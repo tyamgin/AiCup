@@ -25,6 +25,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Y = unit.Y;
         }
 
+        public double GetDistanceTo(int x, int y)
+        {
+            return Math.Sqrt((X - x) * (X - x) + (Y - y) * (Y - y));
+        }
+
         public bool Same(int otherX, int otherY)
         {
             return X == otherX && Y == otherY;

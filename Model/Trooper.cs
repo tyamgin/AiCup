@@ -1,3 +1,5 @@
+using System;
+
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
 {
     public sealed class Trooper : Unit
@@ -18,7 +20,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
         private readonly double visionRange;
         private readonly double shootingRange;
 
-        private readonly int shotCost;
+        private readonly int shootCost;
         private readonly int standingDamage;
         private readonly int kneelingDamage;
         private readonly int proneDamage;
@@ -31,7 +33,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
         public Trooper(long id, int x, int y, long playerId,
             int teammateIndex, bool isTeammate, TrooperType type, TrooperStance stance,
             int hitpoints, int maximalHitpoints, int actionPoints, int initialActionPoints,
-            double visionRange, double shootingRange, int shotCost,
+            double visionRange, double shootingRange, int shootCost,
             int standingDamage, int kneelingDamage, int proneDamage, int damage,
             bool isHoldingGrenade, bool isHoldingMedikit, bool isHoldingFieldRation)
             : base(id, x, y)
@@ -47,7 +49,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
             this.initialActionPoints = initialActionPoints;
             this.visionRange = visionRange;
             this.shootingRange = shootingRange;
-            this.shotCost = shotCost;
+            this.shootCost = shootCost;
             this.standingDamage = standingDamage;
             this.kneelingDamage = kneelingDamage;
             this.proneDamage = proneDamage;
@@ -112,9 +114,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
             get { return shootingRange; }
         }
 
-        public int ShotCost
+        public int ShootCost
         {
-            get { return shotCost; }
+            get { return shootCost; }
         }
 
         public int StandingDamage
@@ -150,6 +152,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
         public bool IsHoldingFieldRation
         {
             get { return isHoldingFieldRation; }
+        }
+        
+        public int GetDamage(TrooperStance stance)
+        {
+            switch (stance)
+            {
+                case TrooperStance.Prone:
+                    return proneDamage;
+                case TrooperStance.Kneeling:
+                    return kneelingDamage;
+                case TrooperStance.Standing:
+                    return standingDamage;
+                default:
+                    throw new ArgumentException("Unsupported stance: " + stance + '.');
+            }
         }
     }
 }

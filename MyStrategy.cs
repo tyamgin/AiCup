@@ -25,7 +25,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point ifShotting()
         {
-            if (self.ActionPoints < self.ShotCost)
+            if (self.ActionPoints < self.ShootCost)
                 return null;
             Point bestGoal = new Point(0, 0, -Inf);
             foreach(Trooper tr in troopers)
@@ -152,7 +152,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             foreach (Bonus bo in bonuses)
             {
                 double profit = getBonusProfit(bo);
-                if (profit > bestGoal.profit)
+                if (profit > bestGoal.profit && map[bo.X, bo.Y] == 0)
                     bestGoal = new Point(bo.X, bo.Y, profit);
             }
             if (bestGoal.profit <= 0)

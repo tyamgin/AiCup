@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Collections;
+using System.Threading;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
@@ -31,6 +32,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 move.Action = ActionType.EndTurn;
 #if DEBUG
             Console.WriteLine(move.Action.ToString() + " " + move.X + " " + move.Y);
+            //Thread.Sleep(100);
 #endif
             validateMove();
         }
@@ -110,7 +112,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             else if (move.Action == ActionType.Shoot)
             {
-                if (self.ShotCost > self.ActionPoints)
+                if (self.ShootCost > self.ActionPoints)
                     throw new Exception("");
                 if (!world.IsVisible(self.ShootingRange, self.X, self.Y, self.Stance, move.X, move.Y, TrooperStance.Standing))
                     throw new Exception("");

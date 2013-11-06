@@ -1,5 +1,4 @@
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
-using System.Diagnostics;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -10,7 +9,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         public static void Main(string[] args)
         {
-            //Process.Start("cmd", "D:\\local_runner\\local-runner.bat");
             if (args.Length == 3)
             {
                 new Runner(args).run();

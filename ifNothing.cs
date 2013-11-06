@@ -8,13 +8,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        Point Goal = null;
+
         Point ifGoNothingCommander()
         {
-            for (int x = 1; x < world.Width; x += world.Width - 3)
-                for (int y = 1; y < world.Height; y += world.Height - 3)
-                    if (self.GetDistanceTo(x, y) > world.Height / 3)
-                        return new Point(x, y);
-            return new Point(self.X, self.Y);
+            if (Goal == null || self.GetDistanceTo(Goal.X, Goal.Y) < world.Height / 4)
+            {
+                for (int x = 1; x < world.Width; x += world.Width - 3)
+                    for (int y = 1; y < world.Height; y += world.Height - 3)
+                        if (Goal == null || Goal.GetDistanceTo(x, y) > world.Height / 3)
+                        {
+                            Goal = new Point(x, y);
+                            return Goal;
+                        }
+            }
+            return Goal != null ? Goal : new Point(self.X, self.Y);
         }
 
         Point ifGoNothing()
