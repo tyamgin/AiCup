@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
+using System.Collections;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -14,13 +15,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (Goal == null || self.GetDistanceTo(Goal.X, Goal.Y) < world.Height / 4)
             {
+                ArrayList places = new ArrayList();
                 for (int x = 1; x < world.Width; x += world.Width - 3)
+                {
                     for (int y = 1; y < world.Height; y += world.Height - 3)
+                    {
                         if (Goal == null || Goal.GetDistanceTo(x, y) > world.Height / 3)
                         {
-                            Goal = new Point(x, y);
-                            return Goal;
+                            places.Add(new Point(x, y));
                         }
+                    }
+                }
+                var pl = places.ToArray();
+                Goal = pl[random.Next(places.Count)] as Point;
             }
             return Goal != null ? Goal : new Point(self.X, self.Y);
         }
