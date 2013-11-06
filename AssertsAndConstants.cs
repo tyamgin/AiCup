@@ -9,13 +9,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        const int Inf = 0x3f3f3f3f;
+        public static int Inf = 0x3f3f3f3f;
 
         World world;
         Move move;
         Trooper self;
         Game game;
         Trooper[] troopers;
+        ArrayList team, friend;
         Bonus[] bonuses;
         int[,] map;
         CellType[][] cells;
@@ -24,7 +25,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             move.X = toX;
             move.Y = toY;
-            if (map[move.X, move.Y] != 0) // TODO: это костыль
+            if (move.Action == ActionType.Move && self.X == toX && self.Y == toY)
+                move.Action = ActionType.EndTurn; // TODO:
+            if (map[move.X, move.Y] != 0 && move.Action == ActionType.Move) // TODO: это костыль
                 move.Action = ActionType.EndTurn;
 #if DEBUG
             Console.WriteLine(move.Action.ToString() + " " + move.X + " " + move.Y);
@@ -56,6 +59,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return null;
         }
 
+        TrooperType[] commanderPriority = { TrooperType.Commander, TrooperType.Sniper, TrooperType.Soldier, TrooperType.FieldMedic, TrooperType.Scout };
+
+        Trooper getCommander()
+        {
+            foreach(TrooperType type in commanderPriority)
+                foreach (Trooper tr in team)
+                    if (tr.Type == type)
+                        return tr;
+            throw new Exception("Have no player in my team");
+        }
+
         void validateMove()
         {
             if (move.Action == ActionType.EatFieldRation)
@@ -72,7 +86,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 // TODO: implement
                 if (self.Type != TrooperType.FieldMedic)
                     throw new Exception("");
-                if (!(new Point(self.X, self.Y)).Nearest(new Point(move.X, move.Y)))
+                if (!new Point(self.X, self.Y).Nearest(new Point(move.X, move.Y)))
                     throw new Exception("");
             }
             else if (move.Action == ActionType.LowerStance)
@@ -118,8 +132,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (game.MedikitUseCost > self.ActionPoints || !self.IsHoldingMedikit)
                     throw new Exception("");
-                if (move.X < 0 || move.Y < 0 || move.X >= world.Width || move.Y >= world.Height || !(new Point(self.X, self.Y)).Nearest(new Point(move.X, move.Y)))
+                if (move.X < 0 || move.Y < 0 || move.X >= world.Width || move.Y >= world.Height || !new Point(self.X, self.Y).Nearest(new Point(move.X, move.Y)))
                     throw new Exception("");
+
                 // TODO:
             }
         }

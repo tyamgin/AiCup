@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -9,12 +10,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         public int X, Y;
         public double profit;
-
+        
         public Point(int X, int Y, double profit = 0)
         {
             this.X = X;
             this.Y = Y;
             this.profit = profit;
+        }
+
+        public Point(Unit unit)
+        {
+            profit = 0;
+            X = unit.X;
+            Y = unit.Y;
         }
 
         public bool Same(int otherX, int otherY)
@@ -23,6 +31,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         }
 
         public bool Same(Point other)
+        {
+            return Same(other.X, other.Y);
+        }
+
+        public bool Same(Unit other)
         {
             return Same(other.X, other.Y);
         }
@@ -36,5 +49,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             return Nearest(other.X, other.Y);
         }
+
+        public bool Nearest(Unit other)
+        {
+            return Nearest(other.X, other.Y);
+        }
+
+        public static Point Inf
+        {
+            get
+            {
+                return new Point(0, 0, -MyStrategy.Inf);
+            }
+        }
+
     }
 }

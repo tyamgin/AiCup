@@ -6,57 +6,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        bool canThrowTo(int x, int y)
-        {
-            if (x < 0 || y < 0 || x >= world.Width || y >= world.Height)
-                return false;
-            if (cells[x][y] != 0)
-                return false;
-            return self.GetDistanceTo(x, y) <= game.GrenadeThrowRange;
-        }
-
-        double getThrowGranadeProfit(int x, int y)
-        {
-            // TODO: проверить что в troopers есть self
-            Point to = new Point(x, y);
-            double sum = 0;
-            foreach(Trooper tr in troopers)
-            {
-                if (tr.IsTeammate && to.Nearest(tr.X, tr.Y))
-                    return -Inf;
-                if (to.Same(tr.X, tr.Y))
-                    sum += game.GrenadeDirectDamage;
-                else if (to.Nearest(tr.X, tr.Y))
-                    sum += game.GrenadeCollateralDamage;
-            }
-            return sum;
-        }
-
-        Point ifThrowGrenade()
-        {
-            if (game.GrenadeThrowCost > self.ActionPoints)
-                return null;
-            if (!self.IsHoldingGrenade)
-                return null;
-            int grenadeRange = (int)(game.GrenadeThrowRange + 1);
-            Point bestPoint = new Point(0, 0, -Inf);
-            for(int x = self.X - grenadeRange; x <= self.X + grenadeRange; x++)
-            {
-                for(int y = self.Y - grenadeRange; y <= self.Y + grenadeRange; y++)
-                {
-                    if (canThrowTo(x, y))
-                    {
-                        double profit = getThrowGranadeProfit(x, y);
-                        if (bestPoint.profit < profit)
-                            bestPoint = new Point(x, y, profit);
-                    }
-                }
-            }
-            if (bestPoint.profit <= 0)
-                bestPoint = null;
-            return bestPoint;
-        }
-
         bool isLastInTeam(Trooper tr)
         {
             // TODO: implement this
@@ -129,10 +78,31 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         // Направляться к этому юниту.
         Point goToUnit(Unit bo)
         {
-            return goToUnit(new Point(bo.X, bo.Y));
+            int distance = 0;
+            return goToUnit(new Point(bo.X, bo.Y), ref distance);
         }
-        
+
+        int getShoterPath(Unit tr)
+        {
+            int distance = 0;
+            goToUnit(new Point(tr.X, tr.Y), ref distance);
+            return distance;
+        }
+
+        int getShoterPath(Point tr)
+        {
+            int distance = 0;
+            goToUnit(new Point(tr.X, tr.Y), ref distance);
+            return distance;
+        }
+
         Point goToUnit(Point bo)
+        {
+            int distance = 0;
+            return goToUnit(bo, ref distance);
+        }
+
+        Point goToUnit(Point bo, ref int distance)
         {
             // TODO: если по пути можно взять бонус
             if (bo.X == self.X && bo.Y == self.Y) // застрявает в угол
@@ -163,6 +133,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
+            distance = d[self.X, self.Y];
             if (d[self.X, self.Y] == Inf)
                 return null;
             for (int k = 0; k < 4; k++)
@@ -196,45 +167,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return 1.0 / self.GetDistanceTo(goal);
         }
 
-        /*double getIfNothingProfit(int x, int y)
-        {
-            double sum = 0;
-            if (map[x, y] != 0)
-                return -Inf;
-            
-            foreach (Trooper tr in troopers)
-            {
-                if (tr.IsTeammate)
-                {
-                    sum += tr.GetDistanceTo(x, y);
-                }
-            }
-            return sum;
-        }*/
-
-        Point ifGoNothing()
-        {
-            //Point bestPoint = new Point(0, 0, -Inf);
-            if (game.MoveCount < 10)
-                return new Point(0, 0);
-            if (game.MoveCount < 20)
-                return new Point(world.Width - 1, 0);
-            if (game.MoveCount < 30)
-                return new Point(world.Width - 1, world.Height - 1);
-            return new Point(0, world.Height - 1);
-
-            /*for (int i = 0; i < world.Width; i++)
-            {
-                for (int j = 0; j < world.Height; j++)
-                {
-                    double profit = getIfNothingProfit(i, j);
-                    if (profit > bestPoint.profit)
-                        bestPoint = new Point(i, j, profit);
-                }
-            }
-            return bestPoint;*/
-        }
-
         Point ifGoAtack()
         {
             Point bestGoal = new Point(0, 0, -Inf);
@@ -243,39 +175,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 double profit = getGoAtackProfit(tr);
                 if (profit > bestGoal.profit)
                     bestGoal = new Point(tr.X, tr.Y, profit);
-            }
-            if (bestGoal.profit <= 0)
-                bestGoal = null;
-            return bestGoal;
-        }
-
-        Point needUseMedikit()
-        {
-            if (!self.IsHoldingMedikit || self.ActionPoints < game.MedikitUseCost)
-                return null;
-            // TODO: хилить не себя
-            return self.MaximalHitpoints >= self.Hitpoints + game.MedikitHealSelfBonusHitpoints ? new Point(self.X, self.Y) : null;
-        }
-
-        double getHelpTeammateProfit(Trooper goal)
-        {
-            // TODO:
-            return 1 / (goal.Hitpoints / (double)goal.MaximalHitpoints);
-        }
-
-        Point ifHelpTeammate()
-        {
-            if (self.Hitpoints + game.FieldMedicHealSelfBonusHitpoints <= self.MaximalHitpoints) // лечить себя
-                return new Point(self.X, self.Y);
-            Point bestGoal = new Point(0, 0, -Inf);
-            foreach(Trooper tr in troopers)
-            {
-                if (tr.IsTeammate && tr.Id != self.Id)
-                {
-                    double profit = getHelpTeammateProfit(tr);
-                    if (profit > bestGoal.profit)
-                        bestGoal = new Point(tr.X, tr.Y, profit);
-                }
             }
             if (bestGoal.profit <= 0)
                 bestGoal = null;
@@ -295,9 +194,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             for (int i = 0; i < world.Width; i++)
                 for (int j = 0; j < world.Height; j++)
                     map[i, j] = cells[i][j] == 0 ? 0 : 1;
+            team = new ArrayList();
+            friend = new ArrayList();
             foreach (Trooper tr in troopers)
+            {
                 if (tr.Id != self.Id)
                     map[tr.X, tr.Y] = 1;
+                if (tr.IsTeammate)
+                {
+                    team.Add(tr);
+                    if (tr.Id != self.Id)
+                        friend.Add(tr);
+                }
+            }
             map[self.X, self.Y] = 0;
 
             Point ifGrenade = ifThrowGrenade();
@@ -324,13 +233,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            Point ifBonus = ifTakeBonus();
-            if (ifBonus != null && canMove())
+            if (needHelp() && self.Type != TrooperType.FieldMedic)
             {
-                move.Action = ActionType.Move;
-                Point to = goToUnit(ifBonus);
-                Go(to);
-                return;
+                Point helper = getBestHelper();
+                if (helper != null)
+                {
+                    if (helper.Nearest(self) || !canMove())
+                        return;
+                    Point to = goToUnit(helper);
+                    move.Action = ActionType.Move;
+                    Go(to);
+                    return;
+                }
             }
 
             if (self.Type == TrooperType.FieldMedic)
@@ -358,6 +272,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
+            Point ifBonus = ifTakeBonus();
+            if (ifBonus != null && canMove())
+            {
+                move.Action = ActionType.Move;
+                Point to = goToUnit(ifBonus);
+                Go(to);
+                return;
+            }
+
             Point ifGo = ifGoAtack();
             if (ifGo != null && canMove())
             {
@@ -372,7 +295,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 move.Action = ActionType.Move;
                 Point to = goToUnit(ifNothing);
-                Go(to);
+                if (to == null || to.X == self.X && to.Y == self.Y)
+                    move.Action = ActionType.EndTurn;
+                else
+                    Go(to);
                 return;
             }
 

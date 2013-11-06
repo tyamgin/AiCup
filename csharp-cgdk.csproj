@@ -69,7 +69,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="A.cs" />
+    <Compile Include="AssertsAndConstants.cs" />
+    <Compile Include="helpStrategy.cs" />
+    <Compile Include="ifHelpTeammate.cs" />
+    <Compile Include="ifNothing.cs" />
+    <Compile Include="ifThrowGrenade.cs" />
     <Compile Include="Model\Bonus.cs" />
     <Compile Include="Model\BonusType.cs" />
     <Compile Include="Model\ActionType.cs" />
