@@ -12,6 +12,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         public static int Inf = 0x3f3f3f3f;
+        public static double MaxTeamRadius = 5;
+
         public static int DangerNothing = 0;
         public static int DangerVisible = 1;
         public static int DangerShoot = 2;
@@ -34,8 +36,23 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             move.X = toX;
             move.Y = toY;
-            if (move.Action == ActionType.Move && self.X == toX && self.Y == toY)
-                move.Action = ActionType.EndTurn;
+            if (move.Action == ActionType.Move && self.X == toX && self.Y == toY) // это костыль
+            {
+                int[] _i = { 0, 0, 1, -1 };
+                int[] _j = { 1, -1, 0, 0 };
+                for (int k = 0; k < 4; k++)
+                {
+                    int ni = _i[k] + move.X;
+                    int nj = _j[k] + move.Y;
+                    if (ni >= 0 && nj >= 0 && ni < world.Width && nj < world.Height && map[ni, nj] == 0)
+                    {
+                        move.X = ni;
+                        move.Y = nj;
+                        break;
+                    }
+                }
+                move = move; //move.Action = ActionType.EndTurn;
+            }
             if (map[move.X, move.Y] != 0 && move.Action == ActionType.Move) // это костыль
                 move.Action = ActionType.EndTurn;
 #if DEBUG

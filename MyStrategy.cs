@@ -42,17 +42,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestGoal;
         }
 
-        bool haveSuchBonus(Bonus bo)
-        {
-            if (bo.Type == BonusType.Medikit)
-                return self.IsHoldingMedikit;
-            if (bo.Type == BonusType.Grenade)
-                return self.IsHoldingGrenade;
-            if (bo.Type == BonusType.FieldRation)
-                return self.IsHoldingFieldRation;
-            throw new Exception("Unknown bonus type");
-        }
-
         // Направляться к этому юниту.
         Point goToUnit(Unit bo)
         {
@@ -60,10 +49,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return goToUnit(new Point(bo.X, bo.Y), ref distance);
         }
 
-        int getShoterPath(Unit tr)
+        int getShoterPath(Unit tr, Trooper self = null)
         {
+            if (self == null)
+                self = this.self;
             int distance = 0;
-            goToUnit(new Point(tr.X, tr.Y), ref distance);
+            goToUnit(new Point(tr.X, tr.Y), ref distance, self);
             return distance;
         }
 
@@ -80,10 +71,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return goToUnit(bo, ref distance);
         }
 
-        Point goToUnit(Point bo, ref int distance)
+        Point goToUnit(Point bo, ref int distance, Trooper self = null)
         {
+            if (self == null)
+                self = this.self;
             // TODO: если по пути можно взять бонус
-            if (bo.X == self.X && bo.Y == self.Y) // застрявает в угол
+            if (bo.X == self.X && bo.Y == self.Y) // застрявает в угол ??
                 return bo;
             Queue q = new Queue();
             q.Enqueue(bo.X);
@@ -93,6 +86,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 for (int j = 0; j < world.Height; j++)
                     d[i, j] = Inf;
             d[bo.X, bo.Y] = 0;
+            // ???? если self != this.self, то map[self.X, selfY] = 1
+            if (self.Id != this.self.Id)
+                map[self.X, self.Y] = 0;
             int[] _i = { 0, 0, 1, -1 };
             int[] _j = { 1, -1, 0, 0 };
             while (q.Count != 0)
@@ -111,6 +107,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
+            if (self.Id != this.self.Id)
+                map[self.X, self.Y] = 1;
             distance = d[self.X, self.Y];
             if (d[self.X, self.Y] == Inf)
                 return null;
@@ -124,20 +122,33 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Something wrong");
         }
 
-        double getBonusProfit(Bonus bo)
+        bool haveSuchBonus(Trooper self, Bonus bo)
+        {
+            if (bo.Type == BonusType.Medikit)
+                return self.IsHoldingMedikit;
+            if (bo.Type == BonusType.Grenade)
+                return self.IsHoldingGrenade;
+            if (bo.Type == BonusType.FieldRation)
+                return self.IsHoldingFieldRation;
+            throw new Exception("Unknown bonus type");
+        }
+
+        double getBonusProfit(Trooper self, Bonus bo)
         {
             // TODO: брать бонус только чтобы другой не взял
-            if (haveSuchBonus(bo))
+            if (haveSuchBonus(self, bo))
                 return -1;
             return 1.0 / getShoterPath(bo);
         }
 
-        Point ifTakeBonus()
+        Point ifTakeBonus(Trooper self = null)
         {
+            if (self == null)
+                self = this.self;
             Point bestGoal = new Point(0, 0, -Inf);
             foreach (Bonus bo in bonuses)
             {
-                double profit = getBonusProfit(bo);
+                double profit = getBonusProfit(self, bo);
                 if (profit > bestGoal.profit && map[bo.X, bo.Y] == 0)
                     bestGoal = new Point(bo.X, bo.Y, profit);
             }
@@ -182,9 +193,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.game = game;
             this.move = move;
             InitializeConstants();
-
-            if (self.X == 5 && self.Y == 8)
-                self = self;
 
             if (ifFieldRationNeed())
             {
@@ -258,10 +266,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifBonus = ifTakeBonus();
             if (ifBonus != null && canMove())
             {
-                move.Action = ActionType.Move;
-                Point to = goToUnit(ifBonus);
-                Go(to);
-                return;
+                if (commander.Id == self.Id || ifBonus.GetDistanceTo(commander) <= MaxTeamRadius)
+                {
+                    move.Action = ActionType.Move;
+                    Point to = goToUnit(ifBonus);
+                    Go(to);
+                    return;
+                }
             }
 
             Point ifGo = ifGoAtack();
@@ -273,6 +284,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
+            if (self.Id == commander.Id && canMove())
+            {
+                // Проверить что тиммейтам нужен бонус. Если нужен, то идти к туда.
+                foreach(Trooper tr in friend)
+                {
+                    Point bonus = ifTakeBonus(tr);
+                    // если я не стою на бонусе
+                    if (bonus != null && !(bonus.X == self.X && bonus.Y == self.Y))
+                    {
+                        Point to = goToUnit(bonus);
+                        // если я не наступлю на бонус и он без меня не может взять
+                        if (to != null && !(to.X == bonus.X && to.Y == bonus.Y) && bonus.GetDistanceTo(commander) > MaxTeamRadius)
+                        {
+                            move.Action = ActionType.Move;
+                            Go(to);
+                            return;
+                        }
+                    }
+                }
+            }
+
             Point ifNothing = ifGoNothing();
             if (ifNothing != null && canMove())
             {
@@ -282,11 +314,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     move.Action = ActionType.EndTurn;
                 else
                 {
-                    if (commander.Id != self.Id || getTeamRadius() <= 5)
+                    if (commander.Id != self.Id || getTeamRadius() <= MaxTeamRadius)
                         Go(to);
                 }
                 return;
             }
+
 
             validateMove();
         }
