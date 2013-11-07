@@ -89,21 +89,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // ???? если self != this.self, то map[self.X, selfY] = 1
             if (self.Id != this.self.Id)
                 map[self.X, self.Y] = 0;
-            int[] _i = { 0, 0, 1, -1 };
-            int[] _j = { 1, -1, 0, 0 };
+            
             while (q.Count != 0)
             {
                 int x = (int)q.Dequeue();
                 int y = (int)q.Dequeue();
-                for (int k = 0; k < 4; k++)
+                foreach(Point n in Nearest(x, y))
                 {
-                    int ni = _i[k] + x;
-                    int nj = _j[k] + y;
-                    if (ni >= 0 && nj >= 0 && ni < world.Width && nj < world.Height && d[ni, nj] == Inf && map[ni, nj] == 0)
+                    if (d[n.X, n.Y] == Inf)
                     {
-                        d[ni, nj] = d[x, y] + 1;
-                        q.Enqueue(ni);
-                        q.Enqueue(nj);
+                        d[n.X, n.Y] = d[x, y] + 1;
+                        q.Enqueue(n.X);
+                        q.Enqueue(n.Y);
                     }
                 }
             }
@@ -112,13 +109,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             distance = d[self.X, self.Y];
             if (d[self.X, self.Y] == Inf)
                 return null;
-            for (int k = 0; k < 4; k++)
-            {
-                int ni = _i[k] + self.X;
-                int nj = _j[k] + self.Y;
-                if (ni >= 0 && nj >= 0 && ni < world.Width && nj < world.Height && d[ni, nj] + 1 == d[self.X, self.Y])
-                    return new Point(ni, nj);
-            }
+            foreach(Point n in Nearest(self, 1))
+                if (d[n.X, n.Y] + 1 == d[self.X, self.Y])
+                    return new Point(n.X, n.Y);
             throw new Exception("Something wrong");
         }
 
@@ -209,10 +202,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            Point ifGrenade = ifThrowGrenade();
+            bool needMove = false;
+            Point ifGrenade = ifThrowGrenade(ref needMove);
             if (ifGrenade != null)
             {
-                move.Action = ActionType.ThrowGrenade;
+                if (needMove)
+                {
+                    move.Action = ActionType.Move;
+                }
+                else
+                {
+                    move.Action = ActionType.ThrowGrenade;
+                }
                 Go(ifGrenade);
                 return;
             }

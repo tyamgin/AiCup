@@ -21,9 +21,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var q = new PriorityQueue<Pair<int, Pair<int, int>>>();
             q.Push(new Pair<int, Pair<int, int>>(danger[startX, startY], new Pair<int, int>(startX, startY)));
 
-            int[] _i = { 0, 0, 1, -1 };
-            int[] _j = { 1, -1, 0, 0 };
-
 	        while (!q.Empty()) 
             {
                 var v = q.Top().second;
@@ -32,15 +29,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 		        if (cur_d > d[v.first, v.second])  
                     continue;
 
-                for (int k = 0; k < 4; k++)
+                foreach(Point n in Nearest(v.first, v.second))
                 {
-                    int ni = _i[k] + v.first;
-                    int nj = _j[k] + v.second;
-                    int dist = d[v.first, v.second] + danger[ni, nj];
-                    if (ni >= 0 && nj >= 0 && ni < world.Width && nj < world.Height && map[ni, nj] == 0 && dist < d[ni, nj])
+                    int dist = d[v.first, v.second] + danger[n.X, n.Y];
+                    if (dist < d[n.X, n.Y])
                     {
-                        d[ni, nj] = dist;
-                        p[ni, nj] = v;
+                        d[n.X, n.Y] = dist;
+                        p[n.X, n.Y] = v;
                         q.Push(new Pair<int, Pair<int, int>>(-dist, v));
                     }
 		        }

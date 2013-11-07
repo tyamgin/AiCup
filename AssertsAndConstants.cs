@@ -38,18 +38,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             move.Y = toY;
             if (move.Action == ActionType.Move && self.X == toX && self.Y == toY) // это костыль
             {
-                int[] _i = { 0, 0, 1, -1 };
-                int[] _j = { 1, -1, 0, 0 };
-                for (int k = 0; k < 4; k++)
+                foreach(Point n in Nearest(move.X, move.Y))
                 {
-                    int ni = _i[k] + move.X;
-                    int nj = _j[k] + move.Y;
-                    if (ni >= 0 && nj >= 0 && ni < world.Width && nj < world.Height && map[ni, nj] == 0)
-                    {
-                        move.X = ni;
-                        move.Y = nj;
-                        break;
-                    }
+                    move.X = n.X;
+                    move.Y = n.Y;
+                    break;
                 }
                 move = move; //move.Action = ActionType.EndTurn;
             }
@@ -163,6 +156,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 file.WriteLine("");
             }
 #endif
+        }
+
+        int[] _i = { 0, 0, 1, -1 };
+        int[] _j = { 1, -1, 0, 0 };
+
+        ArrayList Nearest(Unit unit, int mp = 0)
+        {
+            return Nearest(unit.X, unit.Y, mp);
+        }
+
+        ArrayList Nearest(int x, int y, int mp = 0)
+        {
+            ArrayList List = new ArrayList();
+            for (int k = 0; k < 4; k++)
+            {
+                int ni = _i[k] + x;
+                int nj = _j[k] + y;
+                if (ni >= 0 && nj >= 0 && ni < world.Width && nj < world.Height && map[ni, nj] <= mp)
+                    List.Add(new Point(ni, nj));
+            }
+            return List;
         }
 
         void validateMove()
