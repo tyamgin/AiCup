@@ -254,7 +254,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 if (ifHelp != null)
                 {
                     Trooper goal = get(ifHelp.X, ifHelp.Y);
-                    if (goal != null && goal.Hitpoints < goal.MaximalHitpoints && ifHelp.Nearest(new Point(self.X, self.Y)) && game.FieldMedicHealCost <= self.ActionPoints)
+                    if (goal != null && goal.Hitpoints < goal.MaximalHitpoints && ifHelp.Nearest(self) && game.FieldMedicHealCost <= self.ActionPoints)
                     {
                         move.Action = ActionType.Heal;
                         Go(ifHelp);
@@ -273,6 +273,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
+            Point ifGo = ifGoAtack();
+            if (ifGo != null && canMove())
+            {
+                move.Action = ActionType.Move;
+                Point to = goToUnit(ifGo);
+                Go(to);
+                return;
+            }
+
             Point ifBonus = ifTakeBonus();
             if (ifBonus != null && canMove())
             {
@@ -283,15 +292,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(to);
                     return;
                 }
-            }
-
-            Point ifGo = ifGoAtack();
-            if (ifGo != null && canMove())
-            {
-                move.Action = ActionType.Move;
-                Point to = goToUnit(ifGo);
-                Go(to);
-                return;
             }
 
             if (self.Id == commander.Id && canMove())

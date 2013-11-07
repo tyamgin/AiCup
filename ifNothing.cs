@@ -36,8 +36,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (commander.Id == self.Id)
                 return ifGoNothingCommander();
-            int[] _i = { 1, 1, -1, -1, 2, -2, 0, 0, 1, 1, -2, -2 };
-            int[] _j = { 1, -1, 1, -1, 0, 0, 2, -2, 2, -2, 1, -1 };
+            //int[] _i = { 1, 1, -1, -1, 2, -2, 0, 0, 1, 1, -2, -2 };
+            //int[] _j = { 1, -1, 1, -1, 0, 0, 2, -2, 2, -2, 1, -1 };
+            int[] _i = { 1, 1, -1, -1, 2, -2, 0, 0, 0, 0, 1, -1 };
+            int[] _j = { 1, -1, 1, -1, 0, 0, 2, -2, 1, -1, 0, 0 };
             Point bestPoint = Point.Inf;
             for (int k = 0; k < _i.Length; k++)
             {

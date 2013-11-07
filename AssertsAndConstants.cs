@@ -50,7 +50,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 move.Action = ActionType.EndTurn;
 #if DEBUG
             Console.WriteLine(self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
-            //Thread.Sleep(100);
+            //Thread.Sleep(50);
 #endif
             validateMove();
         }
