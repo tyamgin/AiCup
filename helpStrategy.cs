@@ -21,7 +21,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (tr.Type == TrooperType.FieldMedic)
                 return quality * 2;
             if (!tr.IsHoldingMedikit)
-                return 0.0001;
+                return -Inf;
             return quality;
         }
 

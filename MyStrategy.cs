@@ -53,26 +53,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown bonus type");
         }
 
-        double getBonusPriority(Bonus bo)
-        {
-            if (bo.Type == BonusType.Medikit)
-                return 3;
-            if (bo.Type == BonusType.Grenade)
-                return 2;
-            if (bo.Type == BonusType.FieldRation)
-                return 1;
-            throw new Exception("Unknown bonus type");
-        }
-
-        double getBonusProfit(Bonus bo)
-        {
-            // TODO: брать бонус только чтобы другой не вз€л
-            if (haveSuchBonus(bo))
-                return -1;
-            return getBonusPriority(bo);
-        }
-
-
         // Ќаправл€тьс€ к этому юниту.
         Point goToUnit(Unit bo)
         {
@@ -144,6 +124,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Something wrong");
         }
 
+        double getBonusProfit(Bonus bo)
+        {
+            // TODO: брать бонус только чтобы другой не вз€л
+            if (haveSuchBonus(bo))
+                return -1;
+            return 1.0 / getShoterPath(bo);
+        }
+
         Point ifTakeBonus()
         {
             Point bestGoal = new Point(0, 0, -Inf);
@@ -194,6 +182,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.game = game;
             this.move = move;
             InitializeConstants();
+
+            if (self.X == 5 && self.Y == 8)
+                self = self;
 
             if (ifFieldRationNeed())
             {
