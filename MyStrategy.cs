@@ -64,8 +64,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown bonus type");
         }
 
-        // TODO: сухпаёк
-
         double getBonusProfit(Bonus bo)
         {
             // TODO: брать бонус только чтобы другой не взял
@@ -184,7 +182,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         double getTeamRadius()
         {
             double maxDist = 0;
-            Trooper commander = getCommander();
             foreach(Trooper tr in team)
                 maxDist = Math.Max(maxDist, commander.GetDistanceTo(tr));
             return maxDist;
@@ -196,27 +193,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.world = world;
             this.game = game;
             this.move = move;
-            this.troopers = world.Troopers;
-            this.bonuses = world.Bonuses;
-            this.cells = world.Cells;
-            map = new int[world.Width, world.Height];
-            for (int i = 0; i < world.Width; i++)
-                for (int j = 0; j < world.Height; j++)
-                    map[i, j] = cells[i][j] == 0 ? 0 : 1;
-            team = new ArrayList();
-            friend = new ArrayList();
-            foreach (Trooper tr in troopers)
+            InitializeConstants();
+
+            if (ifFieldRationNeed())
             {
-                if (tr.Id != self.Id)
-                    map[tr.X, tr.Y] = 1;
-                if (tr.IsTeammate)
-                {
-                    team.Add(tr);
-                    if (tr.Id != self.Id)
-                        friend.Add(tr);
-                }
+                move.Action = ActionType.EatFieldRation;
+                return;
             }
-            map[self.X, self.Y] = 0;
 
             Point ifGrenade = ifThrowGrenade();
             if (ifGrenade != null)
@@ -308,7 +291,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     move.Action = ActionType.EndTurn;
                 else
                 {
-                    if (getCommander().Id != self.Id || getTeamRadius() <= 5)
+                    if (commander.Id != self.Id || getTeamRadius() <= 5)
                         Go(to);
                 }
                 return;

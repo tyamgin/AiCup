@@ -5,34 +5,41 @@ using System.Text;
 using System.Collections;
 using System.Threading;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
+using System.IO;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
         public static int Inf = 0x3f3f3f3f;
+        public static int DangerNothing = 0;
+        public static int DangerVisible = 1;
+        public static int DangerShoot = 2;
+        public static int DangerHighShoot = 3;
+
         Random random = new Random();
 
         World world;
         Move move;
-        Trooper self;
         Game game;
+        Trooper self, commander;
         Trooper[] troopers;
-        ArrayList team, friend;
+        ArrayList team, friend, opponents;
         Bonus[] bonuses;
-        int[,] map;
         CellType[][] cells;
+        int[,] map;
+        int[,] danger;
 
         void Go(int toX, int toY)
         {
             move.X = toX;
             move.Y = toY;
             if (move.Action == ActionType.Move && self.X == toX && self.Y == toY)
-                move.Action = ActionType.EndTurn; // TODO:
-            if (map[move.X, move.Y] != 0 && move.Action == ActionType.Move) // TODO: это костыль
+                move.Action = ActionType.EndTurn;
+            if (map[move.X, move.Y] != 0 && move.Action == ActionType.Move) // это костыль
                 move.Action = ActionType.EndTurn;
 #if DEBUG
-            Console.WriteLine(move.Action.ToString() + " " + move.X + " " + move.Y);
+            Console.WriteLine(self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
             //Thread.Sleep(100);
 #endif
             validateMove();
@@ -71,6 +78,74 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     if (tr.Type == type)
                         return tr;
             throw new Exception("Have no player in my team");
+        }
+
+        void InitializeConstants()
+        {
+            this.troopers = world.Troopers;
+            this.bonuses = world.Bonuses;
+            this.cells = world.Cells;
+            if (map == null)
+                map = new int[world.Width, world.Height];
+            for (int i = 0; i < world.Width; i++)
+                for (int j = 0; j < world.Height; j++)
+                    map[i, j] = cells[i][j] == 0 ? 0 : 1;
+            team = new ArrayList();
+            friend = new ArrayList();
+            opponents = new ArrayList();
+            foreach (Trooper tr in troopers)
+            {
+                if (tr.Id != self.Id)
+                    map[tr.X, tr.Y] = 1;
+                if (tr.IsTeammate)
+                {
+                    team.Add(tr);
+                    if (tr.Id != self.Id)
+                        friend.Add(tr);
+                }
+                else
+                {
+                    opponents.Add(tr);
+                }
+            }
+            map[self.X, self.Y] = 0;
+            commander = getCommander();
+            danger = new int[world.Width, world.Height];
+
+            foreach (Trooper tr in opponents)
+            {
+                for (int i = 0; i < world.Width; i++)
+                {
+                    for (int j = 0; j < world.Height; j++)
+                    {
+                        if (world.IsVisible(tr.ShootingRange, tr.X, tr.Y, tr.Stance, i, j, self.Stance))
+                        {
+                            danger[i, j]++;
+                        }
+                        if (world.IsVisible(tr.VisionRange, tr.X, tr.Y, tr.Stance, i, j, self.Stance))
+                        {
+                            danger[i, j]++;
+                        }
+                    }
+                }
+            }
+
+#if DEBUG
+            string path = "TestFolder\\" + "a" + game.MoveCount + ".txt";
+            FileStream fs = File.Create(path);
+            fs.Close();
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
+            {
+                for(int j = 0; j < world.Height; j++)
+                {
+                    string str = "";
+                    for(int i = 0; i < world.Width; i++)
+                        str += danger[i, j];
+                    file.WriteLine(str);
+                }
+                file.WriteLine("");
+            }
+#endif
         }
 
         void validateMove()

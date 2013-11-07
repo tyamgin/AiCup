@@ -19,7 +19,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         double getThrowGranadeProfit(int x, int y)
         {
-            // TODO: проверить что в troopers есть self
             Point to = new Point(x, y);
             double sum = 0;
             foreach (Trooper tr in troopers)

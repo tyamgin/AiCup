@@ -34,7 +34,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point ifGoNothing()
         {
-            var commander = getCommander();
             if (commander.Id == self.Id)
                 return ifGoNothingCommander();
             int[] _i = { 1, 1, -1, -1, 2, -2, 0, 0, 1, 1, -2, -2 };

@@ -71,8 +71,10 @@
   <ItemGroup>
     <Compile Include="AssertsAndConstants.cs" />
     <Compile Include="helpStrategy.cs" />
+    <Compile Include="ifFieldRation.cs" />
     <Compile Include="ifHelpTeammate.cs" />
     <Compile Include="ifNothing.cs" />
+    <Compile Include="ifRunAway.cs" />
     <Compile Include="ifThrowGrenade.cs" />
     <Compile Include="Model\Bonus.cs" />
     <Compile Include="Model\BonusType.cs" />
@@ -87,6 +89,7 @@
     <Compile Include="Model\Player.cs" />
     <Compile Include="Model\PlayerContext.cs" />
     <Compile Include="Point.cs" />
+    <Compile Include="PriorityQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteProcessClient.cs" />
     <Compile Include="Runner.cs" />
