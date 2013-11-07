@@ -178,6 +178,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestGoal;
         }
 
+        double getTeamRadius(int x, int y)
+        {
+            double maxDist = 0;
+            foreach (Trooper tr in team)
+                if (tr.Id != commander.Id)
+                    maxDist = Math.Max(maxDist, tr.GetDistanceTo(x, y));
+            return maxDist;
+        }
+
         double getTeamRadius()
         {
             double maxDist = 0;
@@ -314,7 +323,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     move.Action = ActionType.EndTurn;
                 else
                 {
-                    if (commander.Id != self.Id || getTeamRadius() <= MaxTeamRadius)
+                    if (commander.Id != self.Id || getTeamRadius(to.X, to.Y) <= MaxTeamRadius)
                         Go(to);
                 }
                 return;
