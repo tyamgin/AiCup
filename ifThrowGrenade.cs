@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         bool canThrowTo(Point pos, int x, int y)
         {
-            if (x < 0 || y < 0 || x >= world.Width || y >= world.Height)
+            if (x < 0 || y < 0 || x >= width || y >= height)
                 return false;
             if (cells[x][y] != 0)
                 return false;
@@ -52,7 +52,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestPoint;
         }
 
-        Point ifThrowGrenade(ref bool needMove)
+        Point IfThrowGrenade(ref bool needMove)
         {
             needMove = false;
             if (game.GrenadeThrowCost > self.ActionPoints)

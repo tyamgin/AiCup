@@ -11,40 +11,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        public static int Inf = 0x3f3f3f3f;
-        public static double MaxTeamRadius = 5;
-
-        public static int DangerNothing = 0;
-        public static int DangerVisible = 1;
-        public static int DangerShoot = 2;
-        public static int DangerHighShoot = 3;
-
-        Random random = new Random();
-
-        World world;
-        Move move;
-        Game game;
-        Trooper self, commander;
-        Trooper[] troopers;
-        ArrayList team, friend, opponents;
-        Bonus[] bonuses;
-        CellType[][] cells;
-        int[,] map;
-        int[,] danger;
-
         void Go(int toX, int toY)
         {
             move.X = toX;
             move.Y = toY;
             if (move.Action == ActionType.Move && self.X == toX && self.Y == toY) // это костыль
             {
+                int x = move.X, y = move.Y;
                 foreach(Point n in Nearest(move.X, move.Y))
                 {
                     move.X = n.X;
                     move.Y = n.Y;
                     break;
                 }
-                move = move; //move.Action = ActionType.EndTurn;
             }
             if (map[move.X, move.Y] != 0 && move.Action == ActionType.Move) // это костыль
                 move.Action = ActionType.EndTurn;
@@ -95,11 +74,20 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.troopers = world.Troopers;
             this.bonuses = world.Bonuses;
             this.cells = world.Cells;
+            this.width = world.Width;
+            this.height = world.Height;
             if (map == null)
-                map = new int[world.Width, world.Height];
-            for (int i = 0; i < world.Width; i++)
-                for (int j = 0; j < world.Height; j++)
+                map = new int[width, height];
+            if (notFilledMap == null)
+                notFilledMap = new int[width, height];
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
                     map[i, j] = cells[i][j] == 0 ? 0 : 1;
+                    notFilledMap[i, j] = map[i, j];
+                }
+            }
             team = new ArrayList();
             friend = new ArrayList();
             opponents = new ArrayList();
@@ -118,15 +106,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     opponents.Add(tr);
                 }
             }
+            if (MaxTeamDiametr == -1)
+                MaxTeamDiametr = team.Count + 1;
             map[self.X, self.Y] = 0;
             commander = getCommander();
-            danger = new int[world.Width, world.Height];
+            danger = new int[width, height];
 
             foreach (Trooper tr in opponents)
             {
-                for (int i = 0; i < world.Width; i++)
+                for (int i = 0; i < width; i++)
                 {
-                    for (int j = 0; j < world.Height; j++)
+                    for (int j = 0; j < height; j++)
                     {
                         if (world.IsVisible(tr.ShootingRange, tr.X, tr.Y, tr.Stance, i, j, self.Stance))
                         {
@@ -140,16 +130,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
+
+
 #if DEBUG
             string path = "TestFolder\\" + "a" + game.MoveCount + ".txt";
             FileStream fs = File.Create(path);
             fs.Close();
             using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
             {
-                for(int j = 0; j < world.Height; j++)
+                for(int j = 0; j < height; j++)
                 {
                     string str = "";
-                    for(int i = 0; i < world.Width; i++)
+                    for(int i = 0; i < width; i++)
                         str += danger[i, j];
                     file.WriteLine(str);
                 }
@@ -173,7 +165,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 int ni = _i[k] + x;
                 int nj = _j[k] + y;
-                if (ni >= 0 && nj >= 0 && ni < world.Width && nj < world.Height && map[ni, nj] <= mp)
+                if (ni >= 0 && nj >= 0 && ni < width && nj < height && map[ni, nj] <= mp)
                     List.Add(new Point(ni, nj));
             }
             return List;
@@ -209,7 +201,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     throw new Exception("");
                 Point to = new Point(move.X, move.Y);
                 Point ths = new Point(self.X, self.Y);
-                if (!to.Nearest(ths) || to.X < 0 || to.Y < 0 || to.X >= world.Width || to.Y >= world.Height || map[to.X, to.Y] != 0)
+                if (!to.Nearest(ths) || to.X < 0 || to.Y < 0 || to.X >= width || to.Y >= height || map[to.X, to.Y] != 0)
                     throw new Exception("");
             }
             else if (move.Action == ActionType.RaiseStance)
@@ -225,14 +217,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     throw new Exception("");
                 if (move.X == self.X && move.Y == self.Y)
                     throw new Exception("");
-                if (move.X < 0 || move.Y < 0 || move.X >= world.Width || move.Y >= world.Height || cells[move.X][move.Y] != 0)
+                if (move.X < 0 || move.Y < 0 || move.X >= width || move.Y >= height || cells[move.X][move.Y] != 0)
                     throw new Exception("");
             }
             else if (move.Action == ActionType.ThrowGrenade)
             {
                 if (self.ActionPoints < game.GrenadeThrowCost)
                     throw new Exception("");
-                if (move.X < 0 || move.Y < 0 || move.X >= world.Width || move.Y >= world.Height || cells[move.X][move.Y] != 0)
+                if (move.X < 0 || move.Y < 0 || move.X >= width || move.Y >= height || cells[move.X][move.Y] != 0)
                     throw new Exception("");
                 if (!self.IsHoldingGrenade || game.GrenadeThrowRange < self.GetDistanceTo(move.X, move.Y))
                     throw new Exception("");
@@ -241,7 +233,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (game.MedikitUseCost > self.ActionPoints || !self.IsHoldingMedikit)
                     throw new Exception("");
-                if (move.X < 0 || move.Y < 0 || move.X >= world.Width || move.Y >= world.Height || !new Point(self.X, self.Y).Nearest(new Point(move.X, move.Y)))
+                if (move.X < 0 || move.Y < 0 || move.X >= width || move.Y >= height || !new Point(self.X, self.Y).Nearest(new Point(move.X, move.Y)))
                     throw new Exception("");
 
                 // TODO:

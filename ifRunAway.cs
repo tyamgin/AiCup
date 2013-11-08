@@ -12,10 +12,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             int startX = self.X;
             int startY = self.Y;
-            int[,] d = new int[world.Width, world.Height];
-            var p = new Pair<int, int>[world.Width, world.Height];
-            for(int i = 0; i < world.Width; i++)
-                for(int j = 0; j < world.Height; j++)
+            int[,] d = new int[width, height];
+            var p = new Pair<int, int>[width, height];
+            for(int i = 0; i < width; i++)
+                for(int j = 0; j < height; j++)
                     d[i, j] = Inf;
             d[startX, startY] = danger[startX, startY];
             var q = new PriorityQueue<Pair<int, Pair<int, int>>>();

@@ -8,7 +8,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        bool needHelp(Trooper self = null)
+        bool IfNeedHelp(Trooper self = null)
         {
             if (self == null)
                 self = this.self;
@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         double getHelperQuality(Trooper tr)
         {
-            double quality = 1.0 / getShoterPath(tr);
+            double quality = 1.0 / getShoterPath(tr, true);
             if (tr.Type == TrooperType.FieldMedic)
                 return quality * 2;
             if (!tr.IsHoldingMedikit)
@@ -39,12 +39,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestHelper;
         }
 
-        Point needUseMedikit()
+        Point IfUseMedikit()
         {
             if (!self.IsHoldingMedikit || self.ActionPoints < game.MedikitUseCost)
                 return null;
             foreach (Trooper tr in friend)
-                if (needHelp(tr) && new Point(tr).Nearest(self))
+                if (IfNeedHelp(tr) && new Point(tr).Nearest(self))
                     return new Point(tr);
              
             Point bestHeal = Point.Inf;

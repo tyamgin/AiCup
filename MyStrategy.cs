@@ -2,6 +2,12 @@ using System;
 using System.Collections;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
+// TODO!!!: вместо того чтобы явно стрелять и убивать - шел группироваться
+// TODO!!!: пытался пройти к медику через трупера, но не мог
+
+// TODO: если я нахожусь далеко от тимлида (по радиусу), то нужно идти к его компоненте связности.
+// труперы смежны, если расстояние между ними (кратчайший путь) <= 2 
+
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -23,7 +29,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return profit;
         }
 
-        Point ifShotting()
+        Point IfShot()
         {
             if (self.ActionPoints < self.ShootCost)
                 return null;
@@ -46,47 +52,52 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Point goToUnit(Unit bo)
         {
             int distance = 0;
-            return goToUnit(new Point(bo.X, bo.Y), ref distance);
+            return goToUnit(new Point(bo.X, bo.Y), ref distance, true);
         }
 
-        int getShoterPath(Unit tr, Trooper self = null)
+        int getShoterPath(Unit tr, bool filledMap, Trooper self = null)
         {
             if (self == null)
                 self = this.self;
             int distance = 0;
-            goToUnit(new Point(tr.X, tr.Y), ref distance, self);
+            goToUnit(new Point(tr.X, tr.Y), ref distance, filledMap, self);
             return distance;
         }
 
-        int getShoterPath(Point tr)
+        int getShoterPath(Point tr, bool filledMap = true)
         {
             int distance = 0;
-            goToUnit(new Point(tr.X, tr.Y), ref distance);
+            goToUnit(new Point(tr.X, tr.Y), ref distance, filledMap);
             return distance;
         }
 
         Point goToUnit(Point bo)
         {
             int distance = 0;
-            return goToUnit(bo, ref distance);
+            return goToUnit(bo, ref distance, true);
         }
 
-        Point goToUnit(Point bo, ref int distance, Trooper self = null)
+        Point goToUnit(Point bo, ref int distance, bool filledMap, Trooper self = null)
         {
             if (self == null)
                 self = this.self;
-            // TODO: если по пути можно взять бонус
+            int[,] map;
+            if (filledMap)
+                map = this.map;
+            else
+                map = this.notFilledMap;
+            
             if (bo.X == self.X && bo.Y == self.Y) // застрявает в угол ??
                 return bo;
             Queue q = new Queue();
             q.Enqueue(bo.X);
             q.Enqueue(bo.Y);
-            int[,] d = new int[world.Width, world.Height];
-            for (int i = 0; i < world.Width; i++)
-                for (int j = 0; j < world.Height; j++)
+            int[,] d = new int[width, height];
+            for (int i = 0; i < width; i++)
+                for (int j = 0; j < height; j++)
                     d[i, j] = Inf;
             d[bo.X, bo.Y] = 0;
-            // ???? если self != this.self, то map[self.X, selfY] = 1
+            // если self != this.self, то map[self.X, selfY] = 1
             if (self.Id != this.self.Id)
                 map[self.X, self.Y] = 0;
             
@@ -131,10 +142,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // TODO: брать бонус только чтобы другой не взял
             if (haveSuchBonus(self, bo))
                 return -1;
-            return 1.0 / getShoterPath(bo);
+            return 1.0 / getShoterPath(bo, true);
         }
 
-        Point ifTakeBonus(Trooper self = null)
+        Point IfTakeBonus(Trooper self = null)
         {
             if (self == null)
                 self = this.self;
@@ -157,7 +168,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return 1.0 / self.GetDistanceTo(goal);
         }
 
-        Point ifGoAtack()
+        Point IfGoAtack()
         {
             Point bestGoal = new Point(0, 0, -Inf);
             foreach (Trooper tr in troopers)
@@ -169,23 +180,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (bestGoal.profit <= 0)
                 bestGoal = null;
             return bestGoal;
-        }
-
-        double getTeamRadius(int x, int y)
-        {
-            double maxDist = 0;
-            foreach (Trooper tr in team)
-                if (tr.Id != commander.Id)
-                    maxDist = Math.Max(maxDist, tr.GetDistanceTo(x, y));
-            return maxDist;
-        }
-
-        double getTeamRadius()
-        {
-            double maxDist = 0;
-            foreach(Trooper tr in team)
-                maxDist = Math.Max(maxDist, commander.GetDistanceTo(tr));
-            return maxDist;
         }
 
         public void Move(Trooper self, World world, Game game, Move move)
@@ -203,49 +197,31 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             bool needMove = false;
-            Point ifGrenade = ifThrowGrenade(ref needMove);
-            if (ifGrenade != null)
+            Point ifThrowGrenade = IfThrowGrenade(ref needMove);
+            if (ifThrowGrenade != null)
             {
                 if (needMove)
-                {
                     move.Action = ActionType.Move;
-                }
                 else
-                {
                     move.Action = ActionType.ThrowGrenade;
-                }
-                Go(ifGrenade);
+                Go(ifThrowGrenade);
                 return;
             }
 
-            Point ifMedkit = needUseMedikit();
-            if (ifMedkit != null)
+            Point ifUseMedikit = IfUseMedikit();
+            if (ifUseMedikit != null)
             {
                 move.Action = ActionType.UseMedikit;
-                Go(ifMedkit);
+                Go(ifUseMedikit);
                 return;
             }
 
-            Point ifShot = ifShotting();
+            Point ifShot = IfShot();
             if (ifShot != null)
             {
                 move.Action = ActionType.Shoot;
                 Go(ifShot);
                 return;
-            }
-
-            if (needHelp() && self.Type != TrooperType.FieldMedic)
-            {
-                Point helper = getBestHelper();
-                if (helper != null)
-                {
-                    if (helper.Nearest(self) || !canMove())
-                        return;
-                    Point to = goToUnit(helper);
-                    move.Action = ActionType.Move;
-                    Go(to);
-                    return;
-                }
             }
 
             if (self.Type == TrooperType.FieldMedic)
@@ -273,22 +249,55 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            Point ifGo = ifGoAtack();
-            if (ifGo != null && canMove())
+            if (canMove() && self.Id != commander.Id && getTeamDiametr() > MaxTeamDiametr)
             {
-                move.Action = ActionType.Move;
-                Point to = goToUnit(ifGo);
-                Go(to);
-                return;
+                Point grouping = ifGrouping();
+                // grouping != null !!!
+                if (grouping.X != self.X || grouping.Y != self.Y)
+                {
+                    Point to = goToUnit(grouping);
+                    if (to != null)
+                    {
+                        move.Action = ActionType.Move;
+                        Go(to);
+                        return;
+                    }
+                }
             }
 
-            Point ifBonus = ifTakeBonus();
-            if (ifBonus != null && canMove())
+            if (IfNeedHelp() && self.Type != TrooperType.FieldMedic)
             {
-                if (commander.Id == self.Id || ifBonus.GetDistanceTo(commander) <= MaxTeamRadius)
+                Point helper = getBestHelper();
+                if (helper != null)
+                {
+                    if (helper.Nearest(self) || !canMove())
+                        return;
+                    Point to = goToUnit(helper);
+                    move.Action = ActionType.Move;
+                    Go(to);
+                    return;
+                }
+            }
+
+            Point ifGoAtack = IfGoAtack();
+            if (ifGoAtack != null && canMove())
+            {
+                Point to = goToUnit(ifGoAtack);
+                if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
                 {
                     move.Action = ActionType.Move;
-                    Point to = goToUnit(ifBonus);
+                    Go(to);
+                    return;
+                }
+            }
+
+            Point ifTakeBonus = IfTakeBonus();
+            if (ifTakeBonus != null && canMove())
+            {
+                Point to = goToUnit(ifTakeBonus);
+                if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
+                {
+                    move.Action = ActionType.Move;
                     Go(to);
                     return;
                 }
@@ -299,38 +308,42 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 // Проверить что тиммейтам нужен бонус. Если нужен, то идти к туда.
                 foreach(Trooper tr in friend)
                 {
-                    Point bonus = ifTakeBonus(tr);
+                    Point bonus = IfTakeBonus(tr);
                     // если я не стою на бонусе
                     if (bonus != null && !(bonus.X == self.X && bonus.Y == self.Y))
                     {
                         Point to = goToUnit(bonus);
-                        // если я не наступлю на бонус и он без меня не может взять
-                        if (to != null && !(to.X == bonus.X && to.Y == bonus.Y) && bonus.GetDistanceTo(commander) > MaxTeamRadius)
+                        // если я не наступлю на бонус //////и он без меня не может взять
+                        if (to != null && !(to.X == bonus.X && to.Y == bonus.Y)) ;// && bonus.GetDistanceTo(commander) > MaxTeamRadius)
                         {
-                            move.Action = ActionType.Move;
-                            Go(to);
-                            return;
+                            if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
+                            {
+                                move.Action = ActionType.Move;
+                                Go(to);
+                                return;
+                            }
                         }
                     }
                 }
             }
 
-            Point ifNothing = ifGoNothing();
+            Point ifNothing = IfNothing();
             if (ifNothing != null && canMove())
             {
-                move.Action = ActionType.Move;
                 Point to = goToUnit(ifNothing);
                 if (to == null || to.X == self.X && to.Y == self.Y)
-                    move.Action = ActionType.EndTurn;
-                else
                 {
-                    if (commander.Id != self.Id || getTeamRadius(to.X, to.Y) <= MaxTeamRadius)
-                        Go(to);
+                    move.Action = ActionType.EndTurn; // Тут буду ложиться/садиться
+                    return;
                 }
-                return;
+                else if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
+                {
+                    move.Action = ActionType.Move;
+                    Go(to);
+                    return;
+                }
             }
-
-
+            // Тут буду ложиться/садиться
             validateMove();
         }
 

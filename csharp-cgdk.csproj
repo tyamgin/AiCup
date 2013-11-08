@@ -69,13 +69,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssertsAndConstants.cs" />
-    <Compile Include="helpStrategy.cs" />
-    <Compile Include="ifFieldRation.cs" />
-    <Compile Include="ifHelpTeammate.cs" />
-    <Compile Include="ifNothing.cs" />
-    <Compile Include="ifRunAway.cs" />
-    <Compile Include="ifThrowGrenade.cs" />
+    <Compile Include="teamGrouping.cs" />
+    <Compile Include="Utills.cs" />
+    <Compile Include="Constants.cs" />
+    <Compile Include="HelpStrategy.cs" />
+    <Compile Include="IfFieldRation.cs" />
+    <Compile Include="IfHelpTeammate.cs" />
+    <Compile Include="IfNothing.cs" />
+    <Compile Include="IfRunAway.cs" />
+    <Compile Include="IfThrowGrenade.cs" />
     <Compile Include="Model\Bonus.cs" />
     <Compile Include="Model\BonusType.cs" />
     <Compile Include="Model\ActionType.cs" />
