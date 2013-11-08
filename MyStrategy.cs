@@ -216,6 +216,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
+            // может возникнуть такое, что очков на выстрел нету, и он попытается пойти на клетку врага
             Point ifShot = IfShot();
             if (ifShot != null)
             {
@@ -249,7 +250,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            if (canMove() && self.Id != commander.Id && getTeamDiametr() > MaxTeamDiametr)
+            if (canMove() && self.Id != commander.Id && getTeamRadius() > MaxTeamRadius)
             {
                 Point grouping = ifGrouping();
                 // grouping != null !!!
@@ -283,7 +284,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (ifGoAtack != null && canMove())
             {
                 Point to = goToUnit(ifGoAtack);
-                if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
+                if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {
                     move.Action = ActionType.Move;
                     Go(to);
@@ -295,7 +296,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (ifTakeBonus != null && canMove())
             {
                 Point to = goToUnit(ifTakeBonus);
-                if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
+                if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {
                     move.Action = ActionType.Move;
                     Go(to);
@@ -316,7 +317,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         // если я не наступлю на бонус //////и он без меня не может взять
                         if (to != null && !(to.X == bonus.X && to.Y == bonus.Y)) ;// && bonus.GetDistanceTo(commander) > MaxTeamRadius)
                         {
-                            if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
+                            if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                             {
                                 move.Action = ActionType.Move;
                                 Go(to);
@@ -336,7 +337,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     move.Action = ActionType.EndTurn; // Тут буду ложиться/садиться
                     return;
                 }
-                else if (getTeamDiametr(self.Id, to) <= MaxTeamDiametr)
+                else if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {
                     move.Action = ActionType.Move;
                     Go(to);

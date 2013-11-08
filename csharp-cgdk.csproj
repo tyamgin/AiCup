@@ -69,7 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="teamGrouping.cs" />
+    <Compile Include="TeamGrouping.cs" />
     <Compile Include="Utills.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="HelpStrategy.cs" />

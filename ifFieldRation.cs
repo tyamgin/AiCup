@@ -14,7 +14,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return false;
             if (danger[self.X, self.Y] != DangerNothing)
                 return true;
-            return self.Id != commander.Id && getTeamRadius() > 4.5;
+            return self.Id != commander.Id && getTeamRadius() > MaxTeamRadius + 1;
             // TODO: если возможно взять ещё 1 такой бонус
         }
     }

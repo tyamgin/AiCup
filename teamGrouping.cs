@@ -9,24 +9,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        double getTeamRadius(int x, int y)
-        {
-            double maxDist = 0;
-            foreach (Trooper tr in team)
-                if (tr.Id != commander.Id)
-                    maxDist = Math.Max(maxDist, tr.GetDistanceTo(x, y));
-            return maxDist;
-        }
-
-        double getTeamRadius()
-        {
-            double maxDist = 0;
-            foreach (Trooper tr in team)
-                maxDist = Math.Max(maxDist, commander.GetDistanceTo(tr));
-            return maxDist;
-        }
-
-        double getTeamDiametr(long delId = -1, Point p = null)
+        double getTeamRadius(long delId = -1, Point p = null)
         {
             double radius = Inf;
             for (int i = 0; i < width; i++)

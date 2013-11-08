@@ -106,8 +106,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     opponents.Add(tr);
                 }
             }
-            if (MaxTeamDiametr == -1)
-                MaxTeamDiametr = team.Count + 1;
             map[self.X, self.Y] = 0;
             commander = getCommander();
             danger = new int[width, height];
