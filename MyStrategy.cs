@@ -182,6 +182,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestGoal;
         }
 
+        bool haveDanger()
+        {
+            for (int i = 0; i < width; i++)
+                for (int j = 0; j < height; j++)
+                    if (danger[i, j] != DangerNothing)
+                        return true;
+            return false;
+        }
+
         public void Move(Trooper self, World world, Game game, Move move)
         {
             this.self = self;
@@ -304,24 +313,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            if (self.Id == commander.Id && canMove())
+            if (!haveDanger())
             {
-                // ѕроверить что тиммейтам нужен бонус. ≈сли нужен, то идти к туда.
-                foreach(Trooper tr in friend)
+                if (self.Id == commander.Id && canMove())
                 {
-                    Point bonus = IfTakeBonus(tr);
-                    // если € не стою на бонусе
-                    if (bonus != null && !(bonus.X == self.X && bonus.Y == self.Y))
+                    // ѕроверить что тиммейтам нужен бонус. ≈сли нужен, то идти к туда.
+                    foreach (Trooper tr in friend)
                     {
-                        Point to = goToUnit(bonus);
-                        // если € не наступлю на бонус //////и он без мен€ не может вз€ть
-                        if (to != null && !(to.X == bonus.X && to.Y == bonus.Y)) ;// && bonus.GetDistanceTo(commander) > MaxTeamRadius)
+                        Point bonus = IfTakeBonus(tr);
+                        // если € не стою на бонусе
+                        if (bonus != null && !(bonus.X == self.X && bonus.Y == self.Y))
                         {
-                            if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                            Point to = goToUnit(bonus);
+                            // если € не наступлю на бонус //////и он без мен€ не может вз€ть
+                            if (to != null && !(to.X == bonus.X && to.Y == bonus.Y)) ;// && bonus.GetDistanceTo(commander) > MaxTeamRadius)
                             {
-                                move.Action = ActionType.Move;
-                                Go(to);
-                                return;
+                                if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                                {
+                                    move.Action = ActionType.Move;
+                                    Go(to);
+                                    return;
+                                }
                             }
                         }
                     }

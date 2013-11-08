@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         public static int Inf = 0x3f3f3f3f;
-        public static double MaxTeamRadius = 3;
+        public static double MaxTeamRadius = 2.5;
 
         public static int DangerNothing = 0;
         public static int DangerVisible = 1;
