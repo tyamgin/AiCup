@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 for (int j = 0; j < height; j++)
                 {
-                    double maxV = p == null ? Inf : p.GetDistanceTo(i, j);
+                    double maxV = p == null ? -Inf : p.GetDistanceTo(i, j);
                     foreach(Trooper tr in team)
                         if (delId != tr.Id)
                             maxV = Math.Max(maxV, tr.GetDistanceTo(i, j));

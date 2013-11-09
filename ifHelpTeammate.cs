@@ -4,9 +4,6 @@ using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
-// TODO: пересмотреть коммандные бонусы
-// TODO: капитан почему-то отходит от диаметра
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy

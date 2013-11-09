@@ -5,9 +5,6 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 // TODO!!!: вместо того чтобы €вно стрел€ть и убивать - шел группироватьс€
 // TODO!!!: пыталс€ пройти к медику через трупера, но не мог
 
-// TODO: если € нахожусь далеко от тимлида (по радиусу), то нужно идти к его компоненте св€зности.
-// труперы смежны, если рассто€ние между ними (кратчайший путь) <= 2 
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -124,41 +121,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 if (d[n.X, n.Y] + 1 == d[self.X, self.Y])
                     return new Point(n.X, n.Y);
             throw new Exception("Something wrong");
-        }
-
-        bool haveSuchBonus(Trooper self, Bonus bo)
-        {
-            if (bo.Type == BonusType.Medikit)
-                return self.IsHoldingMedikit;
-            if (bo.Type == BonusType.Grenade)
-                return self.IsHoldingGrenade;
-            if (bo.Type == BonusType.FieldRation)
-                return self.IsHoldingFieldRation;
-            throw new Exception("Unknown bonus type");
-        }
-
-        double getBonusProfit(Trooper self, Bonus bo)
-        {
-            // TODO: брать бонус только чтобы другой не вз€л
-            if (haveSuchBonus(self, bo))
-                return -1;
-            return 1.0 / getShoterPath(bo, true);
-        }
-
-        Point IfTakeBonus(Trooper self = null)
-        {
-            if (self == null)
-                self = this.self;
-            Point bestGoal = new Point(0, 0, -Inf);
-            foreach (Bonus bo in bonuses)
-            {
-                double profit = getBonusProfit(self, bo);
-                if (profit > bestGoal.profit && map[bo.X, bo.Y] == 0)
-                    bestGoal = new Point(bo.X, bo.Y, profit);
-            }
-            if (bestGoal.profit <= 0)
-                bestGoal = null;
-            return bestGoal;
         }
 
         double getGoAtackProfit(Trooper goal)
@@ -344,7 +306,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (ifNothing != null && canMove())
             {
                 Point to = goToUnit(ifNothing);
-                if (to == null || to.X == self.X && to.Y == self.Y)
+                if (to == null || to.X == self.X && to.Y == self.Y) // TODO: если to = null, то значит мы застр€ли
                 {
                     move.Action = ActionType.EndTurn; // “ут буду ложитьс€/садитьс€
                     return;

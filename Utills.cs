@@ -131,20 +131,20 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
 
 #if DEBUG
-            string path = "TestFolder\\" + "a" + game.MoveCount + ".txt";
-            FileStream fs = File.Create(path);
-            fs.Close();
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
-            {
-                for(int j = 0; j < height; j++)
-                {
-                    string str = "";
-                    for(int i = 0; i < width; i++)
-                        str += danger[i, j];
-                    file.WriteLine(str);
-                }
-                file.WriteLine("");
-            }
+            //string path = "TestFolder\\" + "a" + game.MoveCount + ".txt";
+            //FileStream fs = File.Create(path);
+            //fs.Close();
+            //using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
+            //{
+            //    for(int j = 0; j < height; j++)
+            //    {
+            //        string str = "";
+            //        for(int i = 0; i < width; i++)
+            //            str += danger[i, j];
+            //        file.WriteLine(str);
+            //    }
+            //    file.WriteLine("");
+            //}
 #endif
         }
 
@@ -236,6 +236,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
                 // TODO:
             }
+        }
+
+        void Debugger(string param)
+        {
+#if DEBUG
+            // example: "FieldMedic Move 11 15"
+            string[] args = param.Split(' ');
+            if (self.Type.ToString() == args[0] &&
+                move.Action.ToString() == args[1] &&
+                move.X.ToString() == args[2] &&
+                move.Y.ToString() == args[3])
+            {
+                param = param;
+            }
+#endif
         }
     }
 }
