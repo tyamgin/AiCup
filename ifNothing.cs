@@ -35,7 +35,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point IfNothingCommander()
         {
-            if (Goal == null || self.GetDistanceTo(Goal.X, Goal.Y) < height / 4)
+            if (Goal == null)
                 SelectNewGoal();
             return Goal != null ? Goal : new Point(self.X, self.Y);
         }

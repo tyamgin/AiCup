@@ -159,9 +159,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
+            Point ifTeamBonus = IfTeamBonus();
+            if (ifTeamBonus != null && (Goal == null || !isBonusExistAt(Goal)) && map[ifTeamBonus.X, ifTeamBonus.Y] == 0)
+            {
+                Goal = ifTeamBonus;
+            }
 
             Point ifTakeBonus = IfTakeBonus();
-            if (ifTakeBonus != null && canMove())
+            if (ifTakeBonus != null && canMove() && (Goal == null || Goal.X == ifTakeBonus.X && Goal.Y == ifTakeBonus.Y))
             {
                 Point to = goToUnit(ifTakeBonus);
                 if (getTeamRadius(self.Id, ifTakeBonus) <= MaxTeamRadius && getTeamRadius(self.Id, to) <= MaxTeamRadius)
@@ -170,12 +175,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(to);
                     return;
                 }
-            }
-
-            Point ifTeamBonus = IfTeamBonus();
-            if (ifTeamBonus != null && (Goal == null || !isBonusExistAt(Goal)))
-            {
-                Goal = ifTeamBonus;
             }
 
             Point ifNothing = IfNothing();
