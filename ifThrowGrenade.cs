@@ -23,12 +23,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             double sum = 0;
             foreach (Trooper tr in troopers)
             {
-                if (tr.IsTeammate && to.Nearest(tr.X, tr.Y))
-                    return -Inf;
-                if (to.Same(tr.X, tr.Y))
-                    sum += game.GrenadeDirectDamage;
-                else if (to.Nearest(tr.X, tr.Y))
-                    sum += game.GrenadeCollateralDamage;
+                if (tr.IsTeammate)
+                {
+                    if (to.Nearest(tr))
+                        return -Inf;
+                }
+                else
+                {
+                    if (to.Same(tr.X, tr.Y))
+                        sum += game.GrenadeDirectDamage;
+                    else if (to.Nearest(tr.X, tr.Y))
+                        sum += game.GrenadeCollateralDamage;
+                }
             }
             return sum;
         }
@@ -36,7 +42,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Point throwGrenadeByPos(Point pos)
         {
             int grenadeRange = (int)(game.GrenadeThrowRange + 1);
-            Point bestPoint = new Point(0, 0, -Inf);
+            Point bestPoint = Point.Inf;
             for (int x = pos.X - grenadeRange; x <= pos.X + grenadeRange; x++)
             {
                 for (int y = pos.Y - grenadeRange; y <= pos.Y + grenadeRange; y++)

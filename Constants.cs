@@ -9,6 +9,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        public static int changedCommander = -1;
+        public static Point Goal = null;
+
         public static int Inf = 0x3f3f3f3f;
         public static double MaxTeamRadius = 2.5;
 
@@ -17,7 +20,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public static int DangerShoot = 2;
         public static int DangerHighShoot = 3;
 
-        Random random = new Random();
+        public static Random random = new Random();
+
+        TrooperType[] commanderPriority = { TrooperType.Commander, TrooperType.Sniper, TrooperType.Soldier, TrooperType.FieldMedic, TrooperType.Scout };
 
         World world;
         Move move;

@@ -14,8 +14,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        Point Goal = null;
-
         void Reached(Point p)
         {
             if (Goal != null && Goal.X == p.X && Goal.Y == p.Y)

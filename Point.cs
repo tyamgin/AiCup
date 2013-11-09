@@ -6,7 +6,7 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
-    class Point
+    public class Point
     {
         public int X, Y;
         public double profit;
@@ -73,5 +73,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
+        public override string ToString()
+        {
+            return "(" + X + "; " + Y + ")";
+        }
     }
 }

@@ -11,6 +11,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         public void Move(Trooper self, World world, Game game, Move move)
         {
+#if DEBUG
+            Console.Write("> ");
+#endif
             this.self = self;
             this.world = world;
             this.game = game;
@@ -20,6 +23,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (ifFieldRationNeed())
             {
                 move.Action = ActionType.EatFieldRation;
+                Go(null);
                 return;
             }
             Reached(new Point(self));
@@ -100,7 +104,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 if (helper != null)
                 {
                     if (helper.Nearest(self) || !canMove())
+                    {
+                        Go(null);
                         return;
+                    }
                     Point to = goToUnit(helper);
                     move.Action = ActionType.Move;
                     Go(to);
@@ -139,6 +146,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         if (to == null || to.X == self.X && to.Y == self.Y) // TODO: если to = null, то значит мы застр€ли
                         {
                             move.Action = ActionType.EndTurn; // “ут буду ложитьс€/садитьс€
+                            Go(null);
                             return;
                         }
                         if (getTeamRadius(self.Id, to) <= MaxTeamRadius) // ??
@@ -174,15 +182,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (ifNothing != null && canMove())
             {
                 Point to = goToUnit(ifNothing);
-                if (to == null || to.X == self.X && to.Y == self.Y) // TODO: если to = null, то значит мы застр€ли
+                if (to == null || to.X == self.X && to.Y == self.Y)
                 {
-                    if (to == null)
+                    if (to == null && changedCommander == -1) // значит мы застр€ли
                     {
-                        to = to;
                         // передать коммандование
-                        //ChangeCommander(); // TODO:!!!
+                        ChangeCommander();
                     }
                     move.Action = ActionType.EndTurn; // “ут буду ложитьс€/садитьс€
+                    Go(null);
                     return;
                 }
                 else if (getTeamRadius(self.Id, to) <= MaxTeamRadius)

@@ -11,6 +11,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        static StreamWriter file = null;
+
+
         void Go(int toX, int toY)
         {
             move.X = toX;
@@ -28,17 +31,26 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (map[move.X, move.Y] != 0 && move.Action == ActionType.Move) // это костыль
                 move.Action = ActionType.EndTurn;
 #if DEBUG
-            Console.WriteLine(self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
             Thread.Sleep(100);
 #endif
-            Debugger("Commander Move 6 6",  8);
-            //Debugger("4");
+            //Debugger("Soldier Move 27 2");
+            //Debugger("8");
             validateMove();
         }
 
         void Go(Point to)
         {
-            Go(to.X, to.Y);
+            if (to == null)
+            {
+#if DEBUG
+                Thread.Sleep(100);
+                validateMove();
+#endif
+            }
+            else
+            {
+                Go(to.X, to.Y);
+            }
         }
 
         int getMoveCost()
@@ -73,37 +85,32 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return false;
         }
 
-        TrooperType[] commanderPriority = { TrooperType.Commander, TrooperType.Sniper, TrooperType.Soldier, TrooperType.FieldMedic, TrooperType.Scout };
-
         void ChangeCommander()
         {
-            Trooper initialCommander = getCommander();
-            if (initialCommander.Id != commander.Id)
-            {
-                commander = initialCommander;
-                return;
-            }
-            foreach (TrooperType type in commanderPriority)
-            {
-                if (type != commander.Type)
-                {
-                    foreach (Trooper tr in team)
-                    {
-                        if (tr.Type == type)
-                        {
-                            // TODO:
-                        }
-                    }
-                }
-            }
+            if (changedCommander == -1)
+                changedCommander = world.MoveIndex;
+            else
+                changedCommander = -1;
         }
 
         Trooper getCommander()
         {
-            foreach(TrooperType type in commanderPriority)
+            int cnt = 0;
+            foreach (TrooperType type in commanderPriority)
+            {
                 foreach (Trooper tr in team)
+                {
                     if (tr.Type == type)
-                        return tr;
+                    {
+                        cnt++;
+                        if (changedCommander != -1 && cnt == 2)
+                            return tr;
+                        if (changedCommander == -1 && cnt == 1)
+                            return tr;
+                        break;
+                    }
+                }
+            }
             throw new Exception("Have no player in my team");
         }
 
@@ -145,7 +152,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
             map[self.X, self.Y] = 0;
+            if (changedCommander != -1 && world.MoveIndex - changedCommander >= 6)
+                ChangeCommander();
             commander = getCommander();
+
             danger = new int[width, height];
 
             foreach (Trooper tr in opponents)
