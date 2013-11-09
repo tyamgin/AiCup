@@ -117,10 +117,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             distance = d[self.X, self.Y];
             if (d[self.X, self.Y] == Inf)
                 return null;
-            foreach(Point n in Nearest(self, 1))
-                if (d[n.X, n.Y] + 1 == d[self.X, self.Y])
-                    return new Point(n.X, n.Y);
-            throw new Exception("Something wrong");
+            Point bestTurn = new Point(0, 0, Inf);
+            foreach (Point n in Nearest(self, 1))
+                if (d[n.X, n.Y] + 1 == d[self.X, self.Y] && bestTurn.profit > getTeamRadius(self.Id, n))
+                    bestTurn = new Point(n.X, n.Y, getTeamRadius(self.Id, n));
+            return bestTurn;
         }
 
         double getGoAtackProfit(Trooper goal)
@@ -132,7 +133,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point IfGoAtack()
         {
-            Point bestGoal = new Point(0, 0, -Inf);
+            Point bestGoal = Point.Inf;
             foreach (Trooper tr in troopers)
             {
                 double profit = getGoAtackProfit(tr);
@@ -142,6 +143,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (bestGoal.profit <= 0)
                 bestGoal = null;
             return bestGoal;
+        }
+
+        Point getMostDanger()
+        {
+            Point mostDanger = Point.Inf;
+            foreach (Trooper tr in team)
+                if (danger[tr.X, tr.Y] > mostDanger.profit)
+                    mostDanger = new Point(tr.X, tr.Y, danger[tr.X, tr.Y]);
+            if (mostDanger.profit <= DangerNothing)
+                return null;
+            return mostDanger;
         }
 
         bool haveDanger()
@@ -166,6 +178,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 move.Action = ActionType.EatFieldRation;
                 return;
             }
+            Reached(new Point(self));
 
             bool needMove = false;
             Point ifThrowGrenade = IfThrowGrenade(ref needMove);
@@ -251,23 +264,52 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            Point ifGoAtack = IfGoAtack();
-            if (ifGoAtack != null && canMove())
+            // Если нужно идти атаковать, то тот кто находится на самой опасной зоне выполняет IfGoAtack,
+            // остальные приближаются к EncirclingPoints того кто в опастности
+            Point mostDanger = getMostDanger();
+            if (mostDanger != null)
             {
-                Point to = goToUnit(ifGoAtack);
-                if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                if (mostDanger.X == self.X && mostDanger.Y == self.Y)
                 {
-                    move.Action = ActionType.Move;
-                    Go(to);
-                    return;
+                    Point ifGoAtack = IfGoAtack();
+                    if (ifGoAtack != null && canMove())
+                    {
+                        Point to = goToUnit(ifGoAtack);
+                        if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                        {
+                            move.Action = ActionType.Move;
+                            Go(to);
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    Point goToEncircling = GoToEncircling();
+                    if (goToEncircling != null && canMove())
+                    {
+                        Point to = goToUnit(goToEncircling);
+                        if (to == null || to.X == self.X && to.Y == self.Y) // TODO: если to = null, то значит мы застряли
+                        {
+                            move.Action = ActionType.EndTurn; // Тут буду ложиться/садиться
+                            return;
+                        }
+                        if (getTeamRadius(self.Id, to) <= MaxTeamRadius) // ??
+                        {
+                            move.Action = ActionType.Move;
+                            Go(to);
+                            return;
+                        }
+                    }
                 }
             }
+            
 
             Point ifTakeBonus = IfTakeBonus();
             if (ifTakeBonus != null && canMove())
             {
                 Point to = goToUnit(ifTakeBonus);
-                if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                if (getTeamRadius(self.Id, ifTakeBonus) <= MaxTeamRadius && getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {
                     move.Action = ActionType.Move;
                     Go(to);
@@ -275,31 +317,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            if (!haveDanger())
+            Point ifTeamBonus = IfTeamBonus();
+            if (ifTeamBonus != null && (Goal == null || !isBonusExistAt(Goal)))
             {
-                if (self.Id == commander.Id && canMove())
-                {
-                    // Проверить что тиммейтам нужен бонус. Если нужен, то идти к туда.
-                    foreach (Trooper tr in friend)
-                    {
-                        Point bonus = IfTakeBonus(tr);
-                        // если я не стою на бонусе
-                        if (bonus != null && !(bonus.X == self.X && bonus.Y == self.Y))
-                        {
-                            Point to = goToUnit(bonus);
-                            // если я не наступлю на бонус //////и он без меня не может взять
-                            if (to != null && !(to.X == bonus.X && to.Y == bonus.Y)) ;// && bonus.GetDistanceTo(commander) > MaxTeamRadius)
-                            {
-                                if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
-                                {
-                                    move.Action = ActionType.Move;
-                                    Go(to);
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
+                Goal = ifTeamBonus;
             }
 
             Point ifNothing = IfNothing();
@@ -308,6 +329,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 Point to = goToUnit(ifNothing);
                 if (to == null || to.X == self.X && to.Y == self.Y) // TODO: если to = null, то значит мы застряли
                 {
+                    if (to == null)
+                    {
+                        to = to;
+                        // передать коммандование
+                        //ChangeCommander(); // TODO:!!!
+                    }
                     move.Action = ActionType.EndTurn; // Тут буду ложиться/садиться
                     return;
                 }

@@ -16,48 +16,51 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         Point Goal = null;
 
+        void Reached(Point p)
+        {
+            if (Goal != null && Goal.X == p.X && Goal.Y == p.Y)
+                Goal = null;
+            if (Goal == null)
+                SelectNewGoal();
+        }
+
+        void SelectNewGoal()
+        {
+            ArrayList places = new ArrayList();
+            for (int x = 1; x < width; x += width - 3)
+                for (int y = 1; y < height; y += height - 3)
+                    if (Goal == null || Goal.GetDistanceTo(x, y) > height / 3)
+                        places.Add(new Point(x, y));
+            var pl = places.ToArray();
+            Goal = pl[random.Next(places.Count)] as Point;
+        }
+
         Point IfNothingCommander()
         {
             if (Goal == null || self.GetDistanceTo(Goal.X, Goal.Y) < height / 4)
-            {
-                ArrayList places = new ArrayList();
-                for (int x = 1; x < width; x += width - 3)
-                {
-                    for (int y = 1; y < height; y += height - 3)
-                    {
-                        if (Goal == null || Goal.GetDistanceTo(x, y) > height / 3)
-                        {
-                            places.Add(new Point(x, y));
-                        }
-                    }
-                }
-                var pl = places.ToArray();
-                Goal = pl[random.Next(places.Count)] as Point;
-            }
+                SelectNewGoal();
             return Goal != null ? Goal : new Point(self.X, self.Y);
+        }
+
+        Point GoToEncircling()
+        {
+            Point bestPoint = Point.Inf;
+            foreach (Point n in getEncirclingPoints(commander))
+            {
+                double quality = 1.0 / getShoterPath(new Point(n.X, n.Y), false);
+                if (quality > bestPoint.profit)
+                    bestPoint = new Point(n.X, n.Y, quality);
+            }
+            if (bestPoint.profit <= 0)
+                bestPoint = null;
+            return bestPoint;
         }
 
         Point IfNothing()
         {
             if (commander.Id == self.Id)
                 return IfNothingCommander();
-            int[] _i = { 1, 1, -1, -1, 2, -2, 0, 0, 0, 0, 1, -1 };
-            int[] _j = { 1, -1, 1, -1, 0, 0, 2, -2, 1, -1, 0, 0 };
-            Point bestPoint = Point.Inf;
-            for (int k = 0; k < _i.Length; k++)
-            {
-                int ni = commander.X + _i[k];
-                int nj = commander.Y + _j[k];
-                if (ni >= 0 && nj >= 0 && ni < width && nj < height && map[ni, nj] == 0)
-                {
-                    double quality = 1.0 / getShoterPath(new Point(ni, nj), false);
-                    if (quality > bestPoint.profit)
-                        bestPoint = new Point(ni, nj, quality);
-                }
-            }
-            if (bestPoint.profit <= 0)
-                bestPoint = null;
-            return bestPoint;
+            return GoToEncircling();
         }
     }
 }

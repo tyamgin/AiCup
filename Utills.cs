@@ -29,8 +29,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 move.Action = ActionType.EndTurn;
 #if DEBUG
             Console.WriteLine(self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
-            //Thread.Sleep(50);
+            Thread.Sleep(100);
 #endif
+            //Debugger("Soldier Move 6 7");
             validateMove();
         }
 
@@ -58,7 +59,38 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return null;
         }
 
+        bool isBonusExistAt(Point p)
+        {
+            foreach (Bonus bo in bonuses)
+                if (bo.X == p.X && bo.Y == p.Y)
+                    return true;
+            return false;
+        }
+
         TrooperType[] commanderPriority = { TrooperType.Commander, TrooperType.Sniper, TrooperType.Soldier, TrooperType.FieldMedic, TrooperType.Scout };
+
+        void ChangeCommander()
+        {
+            Trooper initialCommander = getCommander();
+            if (initialCommander.Id != commander.Id)
+            {
+                commander = initialCommander;
+                return;
+            }
+            foreach (TrooperType type in commanderPriority)
+            {
+                if (type != commander.Type)
+                {
+                    foreach (Trooper tr in team)
+                    {
+                        if (tr.Type == type)
+                        {
+                            // TODO:
+                        }
+                    }
+                }
+            }
+        }
 
         Trooper getCommander()
         {
