@@ -214,7 +214,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 Point ifHelp = ifHelpTeammate();
                 if (ifHelp != null)
                 {
-                    Trooper goal = get(ifHelp.X, ifHelp.Y);
+                    Trooper goal = getTrooperAt(ifHelp.X, ifHelp.Y);
                     if (goal != null && goal.Hitpoints < goal.MaximalHitpoints && ifHelp.Nearest(self) && game.FieldMedicHealCost <= self.ActionPoints)
                     {
                         move.Action = ActionType.Heal;
@@ -285,7 +285,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    Point goToEncircling = GoToEncircling();
+                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger));
                     if (goToEncircling != null && canMove())
                     {
                         Point to = goToUnit(goToEncircling);

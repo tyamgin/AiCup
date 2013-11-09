@@ -41,7 +41,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public void WriteProtocolVersion()
         {
             WriteEnum((sbyte?) MessageType.ProtocolVersion);
-            WriteInt(1);
+            WriteInt(2);
             writer.Flush();
         }
 
@@ -58,6 +58,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 ReadInt(), ReadDouble(),
                 ReadInt(), ReadInt(), ReadInt(), ReadInt(),
                 ReadInt(), ReadDouble(),
+                ReadInt(), ReadInt(),
                 ReadInt(), ReadInt(), ReadInt(),
                 ReadDouble(), ReadDouble(), ReadDouble(),
                 ReadDouble(), ReadDouble(),
@@ -130,7 +131,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (ReadBoolean())
                 {
-                    players[playerIndex] = new Player(ReadLong(), ReadString(), ReadInt(), ReadBoolean());
+                    players[playerIndex] = new Player(ReadLong(), ReadString(), ReadInt(), ReadBoolean(),
+                        ReadInt(), ReadInt());
                 }
             }
 

@@ -42,10 +42,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return Goal != null ? Goal : new Point(self.X, self.Y);
         }
 
-        Point GoToEncircling()
+        Point GoToEncircling(Trooper center)
         {
             Point bestPoint = Point.Inf;
-            foreach (Point n in getEncirclingPoints(commander))
+            foreach (Point n in getEncirclingPoints(center))
             {
                 double quality = 1.0 / getShoterPath(new Point(n.X, n.Y), false);
                 if (quality > bestPoint.profit)
@@ -60,7 +60,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (commander.Id == self.Id)
                 return IfNothingCommander();
-            return GoToEncircling();
+            return GoToEncircling(commander);
         }
     }
 }

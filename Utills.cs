@@ -31,7 +31,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Console.WriteLine(self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
             Thread.Sleep(100);
 #endif
-            //Debugger("Soldier Move 6 7");
+            Debugger("Commander Move 6 6",  8);
+            //Debugger("4");
             validateMove();
         }
 
@@ -51,7 +52,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("something wrong");
         }
 
-        Trooper get(int x, int y)
+        Trooper getTrooperAt(Point point)
+        {
+            return getTrooperAt(point.X, point.Y);
+        }
+
+        Trooper getTrooperAt(int x, int y)
         {
             foreach(Trooper tr in troopers)
                 if (tr.X == x && tr.Y == y)
@@ -270,17 +276,30 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
-        void Debugger(string param)
+        void Debugger(string param, int Turn = -1)
         {
 #if DEBUG
-            // example: "FieldMedic Move 11 15"
-            string[] args = param.Split(' ');
-            if (self.Type.ToString() == args[0] &&
-                move.Action.ToString() == args[1] &&
-                move.X.ToString() == args[2] &&
-                move.Y.ToString() == args[3])
+            if (param.Length <= 2)
             {
-                param = param;
+                int turn = int.Parse(param);
+                if (turn == world.MoveIndex)
+                {
+                    turn = turn;
+                }
+            }
+            else
+            {
+                // example: "FieldMedic Move 11 15"
+                string[] args = param.Split(' ');
+                if (self.Type.ToString() == args[0] &&
+                    move.Action.ToString() == args[1] &&
+                    move.X.ToString() == args[2] &&
+                    move.Y.ToString() == args[3] &&
+                    (Turn == -1 || Turn == world.MoveIndex)
+                   )
+                {
+                    param = param;
+                }
             }
 #endif
         }

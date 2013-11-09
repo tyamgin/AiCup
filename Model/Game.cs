@@ -16,6 +16,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
 
         private readonly int commanderAuraBonusActionPoints;
         private readonly double commanderAuraRange;
+        
+        private readonly int commanderRequestEnemyDispositionCost;
+        private readonly int commanderRequestEnemyDispositionMaxOffset;
 
         private readonly int fieldMedicHealCost;
         private readonly int fieldMedicHealBonusHitpoints;
@@ -48,6 +51,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
             int trooperEliminationScore, double trooperDamageScoreFactor,
             int stanceChangeCost, int standingMoveCost, int kneelingMoveCost, int proneMoveCost,
             int commanderAuraBonusActionPoints, double commanderAuraRange,
+            int commanderRequestEnemyDispositionCost, int commanderRequestEnemyDispositionMaxOffset,
             int fieldMedicHealCost, int fieldMedicHealBonusHitpoints, int fieldMedicHealSelfBonusHitpoints,
             double sniperStandingStealthBonus, double sniperKneelingStealthBonus, double sniperProneStealthBonus,
             double sniperStandingShootingRangeBonus, double sniperKneelingShootingRangeBonus,
@@ -67,6 +71,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
             this.proneMoveCost = proneMoveCost;
             this.commanderAuraBonusActionPoints = commanderAuraBonusActionPoints;
             this.commanderAuraRange = commanderAuraRange;
+            this.commanderRequestEnemyDispositionCost = commanderRequestEnemyDispositionCost;
+            this.commanderRequestEnemyDispositionMaxOffset = commanderRequestEnemyDispositionMaxOffset;
             this.fieldMedicHealCost = fieldMedicHealCost;
             this.fieldMedicHealBonusHitpoints = fieldMedicHealBonusHitpoints;
             this.fieldMedicHealSelfBonusHitpoints = fieldMedicHealSelfBonusHitpoints;
@@ -191,6 +197,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
         public int CommanderAuraBonusActionPoints
         {
             get { return commanderAuraBonusActionPoints; }
+        }
+        
+        public int CommanderRequestEnemyDispositionCost
+        {
+            get { return commanderRequestEnemyDispositionCost; }
+        }
+        
+        public int CommanderRequestEnemyDispositionMaxOffset
+        {
+            get { return commanderRequestEnemyDispositionMaxOffset; }
         }
 
         public int ProneMoveCost

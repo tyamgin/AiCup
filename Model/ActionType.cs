@@ -10,6 +10,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
         ThrowGrenade,
         UseMedikit,
         EatFieldRation,
-        Heal
+        Heal,
+        RequestEnemyDisposition
     }
 }
