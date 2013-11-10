@@ -43,6 +43,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifShot = IfShot();
             if (ifShot != null)
             {
+                if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
+                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
+                {
+                    Go(ActionType.LowerStance);
+                    return;
+                }
                 Go(ActionType.Shoot, ifShot);
                 return;
             }
@@ -88,19 +94,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (IfNeedHelp() && self.Type != TrooperType.FieldMedic)
             {
-                Point helper = getBestHelper();
-                if (helper != null)
-                {
-                    if (helper.Nearest(self) || !canMove())
-                    {
-                        Go(ActionType.EndTurn);
-                        return;
-                    }
-                    Point to = goToUnit(self, helper, map, true);
-                    Go(move.Action = ActionType.Move, to);
-                    return;
-                }
+                if (canLower())
+                    Go(ActionType.LowerStance);
+                else
+                    Go(ActionType.EndTurn);
+                return;
             }
+            //if (IfNeedHelp() && self.Type != TrooperType.FieldMedic)
+            //{
+            //    Point helper = getBestHelper();
+            //    if (helper != null)
+            //    {
+            //        if (helper.Nearest(self) || !canMove())
+            //        {
+            //            Go(ActionType.EndTurn);
+            //            return;
+            //        }
+            //        Point to = goToUnit(self, helper, map, true);
+            //        Go(move.Action = ActionType.Move, to);
+            //        return;
+            //    }
+            //}
 
             // Если нужно идти атаковать, то тот кто находится на самой опасной зоне выполняет IfGoAtack,
             // остальные приближаются к EncirclingPoints того кто в опастности
@@ -133,11 +147,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         if (to == null || Equal(self, to)) // TODO: если to = null, то значит мы застряли, или не хватило очков на стрельбу
                         {
                             // можно сесть
-
-                            Go(ActionType.EndTurn);
+                            if (canLower() && self.Type != TrooperType.FieldMedic)
+                                Go(ActionType.LowerStance);
+                            else
+                                Go(ActionType.EndTurn);
                             return;    
                         }
-                        if (getTeamRadius(self.Id, to) <= MaxTeamRadius) // ??
+                        if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                         {
                             Go(ActionType.Move, to);
                             return;
@@ -175,6 +191,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifNothing = IfNothing();
             if (ifNothing != null && canMove())
             {
+                if (canUpper())
+                {
+                    Go(ActionType.RaiseStance);
+                    return;
+                }
                 Point to = goToUnit(self, ifNothing, map, false);
                 if (to == null || Equal(self, to))
                 {
@@ -192,8 +213,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return;
                 }
             }
-            // Тут буду ложиться/садиться
-            Go(ActionType.EndTurn);
         }
     }
 }

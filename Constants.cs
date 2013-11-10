@@ -15,7 +15,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public static int playersCount = 4; // TODO: в зависимости от типа игры
 
         public static int Inf = 0x3f3f3f3f;
-        public static double MaxTeamRadius = 2.5;
+        public static double MaxTeamRadius = 2;
 
         public static int DangerNothing = 0;
         public static int DangerVisible = 1;

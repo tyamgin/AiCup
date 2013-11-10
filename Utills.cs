@@ -204,5 +204,33 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             return self.ActionPoints >= getMoveCost();
         }
+
+        bool canLower()
+        {
+            return self.Stance != TrooperStance.Prone && self.ActionPoints >= game.StanceChangeCost;
+        }
+
+        bool canUpper()
+        {
+            return self.Stance != TrooperStance.Standing && self.ActionPoints >= game.StanceChangeCost;
+        }
+
+        TrooperStance Low(TrooperStance stance)
+        {
+            if (stance == TrooperStance.Standing)
+                return TrooperStance.Kneeling;
+            if (stance == TrooperStance.Kneeling)
+                return TrooperStance.Prone;
+            throw new Exception("");
+        }
+
+        TrooperStance High(TrooperStance stance)
+        {
+            if (stance == TrooperStance.Prone)
+                return TrooperStance.Kneeling;
+            if (stance == TrooperStance.Kneeling)
+                return TrooperStance.Standing;
+            throw new Exception("");
+        }
     }
 }
