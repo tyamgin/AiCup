@@ -10,7 +10,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         public static int changedCommander = -1;
-        public static Point Goal = null;
+        public static Bonus BonusGoal = null;
+        public static Point PointGoal = null;
 
         public static int Inf = 0x3f3f3f3f;
         public static double MaxTeamRadius = 2.5;

@@ -74,12 +74,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return null;
         }
 
-        bool isBonusExistAt(Point p)
+        Bonus getBonusAt(Point p)
         {
             foreach (Bonus bo in bonuses)
                 if (bo.X == p.X && bo.Y == p.Y)
-                    return true;
-            return false;
+                    return bo;
+            return null;
         }
 
         void ChangeCommander()

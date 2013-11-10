@@ -146,7 +146,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             Point ifTeamBonus = IfTeamBonus();
-            if (ifTeamBonus != null && (Goal == null || !isBonusExistAt(Goal)) && 
+            if (ifTeamBonus != null && (BonusGoal == null || !isBonusExistAt(BonusGoal)) && 
                 map[ifTeamBonus.X, ifTeamBonus.Y] == 0 && !Equal(ifTeamBonus, self))
             {
                 Goal = ifTeamBonus;

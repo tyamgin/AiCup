@@ -16,21 +16,31 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         void Reached(Point p)
         {
-            if (Goal != null && Goal.X == p.X && Goal.Y == p.Y)
-                Goal = null;
-            if (Goal == null)
-                SelectNewGoal();
+            if (BonusGoal != null && Equal(BonusGoal, p))
+                BonusGoal = null;
+            if (PointGoal != null && Equal(PointGoal, p))
+                PointGoal = null;
+            if (BonusGoal != null)
+                return;
+            SelectNewPointGoal();
         }
 
-        void SelectNewGoal()
+        void SelectNewPointGoal()
         {
-            ArrayList places = new ArrayList();
-            for (int x = 1; x < width; x += width - 3)
-                for (int y = 1; y < height; y += height - 3)
-                    if (Goal == null || Goal.GetDistanceTo(x, y) > height / 3)
-                        places.Add(new Point(x, y));
-            var pl = places.ToArray();
-            Goal = pl[random.Next(places.Count)] as Point;
+            if (canMakeQuery())
+            {
+                
+            }
+            else
+            {
+                ArrayList places = new ArrayList();
+                for (int x = 1; x < width; x += width - 3)
+                    for (int y = 1; y < height; y += height - 3)
+                        if (PointGoal == null || PointGoal.GetDistanceTo(x, y) > height / 3)
+                            places.Add(new Point(x, y));
+                var pl = places.ToArray();
+                PointGoal = pl[random.Next(places.Count)] as Point;
+            }
         }
 
         Point IfNothingCommander()

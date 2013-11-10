@@ -82,7 +82,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
-            if (bestPoint.profit <= game.GrenadeDirectDamage) // граната должна задеть хотябы двоих
+            if (bestPoint.profit <= game.GrenadeCollateralDamage) // граната должна задеть хотябы двоих или точно попадет в одного
                 return null;
             if (needMove)
                 bestPoint = moveTo;
