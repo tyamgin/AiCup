@@ -120,6 +120,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
                 // TODO:
             }
+            else if (move.Action == ActionType.RequestEnemyDisposition)
+            {
+                if (self.Type != TrooperType.Commander || self.ActionPoints < game.CommanderRequestEnemyDispositionCost)
+                    throw new Exception("");
+            }
         }
 
     }

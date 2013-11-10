@@ -20,18 +20,30 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 BonusGoal = null;
             if (PointGoal != null && Equal(PointGoal, p))
                 PointGoal = null;
-            if (BonusGoal != null)
+            if (BonusGoal != null || PointGoal != null)
                 return;
             SelectNewPointGoal();
         }
 
+        bool canMakeQuery()
+        {
+            if (self.Type != TrooperType.Commander || self.ActionPoints < game.CommanderRequestEnemyDispositionCost)
+                return false;
+            if (world.MoveIndex < 3) // TODO: Только для первого типа боя
+                return false;
+            return true;
+        }
+
+        bool IfMakeQuery()
+        {
+            if (BonusGoal == null && (PointGoal == null || world.MoveIndex - PointGoal.profit > 6) && canMakeQuery())
+                return true;
+            return false;
+        }
+
         void SelectNewPointGoal()
         {
-            if (canMakeQuery())
-            {
-                
-            }
-            else
+            if (!canMakeQuery())
             {
                 ArrayList places = new ArrayList();
                 for (int x = 1; x < width; x += width - 3)
@@ -40,14 +52,61 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                             places.Add(new Point(x, y));
                 var pl = places.ToArray();
                 PointGoal = pl[random.Next(places.Count)] as Point;
+                PointGoal.profit = world.MoveIndex;
             }
+        }
+
+        bool isApproximationExist()
+        {
+            foreach (Player pl in world.Players)
+                if (pl.ApproximateX != -1)
+                    return true;
+            return false;
+        }
+
+        Point getCoordinateByApproximation(int x, int y)
+        {
+            Point nearestPoint = new Point(0, 0, Inf);
+            for (int i = 0; i < width; i++)
+                for (int j = 0; j < height; j++)
+                    if (notFilledMap[i, j] == 0 && new Point(x, y).GetDistanceTo(i, j) < nearestPoint.profit)
+                        nearestPoint = new Point(i, j, new Point(x, y).GetDistanceTo(i, j));
+            return nearestPoint;            
+        }
+
+        void ProcessApproximation()
+        {
+            if (!isApproximationExist())
+                return;
+            playersCount = 0;
+            Point nearestPoint = new Point(0, 0, Inf);
+            foreach(Player pl in world.Players)
+            {
+                if (pl.ApproximateX != -1)
+                {
+                    playersCount++;
+                    if (pl.Id != self.PlayerId)
+                    {
+                        Point coordinate = getCoordinateByApproximation(pl.ApproximateX, pl.ApproximateY);
+                        int path = getShoterPath(commander, coordinate, map, true);
+                        if (path < nearestPoint.profit)
+                            nearestPoint = new Point(coordinate.X, coordinate.Y, path);
+                    }
+                }
+            }
+            if (nearestPoint.profit >= Inf)
+                throw new Exception("");
+            PointGoal = nearestPoint;
+            PointGoal.profit = world.MoveIndex;
         }
 
         Point IfNothingCommander()
         {
-            if (Goal == null)
-                SelectNewGoal();
-            return Goal != null ? Goal : new Point(self.X, self.Y);
+            if (BonusGoal != null)
+                return new Point(BonusGoal);
+            if (PointGoal != null)
+                return PointGoal;
+            return null;
         }
 
         bool canShootSomeone(Point position)

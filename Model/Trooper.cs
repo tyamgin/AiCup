@@ -167,11 +167,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
                 default:
                     throw new ArgumentException("Unsupported stance: " + stance + '.');
             }
-        }
+		}
 
-        public override string ToString()
+		public override string ToString()
         {
             return type + " (" + X + "; " + Y + ") " + Hitpoints + "/" + MaximalHitpoints + " <" + ActionPoints + ">";
         }
-    }
+	}
 }

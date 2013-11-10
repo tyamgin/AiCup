@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.game = game;
             this.move = move;
             InitializeConstants();
-
+            ProcessApproximation();
             if (ifFieldRationNeed())
             {
                 Go(ActionType.EatFieldRation);
@@ -126,6 +126,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
+                    // TODO!!!: проверять расширенный Encircling http://russianaicup.ru/game/view/27226
                     Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), true);
                     if (goToEncircling != null && canMove())
                     {
@@ -146,14 +147,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             Point ifTeamBonus = IfTeamBonus();
-            if (ifTeamBonus != null && (BonusGoal == null || !isBonusExistAt(BonusGoal)) && 
+            if (ifTeamBonus != null && BonusGoal == null && 
                 map[ifTeamBonus.X, ifTeamBonus.Y] == 0 && !Equal(ifTeamBonus, self))
             {
-                Goal = ifTeamBonus;
+                BonusGoal = getBonusAt(ifTeamBonus);
             }
 
             Point ifTakeBonus = IfTakeBonus();
-            if (ifTakeBonus != null && canMove() && (Goal == null || Equal(Goal, ifTakeBonus)))
+            if (ifTakeBonus != null && canMove() && (BonusGoal == null || Equal(BonusGoal, ifTakeBonus)))
             {
                 Point to = goToUnit(self, ifTakeBonus, map, false);
                 if (getTeamRadius(self.Id, ifTakeBonus) <= MaxTeamRadius && 
@@ -163,6 +164,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(move.Action = ActionType.Move, to);
                     return;
                 }
+            }
+
+            if (IfMakeQuery())
+            {
+                Go(ActionType.RequestEnemyDisposition);
+                return;
             }
 
             Point ifNothing = IfNothing();
