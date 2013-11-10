@@ -127,7 +127,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     bestPoint = new Point(n.X, n.Y, quality);
             }
             if (bestPoint.profit <= 0)
-                bestPoint = null;
+            {
+                // проверяю расширенный Encircling
+                foreach (Point n in getEncirclingPoints(center, extended:true))
+                {
+                    double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, false);
+                    if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n)))
+                        bestPoint = new Point(n.X, n.Y, quality);
+                }
+                if (bestPoint.profit > 0)
+                    bestPoint = bestPoint;
+            }
+            if (bestPoint.profit <= 0)
+                return null;
             return bestPoint;
         }
 

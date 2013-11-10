@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 #if DEBUG
             Thread.Sleep(100);
 #endif
-            //Debugger("Soldier Move 27 2");
+            //Debugger("Commander Move 7 8", 22);
             //Debugger("8");
             validateMove();
         }
@@ -173,8 +173,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
-        int[] _i = { 0, 0, 1, -1 };
-        int[] _j = { 1, -1, 0, 0 };
+        static int[] _i = { 0, 0, 1, -1 };
+        static int[] _j = { 1, -1, 0, 0 };
 
         ArrayList Nearest(Unit unit, int[,] map)
         {

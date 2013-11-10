@@ -126,7 +126,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    // TODO!!!: проверять расширенный Encircling http://russianaicup.ru/game/view/27226
                     Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), true);
                     if (goToEncircling != null && canMove())
                     {
@@ -134,6 +133,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         if (to == null || Equal(self, to)) // TODO: если to = null, то значит мы застряли, или не хватило очков на стрельбу
                         {
                             // можно сесть
+
                             Go(ActionType.EndTurn);
                             return;    
                         }
@@ -183,7 +183,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         // передать коммандование
                         ChangeCommander();
                     }
-                    // Тут буду ложиться/садиться
                     Go(ActionType.EndTurn);
                     return;
                 }
@@ -194,7 +193,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
             // Тут буду ложиться/садиться
-            validateMove();
+            Go(ActionType.EndTurn);
         }
     }
 }

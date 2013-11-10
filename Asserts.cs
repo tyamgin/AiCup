@@ -74,8 +74,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             else if (move.Action == ActionType.LowerStance)
             {
-                // TODO: implement
-                throw new NotImplementedException();
+                if (self.ActionPoints < game.StanceChangeCost || self.Stance == TrooperStance.Prone)
+                    throw new Exception("");
             }
             else if (move.Action == ActionType.Move)
             {
@@ -88,8 +88,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             else if (move.Action == ActionType.RaiseStance)
             {
-                // TODO: implement
-                throw new NotImplementedException();
+                if (self.ActionPoints < game.StanceChangeCost || self.Stance == TrooperStance.Standing)
+                    throw new Exception("");
             }
             else if (move.Action == ActionType.Shoot)
             {

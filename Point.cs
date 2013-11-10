@@ -81,5 +81,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             return "(" + X + "; " + Y + ")";
         }
+
+        public int CompareTo(Point other)
+        {
+            if (X == other.X)
+                return Y.CompareTo(other.Y);
+            return X.CompareTo(other.X);
+        }
     }
 }

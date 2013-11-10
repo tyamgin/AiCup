@@ -49,11 +49,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
-        Point[] getEncirclingPoints(Trooper trooper)
+        Point[] getEncirclingPoints(Trooper trooper, bool extended = false)
         {
             points.Clear();
             used.Clear();
+            if (extended)
+            {
+                _i = new int[] { 0, 0, 1, -1, 1, 1, -1, -1 };
+                _j = new int[] { 1, -1, 0, 0, 1, -1, 1, -1 };
+            }
             dfs_getEncircling(trooper);
+            if (extended)
+            {
+                _i = new int[] { 0, 0, 1, -1 };
+                _j = new int[] { 1, -1, 0, 0 };
+            }
             return points.ToArray();
         }
 
