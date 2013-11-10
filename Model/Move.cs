@@ -30,5 +30,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
             get { return action; }
             set { action = value; }
         }
+
+        public override string ToString()
+        {
+            return action + " (" + X + "; " + Y + ")";
+        }
     }
 }
