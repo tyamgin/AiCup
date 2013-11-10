@@ -158,7 +158,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 Point to = goToUnit(self, ifTakeBonus, map, false);
                 if (getTeamRadius(self.Id, ifTakeBonus) <= MaxTeamRadius && 
                     getTeamRadius(self.Id, to) <= MaxTeamRadius && 
-                    getShoterPath(self, ifTakeBonus, notFilledMap, false) <= 6)
+                    getShoterPath(self, ifTakeBonus, map, false) <= 6)
                 {
                     Go(move.Action = ActionType.Move, to);
                     return;

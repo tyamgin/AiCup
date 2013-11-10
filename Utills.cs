@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 #if DEBUG
             Thread.Sleep(100);
 #endif
-            //Debugger("Soldier Move 28 16");
+            //Debugger("Soldier Move 27 2");
             //Debugger("8");
             validateMove();
         }
