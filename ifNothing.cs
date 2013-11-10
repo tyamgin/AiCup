@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool IfMakeQuery()
         {
-            if (BonusGoal == null && (PointGoal == null || world.MoveIndex - PointGoal.profit > 6) && canMakeQuery())
+            if (BonusGoal == null && (PointGoal == null || world.MoveIndex - PointGoal.profit > 4) && canMakeQuery())
                 return true;
             return false;
         }
@@ -109,10 +109,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return null;
         }
 
-        bool canShootSomeone(Point position)
+        bool canShootSomeone(Point position, TrooperStance stance)
         {
             foreach (Trooper tr in opponents)
-                if (world.IsVisible(self.ShootingRange, position.X, position.Y, self.Stance, tr.X, tr.Y, tr.Stance))
+                if (world.IsVisible(self.ShootingRange, position.X, position.Y, stance, tr.X, tr.Y, tr.Stance))
                     return true;
             return false;
         }
@@ -123,7 +123,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             foreach (Point n in getEncirclingPoints(center))
             {
                 double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, false);
-                if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n)))
+                if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n, self.Stance)))
                     bestPoint = new Point(n.X, n.Y, quality);
             }
             if (bestPoint.profit <= 0)
@@ -132,7 +132,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 foreach (Point n in getEncirclingPoints(center, extended:true))
                 {
                     double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, false);
-                    if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n)))
+                    if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n, self.Stance)))
                         bestPoint = new Point(n.X, n.Y, quality);
                 }
                 if (bestPoint.profit > 0)
