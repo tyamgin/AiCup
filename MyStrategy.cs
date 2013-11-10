@@ -92,30 +92,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            if (IfNeedHelp() && self.Type != TrooperType.FieldMedic)
-            {
-                if (canLower())
-                    Go(ActionType.LowerStance);
-                else
-                    Go(ActionType.EndTurn);
-                return;
-            }
-            //if (IfNeedHelp() && self.Type != TrooperType.FieldMedic)
-            //{
-            //    Point helper = getBestHelper();
-            //    if (helper != null)
-            //    {
-            //        if (helper.Nearest(self) || !canMove())
-            //        {
-            //            Go(ActionType.EndTurn);
-            //            return;
-            //        }
-            //        Point to = goToUnit(self, helper, map, true);
-            //        Go(move.Action = ActionType.Move, to);
-            //        return;
-            //    }
-            //}
-
             // Если нужно идти атаковать, то тот кто находится на самой опасной зоне выполняет IfGoAtack,
             // остальные приближаются к EncirclingPoints того кто в опастности
             // TODO: нужно чтобы они стремились к квадрату
@@ -169,8 +145,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 BonusGoal = getBonusAt(ifTeamBonus);
             }
 
+            bool waitingHelp = IfNeedHelp() && self.Type != TrooperType.FieldMedic && getBestHelper() != null;
+
             Point ifTakeBonus = IfTakeBonus();
-            if (ifTakeBonus != null && canMove() && (BonusGoal == null || Equal(BonusGoal, ifTakeBonus)))
+            if (!waitingHelp && ifTakeBonus != null && canMove() && (BonusGoal == null || Equal(BonusGoal, ifTakeBonus)))
             {
                 Point to = goToUnit(self, ifTakeBonus, map, false);
                 if (getTeamRadius(self.Id, ifTakeBonus) <= MaxTeamRadius && 
@@ -207,7 +185,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.EndTurn);
                     return;
                 }
-                else if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                else if (!waitingHelp && getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {
                     Go(ActionType.Move, to);
                     return;
