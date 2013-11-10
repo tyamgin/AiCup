@@ -40,13 +40,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return Goal != null ? Goal : new Point(self.X, self.Y);
         }
 
-        Point GoToEncircling(Trooper center)
+        bool canShootSomeone(Point position)
+        {
+            foreach (Trooper tr in opponents)
+                if (world.IsVisible(self.ShootingRange, position.X, position.Y, self.Stance, tr.X, tr.Y, tr.Stance))
+                    return true;
+            return false;
+        }
+
+        Point GoToEncircling(Trooper center, bool needShootingPosition = false)
         {
             Point bestPoint = Point.Inf;
             foreach (Point n in getEncirclingPoints(center))
             {
-                double quality = 1.0 / getShoterPath(new Point(n.X, n.Y), false);
-                if (quality > bestPoint.profit)
+                double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, false);
+                if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n)))
                     bestPoint = new Point(n.X, n.Y, quality);
             }
             if (bestPoint.profit <= 0)

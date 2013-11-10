@@ -28,7 +28,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool isAdjanced(Trooper a, Trooper b)
         {
-            return getShoterPath(a, false, b) <= 2;
+            return getShoterPath(a, b, notFilledMap, true) <= 2;
         }
 
         HashSet<long> used = new HashSet<long>();
@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         void dfs_getEncircling(Trooper trooper)
         {
             used.Add(trooper.Id);
-            foreach (Point p in Nearest(trooper))
+            foreach (Point p in Nearest(trooper, map))
                 points.Add(p);
             foreach(Trooper tr in team)
             {
@@ -64,7 +64,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             foreach (Point p in points)
             {
                 double dist = (double)p.GetDistanceTo(self);
-                if (bestPoint.profit > dist && getShoterPath(p) < Inf)
+                if (bestPoint.profit > dist && getShoterPath(self, p, map, false) < Inf)
                     bestPoint = new Point(p.X, p.Y, dist);
             }
             if (bestPoint.profit >= Inf - 1)

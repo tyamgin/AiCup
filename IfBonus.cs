@@ -23,9 +23,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         double getBonusProfit(Trooper self, Bonus bonus)
         {
-            if (haveSuchBonus(self, bonus) || getShoterPath(bonus, true, self) >= Inf)
+            if (haveSuchBonus(self, bonus) || getShoterPath(self, bonus, notFilledMap, false) >= Inf)
                 return -1;
-            return 1.0 / getShoterPath(bonus, true, self);
+            return 1.0 / getShoterPath(self, bonus, notFilledMap, false);
         }
 
         Point IfTakeBonus(Trooper self = null)
@@ -47,8 +47,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         double getTeamBonusProfit(Bonus bonus)
         {
             foreach (Trooper tr in team)
-                if (!haveSuchBonus(tr, bonus) && getShoterPath(bonus, false, commander) < Inf)
-                    return 1.0 / getShoterPath(bonus, false, commander);
+                if (!haveSuchBonus(tr, bonus) && getShoterPath(commander, bonus, notFilledMap, false) < Inf)
+                    return 1.0 / getShoterPath(commander, bonus, notFilledMap, false);
             return -1;
         }
 

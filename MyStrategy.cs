@@ -11,9 +11,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         public void Move(Trooper self, World world, Game game, Move move)
         {
-#if DEBUG
-            Console.Write("> ");
-#endif
             this.self = self;
             this.world = world;
             this.game = game;
@@ -22,8 +19,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (ifFieldRationNeed())
             {
-                move.Action = ActionType.EatFieldRation;
-                Go(null);
+                Go(ActionType.EatFieldRation);
                 return;
             }
             Reached(new Point(self));
@@ -32,19 +28,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifThrowGrenade = IfThrowGrenade(ref needMove);
             if (ifThrowGrenade != null)
             {
-                if (needMove)
-                    move.Action = ActionType.Move;
-                else
-                    move.Action = ActionType.ThrowGrenade;
-                Go(ifThrowGrenade);
+                Go(needMove ? ActionType.Move : ActionType.ThrowGrenade, ifThrowGrenade);
                 return;
             }
 
             Point ifUseMedikit = IfUseMedikit();
             if (ifUseMedikit != null)
             {
-                move.Action = ActionType.UseMedikit;
-                Go(ifUseMedikit);
+                Go(ActionType.UseMedikit, ifUseMedikit);
                 return;
             }
 
@@ -52,8 +43,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifShot = IfShot();
             if (ifShot != null)
             {
-                move.Action = ActionType.Shoot;
-                Go(ifShot);
+                Go(ActionType.Shoot, ifShot);
                 return;
             }
 
@@ -65,34 +55,32 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Trooper goal = getTrooperAt(ifHelp.X, ifHelp.Y);
                     if (goal != null && goal.Hitpoints < goal.MaximalHitpoints && ifHelp.Nearest(self) && game.FieldMedicHealCost <= self.ActionPoints)
                     {
-                        move.Action = ActionType.Heal;
-                        Go(ifHelp);
+                        Go(ActionType.Heal, ifHelp);
                         return;
                     }
                     if (canMove())
                     {
-                        Point to = goToUnit(ifHelp);
+                        Point to = goToUnit(self, ifHelp, map, true);
                         if (map[to.X, to.Y] == 0)
                         {
-                            move.Action = ActionType.Move;
-                            Go(to);
+                            Go(ActionType.Move, to);
                             return;
                         }
                     }
                 }
             }
 
+            // ≈сли радиус большой, то нужно сгруппироватьс€
             if (canMove() && self.Id != commander.Id && getTeamRadius() > MaxTeamRadius)
             {
                 Point grouping = ifGrouping();
                 // grouping != null !!!
-                if (grouping.X != self.X || grouping.Y != self.Y)
+                if (!Equal(grouping, self))
                 {
-                    Point to = goToUnit(grouping);
+                    Point to = goToUnit(self, grouping, map, false);
                     if (to != null)
                     {
-                        move.Action = ActionType.Move;
-                        Go(to);
+                        Go(ActionType.Move, to);
                         return;
                     }
                 }
@@ -105,33 +93,32 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     if (helper.Nearest(self) || !canMove())
                     {
-                        Go(null);
+                        Go(ActionType.EndTurn);
                         return;
                     }
-                    Point to = goToUnit(helper);
-                    move.Action = ActionType.Move;
-                    Go(to);
+                    Point to = goToUnit(self, helper, map, true);
+                    Go(move.Action = ActionType.Move, to);
                     return;
                 }
             }
 
             // ≈сли нужно идти атаковать, то тот кто находитс€ на самой опасной зоне выполн€ет IfGoAtack,
             // остальные приближаютс€ к EncirclingPoints того кто в опастности
+            // TODO: нужно чтобы они стремились к квадрату
             Point mostDanger = getMostDanger();
             if (mostDanger != null)
             {
-                if (mostDanger.X == self.X && mostDanger.Y == self.Y)
+                if (Equal(mostDanger, self))
                 {
                     Point ifGoAtack = IfGoAtack();
                     if (ifGoAtack != null && canMove())
                     {
                         if (mustAtack())
                         {
-                            Point to = goToUnit(ifGoAtack);
+                            Point to = goToUnit(self, ifGoAtack, map, true);
                             if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                             {
-                                move.Action = ActionType.Move;
-                                Go(to);
+                                Go(move.Action = ActionType.Move, to);
                                 return;
                             }
                         }
@@ -139,20 +126,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger));
+                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), true);
                     if (goToEncircling != null && canMove())
                     {
-                        Point to = goToUnit(goToEncircling);
-                        if (to == null || to.X == self.X && to.Y == self.Y) // TODO: если to = null, то значит мы застр€ли
+                        Point to = goToUnit(self, goToEncircling, map, false);
+                        if (to == null || Equal(self, to)) // TODO: если to = null, то значит мы застр€ли, или не хватило очков на стрельбу
                         {
-                            move.Action = ActionType.EndTurn; // “ут буду ложитьс€/садитьс€
-                            Go(null);
-                            return;
+                            // можно сесть
+                            Go(ActionType.EndTurn);
+                            return;    
                         }
                         if (getTeamRadius(self.Id, to) <= MaxTeamRadius) // ??
                         {
-                            move.Action = ActionType.Move;
-                            Go(to);
+                            Go(ActionType.Move, to);
                             return;
                         }
                     }
@@ -160,19 +146,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             Point ifTeamBonus = IfTeamBonus();
-            if (ifTeamBonus != null && (Goal == null || !isBonusExistAt(Goal)) && map[ifTeamBonus.X, ifTeamBonus.Y] == 0)
+            if (ifTeamBonus != null && (Goal == null || !isBonusExistAt(Goal)) && 
+                map[ifTeamBonus.X, ifTeamBonus.Y] == 0 && !Equal(ifTeamBonus, self))
             {
                 Goal = ifTeamBonus;
             }
 
             Point ifTakeBonus = IfTakeBonus();
-            if (ifTakeBonus != null && canMove() && (Goal == null || Goal.X == ifTakeBonus.X && Goal.Y == ifTakeBonus.Y))
+            if (ifTakeBonus != null && canMove() && (Goal == null || Equal(Goal, ifTakeBonus)))
             {
-                Point to = goToUnit(ifTakeBonus);
-                if (getTeamRadius(self.Id, ifTakeBonus) <= MaxTeamRadius && getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                Point to = goToUnit(self, ifTakeBonus, map, false);
+                if (getTeamRadius(self.Id, ifTakeBonus) <= MaxTeamRadius && 
+                    getTeamRadius(self.Id, to) <= MaxTeamRadius && 
+                    getShoterPath(self, ifTakeBonus, notFilledMap, false) <= 6)
                 {
-                    move.Action = ActionType.Move;
-                    Go(to);
+                    Go(move.Action = ActionType.Move, to);
                     return;
                 }
             }
@@ -180,119 +168,26 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifNothing = IfNothing();
             if (ifNothing != null && canMove())
             {
-                Point to = goToUnit(ifNothing);
-                if (to == null || to.X == self.X && to.Y == self.Y)
+                Point to = goToUnit(self, ifNothing, map, false);
+                if (to == null || Equal(self, to))
                 {
                     if (to == null && changedCommander == -1) // значит мы застр€ли
                     {
                         // передать коммандование
                         ChangeCommander();
                     }
-                    move.Action = ActionType.EndTurn; // “ут буду ложитьс€/садитьс€
-                    Go(null);
+                    // “ут буду ложитьс€/садитьс€
+                    Go(ActionType.EndTurn);
                     return;
                 }
                 else if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {
-                    move.Action = ActionType.Move;
-                    Go(to);
+                    Go(ActionType.Move, to);
                     return;
                 }
             }
             // “ут буду ложитьс€/садитьс€
             validateMove();
-        }
-
-
-
-        bool isLastInTeam(Trooper tr)
-        {
-            // TODO: implement this
-            return false;
-        }
-
-        // Ќаправл€тьс€ к этому юниту.
-        Point goToUnit(Unit bo)
-        {
-            int distance = 0;
-            return goToUnit(new Point(bo.X, bo.Y), ref distance, true);
-        }
-
-        int getShoterPath(Unit tr, bool filledMap, Trooper self = null)
-        {
-            if (self == null)
-                self = this.self;
-            int distance = 0;
-            goToUnit(new Point(tr.X, tr.Y), ref distance, filledMap, self);
-            return distance;
-        }
-
-        int getShoterPath(Point tr, bool filledMap = true)
-        {
-            int distance = 0;
-            goToUnit(new Point(tr.X, tr.Y), ref distance, filledMap);
-            return distance;
-        }
-
-        Point goToUnit(Point bo)
-        {
-            int distance = 0;
-            return goToUnit(bo, ref distance, true);
-        }
-
-        Point goToUnit(Point bo, ref int distance, bool filledMap, Trooper self = null)
-        {
-            if (self == null)
-                self = this.self;
-            int[,] map;
-            if (filledMap)
-                map = this.map;
-            else
-                map = this.notFilledMap;
-            
-            if (bo.X == self.X && bo.Y == self.Y) // застр€вает в угол ??
-                return bo;
-            Queue q = new Queue();
-            q.Enqueue(bo.X);
-            q.Enqueue(bo.Y);
-            int[,] d = new int[width, height];
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
-                    d[i, j] = Inf;
-            d[bo.X, bo.Y] = 0;
-            // если self != this.self, то map[self.X, selfY] = 1
-            if (self.Id != this.self.Id)
-                map[self.X, self.Y] = 0;
-            
-            while (q.Count != 0)
-            {
-                int x = (int)q.Dequeue();
-                int y = (int)q.Dequeue();
-                foreach(Point n in Nearest(x, y))
-                {
-                    if (d[n.X, n.Y] == Inf)
-                    {
-                        d[n.X, n.Y] = d[x, y] + 1;
-                        q.Enqueue(n.X);
-                        q.Enqueue(n.Y);
-                    }
-                }
-            }
-            if (self.Id != this.self.Id)
-                map[self.X, self.Y] = 1;
-            distance = d[self.X, self.Y];
-            if (d[self.X, self.Y] == Inf)
-                return null;
-            Point bestTurn = new Point(0, 0, Inf);
-            foreach (Point n in Nearest(self, 1))
-                if (d[n.X, n.Y] + 1 == d[self.X, self.Y] && bestTurn.profit > getTeamRadius(self.Id, n))
-                    bestTurn = new Point(n.X, n.Y, getTeamRadius(self.Id, n));
-            return bestTurn;
-        }
-
-        bool canMove()
-        {
-            return self.ActionPoints >= getMoveCost();
         }
     }
 }

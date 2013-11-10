@@ -13,7 +13,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (goal.IsTeammate)
                 return -Inf;
-            // TODO: проверка на последнего игрока в команде
             double profit = 1.0 / goal.Hitpoints;
             if (isLastInTeam(goal))
                 return profit * 1.5;
@@ -24,7 +23,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (self.ActionPoints < self.ShootCost)
                 return null;
-            Point bestGoal = new Point(0, 0, -Inf);
+            Point bestGoal = Point.Inf;
             foreach (Trooper tr in troopers)
             {
                 if (world.IsVisible(self.ShootingRange, self.X, self.Y, self.Stance, tr.X, tr.Y, tr.Stance))

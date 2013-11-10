@@ -58,6 +58,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestPoint;
         }
 
+        // needMove - нужно ли сдвигаться чтобы потом кинуть
         Point IfThrowGrenade(ref bool needMove)
         {
             needMove = false;
@@ -66,11 +67,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (!self.IsHoldingGrenade)
                 return null;
 
-            Point bestPoint = throwGrenadeByPos(new Point(self));
+            Point bestPoint = throwGrenadeByPos(new Point(self)); // если сразу кидать
             Point moveTo = null;
             if (game.GrenadeThrowCost + getMoveCost() <= self.ActionPoints)
             {
-                foreach(Point p in Nearest(self))
+                foreach(Point p in Nearest(self, map))
                 {
                     Point profit = throwGrenadeByPos(p);
                     if (profit.profit > bestPoint.profit)
@@ -81,7 +82,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
-            if (bestPoint.profit <= 0)
+            if (bestPoint.profit <= game.GrenadeDirectDamage) // граната должна задеть хотябы двоих
                 return null;
             if (needMove)
                 bestPoint = moveTo;

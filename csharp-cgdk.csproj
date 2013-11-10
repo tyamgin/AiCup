@@ -72,6 +72,7 @@
     <Compile Include="Asserts.cs" />
     <Compile Include="IfAtack.cs" />
     <Compile Include="IfBonus.cs" />
+    <Compile Include="ShortestPath.cs" />
     <Compile Include="TeamGrouping.cs" />
     <Compile Include="Utills.cs" />
     <Compile Include="Constants.cs" />

@@ -7,6 +7,9 @@ using System.Threading;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 using System.IO;
 
+// TODO: идет за бонусом и попадает под обстрел (не хватает очков) http://russianaicup.ru/game/view/22729
+// TODO:!!! Если юнит находится в окружении, но не может стрелять - поменять позицию 
+
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -14,43 +17,37 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         static StreamWriter file = null;
 
 
-        void Go(int toX, int toY)
+        void Go(ActionType type, int toX, int toY)
         {
             move.X = toX;
             move.Y = toY;
             if (move.Action == ActionType.Move && self.X == toX && self.Y == toY) // это костыль
             {
                 int x = move.X, y = move.Y;
-                foreach(Point n in Nearest(move.X, move.Y))
+                foreach(Point n in Nearest(move.X, move.Y, map))
                 {
                     move.X = n.X;
                     move.Y = n.Y;
                     break;
                 }
             }
-            if (map[move.X, move.Y] != 0 && move.Action == ActionType.Move) // это костыль
+            if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
 #if DEBUG
             Thread.Sleep(100);
 #endif
-            //Debugger("Soldier Move 27 2");
+            //Debugger("Soldier Move 28 16");
             //Debugger("8");
             validateMove();
         }
 
-        void Go(Point to)
+        void Go(ActionType type, Point to = null)
         {
+            move.Action = type;
             if (to == null)
-            {
-#if DEBUG
-                Thread.Sleep(100);
-                validateMove();
-#endif
-            }
+                Go(type, -1, -1);
             else
-            {
-                Go(to.X, to.Y);
-            }
+                Go(type, to.X, to.Y);
         }
 
         int getMoveCost()
@@ -138,8 +135,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             opponents = new ArrayList();
             foreach (Trooper tr in troopers)
             {
-                if (tr.Id != self.Id)
-                    map[tr.X, tr.Y] = 1;
+                map[tr.X, tr.Y] = 1;
                 if (tr.IsTeammate)
                 {
                     team.Add(tr);
@@ -175,46 +171,38 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
-
-
-
-#if DEBUG
-            //string path = "TestFolder\\" + "a" + game.MoveCount + ".txt";
-            //FileStream fs = File.Create(path);
-            //fs.Close();
-            //using (System.IO.StreamWriter file = new System.IO.StreamWriter(path, true))
-            //{
-            //    for(int j = 0; j < height; j++)
-            //    {
-            //        string str = "";
-            //        for(int i = 0; i < width; i++)
-            //            str += danger[i, j];
-            //        file.WriteLine(str);
-            //    }
-            //    file.WriteLine("");
-            //}
-#endif
         }
 
         int[] _i = { 0, 0, 1, -1 };
         int[] _j = { 1, -1, 0, 0 };
 
-        ArrayList Nearest(Unit unit, int mp = 0)
+        ArrayList Nearest(Unit unit, int[,] map)
         {
-            return Nearest(unit.X, unit.Y, mp);
+            return Nearest(unit.X, unit.Y, map);
         }
 
-        ArrayList Nearest(int x, int y, int mp = 0)
+        ArrayList Nearest(int x, int y, int[,] map)
         {
             ArrayList List = new ArrayList();
             for (int k = 0; k < 4; k++)
             {
                 int ni = _i[k] + x;
                 int nj = _j[k] + y;
-                if (ni >= 0 && nj >= 0 && ni < width && nj < height && map[ni, nj] <= mp)
+                if (ni >= 0 && nj >= 0 && ni < width && nj < height && map[ni, nj] == 0)
                     List.Add(new Point(ni, nj));
             }
             return List;
+        }
+
+        bool isLastInTeam(Trooper tr)
+        {
+            // TODO: implement this?
+            return false;
+        }
+
+        bool canMove()
+        {
+            return self.ActionPoints >= getMoveCost();
         }
     }
 }

@@ -35,5 +35,30 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         int[,] map, notFilledMap;
         int[,] danger;
         int width, height;
+
+
+
+
+
+
+
+
+
+        static bool Equal(Point point, Unit unit)
+        {
+            return point.X == unit.X && point.Y == unit.Y;
+        }
+        static bool Equal(Unit unit, Point point)
+        {
+            return point.X == unit.X && point.Y == unit.Y;
+        }
+        static bool Equal(Point point, Point unit)
+        {
+            return point.X == unit.X && point.Y == unit.Y;
+        }
+        static bool Equal(Unit point, Unit unit)
+        {
+            return point.X == unit.X && point.Y == unit.Y;
+        }
     }
 }

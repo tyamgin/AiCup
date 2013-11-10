@@ -35,6 +35,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return Math.Sqrt((X - x) * (X - x) + (Y - y) * (Y - y));
         }
 
+
         public bool Same(int otherX, int otherY)
         {
             return X == otherX && Y == otherY;
@@ -50,6 +51,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return Same(other.X, other.Y);
         }
 
+
         public bool Nearest(int otherX, int otherY)
         {
             return Math.Abs(X - otherX) + Math.Abs(Y - otherY) <= 1;
@@ -62,8 +64,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         public bool Nearest(Unit other)
         {
-            return Nearest(other.X, other.Y);
+            return Nearest(other.X, other.Y);  
         }
+
+
 
         public static Point Inf
         {

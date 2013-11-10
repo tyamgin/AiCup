@@ -29,7 +29,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 		        if (cur_d > d[v.first, v.second])  
                     continue;
 
-                foreach(Point n in Nearest(v.first, v.second))
+                foreach(Point n in Nearest(v.first, v.second, null))
                 {
                     int dist = d[v.first, v.second] + danger[n.X, n.Y];
                     if (dist < d[n.X, n.Y])
