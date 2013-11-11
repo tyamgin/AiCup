@@ -184,7 +184,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        // TODO: стреситься к квадрату
+                        // TODO: стремиться к квадрату
                         Go(ActionType.EndTurn);
                         return;
                     }

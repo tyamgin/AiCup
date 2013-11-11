@@ -13,6 +13,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public static Bonus BonusGoal = null;
         public static Point PointGoal = null;
         public static int playersCount = 4; // TODO: в зависимости от типа игры
+        public static Queue<Trooper> queue = new Queue<Trooper>();
 
         public static int Inf = 0x3f3f3f3f;
         public static double MaxTeamRadius = 2;
