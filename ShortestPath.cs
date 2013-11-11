@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         // Указывает путь на to.
         // Если map[self] или map[to] не 0, то пути нет!
-        Point goToUnit(Trooper self, Point to, int[,] map, bool endFree, ref int distance)
+        Point goToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree, ref int distance)
         {
             if (Equal(to, self))
                 return to;
@@ -26,6 +26,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 distance = Inf;
                 return null;
+            }
+            int tmp = 0;
+            if (beginFree)
+            {
+                tmp = map[self.X, self.Y];
+                map[self.X, self.Y] = 0;
             }
             d[to.X, to.Y] = 0;
             while (q.Count != 0)
@@ -44,6 +50,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
             distance = d[self.X, self.Y];
+            if (beginFree)
+                map[self.X, self.Y] = tmp;
             if (distance >= Inf)
                 return null;
             Point bestTurn = new Point(0, 0, Inf);
@@ -58,29 +66,29 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestTurn;
         }
 
-        Point goToUnit(Trooper self, Unit unit, int[,] map, bool endFree)
+        Point goToUnit(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            return goToUnit(self, new Point(unit), map, endFree, ref distance);
+            return goToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
         }
 
-        int getShoterPath(Trooper self, Unit unit, int[,] map, bool endFree)
+        int getShoterPath(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            goToUnit(self, new Point(unit), map, endFree, ref distance);
+            goToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
             return distance;
         }
 
-        Point goToUnit(Trooper self, Point to, int[,] map, bool endFree)
+        Point goToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            return goToUnit(self, to, map, endFree, ref distance);
+            return goToUnit(self, to, map, beginFree, endFree, ref distance);
         }
 
-        int getShoterPath(Trooper self, Point to, int[,] map, bool endFree)
+        int getShoterPath(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            goToUnit(self, to, map, endFree, ref distance);
+            goToUnit(self, to, map, beginFree, endFree, ref distance);
             return distance;
         }
     }

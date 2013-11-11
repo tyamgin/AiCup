@@ -21,45 +21,36 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown bonus type");
         }
 
-        double getBonusProfit(Trooper self, Bonus bonus)
+        double getTeamBonusProfit(Bonus bonus, ref Trooper trooper)
         {
-            if (haveSuchBonus(self, bonus) || getShoterPath(self, bonus, notFilledMap, false) >= Inf)
-                return -1;
-            return 1.0 / getShoterPath(self, bonus, notFilledMap, false);
-        }
-
-        Point IfTakeBonus(Trooper self = null)
-        {
-            if (self == null)
-                self = this.self;
-            Point bestGoal = new Point(0, 0, -Inf);
-            foreach (Bonus bo in bonuses)
-            {
-                double profit = getBonusProfit(self, bo);
-                if (profit > bestGoal.profit && map[bo.X, bo.Y] == 0)
-                    bestGoal = new Point(bo.X, bo.Y, profit);
-            }
-            if (bestGoal.profit <= 0)
-                bestGoal = null;
-            return bestGoal;
-        }
-
-        double getTeamBonusProfit(Bonus bonus)
-        {
+            int bestPath = Inf;
             foreach (Trooper tr in team)
-                if (!haveSuchBonus(tr, bonus) && getShoterPath(commander, bonus, notFilledMap, false) < Inf)
-                    return 1.0 / getShoterPath(commander, bonus, notFilledMap, false);
-            return -1;
+            {
+                int path = getShoterPath(tr, bonus, notFilledMap, beginFree:true, endFree: false);
+                if (!haveSuchBonus(tr, bonus) && path < bestPath)
+                {
+                    bestPath = path;
+                    trooper = tr;
+                }
+            }
+            if (bestPath == Inf)
+                return -1;
+            return 1.0 / bestPath;
         }
 
-        Point IfTeamBonus()
+        Point IfTeamBonus(ref Trooper result)
         {
             Point bestPoint = Point.Inf;
+            result = null;
             foreach (Bonus bo in bonuses)
             {
-                double profit = getTeamBonusProfit(bo);
+                Trooper whose = null; ;
+                double profit = getTeamBonusProfit(bo, ref whose);
                 if (profit > bestPoint.profit)
+                {
                     bestPoint = new Point(bo.X, bo.Y, profit);
+                    result = whose;
+                }
             }
             if (bestPoint.profit <= 0)
                 bestPoint = null;

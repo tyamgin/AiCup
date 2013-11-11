@@ -74,6 +74,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return null;
         }
 
+        Trooper getTrooper(long id)
+        {
+            foreach (Trooper tr in troopers)
+                if (tr.Id == id)
+                    return tr;
+            return null;
+        }
+
         Bonus getBonusAt(Point p)
         {
             foreach (Bonus bo in bonuses)
@@ -118,6 +126,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.cells = world.Cells;
             this.width = world.Width;
             this.height = world.Height;
+            if (alivePlayers == null)
+            {
+                alivePlayers = new ArrayList();
+                foreach (Player pl in world.Players)
+                    alivePlayers.Add(pl);
+            }
             if (map == null)
                 map = new int[width, height];
             if (notFilledMap == null)
@@ -147,7 +161,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     opponents.Add(tr);
                 }
             }
-            map[self.X, self.Y] = 0;
             if (changedCommander != -1 && world.MoveIndex - changedCommander >= 6)
                 ChangeCommander();
             commander = getCommander();
@@ -171,6 +184,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
+
+            if (queue.Count == 0 || queue.Peek() != self.Id)
+                queue.Enqueue(self.Id);
+
         }
 
         static int[] _i = { 0, 0, 1, -1 };

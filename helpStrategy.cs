@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         double getHelperQuality(Trooper tr)
         {
-            double quality = 1.0 / getShoterPath(self, tr, notFilledMap, true); // TODO: или filled??
+            double quality = 1.0 / getShoterPath(self, tr, notFilledMap, beginFree: true, endFree: true); // TODO: или filled??
             if (tr.Type == TrooperType.FieldMedic)
                 return quality * 2;
             if (!tr.IsHoldingMedikit)

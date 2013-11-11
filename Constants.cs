@@ -10,11 +10,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         public static int changedCommander = -1;
-        public static Bonus BonusGoal = null;
+        public static Point BonusGoal = null;
+        public static long whoseBonus = -1;
         public static Point PointGoal = null;
-        public static int playersCount = 4; // TODO: в зависимости от типа игры
-        public static Queue<Trooper> queue = new Queue<Trooper>();
-
+        public static ArrayList alivePlayers = null;        
+        public static Queue<long> queue = new Queue<long>();
         public static int Inf = 0x3f3f3f3f;
         public static double MaxTeamRadius = 2;
 

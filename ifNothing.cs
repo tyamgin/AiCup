@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         void Reached(Point p)
         {
-            if (BonusGoal != null && Equal(BonusGoal, p))
+            if (BonusGoal != null && Equal(BonusGoal, p) && getBonusAt(p) == null)
                 BonusGoal = null;
             if (PointGoal != null && Equal(PointGoal, p))
                 PointGoal = null;
@@ -74,21 +74,37 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return nearestPoint;            
         }
 
+        bool IWin()
+        {
+            if (alivePlayers.Count > 2)
+                return false;
+            int myScore = 0;
+            int hisScore = 0;
+            foreach(Player pl in world.Players)
+            {
+                if (pl.Id == self.PlayerId)
+                    myScore = pl.Score;
+                else
+                    hisScore = Math.Max(hisScore, pl.Score);
+            }
+            return myScore > hisScore;
+        }
+
         void ProcessApproximation()
         {
             if (!isApproximationExist())
                 return;
-            playersCount = 0;
+            alivePlayers = new ArrayList();
             Point nearestPoint = new Point(0, 0, Inf);
             foreach(Player pl in world.Players)
             {
                 if (pl.ApproximateX != -1)
                 {
-                    playersCount++;
+                    alivePlayers.Add(pl);
                     if (pl.Id != self.PlayerId)
                     {
                         Point coordinate = getCoordinateByApproximation(pl.ApproximateX, pl.ApproximateY);
-                        int path = getShoterPath(commander, coordinate, map, true);
+                        int path = getShoterPath(commander, coordinate, map, beginFree: true, endFree: true);
                         if (path < nearestPoint.profit)
                             nearestPoint = new Point(coordinate.X, coordinate.Y, path);
                     }
@@ -103,7 +119,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Point IfNothingCommander()
         {
             if (BonusGoal != null)
-                return new Point(BonusGoal);
+                return BonusGoal;
             if (PointGoal != null)
                 return PointGoal;
             return null;
@@ -122,7 +138,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point bestPoint = Point.Inf;
             foreach (Point n in getEncirclingPoints(center))
             {
-                double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, false);
+                double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, beginFree: true, endFree: false);
                 if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n, self.Stance)))
                     bestPoint = new Point(n.X, n.Y, quality);
             }
@@ -131,7 +147,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 // проверяю расширенный Encircling
                 foreach (Point n in getEncirclingPoints(center, extended:true))
                 {
-                    double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, false);
+                    double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, beginFree:true, endFree: false);
                     if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n, self.Stance)))
                         bestPoint = new Point(n.X, n.Y, quality);
                 }

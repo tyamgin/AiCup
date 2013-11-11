@@ -26,9 +26,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return radius;
         }
 
+        int adjDist;
+
         bool isAdjanced(Trooper a, Trooper b)
         {
-            return getShoterPath(a, b, notFilledMap, true) <= 2;
+            return getShoterPath(a, b, notFilledMap, beginFree: true, endFree: true) <= adjDist;
         }
 
         HashSet<long> used = new HashSet<long>();
@@ -39,6 +41,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             used.Add(trooper.Id);
             foreach (Point p in Nearest(trooper, map))
                 points.Add(p);
+            points.Add(new Point(trooper));
             foreach(Trooper tr in team)
             {
                 if (!used.Contains(tr.Id) && isAdjanced(trooper, tr))
@@ -49,8 +52,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
-        Point[] getEncirclingPoints(Trooper trooper, bool extended = false)
+        Point[] getEncirclingPoints(Trooper trooper, bool extended = false, int adjDist = 1)
         {
+            this.adjDist = adjDist;
             points.Clear();
             used.Clear();
             if (extended)
@@ -74,7 +78,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             foreach (Point p in points)
             {
                 double dist = (double)p.GetDistanceTo(self);
-                if (bestPoint.profit > dist && getShoterPath(self, p, map, false) < Inf)
+                if (bestPoint.profit > dist && getShoterPath(self, p, map, beginFree: true, endFree: false) < Inf)
                     bestPoint = new Point(p.X, p.Y, dist);
             }
             if (bestPoint.profit >= Inf - 1)
