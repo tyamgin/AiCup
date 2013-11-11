@@ -182,8 +182,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         // передать коммандование
                         ChangeCommander();
                     }
-                    Go(ActionType.EndTurn);
-                    return;
+                    else
+                    {
+                        // TODO: стреситься к квадрату
+                        Go(ActionType.EndTurn);
+                        return;
+                    }
                 }
                 else if (!waitingHelp && getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {

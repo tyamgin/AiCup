@@ -22,7 +22,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             for (int i = 0; i < width; i++)
                 for (int j = 0; j < height; j++)
                     d[i, j] = Inf;
-            d[to.X, to.Y] = endFree ? 0 : map[to.X, to.Y];
+            if (map[to.X, to.Y] != 0 && !endFree)
+            {
+                distance = Inf;
+                return null;
+            }
+            d[to.X, to.Y] = 0;
             while (q.Count != 0)
             {
                 int x = (int)q.Dequeue();
@@ -39,7 +44,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
             distance = d[self.X, self.Y];
-            if (distance == Inf)
+            if (distance >= Inf)
                 return null;
             Point bestTurn = new Point(0, 0, Inf);
             // Если вариантов несколько - выбрать где будет меньше радиус
