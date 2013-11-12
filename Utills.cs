@@ -34,7 +34,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
 #if DEBUG
-            Thread.Sleep(50);
+            Thread.Sleep(10);
 #endif
             //Debugger("Commander Move 3 1");
             //Debugger("8");

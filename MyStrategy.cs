@@ -160,9 +160,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 allowNothing = false;
                 Point to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
+                // Если путь до бонуса пока что занят, то все равно идти к нему
+                if (to == null)
+                {
+                    to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: true);
+                    if (to != null && map[to.X, to.Y] == 0 && getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                    {
+                        Go(ActionType.Move, to);
+                        return;
+                    }
+                }
                 if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
                 {
-                    Go(move.Action = ActionType.Move, to);
+                    Go(ActionType.Move, to);
                     return;
                 }
             }

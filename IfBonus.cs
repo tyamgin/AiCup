@@ -37,16 +37,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             double bestWeight = Inf;
             foreach (Trooper tr in team)
             {
-                double weight = getShoterPath(tr, bonus, notFilledMap, beginFree:true, endFree: false) * (1 + 0.5 * getQueuePlace(tr, self.Id == tr.Id && self.ActionPoints >= self.InitialActionPoints));
-                if (bonus.Type != BonusType.Medikit && tr.Type == TrooperType.FieldMedic)
-                    weight *= 2;
-                if (!haveSuchBonus(tr, bonus) && weight < bestWeight)
+                //if (getShoterPath(tr, bonus, map, beginFree: true, endFree: false) < Inf)
                 {
-                    bestWeight = weight;
-                    trooper = tr;
+                    double weight = getShoterPath(tr, bonus, notFilledMap, beginFree: true, endFree: false) * (1 + 0.5 * getQueuePlace(tr, self.Id == tr.Id && self.ActionPoints >= self.InitialActionPoints));
+                    if (bonus.Type != BonusType.Medikit && tr.Type == TrooperType.FieldMedic)
+                        weight *= 2;
+                    if (!haveSuchBonus(tr, bonus) && weight < bestWeight)
+                    {
+                        bestWeight = weight;
+                        trooper = tr;
+                    }
                 }
             }
-            if (bestWeight == Inf)
+            if (bestWeight >= Inf)
                 return -1;
             return 1.0 / bestWeight;
         }
