@@ -17,11 +17,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            bool allowHill = true;
-            if (CheckShootMe())
-            {
-                allowHill = false;
-            }
+            bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
             if (ifFieldRationNeed())
@@ -50,6 +46,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifShot = IfShot();
             if (ifShot != null)
             {
+                // TODO!!!!!!!!!!!!!!!!!!!!!!!!: —мотреть сколько очков € получу если с€ду, л€гу
                 if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
                     (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
                 {

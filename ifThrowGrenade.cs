@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
+// TODO: пересмотреть FieldRation
+
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
