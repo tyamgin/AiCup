@@ -6,9 +6,7 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 using System.Collections;
 
 // TODO:!!! радиус зависит от плотности местности
-// TODO: если я выигрываю и остался 1 противник, то залечь
-// TODO: ходить за тимлидом, чтобы не обходить препятствия - искать кратчайший путь без учета юнитов
-// TODO: поле опастности
+// нужно-ли?TODO: если я выигрываю и остался 1 противник, то залечь
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {

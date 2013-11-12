@@ -2,8 +2,8 @@ using System;
 using System.Collections;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
-// TODO!!!: вместо того чтобы явно стрелять и убивать - шел группироваться
-// TODO!!!: пытался пройти к медику через трупера, но не мог
+// ??old??TODO!!!: вместо того чтобы явно стрелять и убивать - шел группироваться
+// Пересмотреть кидать-ли медику гранату если нужно лечить
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
