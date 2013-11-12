@@ -33,8 +33,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
+            SaveHitpoints();
 #if DEBUG
-            Thread.Sleep(10);
+            Thread.Sleep(100);
 #endif
             //Debugger("Commander Move 3 1");
             //Debugger("8");
@@ -59,6 +60,41 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (self.Stance == TrooperStance.Standing)
                 return game.StandingMoveCost;
             throw new Exception("something wrong");
+        }
+
+        void SaveHitpoints()
+        {
+            Hitpoints = new Hashtable();
+            foreach (Trooper tr in team)
+            {
+                Hitpoints[tr.Id] = tr.Hitpoints;
+            }
+            if (move.Action == ActionType.Heal)
+            {
+                Trooper at = getTrooperAt(new Point(move.X, move.Y));
+                if (at.Id == self.Id)
+                    Hitpoints[at.Id] = Math.Min(at.MaximalHitpoints, (int)Hitpoints[at.Id] + game.FieldMedicHealSelfBonusHitpoints);
+                else
+                    Hitpoints[at.Id] = Math.Min(at.MaximalHitpoints, (int)Hitpoints[at.Id] + game.FieldMedicHealBonusHitpoints);
+            }
+            if (move.Action == ActionType.UseMedikit)
+            {
+                Trooper at = getTrooperAt(new Point(move.X, move.Y));
+                if (at.Id == self.Id)
+                    Hitpoints[at.Id] = Math.Min(at.MaximalHitpoints, (int)Hitpoints[at.Id] + game.MedikitHealSelfBonusHitpoints);
+                else
+                    Hitpoints[at.Id] = Math.Min(at.MaximalHitpoints, (int)Hitpoints[at.Id] + game.MedikitBonusHitpoints);
+            }
+        }
+
+        bool CheckShootMe()
+        {
+            if (Hitpoints == null || troopers.Count() != team.Count)
+                return false;
+            foreach (Trooper tr in team)
+                if ((int)Hitpoints[tr.Id] != tr.Hitpoints)
+                    return true;
+            return false;
         }
 
         Trooper getTrooperAt(Point point)

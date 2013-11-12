@@ -17,6 +17,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
+            bool allowHill = true;
+            if (CheckShootMe())
+            {
+                allowHill = false;
+            }
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
             if (ifFieldRationNeed())
@@ -152,7 +157,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 MyStrategy.whoseBonus = whoseBonus.Id;
             }
             
-            bool waitingHelp = IfNeedHelp() && self.Type != TrooperType.FieldMedic && getBestHelper() != null;
+            bool waitingHelp = allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && getBestHelper() != null;
             bool allowNothing = true;
             if (!waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id
                 //&& getShoterPath(self, BonusGoal, map, beginFree: true, endFree: false) <= 6

@@ -75,7 +75,7 @@
     <Compile Include="ShortestPath.cs" />
     <Compile Include="TeamGrouping.cs" />
     <Compile Include="Utills.cs" />
-    <Compile Include="Constants.cs" />
+    <Compile Include="Variables.cs" />
     <Compile Include="HelpStrategy.cs" />
     <Compile Include="IfFieldRation.cs" />
     <Compile Include="IfHelpTeammate.cs" />
