@@ -34,7 +34,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
 #if DEBUG
-            Thread.Sleep(100);
+            Thread.Sleep(50);
 #endif
             //Debugger("Commander Move 3 1");
             //Debugger("8");
@@ -185,8 +185,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            if (queue.Count == 0 || queue.Peek() != self.Id)
-                queue.Enqueue(self.Id);
+            if (queue.Count == 0 || (long)queue[queue.Count - 1] != self.Id)
+                queue.Add(self.Id);
 
         }
 

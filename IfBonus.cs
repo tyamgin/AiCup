@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
+using System.Collections;
 
 // TODO: пересмотреть коммандные бонусы
 
@@ -10,6 +11,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        int getQueuePlace(Trooper trooper, bool MayFirst)
+        {
+            int current = queue.IndexOf(self.Id);
+            for (int idx = current + (MayFirst ? 0 : 1); idx < queue.Count; idx++)
+                if ((long)queue[idx] == trooper.Id)
+                    return idx - current + 1;
+            return 1;
+        }
+
         bool haveSuchBonus(Trooper self, Bonus bonus)
         {
             if (bonus.Type == BonusType.Medikit)
@@ -23,19 +33,22 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         double getTeamBonusProfit(Bonus bonus, ref Trooper trooper)
         {
-            int bestPath = Inf;
+            // нужен минимальный вес
+            double bestWeight = Inf;
             foreach (Trooper tr in team)
             {
-                int path = getShoterPath(tr, bonus, notFilledMap, beginFree:true, endFree: false);
-                if (!haveSuchBonus(tr, bonus) && path < bestPath)
+                double weight = getShoterPath(tr, bonus, notFilledMap, beginFree:true, endFree: false) * (1 + 0.5 * getQueuePlace(tr, self.Id == tr.Id && self.ActionPoints >= self.InitialActionPoints));
+                if (bonus.Type != BonusType.Medikit && tr.Type == TrooperType.FieldMedic)
+                    weight *= 2;
+                if (!haveSuchBonus(tr, bonus) && weight < bestWeight)
                 {
-                    bestPath = path;
+                    bestWeight = weight;
                     trooper = tr;
                 }
             }
-            if (bestPath == Inf)
+            if (bestWeight == Inf)
                 return -1;
-            return 1.0 / bestPath;
+            return 1.0 / bestWeight;
         }
 
         Point IfTeamBonus(ref Trooper result)

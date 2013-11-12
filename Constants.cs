@@ -13,8 +13,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public static Point BonusGoal = null;
         public static long whoseBonus = -1;
         public static Point PointGoal = null;
-        public static ArrayList alivePlayers = null;        
-        public static Queue<long> queue = new Queue<long>();
+        public static ArrayList alivePlayers = null;
+        public static ArrayList queue = new ArrayList();
         public static int Inf = 0x3f3f3f3f;
         public static double MaxTeamRadius = 2;
 

@@ -68,7 +68,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                     if (canMove())
                     {
-                        Point to = goToUnit(self, ifHelp, map, beginFree:true, endFree:false);
+                        Point to = goToUnit(self, ifHelp, map, beginFree:true, endFree:true);
                         if (to != null)
                         {
                             Go(ActionType.Move, to);
