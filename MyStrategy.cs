@@ -4,6 +4,7 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 // ??old??TODO!!!: вместо того чтобы явно стрелять и убивать - шел группироваться
 // Пересмотреть кидать-ли медику гранату если нужно лечить
+// TODO:!!! CRASH http://russianaicup.ru/game/view/42715 нужен третий командир
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -47,8 +48,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (ifShot != null)
             {
                 // TODO!!!!!!!!!!!!!!!!!!!!!!!!: Смотреть сколько очков я получу если сяду, лягу
-                if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
-                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
+                if (canLower() 
+                    && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) // смогу попасть хотябы в одного
+                    && self.Type != TrooperType.FieldMedic // медик не должен ложиться, потому что будет долхо идти хилить
+                    && getVisibleShotProfit(self.Stance) >= getVisibleShotProfit(Low(self.Stance))
+                    )
                 {
                     Go(ActionType.LowerStance);
                     return;
