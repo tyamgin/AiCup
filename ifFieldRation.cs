@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         bool ifFieldRationNeed()
         {
-            if (!self.IsHoldingFieldRation || self.ActionPoints < game.FieldRationEatCost)
+            if (!self.IsHoldingFieldRation || self.ActionPoints < game.FieldRationEatCost || self.ActionPoints + game.FieldRationBonusActionPoints - game.FieldRationEatCost > self.InitialActionPoints)
                 return false;
             if (danger[self.X, self.Y] != DangerNothing)
                 return true;

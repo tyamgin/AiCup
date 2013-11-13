@@ -15,7 +15,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private readonly BinaryWriter writer;
 
         private CellType[][] cells;
-        private bool[,,,,] cellVisibilities;
+        private bool[] cellVisibilities;
 
         public RemoteProcessClient(string host, int port)
         {
@@ -227,7 +227,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return cells;
         }
 
-        private bool[,,,,] ReadCellVisibilities()
+        private bool[] ReadCellVisibilities()
         {
             if (cellVisibilities != null)
             {
@@ -252,27 +252,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return null;
             }
 
-            byte[] rawVisibilities = ReadBytes(worldWidth*worldHeight*worldWidth*worldHeight*stanceCount);
-            cellVisibilities = new bool[worldWidth, worldHeight, worldWidth, worldHeight, stanceCount];
+            int rawVisibilityCount = worldWidth * worldHeight * worldWidth * worldHeight * stanceCount;
+            byte[] rawVisibilities = ReadBytes(rawVisibilityCount);
+            cellVisibilities = new bool[rawVisibilityCount];
 
-            int rawVisibilityIndex = 0;
-
-            for (int viewerX = 0; viewerX < worldWidth; ++viewerX)
+            for (int rawVisibilityIndex = 0; rawVisibilityIndex < rawVisibilityCount; ++rawVisibilityIndex)
             {
-                for (int viewerY = 0; viewerY < worldHeight; ++viewerY)
-                {
-                    for (int objectX = 0; objectX < worldWidth; ++objectX)
-                    {
-                        for (int objectY = 0; objectY < worldHeight; ++objectY)
-                        {
-                            for (int stanceIndex = 0; stanceIndex < stanceCount; ++stanceIndex)
-                            {
-                                cellVisibilities[viewerX, viewerY, objectX, objectY, stanceIndex]
-                                    = rawVisibilities[rawVisibilityIndex++] != 0;
-                            }
-                        }
-                    }
-                }
+                cellVisibilities[rawVisibilityIndex] = rawVisibilities[rawVisibilityIndex] != 0;
             }
 
             return cellVisibilities;

@@ -50,8 +50,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 fs.Close();
                 file = new StreamWriter(path, true);
             }
-            file.WriteLine(self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
-            Console.WriteLine(self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
+            file   .WriteLine(world.MoveIndex + ") " + self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
+            Console.WriteLine(world.MoveIndex + ") " + self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
             Thread.Sleep(50);
 #endif
 
