@@ -133,11 +133,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         Point to = goToUnit(self, goToEncircling, map, beginFree: true, endFree: false);
                         if (to == null || Equal(self, to)) // TODO: если to = null, то значит мы застряли, или не хватило очков на стрельбу
                         {
-                            // можно сесть
-                            if (canLower() && self.Type != TrooperType.FieldMedic)
-                                Go(ActionType.LowerStance);
-                            else
-                                Go(ActionType.EndTurn);
+                            Go(ActionType.EndTurn);
                             return;    
                         }
                         if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
