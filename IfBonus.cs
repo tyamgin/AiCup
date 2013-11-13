@@ -20,11 +20,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool haveSuchBonus(Trooper self, Bonus bonus)
         {
-            if (bonus.Type == BonusType.Medikit)
+            if (bonus == null)
+                return false;
+            return haveSuchBonus(self, bonus.Type);
+        }
+
+        bool haveSuchBonus(Trooper self, BonusType bonus)
+        {
+            if (bonus == BonusType.Medikit)
                 return self.IsHoldingMedikit;
-            if (bonus.Type == BonusType.Grenade)
+            if (bonus == BonusType.Grenade)
                 return self.IsHoldingGrenade;
-            if (bonus.Type == BonusType.FieldRation)
+            if (bonus == BonusType.FieldRation)
                 return self.IsHoldingFieldRation;
             throw new Exception("Unknown bonus type");
         }

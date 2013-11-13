@@ -21,6 +21,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
+            if (BonusGoal != null && haveSuchBonus(getTrooper(MyStrategy.whoseBonus), getBonusAt(BonusGoal)))
+                BonusGoal = null;
             if (ifFieldRationNeed())
             {
                 Go(ActionType.EatFieldRation);
@@ -47,11 +49,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifShot = IfShot();
             if (ifShot != null)
             {
-                if (canLower() 
+                if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
+                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost
+                    )
+
+                /*if (canLower() 
                     && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) // смогу попасть хотябы в одного
                     && self.Type != TrooperType.FieldMedic // медик не должен ложиться, потому что будет долхо идти хилить
                     && getVisibleShotSteps(self.Stance, self.ActionPoints) >= getVisibleShotSteps(Low(self.Stance), self.ActionPoints - game.StanceChangeCost)
-                    )
+                    )*/
                 {
                     Go(ActionType.LowerStance);
                     return;
