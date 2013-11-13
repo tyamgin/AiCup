@@ -47,11 +47,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifShot = IfShot();
             if (ifShot != null)
             {
-                // TODO!!!!!!!!!!!!!!!!!!!!!!!!: Смотреть сколько очков я получу если сяду, лягу
                 if (canLower() 
                     && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) // смогу попасть хотябы в одного
                     && self.Type != TrooperType.FieldMedic // медик не должен ложиться, потому что будет долхо идти хилить
-                    && getVisibleShotProfit(self.Stance) >= getVisibleShotProfit(Low(self.Stance))
+                    && getVisibleShotSteps(self.Stance, self.ActionPoints) >= getVisibleShotSteps(Low(self.Stance), self.ActionPoints - game.StanceChangeCost)
                     )
                 {
                     Go(ActionType.LowerStance);
@@ -160,6 +159,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(self, BonusGoal, map, beginFree: true, endFree: false) <= 6
                 )
             {
+                if (canUpper())
+                {
+                    Go(ActionType.RaiseStance);
+                    return;
+                }
                 allowNothing = false;
                 Point to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
                 // Если путь до бонуса пока что занят, то все равно идти к нему
@@ -200,6 +204,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, notFilledMap, beginFree: true, endFree: true) < 6
                 )
             {
+                if (canUpper())
+                {
+                    Go(ActionType.RaiseStance);
+                    return;
+                }
                 Point bestTurn = new Point(self.X, self.Y, getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, map, beginFree: true, endFree: false));
                 foreach (Point p in Nearest(self, map))
                 {
@@ -246,6 +255,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
+                    // Тут менять получателя бонуса
                     self = self;
                 }
             }

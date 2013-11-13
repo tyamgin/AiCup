@@ -11,10 +11,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
         private readonly Trooper[] troopers;
         private readonly Bonus[] bonuses;
         private readonly CellType[][] cells;
-        private readonly bool[,,,,] cellVisibilities;
+        private readonly bool[] cellVisibilities;
 
         public World(int moveIndex, int width, int height, Player[] players, Trooper[] troopers, Bonus[] bonuses,
-            CellType[][] cells, bool[,,,,] cellVisibilities)
+            CellType[][] cells, bool[] cellVisibilities)
         {
             this.moveIndex = moveIndex;
             this.width = width;
@@ -98,6 +98,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
             }
         }
 
+        public bool[] CellVisibilities
+        {
+            get
+            {
+                return (bool[]) cellVisibilities.Clone();
+            }
+        }
+
         public bool IsVisible(
             double maxRange,
             int viewerX, int viewerY, TrooperStance viewerStance,
@@ -106,8 +114,20 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
             int minStanceIndex = Math.Min((int) viewerStance, (int) objectStance);
             int xRange = objectX - viewerX;
             int yRange = objectY - viewerY;
-            return Math.Sqrt(xRange*xRange + yRange*yRange) <= maxRange
-                   && cellVisibilities[viewerX, viewerY, objectX, objectY, minStanceIndex];
+
+            return xRange * xRange + yRange * yRange <= maxRange * maxRange
+                && cellVisibilities[
+                viewerX * height * width * height * StanceCountHolder.STANCE_COUNT
+                + viewerY * width * height * StanceCountHolder.STANCE_COUNT
+                + objectX * height * StanceCountHolder.STANCE_COUNT
+                + objectY * StanceCountHolder.STANCE_COUNT
+                + minStanceIndex
+                ];
+        }
+
+        private static class StanceCountHolder
+        {
+            internal static readonly int STANCE_COUNT = Enum.GetNames(typeof(TrooperStance)).Length;
         }
     }
 }

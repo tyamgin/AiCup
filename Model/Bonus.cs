@@ -13,10 +13,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model
         {
             get { return type; }
         }
-    	
+
 		public override string ToString()
         {
             return type + " (" + X + "; " + Y + ")";
         }
-	}
+    }
 }

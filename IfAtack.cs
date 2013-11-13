@@ -20,13 +20,26 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown TrooperStance");
         }
 
-        int getVisibleShotProfit(TrooperStance stance)
+        int getVisibleShotSteps(TrooperStance stance, int current)
         {
-            int profit = 0;
+            int shots = 0;
             foreach (Trooper tr in opponents)
+            {
                 if (world.IsVisible(self.VisionRange, self.X, self.Y, stance, tr.X, tr.Y, tr.Stance))
-                    profit += getDamage(self, stance);
-            return profit;
+                {
+                    int damage = getDamage(self, stance);
+                    shots += (tr.Hitpoints + damage - 1) / damage;
+                }
+            }
+            int step;
+            for (step = 1; ; step++)
+            {
+                int c = step == 1 ? current : self.ActionPoints;
+                if (c / self.ShootCost >= shots)
+                    break;
+                shots -= c / self.ShootCost;
+            }
+            return step;
         }
 
         double getShotProfit(Trooper goal)
