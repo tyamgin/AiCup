@@ -35,7 +35,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 move.Action = ActionType.EndTurn;
             SaveHitpoints();
 #if DEBUG
-            Thread.Sleep(1);
+            Thread.Sleep(100);
 #endif
             //Debugger("Commander Move 3 1");
             //Debugger("8");

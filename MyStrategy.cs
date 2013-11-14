@@ -4,7 +4,6 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 // ??old??TODO!!!: вместо того чтобы явно стрелять и убивать - шел группироваться
 // Пересмотреть кидать-ли медику гранату если нужно лечить
-// TODO:!!! CRASH http://russianaicup.ru/game/view/42715 нужен третий командир
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -20,8 +19,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             ProcessApproximation();
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
-                BonusGoal = null;
-            if (BonusGoal != null && haveSuchBonus(getTrooper(MyStrategy.whoseBonus), getBonusAt(BonusGoal)))
                 BonusGoal = null;
             if (ifFieldRationNeed())
             {
@@ -49,15 +46,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Point ifShot = IfShot();
             if (ifShot != null)
             {
+                // TODO!!!!!!!!!!!!!!!!!!!!!!!!: Смотреть сколько очков я получу если сяду, лягу
                 if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
-                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost
-                    )
-
-                /*if (canLower() 
-                    && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) // смогу попасть хотябы в одного
-                    && self.Type != TrooperType.FieldMedic // медик не должен ложиться, потому что будет долхо идти хилить
-                    && getVisibleShotSteps(self.Stance, self.ActionPoints) >= getVisibleShotSteps(Low(self.Stance), self.ActionPoints - game.StanceChangeCost)
-                    )*/
+                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
                 {
                     Go(ActionType.LowerStance);
                     return;
@@ -139,7 +130,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         Point to = goToUnit(self, goToEncircling, map, beginFree: true, endFree: false);
                         if (to == null || Equal(self, to)) // TODO: если to = null, то значит мы застряли, или не хватило очков на стрельбу
                         {
-                            Go(ActionType.EndTurn);
+                            // можно сесть
+                            if (canLower() && self.Type != TrooperType.FieldMedic)
+                                Go(ActionType.LowerStance);
+                            else
+                                Go(ActionType.EndTurn);
                             return;    
                         }
                         if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
@@ -165,11 +160,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(self, BonusGoal, map, beginFree: true, endFree: false) <= 6
                 )
             {
-                if (canUpper())
-                {
-                    Go(ActionType.RaiseStance);
-                    return;
-                }
                 allowNothing = false;
                 Point to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
                 // Если путь до бонуса пока что занят, то все равно идти к нему
@@ -210,11 +200,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, notFilledMap, beginFree: true, endFree: true) < 6
                 )
             {
-                if (canUpper())
-                {
-                    Go(ActionType.RaiseStance);
-                    return;
-                }
                 Point bestTurn = new Point(self.X, self.Y, getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, map, beginFree: true, endFree: false));
                 foreach (Point p in Nearest(self, map))
                 {
@@ -261,7 +246,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    // Тут менять получателя бонуса
                     self = self;
                 }
             }

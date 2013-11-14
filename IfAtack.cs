@@ -9,39 +9,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        int getDamage(Trooper tr, TrooperStance stance)
-        {
-            if (stance == TrooperStance.Standing)
-                return tr.StandingDamage;
-            if (stance == TrooperStance.Kneeling)
-                return tr.KneelingDamage;
-            if (stance == TrooperStance.Prone)
-                return tr.ProneDamage;
-            throw new Exception("Unknown TrooperStance");
-        }
-
-        int getVisibleShotSteps(TrooperStance stance, int current)
-        {
-            int shots = 0;
-            foreach (Trooper tr in opponents)
-            {
-                if (world.IsVisible(self.VisionRange, self.X, self.Y, stance, tr.X, tr.Y, tr.Stance))
-                {
-                    int damage = getDamage(self, stance);
-                    shots += (tr.Hitpoints + damage - 1) / damage;
-                }
-            }
-            int step;
-            for (step = 1; ; step++)
-            {
-                int c = step == 1 ? current : self.ActionPoints;
-                if (c / self.ShootCost >= shots)
-                    break;
-                shots -= c / self.ShootCost;
-            }
-            return step;
-        }
-
         double getShotProfit(Trooper goal)
         {
             if (goal.IsTeammate)
