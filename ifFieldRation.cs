@@ -12,9 +12,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (!self.IsHoldingFieldRation || self.ActionPoints < game.FieldRationEatCost || self.ActionPoints + game.FieldRationBonusActionPoints - game.FieldRationEatCost > self.InitialActionPoints)
                 return false;
-            if (danger[self.X, self.Y] != DangerNothing)
+            if (howManyCanShoot(new Point(self), self.Stance) != 0)
                 return true;
-            return self.Id != commander.Id && getTeamRadius() > MaxTeamRadius + 1;
+            return false;
         }
     }
 }

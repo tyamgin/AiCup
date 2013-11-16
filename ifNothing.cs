@@ -143,7 +143,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     {
                         if (self.GetDistanceTo(i, j) > 10) // немного ускорить
                             continue;
-                        if (needShootingPosition && howManyCanShoot(new Point(i, j), self.Stance) > 0)
+                        if (needShootingPosition && howManyCanShoot(new Point(i, j), self.Stance) == 0)
                             continue;
                         // Нужно чтобы хватило ходов
                         int steps = getShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);

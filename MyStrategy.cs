@@ -3,7 +3,7 @@ using System.Collections;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 // TODO: Пересмотреть кидать-ли медику гранату если нужно лечить
-// TODO:!!!! Для сбора бонусов та же фича
+// TODO:!!!!100% Когда shotting отодвигаться если кто-то не может стрелять
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -17,6 +17,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
+            if (world.MoveIndex == 18 && self.Type == TrooperType.Soldier)
+                world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
@@ -110,6 +112,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // TODO: нужно чтобы они стремились к квадрату
             Point mostDanger = getMostDanger();
             bool busy = howManyCanShoot(new Point(self), self.Stance) != 0;
+            // TODO: getMostDanger <- добавить если я вижу
             if (mostDanger != null && !busy)
             {
                 if (Equal(mostDanger, self))
@@ -237,7 +240,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        // TODO: стремиться к квадрату
                         Go(ActionType.EndTurn);
                         return;
                     }
