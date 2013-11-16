@@ -10,7 +10,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         // Указывает путь на to.
-        // Если map[self] или map[to] не 0, то пути нет!
         Point goToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree, ref int distance)
         {
             if (Equal(to, self))
@@ -34,7 +33,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 map[self.X, self.Y] = 0;
             }
             d[to.X, to.Y] = 0;
-            while (q.Count != 0)
+            while (q.Count != 0 && d[self.X, self.Y] >= Inf)
             {
                 int x = (int)q.Dequeue();
                 int y = (int)q.Dequeue();

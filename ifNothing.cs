@@ -72,21 +72,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return nearestPoint;            
         }
 
-        bool IWin()
-        {
-            if (alivePlayers.Count > 2)
-                return false;
-            int myScore = 0;
-            int hisScore = 0;
-            foreach(Player pl in world.Players)
-            {
-                if (pl.Id == self.PlayerId)
-                    myScore = pl.Score;
-                else
-                    hisScore = Math.Max(hisScore, pl.Score);
-            }
-            return myScore > hisScore;
-        }
+        //bool IWin()
+        //{
+        //    if (alivePlayers.Count > 2)
+        //        return false;
+        //    int myScore = 0;
+        //    int hisScore = 0;
+        //    foreach(Player pl in world.Players)
+        //    {
+        //        if (pl.Id == self.PlayerId)
+        //            myScore = pl.Score;
+        //        else
+        //            hisScore = Math.Max(hisScore, pl.Score);
+        //    }
+        //    return myScore > hisScore;
+        //}
 
         void ProcessApproximation()
         {
@@ -109,7 +109,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
             if (nearestPoint.profit >= Inf)
-                throw new Exception("");
+                world = world;
             PointGoal = nearestPoint;
             PointGoal.profit = world.MoveIndex;
         }
@@ -131,28 +131,42 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return false;
         }
 
-        Point GoToEncircling(Trooper center, bool needShootingPosition = false)
+        Point GoToEncircling(Trooper center, Point goal, bool needShootingPosition = false)
         {
-            Point bestPoint = Point.Inf;
-            foreach (Point n in getEncirclingPoints(center))
-            {
-                double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, beginFree: true, endFree: false);
-                if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n, self.Stance)))
-                    bestPoint = new Point(n.X, n.Y, quality);
-            }
-            if (bestPoint.profit <= 0)
-            {
-                // проверяю расширенный Encircling
-                foreach (Point n in getEncirclingPoints(center, extended:true))
+            Point bestPoint = new Point(0, 0, Inf);
+            for (int i = 0; i < width; i++)
+            {   
+                for (int j = 0; j < height; j++)
                 {
-                    double quality = 1.0 / getShoterPath(self, new Point(n.X, n.Y), map, beginFree:true, endFree: false);
-                    if (quality > bestPoint.profit && (!needShootingPosition || canShootSomeone(n, self.Stance)))
-                        bestPoint = new Point(n.X, n.Y, quality);
+                    if (map[i, j] == 0 || i == self.X && j == self.Y)
+                    {
+                        if (self.GetDistanceTo(i, j) > 10) // немного ускорить
+                            continue;
+                        if (needShootingPosition && !canShootSomeone(new Point(i, j), self.Stance))
+                            continue;
+                        // Нужно чтобы хватило ходов
+                        int steps = getShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);
+                        if (self.ActionPoints / getMoveCost() >= steps)
+                        {
+                            // и чтобы не закрывали кратчайший путь:
+                            int before = goal == null ? Inf : getShoterPath(center, goal, map, beginFree:true, endFree: false);
+                            map[i, j] = 1;
+                            map[self.X, self.Y] = 0;
+                            int after = goal == null ? Inf : getShoterPath(center, goal, map, beginFree: true, endFree: false);
+                            map[i, j] = 0;
+                            map[self.X, self.Y] = 1;
+
+                            if (after <= before)
+                            {
+                                double sum = getShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
+                                if (sum < bestPoint.profit)
+                                    bestPoint = new Point(i, j, sum);
+                            }
+                        }
+                    }
                 }
-                if (bestPoint.profit > 0)
-                    bestPoint = bestPoint;
             }
-            if (bestPoint.profit <= 0)
+            if (bestPoint.profit >= Inf)
                 return null;
             return bestPoint;
         }
@@ -161,7 +175,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (commander.Id == self.Id)
                 return IfNothingCommander();
-            return GoToEncircling(commander);
+            return GoToEncircling(commander, PointGoal);
         }
     }
 }

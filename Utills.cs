@@ -35,7 +35,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 move.Action = ActionType.EndTurn;
             SaveHitpoints();
 #if DEBUG
-            Thread.Sleep(100);
+            Thread.Sleep(1);
 #endif
             //Debugger("Commander Move 3 1");
             //Debugger("8");
@@ -87,14 +87,28 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
+        public static int notAllowHillMoveIndex = -1;
+
         bool CheckShootMe()
         {
             if (Hitpoints == null || troopers.Count() != team.Count)
                 return false;
             foreach (Trooper tr in team)
+            {
                 if ((int)Hitpoints[tr.Id] != tr.Hitpoints)
+                {
+                    notAllowHillMoveIndex = world.MoveIndex;
                     return true;
-            return false;
+                }
+            }
+            if (notAllowHillMoveIndex == -1)
+                return false;
+            if (world.MoveIndex - notAllowHillMoveIndex > 1)
+            {
+                notAllowHillMoveIndex = -1;
+                return false;
+            }
+            return true;
         }
 
         Trooper getTrooperAt(Point point)

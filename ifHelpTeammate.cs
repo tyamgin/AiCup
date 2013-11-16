@@ -8,39 +8,23 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        double getHelpTeammateProfit(Trooper goal)
-        {
-            // TODO:
-            if (goal.Hitpoints >= goal.MaximalHitpoints)
-                return -1;
-            return 1 / (goal.Hitpoints / (double)goal.MaximalHitpoints);
-        }
-
         Point ifHelpTeammate()
         {
-            Point bestGoal = new Point(0, 0, -Inf);
-            foreach (Trooper tr in friend)
+            // Перебираю кого лечить: min(max(0, maxhitpoints - hitpoints), 
+            //                            (Очки - (длина пути - 1) * (стоимость пути)) / (стоимость лечения) * (сколько жизней восстанавливыает)
+            //                        ) 
+            Point bestPoint = Point.Inf;
+            foreach (Trooper tr in team)
             {
-                if (new Point(tr).Nearest(self))
-                {
-                    double profit = getHelpTeammateProfit(tr);
-                    if (profit > bestGoal.profit)
-                        bestGoal = new Point(tr.X, tr.Y, profit);
-                }
+                double profit = Math.Min(Math.Max(0, tr.MaximalHitpoints - tr.Hitpoints),
+                                         (self.ActionPoints - Math.Max(0, getShoterPath(self, tr, map, beginFree: true, endFree: true) - 1) * getMoveCost()) / game.FieldMedicHealCost * (tr.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)
+                                );
+                if (profit > bestPoint.profit)
+                    bestPoint = new Point(tr.X, tr.Y, profit);
             }
-            if (bestGoal.profit > 0)
-                return bestGoal;
-            if (self.Hitpoints + game.FieldMedicHealSelfBonusHitpoints <= self.MaximalHitpoints) // лечить себя
-                return new Point(self.X, self.Y);
-            foreach (Trooper tr in friend)
-            {
-                double profit = getHelpTeammateProfit(tr);
-                if (profit > bestGoal.profit)
-                    bestGoal = new Point(tr.X, tr.Y, profit);
-            }
-            if (bestGoal.profit <= 0)
-                bestGoal = null;
-            return bestGoal;
+            if (bestPoint.profit <= 0)
+                return null;
+            return bestPoint;
         }
     }
 }

@@ -6,7 +6,7 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
-    public class Point
+    public class Point : IComparable<Point>
     {
         public int X, Y;
         public double profit;

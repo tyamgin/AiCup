@@ -4,6 +4,7 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 // ??old??TODO!!!: вместо того чтобы €вно стрел€ть и убивать - шел группироватьс€
 // ѕересмотреть кидать-ли медику гранату если нужно лечить
+// ѕрокитывать как-то allowHill вперед
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -19,6 +20,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             ProcessApproximation();
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
+                BonusGoal = null;
+            if (BonusGoal != null && haveSuchBonus(getTrooper(MyStrategy.whoseBonus), getBonusAt(BonusGoal)))
                 BonusGoal = null;
             if (ifFieldRationNeed())
             {
@@ -124,13 +127,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), true);
+                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), null, true);
                     if (goToEncircling != null && canMove())
                     {
                         Point to = goToUnit(self, goToEncircling, map, beginFree: true, endFree: false);
                         if (to == null || Equal(self, to)) // TODO: если to = null, то значит мы застр€ли, или не хватило очков на стрельбу
                         {
-                            // можно сесть
                             if (canLower() && self.Type != TrooperType.FieldMedic)
                                 Go(ActionType.LowerStance);
                             else
@@ -165,7 +167,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 // ≈сли путь до бонуса пока что зан€т, то все равно идти к нему
                 if (to == null)
                 {
-                    to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: true);
+                    to = goToUnit(self, BonusGoal, notFilledMap, beginFree: true, endFree: true);
                     if (to != null && map[to.X, to.Y] == 0 && getTeamRadius(self.Id, to) <= MaxTeamRadius)
                     {
                         Go(ActionType.Move, to);
