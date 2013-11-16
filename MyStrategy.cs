@@ -71,12 +71,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (ifShot != null)
             {
-                // TODO!!!!!!!!!!!!!!!!!!!!!!!!: —мотреть сколько очков € получу если с€ду, л€гу
-                if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
-                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
+                if (canLower())
                 {
-                    Go(ActionType.LowerStance);
-                    return;
+                    if (howManyCanShoot(new Point(self.X, self.Y), Low(self.Stance)) > 0 && self.Type != TrooperType.FieldMedic &&
+                        (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
+                    {
+                        Go(ActionType.LowerStance);
+                        return;
+                    }
+                    if (howManyCanShoot(new Point(self.X, self.Y), Low(self.Stance)) > 1 && self.Type == TrooperType.Soldier)
+                    {
+                        Go(ActionType.LowerStance);
+                        return;
+                    }
                 }
                 Go(ActionType.Shoot, ifShot);
                 return;

@@ -123,12 +123,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return null;
         }
 
-        bool canShootSomeone(Point position, TrooperStance stance)
+        int howManyCanShoot(Point position, TrooperStance stance)
         {
+            int cnt = 0;
             foreach (Trooper tr in opponents)
                 if (world.IsVisible(self.ShootingRange, position.X, position.Y, stance, tr.X, tr.Y, tr.Stance))
-                    return true;
-            return false;
+                    cnt++;
+            return cnt;
         }
 
         Point GoToEncircling(Trooper center, Point goal, bool needShootingPosition)
@@ -142,7 +143,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     {
                         if (self.GetDistanceTo(i, j) > 10) // немного ускорить
                             continue;
-                        if (needShootingPosition && !canShootSomeone(new Point(i, j), self.Stance))
+                        if (needShootingPosition && howManyCanShoot(new Point(i, j), self.Stance) > 0)
                             continue;
                         // Нужно чтобы хватило ходов
                         int steps = getShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);
