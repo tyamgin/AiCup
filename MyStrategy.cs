@@ -109,7 +109,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // остальные приближаются к EncirclingPoints того кто в опастности
             // TODO: нужно чтобы они стремились к квадрату
             Point mostDanger = getMostDanger();
-            if (mostDanger != null)
+            bool busy = howManyCanShoot(new Point(self), self.Stance) != 0;
+            if (mostDanger != null && !busy)
             {
                 if (Equal(mostDanger, self))
                 {
@@ -164,7 +165,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             
             bool waitingHelp = allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && getBestHelper() != null;
             bool allowNothing = true;
-            if (!waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id
+            if (!busy && !waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id
                 //&& getShoterPath(self, BonusGoal, map, beginFree: true, endFree: false) <= 6
                 )
             {
@@ -204,7 +205,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             //}
 
             // Пытаюсь освободить дорогу до бонуса
-            if (canMove() && BonusGoal != null && MyStrategy.whoseBonus != self.Id
+            if (!busy && canMove() && BonusGoal != null && MyStrategy.whoseBonus != self.Id
                 //&& getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, notFilledMap, beginFree: true, endFree: true) < 6
                 )
             {
@@ -218,7 +219,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             Point ifNothing = IfNothing();
-            if (allowNothing && ifNothing != null && canMove())
+            if (!busy && allowNothing && ifNothing != null && canMove())
             {
                 if (canUpper())
                 {
