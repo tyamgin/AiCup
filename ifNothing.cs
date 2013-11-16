@@ -167,7 +167,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
             if (bestPoint.profit >= Inf)
+            {
+                if (needShootingPosition)
+                    return GoToEncircling(center, goal, false);
                 return null;
+            }
             return bestPoint;
         }
 
