@@ -2,9 +2,8 @@ using System;
 using System.Collections;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
-// ??old??TODO!!!: вместо того чтобы явно стрелять и убивать - шел группироваться
-// Пересмотреть кидать-ли медику гранату если нужно лечить
-// Прокитывать как-то allowHill вперед
+// TODO: Пересмотреть кидать-ли медику гранату если нужно лечить
+// TODO:!!!! Для сбора бонусов та же фича
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -45,22 +44,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            // может возникнуть такое, что очков на выстрел нету, и он попытается пойти на клетку врага
             Point ifShot = IfShot();
-            if (ifShot != null)
-            {
-                // TODO!!!!!!!!!!!!!!!!!!!!!!!!: Смотреть сколько очков я получу если сяду, лягу
-                if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
-                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
-                {
-                    Go(ActionType.LowerStance);
-                    return;
-                }
-                Go(ActionType.Shoot, ifShot);
-                return;
-            }
 
-            if (self.Type == TrooperType.FieldMedic)
+            if (self.Type == TrooperType.FieldMedic && (friend.Count != 0 || ifShot == null))
             {
                 Point ifHelp = ifHelpTeammate();
                 if (ifHelp != null)
@@ -73,7 +59,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                     if (canMove())
                     {
-                        Point to = goToUnit(self, ifHelp, map, beginFree:true, endFree:true);
+                        Point to = goToUnit(self, ifHelp, map, beginFree: true, endFree: true);
                         if (to != null)
                         {
                             Go(ActionType.Move, to);
@@ -81,6 +67,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         }
                     }
                 }
+            }
+
+            if (ifShot != null)
+            {
+                // TODO!!!!!!!!!!!!!!!!!!!!!!!!: Смотреть сколько очков я получу если сяду, лягу
+                if (canLower() && canShootSomeone(new Point(self.X, self.Y), Low(self.Stance)) && self.Type != TrooperType.FieldMedic &&
+                    (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
+                {
+                    Go(ActionType.LowerStance);
+                    return;
+                }
+                Go(ActionType.Shoot, ifShot);
+                return;
             }
 
             // Если радиус большой, то нужно сгруппироваться
@@ -202,54 +201,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, notFilledMap, beginFree: true, endFree: true) < 6
                 )
             {
-                Point bestTurn = new Point(self.X, self.Y, getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, map, beginFree: true, endFree: false));
-                foreach (Point p in Nearest(self, map))
-                {
-                    map[self.X, self.Y] = 0;
-                    map[p.X, p.Y] = 1;
-                    int path = getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, map, beginFree: true, endFree: false);
-                    if (path < bestTurn.profit)
-                        bestTurn = new Point(p.X, p.Y, path);
-                    map[self.X, self.Y] = 1;
-                    map[p.X, p.Y] = 0;
-                }
-                if (bestTurn.profit < Inf)
-                {
-                    if (Equal(bestTurn, self))
-                    {   
-                        // Либо двигаться в окружение, чтобы только не загородить(увеличить кратчайший путь до бонуса)
-                        bestTurn = new Point(0, 0, Inf);
-                        foreach (Point p in getEncirclingPoints(getTrooper(MyStrategy.whoseBonus), false, 1))
-                        {
-                            int pathBefore = getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, map, beginFree: true, endFree: false);
-                            int path = getShoterPath(self, p, map, beginFree: true, endFree: false);
-                            Point to = goToUnit(self, p, map, beginFree: true, endFree: false);
-                            if (to != null)
-                            {
-                                map[self.X, self.Y] = 0;    
-                                map[to.X, to.Y] = 1;
-                                int pathAfter = getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, map, beginFree: true, endFree: false);
-                                if (pathBefore >= pathAfter && path < bestTurn.profit)
-                                    bestTurn = new Point(to.X, to.Y, path);
-                                map[self.X, self.Y] = 1;
-                                map[to.X, to.Y] = 0;
-                            }
-                        }
-                        if (bestTurn.profit >= Inf || Equal(bestTurn, self))
-                            Go(ActionType.EndTurn);
-                        else
-                            Go(ActionType.Move, bestTurn);
-                    }
-                    else
-                    {
-                        Go(ActionType.Move, bestTurn);
-                    }
-                    return;
-                }
+                Point bestTurn = GoToEncircling(getTrooper(MyStrategy.whoseBonus), BonusGoal, needShootingPosition: false);
+                Point to = bestTurn == null ? null : goToUnit(self, bestTurn, map, beginFree: true, endFree: false);
+                if (Equal(bestTurn, self))
+                    Go(ActionType.EndTurn);
                 else
-                {
-                    self = self;
-                }
+                    Go(ActionType.Move, to);
+                return;
             }
 
             Point ifNothing = IfNothing();
