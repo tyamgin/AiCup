@@ -17,8 +17,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            //if (world.MoveIndex == 3 && self.Type == TrooperType.Commander)
-            //    world = world;
+            if (world.MoveIndex == 6/* && self.Type == TrooperType.Commander*/)
+                world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
@@ -136,7 +136,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), null, true);
+                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), null, self.Type != TrooperType.FieldMedic);
                     if (goToEncircling != null && canMove())
                     {
                         Point to = goToUnit(self, goToEncircling, map, beginFree: true, endFree: false);
