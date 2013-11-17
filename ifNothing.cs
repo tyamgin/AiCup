@@ -135,7 +135,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Point GoToEncircling(Trooper center, Point goal, bool needShootingPosition)
         {
             Point bestPoint = new Point(0, 0, Inf);
-            int optDanger = self.Type == TrooperType.FieldMedic ? Inf : -Inf;
+            double optDanger = self.Type == TrooperType.FieldMedic ? Inf : -Inf;
             for (int i = 0; i < width; i++)
             {   
                 for (int j = 0; j < height; j++)
@@ -161,10 +161,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                             if ((goal == null || after < Inf) && after <= before)
                             {
                                 double sum = getShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
-                                if (sum < bestPoint.profit || sum == bestPoint.profit && (self.Type == TrooperType.FieldMedic ? (danger[i, j] < optDanger) : ((danger[i, j] > optDanger))))
+                                double dang = danger[i, j] + (goal == null ? 0 : goal.GetDistanceTo(i, j) * 0.01);
+                                if (sum < bestPoint.profit || sum == bestPoint.profit && (self.Type == TrooperType.FieldMedic ? (dang < optDanger) : ((dang > optDanger))))
                                 {
                                     bestPoint = new Point(i, j, sum);
-                                    optDanger = danger[i, j];
+                                    optDanger = dang;
                                 }
                             }
                         }
