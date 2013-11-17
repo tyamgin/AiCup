@@ -183,6 +183,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(self, BonusGoal, map, beginFree: true, endFree: false) <= 6
                 )
             {
+                if (canUpper())
+                {
+                    Go(ActionType.RaiseStance);
+                    return;
+                }
                 allowNothing = false;
                 Point to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
                 // Если путь до бонуса пока что занят, то все равно идти к нему
@@ -223,6 +228,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, notFilledMap, beginFree: true, endFree: true) < 6
                 )
             {
+                if (canUpper())
+                {
+                    Go(ActionType.RaiseStance);
+                    return;
+                }
                 Point bestTurn = SkipPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, needShootingPosition: false);
                 Point to = bestTurn == null ? null : goToUnit(self, bestTurn, map, beginFree: true, endFree: false);
                 if (to == null || Equal(to, self))
