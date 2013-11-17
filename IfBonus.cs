@@ -86,5 +86,52 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 bestPoint = null;
             return bestPoint;
         }
+
+
+
+        Point SkipPath(Trooper center, Point goal, bool needShootingPosition)
+        {
+            // В первую очередь минимизировать путь center до goal
+            Point bestPoint = new Point(0, 0, Inf);
+            int minDistToCenter = Inf;
+            for (int i = 0; i < width; i++)
+            {
+                for (int j = 0; j < height; j++)
+                {
+                    if (map[i, j] == 0 || i == self.X && j == self.Y)
+                    {
+                        if (self.GetDistanceTo(i, j) > 10) // немного ускорит
+                            continue;
+                        if (needShootingPosition && howManyCanShoot(new Point(i, j), self.Stance) == 0)
+                            continue;
+                        // Нужно чтобы хватило ходов
+                        int steps = getShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);
+                        if (self.ActionPoints / getMoveCost() >= steps)
+                        {
+                            // и чтобы не закрывали кратчайший путь:
+                            map[self.X, self.Y] = 0;
+                            map[i, j] = 1;
+                            int after = getShoterPath(center, goal, map, beginFree: true, endFree: false);
+                            map[i, j] = 0;
+                            map[self.X, self.Y] = 1;
+
+                            int path = getShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
+                            if (after < bestPoint.profit || after == bestPoint.profit && path < minDistToCenter)
+                            {
+                                bestPoint = new Point(i, j, after);
+                                minDistToCenter = path;
+                            }
+                        }
+                    }
+                }
+            }
+            if (bestPoint.profit >= Inf)
+            {
+                if (needShootingPosition)
+                    return SkipPath(center, goal, false);
+                return null;
+            }
+            return bestPoint;
+        }
     }
 }

@@ -17,8 +17,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 18 && self.Type == TrooperType.Soldier)
-                world = world;
+            //if (world.MoveIndex == 3 && self.Type == TrooperType.Commander)
+            //    world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
@@ -91,25 +91,24 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            // Если радиус большой, то нужно сгруппироваться
-            if (canMove() && self.Id != commander.Id && getTeamRadius() > MaxTeamRadius)
-            {
-                Point grouping = ifGrouping();
-                // grouping != null !!!
-                if (!Equal(grouping, self))
-                {
-                    Point to = goToUnit(self, grouping, map, beginFree: true, endFree: false);
-                    if (to != null)
-                    {
-                        Go(ActionType.Move, to);
-                        return;
-                    }
-                }
-            }
+            //// Если радиус большой, то нужно сгруппироваться
+            //if (canMove() && self.Id != commander.Id && getTeamRadius() > MaxTeamRadius)
+            //{
+            //    Point grouping = ifGrouping();
+            //    // grouping != null !!!
+            //    if (!Equal(grouping, self))
+            //    {
+            //        Point to = goToUnit(self, grouping, map, beginFree: true, endFree: false);
+            //        if (to != null)
+            //        {
+            //            Go(ActionType.Move, to);
+            //            return;
+            //        }
+            //    }
+            //}
 
             // Если нужно идти атаковать, то тот кто находится на самой опасной зоне выполняет IfGoAtack,
             // остальные приближаются к EncirclingPoints того кто в опастности
-            // TODO: нужно чтобы они стремились к квадрату
             Point mostDanger = getMostDanger();
             bool busy = howManyCanShoot(new Point(self), self.Stance) != 0;
             // TODO: getMostDanger <- добавить если я вижу
@@ -149,11 +148,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                                 Go(ActionType.EndTurn);
                             return;    
                         }
-                        if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
-                        {
-                            Go(ActionType.Move, to);
-                            return;
-                        }
+                        Go(ActionType.Move, to);
+                        return;
                     }
                 }
             }
@@ -212,9 +208,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //&& getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, notFilledMap, beginFree: true, endFree: true) < 6
                 )
             {
-                Point bestTurn = GoToEncircling(getTrooper(MyStrategy.whoseBonus), BonusGoal, needShootingPosition: false);
+                Point bestTurn = SkipPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, needShootingPosition: false);
                 Point to = bestTurn == null ? null : goToUnit(self, bestTurn, map, beginFree: true, endFree: false);
-                if (Equal(bestTurn, self))
+                if (to == null || Equal(to, self))
                     Go(ActionType.EndTurn);
                 else
                     Go(ActionType.Move, to);
@@ -244,7 +240,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                else if (!waitingHelp && getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                else if (!waitingHelp && (self.Id != commander.Id || getTeamRadius(self.Id, to) <= MaxTeamRadius))
                 {
                     Go(ActionType.Move, to);
                     return;
