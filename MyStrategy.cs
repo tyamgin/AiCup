@@ -140,13 +140,28 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     if (goToEncircling != null && canMove())
                     {
                         Point to = goToUnit(self, goToEncircling, map, beginFree: true, endFree: false);
-                        if (to == null || Equal(self, to)) // TODO: если to = null, то значит мы застряли, или не хватило очков на стрельбу
+                        if (to == null || Equal(self, to))
                         {
-                            if (canLower() && self.Type != TrooperType.FieldMedic)
-                                Go(ActionType.LowerStance);
-                            else
-                                Go(ActionType.EndTurn);
-                            return;    
+                            if (self.Type != TrooperType.FieldMedic)
+                            {
+                                int mySt = getStanceId(self.Stance);
+                                for(int st = 0; st < 3; st++)
+                                {
+                                    if (howManyCanShoot(new Point(self), getStance(st)) != 0)
+                                    {
+                                        if (st < mySt && canLower())
+                                            Go(ActionType.LowerStance);
+                                        else if (st > mySt && canUpper())
+                                            Go(ActionType.RaiseStance);
+                                        else
+                                            Go(ActionType.EndTurn);
+                                        return;
+                                    }
+                                }
+                            }
+                            // Значит либо я медик, либо кто-то должен подвинуться
+                            Go(ActionType.EndTurn);
+                            return;
                         }
                         Go(ActionType.Move, to);
                         return;
@@ -240,7 +255,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                else if (!waitingHelp && (self.Id != commander.Id || getTeamRadius(self.Id, to) <= MaxTeamRadius))
+                else if (!waitingHelp && (self.Id != getCurrentLeaderId() || getTeamRadius(self.Id, to) <= MaxTeamRadius))
                 {
                     Go(ActionType.Move, to);
                     return;

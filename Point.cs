@@ -25,6 +25,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Y = unit.Y;
         }
 
+        public double GetDistanceTo(double x, double y)
+        {
+            return Math.Sqrt((X - x) * (X - x) + (Y - y) * (Y - y));
+        }
+
         public double GetDistanceTo(Unit unit)
         {
             return GetDistanceTo(unit.X, unit.Y);

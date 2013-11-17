@@ -53,11 +53,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         int getMoveCost()
         {
-            if (self.Stance == TrooperStance.Prone)
+            return getMoveCost(this.self);
+        }
+
+        int getMoveCost(Trooper self)
+        {
+            return getMoveCost(self.Stance);
+        }
+
+        int getMoveCost(TrooperStance stance)
+        {
+            if (stance == TrooperStance.Prone)
                 return game.ProneMoveCost;
-            if (self.Stance == TrooperStance.Kneeling)
+            if (stance == TrooperStance.Kneeling)
                 return game.KneelingMoveCost;
-            if (self.Stance == TrooperStance.Standing)
+            if (stance == TrooperStance.Standing)
                 return game.StandingMoveCost;
             throw new Exception("something wrong");
         }
@@ -279,7 +289,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool canUpper()
         {
-            return self.Stance != TrooperStance.Standing && self.ActionPoints >= game.StanceChangeCost;
+            return canUpper(this.self);
+        }
+
+        bool canUpper(TrooperStance stance, int actionPoints)
+        {
+            return stance != TrooperStance.Standing && actionPoints >= game.StanceChangeCost;
+        }
+
+        bool canUpper(Trooper self)
+        {
+            return canUpper(self.Stance, self.ActionPoints);
         }
 
         TrooperStance Low(TrooperStance stance)
@@ -298,6 +318,42 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (stance == TrooperStance.Kneeling)
                 return TrooperStance.Standing;
             throw new Exception("");
+        }
+
+        int getStanceId(TrooperStance stance)
+        {
+            if (stance == TrooperStance.Prone)
+                return 0;
+            if (stance == TrooperStance.Kneeling)
+                return 1;
+            if (stance == TrooperStance.Standing)
+                return 2;
+            throw new Exception("Unknown TrooperStance");
+        }
+
+        TrooperStance getStance(int stance)
+        {
+            if (stance == 0)
+                return TrooperStance.Prone;
+            if (stance == 1)
+                return TrooperStance.Kneeling;
+            if (stance == 2)
+                return TrooperStance.Standing;
+            throw new Exception("Unknown TrooperStance");
+        }
+
+        long getCurrentLeaderId()
+        {
+            if (BonusGoal != null)
+                return MyStrategy.whoseBonus;
+            return commander.Id;
+        }
+
+        Trooper getCurrentLeader()
+        {
+            if (BonusGoal != null)
+                return getTrooper(MyStrategy.whoseBonus);
+            return commander;
         }
     }
 }
