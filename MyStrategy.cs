@@ -17,8 +17,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 6/* && self.Type == TrooperType.Commander*/)
-                world = world;
+            //if (world.MoveIndex == 6 && self.Type == TrooperType.Commander)
+            //    world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
@@ -76,7 +76,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 if (canLower())
                 {
                     if (howManyCanShoot(new Point(self.X, self.Y), Low(self.Stance)) > 0 && self.Type != TrooperType.FieldMedic &&
-                        (self.ActionPoints - game.StanceChangeCost) / self.ShootCost >= self.ActionPoints / self.ShootCost)
+                        (self.ActionPoints - game.StanceChangeCost + game.FieldRationBonusActionPoints - game.FieldRationEatCost) / self.ShootCost >= (self.ActionPoints + game.FieldRationBonusActionPoints - game.FieldRationEatCost) / self.ShootCost)
                     {
                         Go(ActionType.LowerStance);
                         return;
@@ -91,22 +91,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            //// Если радиус большой, то нужно сгруппироваться
-            //if (canMove() && self.Id != commander.Id && getTeamRadius() > MaxTeamRadius)
-            //{
-            //    Point grouping = ifGrouping();
-            //    // grouping != null !!!
-            //    if (!Equal(grouping, self))
-            //    {
-            //        Point to = goToUnit(self, grouping, map, beginFree: true, endFree: false);
-            //        if (to != null)
-            //        {
-            //            Go(ActionType.Move, to);
-            //            return;
-            //        }
-            //    }
-            //}
-
             // Если нужно идти атаковать, то тот кто находится на самой опасной зоне выполняет IfGoAtack,
             // остальные приближаются к EncirclingPoints того кто в опастности
             Point mostDanger = getMostDanger();
@@ -119,6 +103,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Point ifGoAtack = IfGoAtack();
                     if (ifGoAtack != null && canMove())
                     {
+                        busy = true;
                         if (mustAtack())
                         {
                             Point to = goToUnit(self, ifGoAtack, map, beginFree: true, endFree: true);
@@ -128,9 +113,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                                 return;
                             }
                         }
-                        else
+                        else if (self.Type != TrooperType.FieldMedic && canLower())
                         {
-                            // TODO!!!: мб ложиться??????
+                            Go(ActionType.LowerStance);
+                            return;
                         }
                     }
                 }
@@ -179,9 +165,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             
             bool waitingHelp = allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && getBestHelper() != null;
             bool allowNothing = true;
-            if (!busy && !waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id
-                //&& getShoterPath(self, BonusGoal, map, beginFree: true, endFree: false) <= 6
-                )
+            if (!busy && !waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id)
             {
                 if (canUpper())
                 {

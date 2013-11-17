@@ -81,7 +81,6 @@
     <Compile Include="IfFieldRation.cs" />
     <Compile Include="IfHelpTeammate.cs" />
     <Compile Include="IfNothing.cs" />
-    <Compile Include="IfRunAway.cs" />
     <Compile Include="IfThrowGrenade.cs" />
     <Compile Include="Model\Bonus.cs" />
     <Compile Include="Model\BonusType.cs" />
@@ -96,7 +95,6 @@
     <Compile Include="Model\Player.cs" />
     <Compile Include="Model\PlayerContext.cs" />
     <Compile Include="Point.cs" />
-    <Compile Include="PriorityQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteProcessClient.cs" />
     <Compile Include="Runner.cs" />

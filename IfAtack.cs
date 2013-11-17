@@ -13,7 +13,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (goal.IsTeammate)
                 return -Inf;
-            double profit = 1.0 / goal.Hitpoints;
+            double profit = 1.0 / goal.Hitpoints * (goal.Type == TrooperType.FieldMedic ? 1.1 : 1);
             if (isLastInTeam(goal))
                 return profit * 1.5;
             return profit;
@@ -85,30 +85,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 return self.ActionPoints >= getMoveCost() + 2 * self.ShootCost; // 1 сходить + 2 выстрелить
             }
-            else if (self.Type == TrooperType.FieldMedic)
+            if (self.Type == TrooperType.FieldMedic)
             {
                 if (friend.Count == 0)
                     return self.ActionPoints == self.InitialActionPoints;
                 return false; // TODO: подумать
             }
-            else if (self.Type == TrooperType.Scout)
+            if (self.Type == TrooperType.Scout)
             {
                 return true;
                 // TODO:
             }
-            else if (self.Type == TrooperType.Sniper)
+            if (self.Type == TrooperType.Sniper)
             {
                 return true;
                 // TODO:
             }
-            else if (self.Type == TrooperType.Soldier)
+            if (self.Type == TrooperType.Soldier)
             {
                 return self.ActionPoints == self.InitialActionPoints;
             }
-            else
-            {
-                throw new Exception("Unknown TrooperType");
-            }
+            throw new Exception("Unknown TrooperType");
         }
     }
 }
