@@ -18,6 +18,23 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return 1;
         }
 
+        int getQueuePlace2(Trooper trooper, bool MayFirst)
+        {
+            for (int i = 0; i < queue.Count; i++)
+            {
+                if (getTrooper((long)queue[i]) == null)
+                {
+                    queue.RemoveAt(i);
+                    i--;
+                }
+            }
+            int current = queue.IndexOf(self.Id);
+            for (int idx = current + (MayFirst ? 0 : 1); ; idx++)
+                if ((long)queue[idx % queue.Count] == trooper.Id)
+                    return idx - current + 1;
+            return -1;
+        }
+
         bool haveSuchBonus(Trooper self, Bonus bonus)
         {
             if (bonus == null)

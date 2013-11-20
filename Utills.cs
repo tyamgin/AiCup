@@ -72,6 +72,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("something wrong");
         }
 
+        int getMoveCost(int stance)
+        {
+            if (stance == 0)
+                return game.ProneMoveCost;
+            if (stance == 1)
+                return game.KneelingMoveCost;
+            if (stance == 2)
+                return game.StandingMoveCost;
+            throw new Exception("something wrong");
+        }
+
         void SaveHitpoints()
         {
             Hitpoints = new Hashtable();
@@ -354,6 +365,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (BonusGoal != null)
                 return getTrooper(MyStrategy.whoseBonus);
             return commander;
+        }
+
+        void Swap(ref int a, ref int b)
+        {
+            int tmp = a;
+            a = b;
+            b = tmp;
         }
     }
 }
