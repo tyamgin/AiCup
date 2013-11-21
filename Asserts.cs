@@ -10,36 +10,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        void Debugger(string param, int Turn = -1)
-        {
-#if DEBUG
-            if (param.Length <= 2)
-            {
-                int turn = int.Parse(param);
-                if (turn == world.MoveIndex)
-                {
-                    turn = turn;
-                }
-            }
-            else
-            {
-                // example: "FieldMedic Move 11 15"
-                string[] args = param.Split(' ');
-                if (self.Type.ToString() == args[0] &&
-                    move.Action.ToString() == args[1] &&
-                    move.X.ToString() == args[2] &&
-                    move.Y.ToString() == args[3] &&
-                    (Turn == -1 || Turn == world.MoveIndex)
-                   )
-                {
-                    param = param;
-                }
-            }
-#endif
-        }
-
-
-
         void validateMove()
         {
 #if DEBUG

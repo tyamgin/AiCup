@@ -93,5 +93,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return Y.CompareTo(other.Y);
             return X.CompareTo(other.X);
         }
+
+        //public static Point Zero = new Point(0, 0);
     }
 }

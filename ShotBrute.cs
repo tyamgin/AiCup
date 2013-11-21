@@ -39,25 +39,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            public override int GetHashCode()
-            {
-                int hash = 0;
-                unchecked
-                {
-                    for (int i = 0; i < Troopers.Count(); i++)
-                    {
-                        hash = hash * 31 + Position[i].X;
-                        hash = hash * 31 + Position[i].Y;
-                        hash = hash * 31 + Stance[i];
-                        hash = hash * 31 + hit[i];
-                        hash = hash * 31 + (heal[i] ? 1 : 0);
-                        hash = hash * 31 + (grenade[i] ? 1 : 0);
-                    }
-                    hash = hash * 31 + id;
-                }
-                return hash;
-            }
-
             public override string ToString()
             {
                 return "" + id + " " + Position[id];
@@ -67,7 +48,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         static int CommanderId; // индекс Commandera, или -1 если его нет
 
         private static State state;
-        private static Point[] moveToVariants;
         private static ArrayList[] stack;
         private static ArrayList[] bestStack;
         private static double bestProfit;
@@ -76,24 +56,25 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             var id = state.id;
 
-            for (int ds = -2; ds <= 2; ds++)
+            for (int deltaStance = -2; deltaStance <= 2; deltaStance++)
             {
-                state.Stance[id] += ds;
+                // Изменяю stance на deltaStance
+                state.Stance[id] += deltaStance;
                 if (state.Stance[id] >= 0 && state.Stance[id] < 3)
                 {
-                    int cost = game.StanceChangeCost * Math.Abs(ds);
+                    int cost = game.StanceChangeCost * Math.Abs(deltaStance);
                     if (cost <= state.act[id])
                     {
                         state.act[id] -= cost;
-                        if (ds != 0)
-                            stack[id].Add("st " + ds);
+                        if (deltaStance != 0)
+                            stack[id].Add("st " + deltaStance);
                         dfs_move2();
-                        if (ds != 0)
+                        if (deltaStance != 0)
                             stack[id].RemoveAt(stack[id].Count - 1);
                         state.act[id] += cost;
                     }
                 }
-                state.Stance[id] -= ds;
+                state.Stance[id] -= deltaStance;
             }
         }
 
@@ -102,217 +83,210 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var id = state.id;
             var stance = state.Stance[id];
             var moveCost = getMoveCost(stance);
-            
-            foreach (Point p in moveToVariants)
+
+            var To = FastBfs(state.X, state.Y, 3, notFilledMap, state.Position);
+            foreach (Point to in To)
             {
-                state.Position[id].X += p.X;
-                state.Position[id].Y += p.Y;
-                // TODO: найти кратчайший путь с учетом state
-                var cost = (Math.Abs(p.X) + Math.Abs(p.Y))*moveCost;
-                if (cost <= state.act[id] && Validate(state) || p.X == 0 && p.Y == 0)
+                int byX = to.X - state.X;
+                int byY = to.Y - state.Y;
+                state.Position[id].X += byX;
+                state.Position[id].Y += byY;
+                var cost = (int)(to.profit + Eps)*moveCost;
+                if (cost <= state.act[id] && Validate(state))
                 {
                     state.act[id] -= cost;
-                    if (p.X != 0 || p.Y != 0)
+                    if (byX != 0 || byY != 0)
                         stack[id].Add("at " + state.X + " " + state.Y);
-                    dfs_changeStance5(); //dfs_heal_grenade3();
-                    if (p.X != 0 || p.Y != 0)
+                    if (state.grenade[id] || state.heal[id])
+                        dfs_heal_grenade3();
+                    else
+                        dfs_changeStance5();
+                    if (byX != 0 || byY != 0)
                         stack[id].RemoveAt(stack[id].Count - 1);
                     state.act[id] += cost;
                 }
-                state.Position[id].X -= p.X;
-                state.Position[id].Y -= p.Y;
+                state.Position[id].X -= byX;
+                state.Position[id].Y -= byY;
             }
         }
 
         private void dfs_heal_grenade3()
         {
-            var id = state.id;
-            var stance = state.Stance[id];
-            var moveCost = getMoveCost(stance);
+            //int id = state.id;
 
-            /*if (ss.heal && ss.actionPoints >= game.MedikitUseCost)
-            {
-                foreach (Point p in ss.Position)
-                {
-                    if (p.Nearest(ss.Position[id]))
-                    {
-                        ss.heal = false;
-                        ss.actionPoints -= game.MedikitUseCost;
-                        dfs_move4();
-                        ss.heal = true;
-                        ss.actionPoints += game.MedikitUseCost;
-                    }
-                }
-            }
+            //if (state.heal[id])
+            //{
+            //    state.heal[id] = false;
+            //    var holdingGrenade = state.grenade[id];
+            //    state.grenade[id] = false;
+            //    for(int i = 0; i < mySize; i++)
+            //    {
+            //        Trooper to = Troopers[i];
+            //        // если имеет смысл юзать
+            //        if (state.hit[i] < 0.8*to.MaximalHitpoints)
+            //        {
+            //            var dist = Math.Abs(state.X - state.Position[i].X) + Math.Abs(state.Y - state.Position[i].Y); // TODO:
+            //            var cost = game.MedikitUseCost + (dist - 1)*getMoveCost(state.Stance[id]);
+            //            if (cost < state.act[id])
+            //            {
+            //                var oldhit = state.hit[i];
+            //                state.act[id] -= cost;
+            //                state.hit[i] = Math.Min(to.MaximalHitpoints, state.hit[i] + (i == id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
+            //                stack[id].Add("med");
+            //                dfs_move2();
+            //                stack[id].RemoveAt(stack[id].Count - 1);
+            //                state.hit[i] = oldhit;
+            //                state.act[id] += cost;
+            //            }
+            //        }
+            //    }
+            //    state.heal[id] = true;
+            //    state.grenade[id] = holdingGrenade;
+            //}
 
-            if (ss.grenade && ss.actionPoints >= game.GrenadeThrowCost)
-            {
-                Point to;/// TODO
-                ss.grenade = false;
-                ss.actionPoints -= game.GrenadeThrowCost;
-                dfs_move4();
-                ss.actionPoints += game.GrenadeThrowCost;
-                ss.grenade = true;
-            }
 
-            dfs_move4();*/
+            //if (state.grenade[id])
+            //{
+            //    // TODO:
+            //}
+
+            dfs_changeStance5();
         }
-
-        //private void dfs_move4()
-        //{
-        //    var hash = ss.GetHashCode();
-        //    if (used.Contains(hash))
-        //        return;
-        //    used.Add(hash);
-
-        //    var id = ss.id;
-        //    var stance = ss.Stance[id];
-        //    var moveCost = getMoveCost(stance);
-
-        //    foreach (Point p in moveToVariants)
-        //    {
-        //        ss.Position[id].X += p.X;
-        //        ss.Position[id].Y += p.Y;
-        //        var cost = (Math.Abs(p.X) + Math.Abs(p.Y)) * moveCost;
-        //        if (cost <= ss.act[id] && Validate(ss) || p.X == 0 && p.Y == 0)
-        //        {
-        //            ss.act[id] -= cost;
-        //            dfs_changeStance5();
-        //            ss.act[id] += cost;
-        //        }
-        //        ss.Position[id].X -= p.X;
-        //        ss.Position[id].Y -= p.Y;
-        //    }
-        //}
 
         void dfs_changeStance5()
         {
             var id = state.id;
 
-            for (int ds = -2; ds <= 2; ds++)
+            for (int deltaStance = -2; deltaStance <= 2; deltaStance++)
             {
-                state.Stance[id] += ds;
+                state.Stance[id] += deltaStance;
                 if (state.Stance[id] >= 0 && state.Stance[id] < 3)
                 {
-                    int cost = game.StanceChangeCost * Math.Abs(ds);
+                    var cost = game.StanceChangeCost * Math.Abs(deltaStance);
                     if (cost <= state.act[id])
                     {
                         state.act[id] -= cost;
-                        if (ds != 0)
-                            stack[id].Add("st " + ds);
+                        if (deltaStance != 0)
+                            stack[id].Add("st " + deltaStance);
                         dfs_end(); //dfs_move2();
-                        if (ds != 0)
+                        if (deltaStance != 0)
                             stack[id].RemoveAt(stack[id].Count - 1);
                         state.act[id] += cost;
                     }
                 }
-                state.Stance[id] -= ds;
+                state.Stance[id] -= deltaStance;
             }
         }
 
-        private int cnt = 0;
+        private int counter = 0;
         private int[] opphit = new int[55];
         private int oppSize;
         private int mySize;
+        int[] opphitOld;
+        int[] actOld;
+        int[] hitOld;
+        int[] oldStackSize;
 
         void dfs_end()
         {
             var id = state.id;
-            var opphitOld = new int[oppSize];
-            var actOld = new int[mySize];
-            Array.Copy(opphit, opphitOld, oppSize);
-            Array.Copy(state.act, actOld, mySize);
 
             if (id == mySize - 1)
             {
-                cnt++;
+                Array.Copy(opphit, opphitOld, oppSize);
+                Array.Copy(state.act, actOld, mySize);
+                Array.Copy(state.hit, hitOld, mySize);
+
+                counter++;
                 
                 // stask sizes backup
-                var oldStackSize = new int[mySize];
                 for (int i = 0; i < mySize; i++)
                     oldStackSize[i] = stack[i].Count;
 
+                // делаю как будто каждый будет убивать у кого меньше жизней которого видит (и у них не теряются жизни)
                 double profit = 0;
                 for (int i = 0; i < mySize; i++)
                 {
+                    int bestIdx = -1;
+                    int minHit = Inf;
                     for (int idx = 0; idx < oppSize; idx++)
                     {
                         var opp = opponents[idx] as Trooper;
                         if (opphit[idx] > 0 && world.IsVisible(Troopers[i].ShootingRange, state.Position[i].X, state.Position[i].Y, getStance(state.Stance[i]),
                                                                                           opp.X, opp.Y, opp.Stance))
                         {
-                            int can = state.act[i]/Troopers[i].ShootCost;
-                            int damage = Troopers[i].GetDamage(getStance(state.Stance[i]));
-                            int need = (opphit[idx] + damage - 1)/damage;
-                            if (need <= can)
+                            if (opphit[idx] < minHit)
                             {
-                                //profit += opphit[idx]; 
-                                profit += opphit[idx] * 1.2;
-                                opphit[idx] = 0;
-                                state.act[i] -= Troopers[i].ShootCost*need;
-                                for (int k = 0; k < need; k++)
-                                {
-                                    stack[i].Add("sh " + opp.X + " " + opp.Y);
-                                }
+                                minHit = opphit[idx];
+                                bestIdx = idx;
                             }
-                            else
-                            {
-                                state.act[i] = 0;
-                                opphit[idx] -= damage*can;
-                                profit += damage*can;
-                                for (int k = 0; k < can; k++)
-                                {
-                                    stack[i].Add("sh " + opp.X + " " + opp.Y);
-                                }
-                            }
+                        }
+                    }
+                    if (bestIdx != -1)
+                    {
+                        var opp = opponents[bestIdx] as Trooper;
+                        var can = state.act[i]/Troopers[i].ShootCost;
+                        var damage = Troopers[i].GetDamage(getStance(state.Stance[i]));
+                        var need = (minHit + damage - 1)/damage;
+
+                        if (need <= can)
+                        {
+                            profit += minHit * 1.2;
+                            for (int k = 0; k < need; k++)
+                                stack[i].Add("sh " + opp.X + " " + opp.Y);
+                        }
+                        else
+                        {
+                            profit += damage * can;
+                            for (int k = 0; k < can; k++)
+                                stack[i].Add("sh " + opp.X + " " + opp.Y);
                         }
                     }
                 }
 
                 // Штраф за большой радиус
-                double sumX = 0, sumY = 0;
-                foreach (Point p in state.Position)
+                double centerX = 0, centerY = 0;
+                foreach (Point position in state.Position)
                 {
-                    sumX += p.X;
-                    sumY += p.Y;
+                    centerX += position.X;
+                    centerY += position.Y;
                 }
-                sumX /= mySize;
-                sumY /= mySize;
-                foreach (Point p in state.Position)
-                    profit -= p.GetDistanceTo(sumX, sumY);
+                centerX /= mySize;
+                centerY /= mySize;
+                foreach (Point position in state.Position)
+                    profit -= position.GetDistanceTo(centerX, centerY);
                 
-                for (int i = 0; i < oppSize; i++)
-                {
-                    if (opphit[i] > 0)
-                    {
-                        var opp = opponents[i] as Trooper;
-                        var act = opp.InitialActionPoints;
-                        for (int idx = 0; idx < mySize; idx++)
-                        {
-                            if (state.hit[idx] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance,
-                                                                      state.Position[idx].X, state.Position[idx].Y, getStance(state.Stance[idx]))
-                                )
-                            {
-                                int can = act / opp.ShootCost;
-                                int damage = opp.GetDamage(opp.Stance);
-                                int need = (state.hit[idx] + damage - 1) / damage;
-                                if (need <= can)
-                                {
-                                    //profit += opphit[idx]; 
-                                    profit -= state.hit[idx] * 1.4;
-                                    state.hit[idx] = 0;
-                                    act -= opp.ShootCost * need;
-                                }
-                                else
-                                {
-                                    act = 0;
-                                    state.hit[idx] -= damage * can;
-                                    profit -= damage * can;
-                                }
-                            }
-                        }
-                    }
-                }
+                //for (int i = 0; i < oppSize; i++)
+                //{
+                //    if (opphit[i] > 0)
+                //    {
+                //        var opp = opponents[i] as Trooper;
+                //        var act = opp.InitialActionPoints;
+                //        for (int idx = 0; idx < mySize; idx++)
+                //        {
+                //            if (state.hit[idx] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance,
+                //                                                      state.Position[idx].X, state.Position[idx].Y, getStance(state.Stance[idx]))
+                //                )
+                //            {
+                //                var can = act / opp.ShootCost;
+                //                var damage = opp.GetDamage(opp.Stance);
+                //                var need = (state.hit[idx] + damage - 1) / damage;
+                //                if (need <= can)
+                //                {
+                //                    profit -= state.hit[idx] * 1.4;
+                //                    state.hit[idx] = 0;
+                //                    act -= opp.ShootCost * need;
+                //                }
+                //                else
+                //                {
+                //                    act = 0;
+                //                    state.hit[idx] -= damage * can;
+                //                    profit -= damage * can;
+                //                }
+                //            }
+                //        }
+                //    }
+                //}
 
                 if (profit > bestProfit)
                 {
@@ -322,6 +296,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         bestStack[i] = stack[i].Clone() as ArrayList;
                 }
                 Array.Copy(actOld, state.act, mySize);
+                Array.Copy(hitOld, state.hit, mySize);
                 Array.Copy(opphitOld, opphit, oppSize);
                 for (int i = 0; i < mySize; i++)
                     stack[i].RemoveRange(oldStackSize[i], stack[i].Count - oldStackSize[i]);
@@ -356,6 +331,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         private bool Validate(State state)
         {
+            // TODO: можно ускорить если заполнять карту
             if (
                 !(state.X >= 0 && state.Y >= 0 && state.X < width && state.Y < height &&
                   notFilledMap[state.X, state.Y] == 0))
@@ -420,21 +396,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 bestStack[i] = null;
             }
             bestProfit = -Inf;
-            cnt = 0;
+            counter = 0;
             oppSize = opponents.Count;
             mySize = state.Position.Count();
+            opphitOld = new int[oppSize];
+            actOld = new int[mySize];
+            hitOld = new int[mySize];
+            oldStackSize = new int[mySize];
             for (int i = 0; i < oppSize; i++)
                 opphit[i] = (opponents[i] as Trooper).Hitpoints;
 
-            ArrayList to = new ArrayList();
-            for(int dx = -3; dx <= 3; dx++)
-                for (int dy = -3; dy <= 3; dy++)
-                    if (Math.Abs(dx) + Math.Abs(dy) <= 3)
-                        to.Add(new Point(dx, dy));
-
-            moveToVariants = new Point[to.Count];
-            for (int i = 0; i < to.Count; i++)
-                moveToVariants[i] = to[i] as Point;
             dfs_changeStance1();
 
             if (bestStack[0] == null)

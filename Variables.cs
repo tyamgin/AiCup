@@ -16,6 +16,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public static ArrayList alivePlayers = null;
         public static ArrayList queue = new ArrayList();
         public static int Inf = 0x3f3f3f3f;
+        public static double Eps = 1e-9;
         public static double MaxTeamRadius = 2;
         public static Hashtable Hitpoints = null;
 

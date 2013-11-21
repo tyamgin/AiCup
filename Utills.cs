@@ -139,26 +139,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Trooper getTrooperAt(int x, int y)
         {
-            foreach(Trooper tr in troopers)
-                if (tr.X == x && tr.Y == y)
-                    return tr;
-            return null;
+            return troopers.FirstOrDefault(tr => tr.X == x && tr.Y == y);
         }
 
         Trooper getTrooper(long id)
         {
-            foreach (Trooper tr in troopers)
-                if (tr.Id == id)
-                    return tr;
-            return null;
+            return troopers.FirstOrDefault(tr => tr.Id == id);
         }
 
         Bonus getBonusAt(Point p)
         {
-            foreach (Bonus bo in bonuses)
-                if (bo.X == p.X && bo.Y == p.Y)
-                    return bo;
-            return null;
+            return bonuses.FirstOrDefault(bo => bo.X == p.X && bo.Y == p.Y);
         }
 
         void ChangeCommander()
