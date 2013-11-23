@@ -14,7 +14,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private static int[] clearBfsDist;
         private static int clearBfsDistSize = 0;
 
-        // TODO: чистить не весь bfsDist
         ArrayList FastBfs(int fromX, int fromY, int length, int[,] map, Point[] filled)
         {
             q.Clear();

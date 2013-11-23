@@ -2,9 +2,6 @@ using System;
 using System.Collections;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
-// TODO: Пересмотреть кидать-ли медику гранату если нужно лечить
-// TODO:!!!!100% Когда shotting отодвигаться если кто-то не может стрелять
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -263,6 +260,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return;
                 }
             }
+
+            Go(ActionType.EndTurn);
         }
     }
 }

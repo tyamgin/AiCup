@@ -73,15 +73,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         }
 
 
-
-        public static Point Inf
-        {
-            get
-            {
-                return new Point(0, 0, -MyStrategy.Inf);
-            }
-        }
-
         public override string ToString()
         {
             return "(" + X + "; " + Y + ")";
@@ -94,6 +85,33 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return X.CompareTo(other.X);
         }
 
-        //public static Point Zero = new Point(0, 0);
+        public void Set(int x, int y)
+        {
+            this.X = x;
+            this.Y = y;
+        }
+
+        public void Set(int x, int y, double profit)
+        {
+            this.X = x;
+            this.Y = y;
+            this.profit = profit;
+        }
+
+        public static Point Inf
+        {
+            get
+            {
+                return new Point(0, 0, -MyStrategy.Inf);
+            }
+        }
+
+        public static Point Zero
+        {
+            get
+            {
+                return new Point(0, 0, 0);
+            }
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Collections;
@@ -15,7 +16,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         static StreamWriter file = null;
-
 
         void Go(ActionType type, int toX, int toY)
         {
@@ -34,11 +34,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
             SaveHitpoints();
-#if DEBUG
-            Thread.Sleep(1);
-#endif
-            //Debugger("Commander Move 3 1");
-            //Debugger("8");
+            // Чищу, т.к.  инфа может устареть
+            if (move.Action == ActionType.EndTurn
+                || move.Action == ActionType.UseMedikit && self.ActionPoints - game.MedikitUseCost == 0 
+                || move.Action == ActionType.Heal && self.ActionPoints - game.FieldMedicHealCost == 0
+                || (move.Action == ActionType.LowerStance || move.Action == ActionType.RaiseStance) && self.ActionPoints - game.StanceChangeCost == 0
+                || move.Action == ActionType.Move && self.ActionPoints - getMoveCost(self) == 0
+                || move.Action == ActionType.Shoot && self.ActionPoints - self.ShootCost == 0
+                || move.Action == ActionType.ThrowGrenade && self.ActionPoints - game.GrenadeThrowCost == 0
+                || move.Action == ActionType.EatFieldRation && self.ActionPoints - game.FieldRationEatCost == 0
+               )
+                PastTroopers.Clear();
             validateMove();
         }
 
@@ -223,6 +229,25 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     opponents.Add(tr);
                 }
             }
+
+            // Загружаем труперов с прошлого хода, и сохраняем с текущего
+            // Кода происходит EndTurn - список чистится
+            foreach(Trooper past in PastTroopers)
+            {
+                bool exist = false;
+                foreach(Trooper opp in opponents)
+                    if (opp.Id == past.Id)
+                        exist = true;
+                if (!exist && !IsVisible(past.X, past.Y))
+                {
+                    opponents.Add(past);
+                    Array.Resize(ref troopers, troopers.Count() + 1);
+                    troopers[troopers.Count() - 1] = past;
+                }
+            }
+            PastTroopers.Clear();
+            PastTroopers.AddRange(opponents);
+
             if (changedCommander != -1 && world.MoveIndex - changedCommander >= 6)
                 ChangeCommander();
             commander = getCommander();
@@ -250,6 +275,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (queue.Count == 0 || (long)queue[queue.Count - 1] != self.Id)
                 queue.Add(self.Id);
 
+        }
+
+        bool IsVisible(int x, int y)
+        {
+            return team.Cast<Trooper>().Any(
+                trooper => world.IsVisible(trooper.VisionRange, trooper.X, trooper.Y, trooper.Stance, x, y, TrooperStance.Prone)
+            );
         }
 
         static int[] _i = { 0, 0, 1, -1 };

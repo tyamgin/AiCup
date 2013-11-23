@@ -40,7 +40,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         int[,] map, notFilledMap;
         int[,] danger;
         int width, height;
-
+        private static ArrayList PastTroopers = new ArrayList();
 
 
 
