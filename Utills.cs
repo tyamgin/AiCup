@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             SaveHitpoints();
             // Чищу, т.к.  инфа может устареть
             if (move.Action == ActionType.EndTurn
-                || move.Action == ActionType.UseMedikit && self.ActionPoints - game.MedikitUseCost == 0 
+                || move.Action == ActionType.UseMedikit && self.ActionPoints - game.MedikitUseCost == 0
                 || move.Action == ActionType.Heal && self.ActionPoints - game.FieldMedicHealCost == 0
                 || (move.Action == ActionType.LowerStance || move.Action == ActionType.RaiseStance) && self.ActionPoints - game.StanceChangeCost == 0
                 || move.Action == ActionType.Move && self.ActionPoints - getMoveCost(self) == 0
@@ -232,8 +232,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             // Загружаем труперов с прошлого хода, и сохраняем с текущего
             // Кода происходит EndTurn - список чистится
-            foreach(Trooper past in PastTroopers)
+            for(int i = 0; i < PastTroopers.Count; i += 2)
             {
+                Trooper past = PastTroopers[i] as Trooper;
+                int when = (int) PastTroopers[i + 1];
+                if (world.MoveIndex - when > 1)
+                    continue;
+
                 bool exist = false;
                 foreach(Trooper opp in opponents)
                     if (opp.Id == past.Id)
@@ -246,7 +251,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
             PastTroopers.Clear();
-            PastTroopers.AddRange(opponents);
+            foreach (Trooper tr in opponents)
+            {
+                PastTroopers.Add(tr);
+                PastTroopers.Add(world.MoveIndex);
+            }
 
             if (changedCommander != -1 && world.MoveIndex - changedCommander >= 6)
                 ChangeCommander();

@@ -14,8 +14,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            //if (world.MoveIndex == 6 && self.Type == TrooperType.Commander)
-            //    world = world;
+            if (world.MoveIndex == 15 && self.Type == TrooperType.FieldMedic)
+                world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
@@ -36,37 +36,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             //    return;
             //}
 
-            //Point ifUseMedikit = IfUseMedikit();
-            //if (ifUseMedikit != null)
-            //{
-            //    Go(ActionType.UseMedikit, ifUseMedikit);
-            //    return;
-            //}
-
             Point ifShot = IfShot();
-
-            //if (self.Type == TrooperType.FieldMedic && (friend.Count != 0 || ifShot == null))
-            //{
-            //    Point ifHelp = ifHelpTeammate();
-            //    if (ifHelp != null)
-            //    {
-            //        Trooper goal = getTrooperAt(ifHelp.X, ifHelp.Y);
-            //        if (goal != null && goal.Hitpoints < goal.MaximalHitpoints && ifHelp.Nearest(self) && game.FieldMedicHealCost <= self.ActionPoints)
-            //        {
-            //            Go(ActionType.Heal, ifHelp);
-            //            return;
-            //        }
-            //        if (canMove())
-            //        {
-            //            Point to = goToUnit(self, ifHelp, map, beginFree: true, endFree: true);
-            //            if (to != null)
-            //            {
-            //                Go(ActionType.Move, to);
-            //                return;
-            //            }
-            //        }
-            //    }
-            //}
 
             if (opponents.Count != 0)
             {
@@ -76,7 +46,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(action.Action, new Point(action.X, action.Y));
                     return;
                 }
-
+                // TODO: мб убрать:
                 if (canLower())
                 {
                     if (howManyCanShoot(new Point(self.X, self.Y), Low(self.Stance)) > 0 && self.Type != TrooperType.FieldMedic &&
@@ -92,6 +62,36 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
                 Go(ActionType.Shoot, ifShot);
+                return;
+            }
+
+            if (self.Type == TrooperType.FieldMedic && (friend.Count != 0 || ifShot == null))
+            {
+                Point ifHelp = ifHelpTeammate();
+                if (ifHelp != null)
+                {
+                    Trooper goal = getTrooperAt(ifHelp.X, ifHelp.Y);
+                    if (goal != null && goal.Hitpoints < goal.MaximalHitpoints && ifHelp.Nearest(self) && game.FieldMedicHealCost <= self.ActionPoints)
+                    {
+                        Go(ActionType.Heal, ifHelp);
+                        return;
+                    }
+                    if (canMove())
+                    {
+                        Point to = goToUnit(self, ifHelp, map, beginFree: true, endFree: true);
+                        if (to != null)
+                        {
+                            Go(ActionType.Move, to);
+                            return;
+                        }
+                    }
+                }
+            }
+
+            Point ifUseMedikit = IfUseMedikit();
+            if (ifUseMedikit != null)
+            {
+                Go(ActionType.UseMedikit, ifUseMedikit);
                 return;
             }
 
