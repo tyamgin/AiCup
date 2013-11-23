@@ -402,7 +402,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             else
             {
                 // Считаем потенциал
-                double potential = Inf; // TODO:
+                double potential = profit; // TODO:
+                for (int i = 0; i < mySize; i++)
+                {
+                    potential += mySize*Troopers[i].MaximalHitpoints;
+                }
+                for (int i = id + 1; i < mySize; i++)
+                {
+                    potential += state.act[i]/Troopers[i].ShootCost*Troopers[i].GetDamage(TrooperStance.Prone);
+                }
                 if (potential >= bestProfit)
                 {
                     // EndTurn
