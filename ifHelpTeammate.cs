@@ -19,7 +19,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             foreach (Trooper tr in team)
             {
                 double profit = Math.Min(Math.Max(0, tr.MaximalHitpoints - tr.Hitpoints),
-                                         (self.ActionPoints - Math.Max(0, getShoterPath(self, tr, map, beginFree: true, endFree: true) - 1) * getMoveCost()) / game.FieldMedicHealCost * (tr.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)
+                                         (self.ActionPoints - Math.Max(0.0, (double)getShoterPath(self, tr, map, beginFree: true, endFree: true) - 1) * getMoveCost()) / game.FieldMedicHealCost * (tr.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)
                                 );
                 if (profit > bestPoint.profit)
                     bestPoint = new Point(tr.X, tr.Y, profit);

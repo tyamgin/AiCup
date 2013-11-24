@@ -34,17 +34,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
             SaveHitpoints();
-            // Чищу, т.к.  инфа может устареть
-            if (move.Action == ActionType.EndTurn
-                || move.Action == ActionType.UseMedikit && self.ActionPoints - game.MedikitUseCost == 0
-                || move.Action == ActionType.Heal && self.ActionPoints - game.FieldMedicHealCost == 0
-                || (move.Action == ActionType.LowerStance || move.Action == ActionType.RaiseStance) && self.ActionPoints - game.StanceChangeCost == 0
-                || move.Action == ActionType.Move && self.ActionPoints - getMoveCost(self) == 0
-                || move.Action == ActionType.Shoot && self.ActionPoints - self.ShootCost == 0
-                || move.Action == ActionType.ThrowGrenade && self.ActionPoints - game.GrenadeThrowCost == 0
-                || move.Action == ActionType.EatFieldRation && self.ActionPoints - game.FieldRationEatCost == 0
-               )
-                PastTroopers.Clear();
+            //// Чищу, т.к.  инфа может устареть
+            //if (move.Action == ActionType.EndTurn
+            //    || move.Action == ActionType.UseMedikit && self.ActionPoints - game.MedikitUseCost == 0
+            //    || move.Action == ActionType.Heal && self.ActionPoints - game.FieldMedicHealCost == 0
+            //    || (move.Action == ActionType.LowerStance || move.Action == ActionType.RaiseStance) && self.ActionPoints - game.StanceChangeCost == 0
+            //    || move.Action == ActionType.Move && self.ActionPoints - getMoveCost(self) == 0
+            //    || move.Action == ActionType.Shoot && self.ActionPoints - self.ShootCost == 0
+            //    || move.Action == ActionType.ThrowGrenade && self.ActionPoints - game.GrenadeThrowCost == 0
+            //    || move.Action == ActionType.EatFieldRation && self.ActionPoints - game.FieldRationEatCost == 0
+            //   )
+            //    PastTroopers.Clear();
             validateMove();
         }
 
@@ -231,7 +231,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             // Загружаем труперов с прошлого хода, и сохраняем с текущего
-            // Кода происходит EndTurn - список чистится
             for(int i = 0; i < PastTroopers.Count; i += 2)
             {
                 Trooper past = PastTroopers[i] as Trooper;
@@ -250,11 +249,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     troopers[troopers.Count() - 1] = past;
                 }
             }
+            var tmp = PastTroopers.Clone() as ArrayList;
             PastTroopers.Clear();
             foreach (Trooper tr in opponents)
             {
                 PastTroopers.Add(tr);
-                PastTroopers.Add(world.MoveIndex);
+                if (world.Troopers.FirstOrDefault(trooper => trooper.Id == tr.Id) != null)
+                    PastTroopers.Add(world.MoveIndex);
+                else
+                {
+                    for(int i = 0; i < tmp.Count; i += 2)
+                        if ((tmp[i] as Trooper).Id == tr.Id)
+                            PastTroopers.Add((int)tmp[i + 1]);
+                }
             }
 
             if (changedCommander != -1 && world.MoveIndex - changedCommander >= 6)
