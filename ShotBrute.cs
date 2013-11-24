@@ -370,6 +370,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             bool[] oldFree = new bool[OpponentsCount];
             Array.Copy(oldFree, state.oppfree, OpponentsCount);
+            var oldHit = state.hit[id];
             for (int i = 0; i < OpponentsCount; i++)
             {
                 if (state.oppfree[i] && state.opphit[i] > 0)
@@ -377,19 +378,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     var opp = opponents[i] as Trooper;
                     if (world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                     {
-                        profit -= state.hit[id];
+                        state.hit[id] = 0; 
                         state.oppfree[i] = false;
                         break;
                     }
-                    else if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
-                    {
-                        profit -= state.hit[id] / 2.0;
-                        state.oppfree[i] = false;
-                        break;
-                    }
+                    //else if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
+                    //{
+                    //    state.hit[id] /= 2;
+                    //    state.oppfree[i] = false;
+                    //    break;
+                    //}
                 }
             }
-
 
             if (id == MyCount - 1)
             {
@@ -410,11 +410,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 // Считаем потенциал
                 double potential = profit;
+                int mediProfit = 0;
+                int mCnt = 0;
+                int hitSum = 0;
                 for (int i = 0; i < MyCount; i++)
                 {
-                    // TODO: учитывать суммарные возможности медика и аптечек
-                    potential += MyCount*Troopers[i].MaximalHitpoints;
+                    mediProfit += Troopers[i].MaximalHitpoints;
+                    if (state.medikit[i])
+                        mCnt++;
+                    hitSum += state.hit[i];
                 }
+                mediProfit = Math.Min(mediProfit, mCnt * game.MedikitBonusHitpoints 
+                    + 12 * game.FieldMedicHealBonusHitpoints + hitSum);
+                potential += mediProfit*MyCount;
                 for (int i = id + 1; i < MyCount; i++)
                 {
                     potential += state.act[i]/Troopers[i].ShootCost*Troopers[i].GetDamage(TrooperStance.Prone);
@@ -433,58 +441,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             if (bestIdx != -1)
                 state.opphit[bestIdx] = oldOppHit;
+            state.hit[id] = oldHit;
             // откатывает стек
             stack[id].RemoveRange(oldStackSize, stack[id].Count - oldStackSize);
             Array.Copy(state.oppfree, oldFree, OpponentsCount);
         }
-
-                        
-
-
-                //for (int i = 0; i < OpponentsCount; i++)
-                //{
-                //    if (opphit[i] > 0)
-                //    {
-                //        var opp = opponents[i] as Trooper;
-                //        var act = opp.InitialActionPoints;
-                //        for (int idx = 0; idx < mySize; idx++)
-                //        {
-                //            if (state.hit[idx] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance,
-                //                                                      state.Position[idx].X, state.Position[idx].Y, getStance(state.Stance[idx]))
-                //                )
-                //            {
-                //                var can = act / opp.ShootCost;
-                //                var damage = opp.GetDamage(opp.Stance);
-                //                var need = (state.hit[idx] + damage - 1) / damage;
-                //                if (need <= can)
-                //                {
-                //                    profit -= state.hit[idx] * 0.8;
-                //                    state.hit[idx] = 0;
-                //                    act -= opp.ShootCost * need;
-                //                }
-                //                else
-                //                {
-                //                    act = 0;
-                //                    state.hit[idx] -= damage * can;
-                //                    profit -= damage * can * 0.5;
-                //                }
-                //            }
-                //        }
-                //    }
-                //}
-
-            
-                //double high = state.profit; // Верхняя оценка ветки            
-        
-
-        //int getActionPoints(State state)
-        //{
-        //    int x = state.X, y = state.Y;
-        //    int points = Troopers[state.id].InitialActionPoints;
-        //    if (CommanderId != -1 && state.Position[state.id].GetDistanceTo(state.Position[CommanderId].X, state.Position[CommanderId].Y) <= game.CommanderAuraRange)
-        //        points += game.CommanderAuraBonusActionPoints;
-        //    return points;
-        //}
 
         int getInitialActionPoints(Trooper tr)
         {
