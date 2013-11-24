@@ -14,8 +14,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 15 && self.Type == TrooperType.FieldMedic)
-                world = world;
+            //if (world.MoveIndex == 15 && self.Type == TrooperType.FieldMedic)
+            //    world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
                 BonusGoal = null;
@@ -28,16 +28,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             Reached(new Point(self));
 
-            bool needMove = false;
-            //Point ifThrowGrenade = IfThrowGrenade(ref needMove);
-            //if (ifThrowGrenade != null)
-            //{
-            //    Go(needMove ? ActionType.Move : ActionType.ThrowGrenade, ifThrowGrenade);
-            //    return;
-            //}
-
-            Point ifShot = IfShot();
-
             if (opponents.Count != 0)
             {
                 var action = BruteForceDo();
@@ -46,26 +36,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(action.Action, new Point(action.X, action.Y));
                     return;
                 }
-                // TODO: мб убрать:
-                if (canLower())
-                {
-                    if (howManyCanShoot(new Point(self.X, self.Y), Low(self.Stance)) > 0 && self.Type != TrooperType.FieldMedic &&
-                        (self.ActionPoints - game.StanceChangeCost + game.FieldRationBonusActionPoints - game.FieldRationEatCost) / self.ShootCost >= (self.ActionPoints + game.FieldRationBonusActionPoints - game.FieldRationEatCost) / self.ShootCost)
-                    {
-                        Go(ActionType.LowerStance);
-                        return;
-                    }
-                    if (howManyCanShoot(new Point(self.X, self.Y), Low(self.Stance)) > 1 && self.Type == TrooperType.Soldier)
-                    {
-                        Go(ActionType.LowerStance);
-                        return;
-                    }
-                }
-                Go(ActionType.Shoot, ifShot);
-                return;
             }
 
-            if (self.Type == TrooperType.FieldMedic && (friend.Count != 0 || ifShot == null))
+            if (self.Type == TrooperType.FieldMedic)
             {
                 Point ifHelp = ifHelpTeammate();
                 if (ifHelp != null)
@@ -95,70 +68,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            // Если нужно идти атаковать, то тот кто находится на самой опасной зоне выполняет IfGoAtack,
-            // остальные приближаются к EncirclingPoints того кто в опастности
-            Point mostDanger = getMostDanger();
-            bool busy = howManyCanShoot(new Point(self), self.Stance) != 0;
-            // TODO: getMostDanger <- добавить если я вижу
-            if (mostDanger != null && !busy)
-            {
-                if (Equal(mostDanger, self))
-                {
-                    Point ifGoAtack = IfGoAtack();
-                    if (ifGoAtack != null && canMove())
-                    {
-                        busy = true;
-                        if (mustAtack())
-                        {
-                            Point to = goToUnit(self, ifGoAtack, map, beginFree: true, endFree: true);
-                            if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
-                            {
-                                Go(move.Action = ActionType.Move, to);
-                                return;
-                            }
-                        }
-                        else if (self.Type != TrooperType.FieldMedic && canLower())
-                        {
-                            Go(ActionType.LowerStance);
-                            return;
-                        }
-                    }
-                }
-                else
-                {
-                    Point goToEncircling = GoToEncircling(getTrooperAt(mostDanger), null, self.Type != TrooperType.FieldMedic);
-                    if (goToEncircling != null && canMove())
-                    {
-                        Point to = goToUnit(self, goToEncircling, map, beginFree: true, endFree: false);
-                        if (to == null || Equal(self, to))
-                        {
-                            if (self.Type != TrooperType.FieldMedic)
-                            {
-                                int mySt = getStanceId(self.Stance);
-                                for(int st = 0; st < 3; st++)
-                                {
-                                    if (howManyCanShoot(new Point(self), getStance(st)) != 0)
-                                    {
-                                        if (st < mySt && canLower())
-                                            Go(ActionType.LowerStance);
-                                        else if (st > mySt && canUpper())
-                                            Go(ActionType.RaiseStance);
-                                        else
-                                            Go(ActionType.EndTurn);
-                                        return;
-                                    }
-                                }
-                            }
-                            // Значит либо я медик, либо кто-то должен подвинуться
-                            Go(ActionType.EndTurn);
-                            return;
-                        }
-                        Go(ActionType.Move, to);
-                        return;
-                    }
-                }
-            }
-
             Trooper whoseBonus = null;
             Point ifTeamBonus = IfTeamBonus(ref whoseBonus);
             if (ifTeamBonus != null && BonusGoal == null && map[ifTeamBonus.X, ifTeamBonus.Y] == 0 && !Equal(ifTeamBonus, self))
@@ -170,7 +79,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             bool waitingHelp = allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && getBestHelper() != null;
             waitingHelp = false;
             bool allowNothing = true;
-            if (!busy && !waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id)
+            if (!waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id)
             {
                 if (canUpper())
                 {
@@ -202,20 +111,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            //if (IWin())
-            //{
-            //    // TODO: что делать с медиком?
-            //    if (canLower())
-            //        Go(ActionType.LowerStance);
-            //    else
-            //        Go(ActionType.EndTurn);
-            //    return;
-            //}
-
             // Пытаюсь освободить дорогу до бонуса
-            if (!busy && canMove() && BonusGoal != null && MyStrategy.whoseBonus != self.Id
-                //&& getShoterPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, notFilledMap, beginFree: true, endFree: true) < 6
-                )
+            if (canMove() && BonusGoal != null && MyStrategy.whoseBonus != self.Id)
             {
                 if (canUpper())
                 {
@@ -232,7 +129,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             Point ifNothing = IfNothing();
-            if (!busy && allowNothing && ifNothing != null && canMove())
+            if (allowNothing && ifNothing != null && canMove())
             {
                 if (canUpper())
                 {

@@ -47,8 +47,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
 
 
-
-
         static bool Equal(Point point, Unit unit)
         {
             return point.X == unit.X && point.Y == unit.Y;

@@ -70,7 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Asserts.cs" />
-    <Compile Include="IfAtack.cs" />
     <Compile Include="IfBonus.cs" />
     <Compile Include="ShortestPath.cs" />
     <Compile Include="ShotBrute.cs" />
@@ -81,7 +80,6 @@
     <Compile Include="IfFieldRation.cs" />
     <Compile Include="IfHelpTeammate.cs" />
     <Compile Include="IfNothing.cs" />
-    <Compile Include="IfThrowGrenade.cs" />
     <Compile Include="Model\Bonus.cs" />
     <Compile Include="Model\BonusType.cs" />
     <Compile Include="Model\ActionType.cs" />

@@ -74,22 +74,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return nearestPoint;            
         }
 
-        //bool IWin()
-        //{
-        //    if (alivePlayers.Count > 2)
-        //        return false;
-        //    int myScore = 0;
-        //    int hisScore = 0;
-        //    foreach(Player pl in world.Players)
-        //    {
-        //        if (pl.Id == self.PlayerId)
-        //            myScore = pl.Score;
-        //        else
-        //            hisScore = Math.Max(hisScore, pl.Score);
-        //    }
-        //    return myScore > hisScore;
-        //}
-
         void ProcessApproximation()
         {
             if (!isApproximationExist())
