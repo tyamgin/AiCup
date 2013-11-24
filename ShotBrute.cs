@@ -106,7 +106,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             var id = state.id;
 
-            for (int deltaStance = -2; deltaStance <= 2; deltaStance++)
+            int upper = 2, lower = -2;
+            if (id != 0)
+                lower = 0;
+            for (int deltaStance = upper; deltaStance >= lower; deltaStance--)
             {
                 // Изменяю stance на deltaStance
                 state.Stance += deltaStance;
@@ -284,7 +287,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             var id = state.id;
 
-            for (int deltaStance = -2; deltaStance <= 2; deltaStance++)
+            int upper = 2, lower = -2;
+            if (id != 0)
+                lower = 0;
+            for (int deltaStance = upper; deltaStance >= lower; deltaStance--)
             {
                 state.Stance += deltaStance;
                 if (state.Stance >= 0 && state.Stance < 3)
@@ -378,20 +384,20 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     var opp = opponents[i] as Trooper;
                     if (world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                     {
-                        state.hit[id] = 0; 
+                        state.hit[id] -= 100; 
                         state.oppfree[i] = false;
                         break;
                     }
-                    //else if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
-                    //{
-                    //    state.hit[id] /= 2;
-                    //    state.oppfree[i] = false;
-                    //    break;
-                    //}
+                    else if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
+                    {
+                        state.hit[id] -= 50;
+                        state.oppfree[i] = false;
+                        break;
+                    }
                 }
             }
 
-            if (id == MyCount - 1)
+            if (id == 1)
             {
                 // К профиту прибавляю итоговое количество жизней
                 for (int i = 0; i < MyCount; i++)
@@ -427,7 +433,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     potential += state.act[i]/Troopers[i].ShootCost*Troopers[i].GetDamage(TrooperStance.Prone);
                 }
-                if (potential >= bestProfit)
+                //if (potential >= bestProfit)
                 {
                     // EndTurn
                     var oldProfit = state.profit;
