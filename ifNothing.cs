@@ -45,7 +45,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 ArrayList places = new ArrayList();
 #if DEBUG
-                places.Add(new Point(width - 1, 1));
+                places.Add(new Point(Width - 1, 1));
 #else
                 for (int x = 1; x < width; x += width - 3)
                     for (int y = 1; y < height; y += height - 3)
@@ -69,8 +69,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Point getCoordinateByApproximation(int x, int y)
         {
             Point nearestPoint = new Point(0, 0, Inf);
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
+            for (int i = 0; i < Width; i++)
+                for (int j = 0; j < Height; j++)
                     if (notFilledMap[i, j] == 0 && new Point(x, y).GetDistanceTo(i, j) < nearestPoint.profit)
                         nearestPoint = new Point(i, j, new Point(x, y).GetDistanceTo(i, j));
             return nearestPoint;            
@@ -80,13 +80,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (!isApproximationExist())
                 return;
-            alivePlayers = new ArrayList();
+            AlivePlayers = new ArrayList();
             Point nearestPoint = new Point(0, 0, Inf);
             foreach(Player pl in world.Players)
             {
                 if (pl.ApproximateX != -1)
                 {
-                    alivePlayers.Add(pl);
+                    AlivePlayers.Add(pl);
                     if (pl.Id != self.PlayerId)
                     {
                         Point coordinate = getCoordinateByApproximation(pl.ApproximateX, pl.ApproximateY);
@@ -114,7 +114,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         int howManyCanShoot(Point position, TrooperStance stance)
         {
             int cnt = 0;
-            foreach (Trooper tr in opponents)
+            foreach (Trooper tr in Opponents)
                 if (world.IsVisible(self.ShootingRange, position.X, position.Y, stance, tr.X, tr.Y, tr.Stance))
                     cnt++;
             return cnt;
@@ -124,9 +124,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             Point bestPoint = new Point(0, 0, Inf);
             double optDanger = self.Type == TrooperType.FieldMedic ? Inf : -Inf;
-            for (int i = 0; i < width; i++)
+            for (int i = 0; i < Width; i++)
             {   
-                for (int j = 0; j < height; j++)
+                for (int j = 0; j < Height; j++)
                 {
                     if (map[i, j] == 0 || i == self.X && j == self.Y)
                     {

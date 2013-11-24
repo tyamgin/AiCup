@@ -11,13 +11,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         public static int changedCommander = -1;
         public static Point BonusGoal = null;
-        public static long whoseBonus = -1;
+        public static long WhoseBonus = -1;
         public static Point PointGoal = null;
-        public static ArrayList alivePlayers = null;
+        public static ArrayList AlivePlayers = null;
         public static ArrayList queue = new ArrayList();
         public static int Inf = 0x3f3f3f3f;
         public static double Eps = 1e-9;
-        public static double MaxTeamRadius = 2;
+        public static double MaxTeamRadius;
         public static Hashtable Hitpoints = null;
 
         public static int DangerNothing = 0;
@@ -29,17 +29,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         TrooperType[] commanderPriority = { TrooperType.Commander, TrooperType.Sniper, TrooperType.Soldier, TrooperType.FieldMedic, TrooperType.Scout };
 
-        World world;
-        Move move;
-        Game game;
-        Trooper self, commander;
-        Trooper[] troopers;
-        ArrayList team, friend, opponents;
-        Bonus[] bonuses;
-        CellType[][] cells;
-        int[,] map, notFilledMap;
-        int[,] danger;
-        int width, height;
+        public World world;
+        public Move move;
+        public Game game;
+        public Trooper self, commander;
+        public Trooper[] troopers;
+        public Trooper[] Team;
+        public Trooper[] Friends; 
+        public Trooper[] Opponents;
+        public Bonus[] Bonuses;
+        public CellType[][] Cells;
+        public int[,] map, notFilledMap;
+        public int[,] danger;
+        public int Width, Height;
         private static ArrayList PastTroopers = new ArrayList();
 
 

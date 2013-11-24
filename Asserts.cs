@@ -53,7 +53,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     throw new Exception("");
                 Point to = new Point(move.X, move.Y);
                 Point ths = new Point(self.X, self.Y);
-                if (!to.Nearest(ths) || to.X < 0 || to.Y < 0 || to.X >= width || to.Y >= height || map[to.X, to.Y] != 0)
+                if (!to.Nearest(ths) || to.X < 0 || to.Y < 0 || to.X >= Width || to.Y >= Height || map[to.X, to.Y] != 0)
                     throw new Exception("");
             }
             else if (move.Action == ActionType.RaiseStance)
@@ -69,14 +69,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     throw new Exception("");
                 if (move.X == self.X && move.Y == self.Y)
                     throw new Exception("");
-                if (move.X < 0 || move.Y < 0 || move.X >= width || move.Y >= height || cells[move.X][move.Y] != 0)
+                if (move.X < 0 || move.Y < 0 || move.X >= Width || move.Y >= Height || Cells[move.X][move.Y] != 0)
                     throw new Exception("");
             }
             else if (move.Action == ActionType.ThrowGrenade)
             {
                 if (self.ActionPoints < game.GrenadeThrowCost)
                     throw new Exception("");
-                if (move.X < 0 || move.Y < 0 || move.X >= width || move.Y >= height || cells[move.X][move.Y] != 0)
+                if (move.X < 0 || move.Y < 0 || move.X >= Width || move.Y >= Height || Cells[move.X][move.Y] != 0)
                     throw new Exception("");
                 if (!self.IsHoldingGrenade || game.GrenadeThrowRange < self.GetDistanceTo(move.X, move.Y))
                     throw new Exception("");
@@ -85,7 +85,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (game.MedikitUseCost > self.ActionPoints || !self.IsHoldingMedikit)
                     throw new Exception("");
-                if (move.X < 0 || move.Y < 0 || move.X >= width || move.Y >= height || !new Point(self.X, self.Y).Nearest(new Point(move.X, move.Y)))
+                if (move.X < 0 || move.Y < 0 || move.X >= Width || move.Y >= Height || !new Point(self.X, self.Y).Nearest(new Point(move.X, move.Y)))
                     throw new Exception("");
 
                 // TODO:

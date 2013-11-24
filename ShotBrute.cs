@@ -223,18 +223,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (state.Grenade && state.act[id] >= game.GrenadeThrowCost)
             {
                 Point bestPoint = Point.Inf;
-                foreach (Trooper trooper in opponents)
+                foreach (Trooper trooper in Opponents)
                 {
                     for (int k = 0; k < 4; k++)
                     {
                         int ni = trooper.X + _i[k];
                         int nj = trooper.Y + _j[k];
-                        if (ni >= 0 && nj >= 0 && ni < width && nj < height && notFilledMap[ni, nj] == 0
+                        if (ni >= 0 && nj >= 0 && ni < Width && nj < Height && notFilledMap[ni, nj] == 0
                             && state.Position[id].GetDistanceTo(ni, nj) <= game.GrenadeThrowRange)
                         {
                             int profit = 0;
                             int loop = 0;
-                            foreach (Trooper tr in opponents)
+                            foreach (Trooper tr in Opponents)
                             {
                                 int dist = Math.Abs(ni - tr.X) + Math.Abs(nj - tr.Y);
                                 if (dist == 0)
@@ -254,7 +254,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     int[] Damage = new int[OpponentsCount];
                     for (int i = 0; i < OpponentsCount; i++)
                     {
-                        Trooper opp = opponents[i] as Trooper;
+                        Trooper opp = Opponents[i];
                         int dist = Math.Abs(bestPoint.X - opp.X) + Math.Abs(bestPoint.Y - opp.Y);
                         if (dist == 0)
                         {
@@ -320,7 +320,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // Выбираю цель с меньшим количеством жизней
             for (int idx = 0; idx < OpponentsCount; idx++)
             {
-                var opp = opponents[idx] as Trooper;
+                var opp = Opponents[idx];
                 if (state.opphit[idx] > 0 &&
                     world.IsVisible(Troopers[id].ShootingRange, state.X, state.Y, getStance(state.Stance), opp.X,
                         opp.Y, opp.Stance))
@@ -337,7 +337,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 var oldOppHit = state.opphit[bestIdx];
                 var oldProfit = state.profit;
 
-                var opp = opponents[bestIdx] as Trooper;
+                var opp = Opponents[bestIdx];
                 var can = state.act[id]/Troopers[id].ShootCost;
                 var damage = Troopers[id].GetDamage(getStance(state.Stance));
                 var need = Math.Min(can, (minHit + damage - 1)/damage);
@@ -385,7 +385,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (state.opphit[i] > 0)
                 {
-                    var opp = opponents[i] as Trooper;
+                    var opp = Opponents[i];
                     if (world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y,
                         getStance(state.Stance)))
                     {
@@ -400,7 +400,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     if (state.opphit[i] > 0)
                     {
-                        var opp = opponents[i] as Trooper;
+                        var opp = Opponents[i];
                         if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y,
                             getStance(state.Stance)))
                         {
@@ -453,7 +453,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             // TODO: можно ускорить если заполнять карту
             if (
-                !(state.X >= 0 && state.Y >= 0 && state.X < width && state.Y < height &&
+                !(state.X >= 0 && state.Y >= 0 && state.X < Width && state.Y < Height &&
                   notFilledMap[state.X, state.Y] == 0))
                 return false;
             
@@ -464,9 +464,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Move BruteForceDo()
         {
             int fictive = 0;
-            if (queue.Count < team.Count)
+            if (queue.Count < Team.Count())
             {
-                foreach (Trooper tr in team)
+                foreach (Trooper tr in Team)
                 {
                     if (!queue.Contains(tr.Id))
                     {
@@ -477,13 +477,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             state = new State();
-            state.Position = new Point[team.Count];
-            state.stance = new int[team.Count];
-            state.act = new int[team.Count];
-            state.hit = new int[team.Count];
-            state.medikit = new bool[team.Count];
-            state.grenade = new bool[team.Count];
-            Troopers = new Trooper[team.Count];
+            state.Position = new Point[Team.Count()];
+            state.stance = new int[Team.Count()];
+            state.act = new int[Team.Count()];
+            state.hit = new int[Team.Count()];
+            state.medikit = new bool[Team.Count()];
+            state.grenade = new bool[Team.Count()];
+            Troopers = new Trooper[Team.Count()];
             CommanderId = -1;
             foreach (Trooper tr in troopers)
             {
@@ -516,12 +516,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             bestProfit = -Inf;
             counter = 0;
-            OpponentsCount = opponents.Count;
+            OpponentsCount = Opponents.Count();
             MyCount = state.Position.Count();
             state.opphit = new int[OpponentsCount];
             for (int i = 0; i < OpponentsCount; i++)
             {
-                state.opphit[i] = (opponents[i] as Trooper).Hitpoints;
+                state.opphit[i] = Opponents[i].Hitpoints;
             }
             dfs_changeStance1();
 

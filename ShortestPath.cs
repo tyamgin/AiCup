@@ -21,10 +21,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             q.Enqueue(fromY);
             if (bfsDist == null)
             {
-                bfsDist = new int[width, height];
-                clearBfsDist = new int[2 * width * height + 1];
-                for (int i = 0; i < width; i++)
-                    for (int j = 0; j < height; j++)
+                bfsDist = new int[Width, Height];
+                clearBfsDist = new int[2 * Width * Height + 1];
+                for (int i = 0; i < Width; i++)
+                    for (int j = 0; j < Height; j++)
                         bfsDist[i, j] = Inf;
             }
             for (int i = 0; i < clearBfsDistSize; i += 2)
@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     {
                         var nX = x + _i[k];
                         var nY = y + _j[k];
-                        if (nX >= 0 && nY >= 0 && nX < width && nY < height && map[nX, nY] == 0 && bfsDist[nX, nY] == Inf)
+                        if (nX >= 0 && nY >= 0 && nX < Width && nY < Height && map[nX, nY] == 0 && bfsDist[nX, nY] == Inf)
                         {
                             bfsDist[nX, nY] = bfsDist[x, y] + 1;
                             clearBfsDist[clearBfsDistSize++] = nX;
@@ -73,9 +73,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             q.Clear();
             q.Enqueue(to.X);
             q.Enqueue(to.Y);
-            int[,] d = new int[width, height];
-            for (int i = 0; i < width; i++)
-                for (int j = 0; j < height; j++)
+            int[,] d = new int[Width, Height];
+            for (int i = 0; i < Width; i++)
+                for (int j = 0; j < Height; j++)
                     d[i, j] = Inf;
             if (map[to.X, to.Y] != 0 && !endFree)
             {
@@ -96,7 +96,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 for (int k = 0; k < 4; k++)
                 {
                     Point n = new Point(x + _i[k], y + _j[k]);
-                    if (n.X >= 0 && n.Y >= 0 && n.X < width && n.Y < height && map[n.X, n.Y] == 0 && d[n.X, n.Y] == Inf)
+                    if (n.X >= 0 && n.Y >= 0 && n.X < Width && n.Y < Height && map[n.X, n.Y] == 0 && d[n.X, n.Y] == Inf)
                     {
                         d[n.X, n.Y] = d[x, y] + 1;
                         q.Enqueue(n.X);

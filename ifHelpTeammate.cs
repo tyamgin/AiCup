@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             //                            (Очки - (длина пути - 1) * (стоимость пути)) / (стоимость лечения) * (сколько жизней восстанавливыает)
             //                        ) 
             Point bestPoint = Point.Inf;
-            foreach (Trooper tr in team)
+            foreach (Trooper tr in Team)
             {
                 double profit = Math.Min(Math.Max(0, tr.MaximalHitpoints - tr.Hitpoints),
                                          (self.ActionPoints - Math.Max(0.0, (double)getShoterPath(self, tr, map, beginFree: true, endFree: true) - 1) * getMoveCost()) / game.FieldMedicHealCost * (tr.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)

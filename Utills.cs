@@ -34,17 +34,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
             SaveHitpoints();
-            //// Чищу, т.к.  инфа может устареть
-            //if (move.Action == ActionType.EndTurn
-            //    || move.Action == ActionType.UseMedikit && self.ActionPoints - game.MedikitUseCost == 0
-            //    || move.Action == ActionType.Heal && self.ActionPoints - game.FieldMedicHealCost == 0
-            //    || (move.Action == ActionType.LowerStance || move.Action == ActionType.RaiseStance) && self.ActionPoints - game.StanceChangeCost == 0
-            //    || move.Action == ActionType.Move && self.ActionPoints - getMoveCost(self) == 0
-            //    || move.Action == ActionType.Shoot && self.ActionPoints - self.ShootCost == 0
-            //    || move.Action == ActionType.ThrowGrenade && self.ActionPoints - game.GrenadeThrowCost == 0
-            //    || move.Action == ActionType.EatFieldRation && self.ActionPoints - game.FieldRationEatCost == 0
-            //   )
-            //    PastTroopers.Clear();
             validateMove();
         }
 
@@ -92,7 +81,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         void SaveHitpoints()
         {
             Hitpoints = new Hashtable();
-            foreach (Trooper tr in team)
+            foreach (Trooper tr in Team)
             {
                 Hitpoints[tr.Id] = tr.Hitpoints;
             }
@@ -118,9 +107,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool CheckShootMe()
         {
-            if (Hitpoints == null || troopers.Count() != team.Count)
+            if (Hitpoints == null || troopers.Count() != Team.Count())
                 return false;
-            foreach (Trooper tr in team)
+            foreach (Trooper tr in Team)
             {
                 if ((int)Hitpoints[tr.Id] != tr.Hitpoints)
                 {
@@ -155,7 +144,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Bonus getBonusAt(Point p)
         {
-            return bonuses.FirstOrDefault(bo => bo.X == p.X && bo.Y == p.Y);
+            return Bonuses.FirstOrDefault(bo => bo.X == p.X && bo.Y == p.Y);
         }
 
         void ChangeCommander()
@@ -171,7 +160,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             int cnt = 0;
             foreach (TrooperType type in commanderPriority)
             {
-                foreach (Trooper tr in team)
+                foreach (Trooper tr in Team)
                 {
                     if (tr.Type == type)
                     {
@@ -190,45 +179,59 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         void InitializeConstants()
         {
             this.troopers = world.Troopers;
-            this.bonuses = world.Bonuses;
-            this.cells = world.Cells;
-            this.width = world.Width;
-            this.height = world.Height;
-            if (alivePlayers == null)
+            this.Bonuses = world.Bonuses;
+            this.Cells = world.Cells;
+            this.Width = world.Width;
+            this.Height = world.Height;
+            if (AlivePlayers == null)
             {
-                alivePlayers = new ArrayList();
+                AlivePlayers = new ArrayList();
                 foreach (Player pl in world.Players)
-                    alivePlayers.Add(pl);
+                    AlivePlayers.Add(pl);
             }
             if (map == null)
-                map = new int[width, height];
+                map = new int[Width, Height];
             if (notFilledMap == null)
-                notFilledMap = new int[width, height];
-            for (int i = 0; i < width; i++)
+                notFilledMap = new int[Width, Height];
+            for (int i = 0; i < Width; i++)
             {
-                for (int j = 0; j < height; j++)
+                for (int j = 0; j < Height; j++)
                 {
-                    map[i, j] = cells[i][j] == 0 ? 0 : 1;
+                    map[i, j] = Cells[i][j] == 0 ? 0 : 1;
                     notFilledMap[i, j] = map[i, j];
                 }
             }
-            team = new ArrayList();
-            friend = new ArrayList();
-            opponents = new ArrayList();
+            var _Team = new ArrayList();
+            var _Friends = new ArrayList();
+            var _Opponents = new ArrayList();
             foreach (Trooper tr in troopers)
             {
                 map[tr.X, tr.Y] = 1;
                 if (tr.IsTeammate)
                 {
-                    team.Add(tr);
+                    _Team.Add(tr);
                     if (tr.Id != self.Id)
-                        friend.Add(tr);
+                        _Friends.Add(tr);
                 }
                 else
                 {
-                    opponents.Add(tr);
+                    _Opponents.Add(tr);
                 }
             }
+            Opponents = new Trooper[_Opponents.Count];
+            for (int i = 0; i < _Opponents.Count; i++)
+                Opponents[i] = _Opponents[i] as Trooper;
+
+            Team = new Trooper[_Team.Count];
+            for (int i = 0; i < _Team.Count; i++)
+                Team[i] = _Team[i] as Trooper;
+
+            Friends = new Trooper[_Friends.Count];
+            for (int i = 0; i < _Friends.Count; i++)
+                Friends[i] = _Friends[i] as Trooper;
+            
+
+            MaxTeamRadius = _Team.Count <= 3 ? 2 : 3;
 
             // Загружаем труперов с прошлого хода, и сохраняем с текущего
             for(int i = 0; i < PastTroopers.Count; i += 2)
@@ -239,19 +242,21 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     continue;
 
                 bool exist = false;
-                foreach(Trooper opp in opponents)
+                foreach(Trooper opp in Opponents)
                     if (opp.Id == past.Id)
                         exist = true;
                 if (!exist && !IsVisible(past.X, past.Y))
                 {
-                    opponents.Add(past);
+                    Array.Resize(ref Opponents, Opponents.Count() + 1);
+                    Opponents[Opponents.Count() - 1] = past;
+
                     Array.Resize(ref troopers, troopers.Count() + 1);
                     troopers[troopers.Count() - 1] = past;
                 }
             }
             var tmp = PastTroopers.Clone() as ArrayList;
             PastTroopers.Clear();
-            foreach (Trooper tr in opponents)
+            foreach (Trooper tr in Opponents)
             {
                 PastTroopers.Add(tr);
                 if (world.Troopers.FirstOrDefault(trooper => trooper.Id == tr.Id) != null)
@@ -268,13 +273,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 ChangeCommander();
             commander = getCommander();
 
-            danger = new int[width, height];
+            danger = new int[Width, Height];
 
-            foreach (Trooper tr in opponents)
+            foreach (Trooper tr in Opponents)
             {
-                for (int i = 0; i < width; i++)
+                for (int i = 0; i < Width; i++)
                 {
-                    for (int j = 0; j < height; j++)
+                    for (int j = 0; j < Height; j++)
                     {
                         if (world.IsVisible(tr.ShootingRange, tr.X, tr.Y, tr.Stance, i, j, self.Stance))
                         {
@@ -295,7 +300,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool IsVisible(int x, int y)
         {
-            return team.Cast<Trooper>().Any(
+            return Team.Any(
                 trooper => world.IsVisible(trooper.VisionRange, trooper.X, trooper.Y, trooper.Stance, x, y, TrooperStance.Prone)
             );
         }
@@ -315,16 +320,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 int ni = _i[k] + x;
                 int nj = _j[k] + y;
-                if (ni >= 0 && nj >= 0 && ni < width && nj < height && map[ni, nj] == 0)
+                if (ni >= 0 && nj >= 0 && ni < Width && nj < Height && map[ni, nj] == 0)
                     List.Add(new Point(ni, nj));
             }
             return List;
-        }
-
-        bool isLastInTeam(Trooper tr)
-        {
-            // TODO: implement this?
-            return false;
         }
 
         bool canMove()
@@ -395,14 +394,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         long getCurrentLeaderId()
         {
             if (BonusGoal != null)
-                return MyStrategy.whoseBonus;
+                return MyStrategy.WhoseBonus;
             return commander.Id;
         }
 
         Trooper getCurrentLeader()
         {
             if (BonusGoal != null)
-                return getTrooper(MyStrategy.whoseBonus);
+                return getTrooper(MyStrategy.WhoseBonus);
             return commander;
         }
 

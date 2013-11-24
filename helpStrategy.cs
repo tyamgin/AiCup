@@ -28,7 +28,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Point getBestHelper()
         {
             Point bestHelper = Point.Inf;
-            foreach(Trooper tr in friend)
+            foreach(Trooper tr in Friends)
             {
                 double quality = getHelperQuality(tr);
                 if (quality > bestHelper.profit)
@@ -43,12 +43,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (!self.IsHoldingMedikit || self.ActionPoints < game.MedikitUseCost)
                 return null;
-            foreach (Trooper tr in friend)
+            foreach (Trooper tr in Friends)
                 if (IfNeedHelp(tr) && new Point(tr).Nearest(self))
                     return new Point(tr);
              
             Point bestHeal = Point.Inf;
-            foreach (Trooper tr in team)
+            foreach (Trooper tr in Team)
             {
                 double profit = (double)self.MaximalHitpoints - Math.Min(self.MaximalHitpoints, self.Hitpoints + (tr.Id == self.Id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
                 if (profit > bestHeal.profit && new Point(tr).Nearest(self))

@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             // нужен минимальный вес
             double bestWeight = Inf;
-            foreach (Trooper tr in team)
+            foreach (Trooper tr in Team)
             {
                 //if (getShoterPath(tr, bonus, map, beginFree: true, endFree: false) < Inf)
                 {
@@ -89,7 +89,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             Point bestPoint = Point.Inf;
             result = null;
-            foreach (Bonus bo in bonuses)
+            foreach (Bonus bo in Bonuses)
             {
                 Trooper whose = null; ;
                 double profit = getTeamBonusProfit(bo, ref whose);
@@ -111,9 +111,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // В первую очередь минимизировать путь center до goal
             Point bestPoint = new Point(0, 0, Inf);
             int minDistToCenter = Inf;
-            for (int i = 0; i < width; i++)
+            for (int i = 0; i < Width; i++)
             {
-                for (int j = 0; j < height; j++)
+                for (int j = 0; j < Height; j++)
                 {
                     if (map[i, j] == 0 || i == self.X && j == self.Y)
                     {

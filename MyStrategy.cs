@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
@@ -17,9 +18,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (world.MoveIndex == 6 && self.Type == TrooperType.Soldier)
                 world = world;
             bool allowHill = !CheckShootMe();
-            if (BonusGoal != null && getTrooper(MyStrategy.whoseBonus) == null)
+            if (BonusGoal != null && getTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
-            if (BonusGoal != null && haveSuchBonus(getTrooper(MyStrategy.whoseBonus), getBonusAt(BonusGoal)))
+            if (BonusGoal != null && haveSuchBonus(getTrooper(MyStrategy.WhoseBonus), getBonusAt(BonusGoal)))
                 BonusGoal = null;
             if (ifFieldRationNeed())
             {
@@ -28,7 +29,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             Reached(new Point(self));
 
-            if (opponents.Count != 0)
+            if (Opponents.Count() != 0)
             {
                 var action = BruteForceDo();
                 if (action != null)
@@ -73,13 +74,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (ifTeamBonus != null && BonusGoal == null && map[ifTeamBonus.X, ifTeamBonus.Y] == 0 && !Equal(ifTeamBonus, self))
             {
                 BonusGoal = ifTeamBonus;
-                MyStrategy.whoseBonus = whoseBonus.Id;
+                MyStrategy.WhoseBonus = whoseBonus.Id;
             }
             
             bool waitingHelp = allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && getBestHelper() != null;
             waitingHelp = false;
             bool allowNothing = true;
-            if (!waitingHelp && canMove() && BonusGoal != null && MyStrategy.whoseBonus == self.Id)
+            if (!waitingHelp && canMove() && BonusGoal != null && MyStrategy.WhoseBonus == self.Id)
             {
                 if (canUpper())
                 {
@@ -112,14 +113,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             // ѕытаюсь освободить дорогу до бонуса
-            if (canMove() && BonusGoal != null && MyStrategy.whoseBonus != self.Id)
+            if (canMove() && BonusGoal != null && MyStrategy.WhoseBonus != self.Id)
             {
                 if (canUpper())
                 {
                     Go(ActionType.RaiseStance);
                     return;
                 }
-                Point bestTurn = SkipPath(getTrooper(MyStrategy.whoseBonus), BonusGoal, needShootingPosition: false);
+                Point bestTurn = SkipPath(getTrooper(MyStrategy.WhoseBonus), BonusGoal, needShootingPosition: false);
                 Point to = bestTurn == null ? null : goToUnit(self, bestTurn, map, beginFree: true, endFree: false);
                 if (to == null || Equal(to, self))
                     Go(ActionType.EndTurn);
