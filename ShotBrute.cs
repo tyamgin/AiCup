@@ -341,14 +341,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
                 if (need <= can)
                 {
-                    profit += minHit + KillBonus;
+                    profit += (minHit + KillBonus) * (id == 0 ? 1.2 : 1);
                     state.opphit[bestIdx] = 0;
                     for (int k = 0; k < need; k++)
                         stack[id].Add("sh " + opp.X + " " + opp.Y);
                 }
                 else
                 {
-                    profit += damage*can;
+                    profit += damage * can * (id == 0 ? 1.2 : 1);
                     state.opphit[bestIdx] -= damage*can;
                     for (int k = 0; k < can; k++)
                         stack[id].Add("sh " + opp.X + " " + opp.Y);
@@ -412,6 +412,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 double potential = profit;
                 for (int i = 0; i < MyCount; i++)
                 {
+                    // TODO: учитывать суммарные возможности медика и аптечек
                     potential += MyCount*Troopers[i].MaximalHitpoints;
                 }
                 for (int i = id + 1; i < MyCount; i++)

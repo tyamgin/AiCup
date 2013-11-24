@@ -44,12 +44,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (!canMakeQuery())
             {
                 ArrayList places = new ArrayList();
+#if DEBUG
                 places.Add(new Point(width - 1, 1));
-                // TODO:
-                //for (int x = 1; x < width; x += width - 3)
-                //    for (int y = 1; y < height; y += height - 3)
-                //        if (PointGoal == null || PointGoal.GetDistanceTo(x, y) > height / 3)
-                //            places.Add(new Point(x, y));
+#else
+                for (int x = 1; x < width; x += width - 3)
+                    for (int y = 1; y < height; y += height - 3)
+                        if (PointGoal == null || PointGoal.GetDistanceTo(x, y) > height / 3)
+                            places.Add(new Point(x, y));
+#endif
                 var pl = places.ToArray();
                 PointGoal = pl[random.Next(places.Count)] as Point;
                 PointGoal.profit = world.MoveIndex;
