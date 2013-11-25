@@ -5,9 +5,6 @@ using System.Text;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 using System.Collections;
 
-// TODO:!!! радиус зависит от плотности местности
-// нужно-ли?TODO: если я выигрываю и остался 1 противник, то залечь
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -47,9 +44,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 #if DEBUG
                 places.Add(new Point(Width - 1, 1));
 #else
-                for (int x = 1; x < width; x += width - 3)
-                    for (int y = 1; y < height; y += height - 3)
-                        if (PointGoal == null || PointGoal.GetDistanceTo(x, y) > height / 3)
+                for (int x = 1; x < Width; x += Width - 3)
+                    for (int y = 1; y < Height; y += Height - 3)
+                        if (PointGoal == null || PointGoal.GetDistanceTo(x, y) > Height / 3)
                             places.Add(new Point(x, y));
 #endif
                 var pl = places.ToArray();
