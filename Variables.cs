@@ -37,6 +37,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public Trooper[] Team;
         public Trooper[] Friends; 
         public Trooper[] Opponents;
+        public int[] OpponentsAppearTime;
         public Bonus[] Bonuses;
         public CellType[][] Cells;
         public int[,] map, notFilledMap;

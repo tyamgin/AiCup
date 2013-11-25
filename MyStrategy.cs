@@ -3,6 +3,9 @@ using System.Collections;
 using System.Linq;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
+// TODO: Устанавливать PointGoal как трупер
+// TODO: Память, приоритеты
+
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -15,8 +18,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 28 && self.Type == TrooperType.Commander)
-                world = world;
+            //if (world.MoveIndex == 12 && self.Type == TrooperType.Commander)
+            //    world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
@@ -31,6 +34,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (Opponents.Count() != 0)
             {
+                // Чтобы знали куда бежать если противник отступит
+                PointGoal = new Point(Opponents[0]);
+
                 var action = BruteForceDo();
                 if (action != null)
                 {

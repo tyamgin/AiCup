@@ -176,7 +176,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         private void dfs_heal()
         {
-            int id = state.id;
+            var id = state.id;
 
             if (state.Medikit && game.MedikitUseCost < state.act[id])
             {
@@ -237,8 +237,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     for (var k = 0; k < 4; k++)
                     {
-                        int ni = trooper.X + _i[k];
-                        int nj = trooper.Y + _j[k];
+                        var ni = trooper.X + _i[k];
+                        var nj = trooper.Y + _j[k];
                         if (ni >= 0 && nj >= 0 && ni < Width && nj < Height && notFilledMap[ni, nj] == 0
                             && state.Position[id].GetDistanceTo(ni, nj) <= game.GrenadeThrowRange)
                         {
@@ -377,42 +377,40 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             // Штраф за большой радиус
             double centerX = 0, centerY = 0;
-            foreach (Point position in state.Position)
+            foreach (var position in state.Position)
             {
                 centerX += position.X;
                 centerY += position.Y;
             }
             centerX /= MyCount;
             centerY /= MyCount;
-            foreach (Point position in state.Position)
+            foreach (var position in state.Position)
                 profit -= position.GetDistanceTo(centerX, centerY);
 
             var oldHit = state.hit[id];
-            bool ok = false;
-            for (int i = 0; i < OpponentsCount; i++)
+            var ok = false;
+            for (var i = 0; i < OpponentsCount; i++)
             {
                 if (state.opphit[i] > 0)
                 {
                     var opp = Opponents[i];
-                    if (world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y,
-                        getStance(state.Stance)))
+                    if (world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                     {
-                        state.hit[id] -= 100;
+                        state.hit[id] -= 200;
                         ok = true;
                     }
                 }
             }
             if (!ok)
             {
-                for (int i = 0; i < OpponentsCount; i++)
+                for (var i = 0; i < OpponentsCount; i++)
                 {
                     if (state.opphit[i] > 0)
                     {
                         var opp = Opponents[i];
-                        if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y,
-                            getStance(state.Stance)))
+                        if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                         {
-                            state.hit[id] -= 50;
+                            state.hit[id] -= 100;
                             break;
                         }
                     }
@@ -422,15 +420,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (id == 1 || id == MyCount - 1)
             {
                 // К профиту прибавляю итоговое количество жизней
-                for (int i = 0; i < MyCount; i++)
-                    profit += state.hit[i] * 3;
+                for (var i = 0; i < MyCount; i++)
+                    profit += state.hit[i] * Math.Min(MyCount, 3);
 
+                // counter - количество состояний - для дебага
                 counter++;
                 if (profit > bestProfit)
                 {
                     bestProfit = profit;
                     bestStack = new ArrayList[MyCount];
-                    for (int i = 0; i < MyCount; i++)
+                    for (var i = 0; i < MyCount; i++)
                         bestStack[i] = stack[i].Clone() as ArrayList;
                 }
             }
@@ -439,7 +438,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 // EndTurn
                 var oldProfit = state.profit;
                 state.profit = profit;
-                int prevId = state.id;
+                var prevId = state.id;
                 state.id = (state.id + 1)%MyCount;
                 dfs_changeStance1();
                 state.profit = oldProfit;
@@ -450,7 +449,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         int getInitialActionPoints(Trooper tr)
         {
-            int x = tr.X, y = tr.Y;
             var points = tr.InitialActionPoints;
             if (CommanderId != -1 && tr.GetDistanceTo(state.Position[CommanderId].X, state.Position[CommanderId].Y) <= game.CommanderAuraRange)
                 points += game.CommanderAuraBonusActionPoints;
@@ -459,12 +457,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         private bool Validate(State state)
         {
-            // TODO: можно ускорить если заполнять карту
-            if (
-                !(state.X >= 0 && state.Y >= 0 && state.X < Width && state.Y < Height &&
-                  notFilledMap[state.X, state.Y] == 0))
+            if (!(state.X >= 0 && state.Y >= 0 && state.X < Width && state.Y < Height && notFilledMap[state.X, state.Y] == 0))
                 return false;
-            
             // Проверяю чтобы не стать в занятую клетку
             return state.Position.Count(p => p.X == state.X && p.Y == state.Y) < 2;
         }

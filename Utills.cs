@@ -8,9 +8,6 @@ using System.Threading;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 using System.IO;
 
-// TODO: идет за бонусом и попадает под обстрел (не хватает очков) http://russianaicup.ru/game/view/22729
-// TODO:!!! Если юнит находится в окружении, но не может стрелять - поменять позицию 
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -201,43 +198,34 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     notFilledMap[i, j] = map[i, j];
                 }
             }
-            var _Team = new ArrayList();
-            var _Friends = new ArrayList();
-            var _Opponents = new ArrayList();
-            foreach (Trooper tr in troopers)
+            Opponents = new Trooper[0];
+            Team = new Trooper[0];
+            Friends = new Trooper[0];
+            OpponentsAppearTime = new int[0];
+
+            foreach (var tr in troopers)
             {
                 map[tr.X, tr.Y] = 1;
                 if (tr.IsTeammate)
                 {
-                    _Team.Add(tr);
+                    Team = Append(Team, tr);
                     if (tr.Id != self.Id)
-                        _Friends.Add(tr);
+                        Friends = Append(Friends, tr);
                 }
                 else
                 {
-                    _Opponents.Add(tr);
+                    Opponents = Append(Opponents, tr);
+                    OpponentsAppearTime = Append(OpponentsAppearTime, 0);
                 }
             }
-            Opponents = new Trooper[_Opponents.Count];
-            for (int i = 0; i < _Opponents.Count; i++)
-                Opponents[i] = _Opponents[i] as Trooper;
-
-            Team = new Trooper[_Team.Count];
-            for (int i = 0; i < _Team.Count; i++)
-                Team[i] = _Team[i] as Trooper;
-
-            Friends = new Trooper[_Friends.Count];
-            for (int i = 0; i < _Friends.Count; i++)
-                Friends[i] = _Friends[i] as Trooper;
             
-
-            MaxTeamRadius = _Team.Count <= 3 ? 2 : 3;
+            MaxTeamRadius = Team.Count() <= 3 ? 2 : 3;
 
             // Загружаем труперов с прошлого хода, и сохраняем с текущего
             for(int i = 0; i < PastTroopers.Count; i += 2)
             {
-                Trooper past = PastTroopers[i] as Trooper;
-                int when = (int) PastTroopers[i + 1];
+                var past = PastTroopers[i] as Trooper;
+                var when = (int) PastTroopers[i + 1];
                 if (world.MoveIndex - when > 1)
                     continue;
 
@@ -247,11 +235,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         exist = true;
                 if (!exist && !IsVisible(past.X, past.Y))
                 {
-                    Array.Resize(ref Opponents, Opponents.Count() + 1);
-                    Opponents[Opponents.Count() - 1] = past;
-
-                    Array.Resize(ref troopers, troopers.Count() + 1);
-                    troopers[troopers.Count() - 1] = past;
+                    Opponents = Append(Opponents, past);
+                    OpponentsAppearTime = Append(OpponentsAppearTime, when);
+                    troopers = Append(troopers, past);
                 }
             }
             var tmp = PastTroopers.Clone() as ArrayList;
@@ -410,6 +396,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             int tmp = a;
             a = b;
             b = tmp;
+        }
+
+        Template[] Append<Template>(Template[] array, Template element)
+        {
+            Array.Resize(ref array, array.Count() + 1);
+            array[array.Count() - 1] = element;
+            return array;
         }
     }
 }
