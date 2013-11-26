@@ -53,15 +53,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown bonus type");
         }
 
-        //int getInitialActionPoints(Trooper tr, int x, int y)
-        //{
-        //    int points = tr.InitialActionPoints;
-        //    Trooper cmd = getCmd();
-        //    if (cmd != null && tr.Type != TrooperType.Commander && tr.Type == TrooperType.Scout && cmd.GetDistanceTo(x, y) <= game.CommanderAuraRange)
-        //        points += game.CommanderAuraBonusActionPoints;
-        //    return points;
-        //}
-
         double getTeamBonusProfit(Bonus bonus, ref Trooper trooper)
         {
             // нужен минимальный вес

@@ -57,7 +57,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool isApproximationExist()
         {
-            foreach (Player pl in world.Players)
+            foreach (var pl in world.Players)
                 if (pl.ApproximateX != -1)
                     return true;
             return false;
@@ -65,9 +65,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point getCoordinateByApproximation(int x, int y)
         {
-            Point nearestPoint = new Point(0, 0, Inf);
-            for (int i = 0; i < Width; i++)
-                for (int j = 0; j < Height; j++)
+            var nearestPoint = new Point(0, 0, Inf);
+            for (var i = 0; i < Width; i++)
+                for (var j = 0; j < Height; j++)
                     if (notFilledMap[i, j] == 0 && new Point(x, y).GetDistanceTo(i, j) < nearestPoint.profit)
                         nearestPoint = new Point(i, j, new Point(x, y).GetDistanceTo(i, j));
             return nearestPoint;            
@@ -78,16 +78,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (!isApproximationExist())
                 return;
             AlivePlayers = new ArrayList();
-            Point nearestPoint = new Point(0, 0, Inf);
-            foreach(Player pl in world.Players)
+            var nearestPoint = new Point(0, 0, Inf);
+            foreach(var pl in world.Players)
             {
                 if (pl.ApproximateX != -1)
                 {
                     AlivePlayers.Add(pl);
                     if (pl.Id != self.PlayerId)
                     {
-                        Point coordinate = getCoordinateByApproximation(pl.ApproximateX, pl.ApproximateY);
-                        int path = getShoterPath(commander, coordinate, map, beginFree: true, endFree: true);
+                        var coordinate = getCoordinateByApproximation(pl.ApproximateX, pl.ApproximateY);
+                        var path = getShoterPath(commander, coordinate, map, beginFree: true, endFree: true);
                         if (path < nearestPoint.profit)
                             nearestPoint = new Point(coordinate.X, coordinate.Y, path);
                     }
@@ -111,7 +111,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         int howManyCanShoot(Point position, TrooperStance stance)
         {
             int cnt = 0;
-            foreach (Trooper tr in Opponents)
+            foreach (var tr in Opponents)
                 if (world.IsVisible(self.ShootingRange, position.X, position.Y, stance, tr.X, tr.Y, tr.Stance))
                     cnt++;
             return cnt;
@@ -119,7 +119,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point GoToEncircling(Trooper center, Point goal, bool needShootingPosition)
         {
-            Point bestPoint = new Point(0, 0, Inf);
+            var bestPoint = new Point(0, 0, Inf);
             double optDanger = self.Type == TrooperType.FieldMedic ? Inf : -Inf;
             for (int i = 0; i < Width; i++)
             {   

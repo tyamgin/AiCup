@@ -3,7 +3,6 @@ using System.Collections;
 using System.Linq;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
-// TODO: ”станавливать PointGoal как трупер
 // TODO: ѕам€ть, приоритеты
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
@@ -18,8 +17,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 23 && self.Type == TrooperType.FieldMedic)
-                world = world;
+            //if (world.MoveIndex == 23 && self.Type == TrooperType.FieldMedic)
+            //    world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
@@ -47,10 +46,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (self.Type == TrooperType.FieldMedic)
             {
-                Point ifHelp = ifHelpTeammate();
+                var ifHelp = ifHelpTeammate();
                 if (ifHelp != null)
                 {
-                    Trooper goal = getTrooperAt(ifHelp.X, ifHelp.Y);
+                    var goal = getTrooperAt(ifHelp.X, ifHelp.Y);
                     if (goal != null && goal.Hitpoints < goal.MaximalHitpoints && ifHelp.Nearest(self) && game.FieldMedicHealCost <= self.ActionPoints)
                     {
                         Go(ActionType.Heal, ifHelp);
@@ -58,7 +57,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                     if (canMove())
                     {
-                        Point to = goToUnit(self, ifHelp, map, beginFree: true, endFree: true);
+                        var to = goToUnit(self, ifHelp, map, beginFree: true, endFree: true);
                         if (to != null)
                         {
                             Go(ActionType.Move, to);
@@ -68,7 +67,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            Point ifUseMedikit = IfUseMedikit();
+            var ifUseMedikit = IfUseMedikit();
             if (ifUseMedikit != null)
             {
                 Go(ActionType.UseMedikit, ifUseMedikit);
@@ -76,7 +75,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             Trooper whoseBonus = null;
-            Point ifTeamBonus = IfTeamBonus(ref whoseBonus);
+            var ifTeamBonus = IfTeamBonus(ref whoseBonus);
             if (ifTeamBonus != null && BonusGoal == null && map[ifTeamBonus.X, ifTeamBonus.Y] == 0 && !Equal(ifTeamBonus, self))
             {
                 BonusGoal = ifTeamBonus;
@@ -94,7 +93,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return;
                 }
                 allowNothing = false;
-                Point to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
+                var to = goToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
                 // ≈сли путь до бонуса пока что зан€т, то все равно идти к нему
                 if (to == null)
                 {
@@ -126,8 +125,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.RaiseStance);
                     return;
                 }
-                Point bestTurn = SkipPath(getTrooper(MyStrategy.WhoseBonus), BonusGoal, needShootingPosition: false);
-                Point to = bestTurn == null ? null : goToUnit(self, bestTurn, map, beginFree: true, endFree: false);
+                var bestTurn = SkipPath(getTrooper(MyStrategy.WhoseBonus), BonusGoal, needShootingPosition: false);
+                var to = bestTurn == null ? null : goToUnit(self, bestTurn, map, beginFree: true, endFree: false);
                 if (to == null || Equal(to, self))
                     Go(ActionType.EndTurn);
                 else
@@ -135,7 +134,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
-            Point ifNothing = IfNothing();
+            var ifNothing = IfNothing();
             if (allowNothing && ifNothing != null && canMove())
             {
                 if (canUpper())
@@ -143,7 +142,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.RaiseStance);
                     return;
                 }
-                Point to = goToUnit(self, ifNothing, map, beginFree: true, endFree: false);
+                var to = goToUnit(self, ifNothing, map, beginFree: true, endFree: false);
                 if (to == null || Equal(self, to))
                 {
                     if (to == null && changedCommander == -1) // значит мы застр€ли

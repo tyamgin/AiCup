@@ -524,6 +524,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             for (var i = 0; i < OpponentsCount; i++)
             {
                 state.opphit[i] = Opponents[i].Hitpoints;
+                // Чтобы уменьшить приоритет стрельбы в "мнимую" цель
+                if (OpponentsMemoryId[i] != self.Id)
+                    state.opphit[i] += 100;
             }
             dfs_changeStance1();
 

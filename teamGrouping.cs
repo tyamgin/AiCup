@@ -12,12 +12,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         double getTeamRadius(long delId = -1, Point p = null)
         {
             double radius = Inf;
-            for (int i = 0; i < Width; i++)
+            for (var i = 0; i < Width; i++)
             {
-                for (int j = 0; j < Height; j++)
+                for (var j = 0; j < Height; j++)
                 {
                     double maxV = p == null ? -Inf : p.GetDistanceTo(i, j);
-                    foreach(Trooper tr in Team)
+                    foreach(var tr in Team)
                         if (delId != tr.Id)
                             maxV = Math.Max(maxV, tr.GetDistanceTo(i, j));
                     radius = Math.Min(radius, maxV);

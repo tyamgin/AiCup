@@ -37,34 +37,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public Trooper[] Team;
         public Trooper[] Friends; 
         public Trooper[] Opponents;
-        public int[] OpponentsAppearTime;
         public Bonus[] Bonuses;
         public CellType[][] Cells;
         public int[,] map, notFilledMap;
         public int[,] danger;
         public int Width, Height;
-        private static ArrayList PastTroopers = new ArrayList();
-
-
-
-
-
-
-        static bool Equal(Point point, Unit unit)
-        {
-            return point.X == unit.X && point.Y == unit.Y;
-        }
-        static bool Equal(Unit unit, Point point)
-        {
-            return point.X == unit.X && point.Y == unit.Y;
-        }
-        static bool Equal(Point point, Point unit)
-        {
-            return point.X == unit.X && point.Y == unit.Y;
-        }
-        static bool Equal(Unit point, Unit unit)
-        {
-            return point.X == unit.X && point.Y == unit.Y;
-        }
+        private static ArrayList PastTroopersInfo = new ArrayList();
+        private static int[] OpponentsMemoryAppearTime;
+        private static long[] OpponentsMemoryId;
     }
 }
