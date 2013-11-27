@@ -15,8 +15,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.world = world;
             this.game = game;
             this.move = move;
-            if (world.MoveIndex == 11 && self.Type == TrooperType.Sniper)
-                world = world;
+            //if (world.MoveIndex == 11 && self.Type == TrooperType.Sniper)
+            //    world = world;
             InitializeConstants();
             ProcessApproximation();
             bool allowHill = !CheckShootMe();

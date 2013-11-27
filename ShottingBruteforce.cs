@@ -405,7 +405,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     var opp = Opponents[i];
                     if (state.opphit[i] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                     {
-                        state.hit[id] -= Math.Min(100, MyCount * 49);
+                        if (MyCount == 1 && self.Type == TrooperType.Sniper)
+                            state.hit[id] -= 60;
+                        else
+                            state.hit[id] -= 100;
                         break;
                     }
                 }
