@@ -37,9 +37,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool haveSuchBonus(Trooper self, Bonus bonus)
         {
-            if (bonus == null)
-                return false;
-            return haveSuchBonus(self, bonus.Type);
+            return bonus != null && haveSuchBonus(self, bonus.Type);
         }
 
         bool haveSuchBonus(Trooper self, BonusType bonus)
@@ -57,7 +55,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             // нужен минимальный вес
             double bestWeight = Inf;
-            foreach (Trooper tr in Team)
+            foreach (var tr in Team)
             {
                 //if (getShoterPath(tr, bonus, map, beginFree: true, endFree: false) < Inf)
                 {
@@ -78,9 +76,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point IfTeamBonus(ref Trooper result)
         {
-            Point bestPoint = Point.Inf;
+            var bestPoint = Point.Inf;
             result = null;
-            foreach (Bonus bo in Bonuses)
+            foreach (var bo in Bonuses)
             {
                 Trooper whose = null; ;
                 double profit = getTeamBonusProfit(bo, ref whose);
@@ -95,16 +93,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestPoint;
         }
 
-
-
         Point SkipPath(Trooper center, Point goal, bool needShootingPosition)
         {
             // В первую очередь минимизировать путь center до goal
-            Point bestPoint = new Point(0, 0, Inf);
+            var bestPoint = new Point(0, 0, Inf);
             int minDistToCenter = Inf;
-            for (int i = 0; i < Width; i++)
+            for (var i = 0; i < Width; i++)
             {
-                for (int j = 0; j < Height; j++)
+                for (var j = 0; j < Height; j++)
                 {
                     if (map[i, j] == 0 || i == self.X && j == self.Y)
                     {
@@ -140,6 +136,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return null;
             }
             return bestPoint;
+        }
+
+        bool IfFieldRationNeed()
+        {
+            if (!self.IsHoldingFieldRation || self.ActionPoints < game.FieldRationEatCost || self.ActionPoints + game.FieldRationBonusActionPoints - game.FieldRationEatCost > self.InitialActionPoints)
+                return false;
+            if (howManyCanShoot(new Point(self), self.Stance) != 0)
+                return true;
+            return false;
         }
     }
 }

@@ -145,8 +145,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var stance = state.Stance;
             var moveCost = getMoveCost(stance);
 
-            var To = FastBfs(state.X, state.Y, bfsRadius, notFilledMap, state.Position);
-            foreach (Point to in To)
+            var encircling = FastBfs(state.X, state.Y, bfsRadius, notFilledMap, state.Position);
+            foreach (Point to in encircling)
             {
                 var byX = to.X - state.X;
                 var byY = to.Y - state.Y;
@@ -391,28 +391,22 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var ok = false;
             for (var i = 0; i < OpponentsCount; i++)
             {
-                if (state.opphit[i] > 0)
+                var opp = Opponents[i];
+                if (state.opphit[i] > 0 && world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                 {
-                    var opp = Opponents[i];
-                    if (world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
-                    {
-                        state.hit[id] -= 200;
-                        ok = true;
-                    }
+                    state.hit[id] -= 200;
+                    ok = true;
                 }
             }
             if (!ok)
             {
                 for (var i = 0; i < OpponentsCount; i++)
                 {
-                    if (state.opphit[i] > 0)
+                    var opp = Opponents[i];
+                    if (state.opphit[i] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                     {
-                        var opp = Opponents[i];
-                        if (world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
-                        {
-                            state.hit[id] -= 100;
-                            break;
-                        }
+                        state.hit[id] -= Math.Min(100, MyCount * 49);
+                        break;
                     }
                 }
             }

@@ -15,16 +15,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.world = world;
             this.game = game;
             this.move = move;
+            if (world.MoveIndex == 11 && self.Type == TrooperType.Sniper)
+                world = world;
             InitializeConstants();
             ProcessApproximation();
-            //if (world.MoveIndex == 23 && self.Type == TrooperType.FieldMedic)
-            //    world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && getTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
             if (BonusGoal != null && haveSuchBonus(getTrooper(MyStrategy.WhoseBonus), getBonusAt(BonusGoal)))
                 BonusGoal = null;
-            if (ifFieldRationNeed())
+            if (IfFieldRationNeed())
             {
                 Go(ActionType.EatFieldRation);
                 return;
