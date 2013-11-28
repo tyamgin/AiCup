@@ -31,6 +31,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
                 move.Action = ActionType.EndTurn;
             SaveHitpoints();
+            RemoveKilledOpponents();
             validateMove();
         }
 
@@ -73,6 +74,31 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (stance == 2)
                 return game.StandingMoveCost;
             throw new Exception("something wrong");
+        }
+
+        void RemoveKilledOpponents()
+        {
+            if (move.Action == ActionType.Shoot)
+            {
+                var trooper = getTrooperAt(move.X, move.Y);
+                
+                for (var i = 0; i < PastTroopersInfo.Count; i += 3)
+                {
+                    if ((PastTroopersInfo[i] as Trooper).Id == trooper.Id)
+                    {
+                        if (trooper.Hitpoints <= self.GetDamage(self.Stance))
+                        {
+                            PastTroopersInfo.RemoveRange(i, 3);
+                            break;
+                        }
+                        else
+                        {
+                            PastTroopersInfo[i] = GetClone(PastTroopersInfo[i] as Trooper,
+                                self.GetDamage(self.Stance));
+                        }
+                    }
+                }
+            }
         }
 
         void SaveHitpoints()
@@ -246,7 +272,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             PastTroopersInfo.Clear();
             for(var i = 0; i < Opponents.Count(); i++)
             {
-                PastTroopersInfo.Add(Opponents[i]);
+                PastTroopersInfo.Add(GetClone(Opponents[i], 0));
                 PastTroopersInfo.Add(OpponentsMemoryAppearTime[i]);
                 PastTroopersInfo.Add(OpponentsMemoryId[i]);
             }
@@ -274,10 +300,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 queue.Add(self.Id);
         }
 
-        bool IsVisible(int x, int y)
+        bool IsVisible(int x, int y, TrooperStance stance = TrooperStance.Prone)
         {
             return Team.Any(
-                trooper => world.IsVisible(trooper.VisionRange, trooper.X, trooper.Y, trooper.Stance, x, y, TrooperStance.Prone)
+                trooper => world.IsVisible(trooper.VisionRange, trooper.X, trooper.Y, trooper.Stance, x, y, stance)
             );
         }
 
@@ -325,24 +351,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         bool canUpper(Trooper self)
         {
             return canUpper(self.Stance, self.ActionPoints);
-        }
-
-        TrooperStance Low(TrooperStance stance)
-        {
-            if (stance == TrooperStance.Standing)
-                return TrooperStance.Kneeling;
-            if (stance == TrooperStance.Kneeling)
-                return TrooperStance.Prone;
-            throw new Exception("");
-        }
-
-        TrooperStance High(TrooperStance stance)
-        {
-            if (stance == TrooperStance.Prone)
-                return TrooperStance.Kneeling;
-            if (stance == TrooperStance.Kneeling)
-                return TrooperStance.Standing;
-            throw new Exception("");
         }
 
         int getStanceId(TrooperStance stance)
@@ -410,6 +418,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Array.Resize(ref array, array.Count() + 1);
             array[array.Count() - 1] = element;
             return array;
+        }
+
+        Trooper GetClone(Trooper a, int minus_hitpoints)
+        {
+            return new Trooper(a.Id, a.X, a.Y, a.PlayerId, a.TeammateIndex, a.IsTeammate, a.Type, a.Stance, a.Hitpoints - minus_hitpoints, a.MaximalHitpoints, a.ActionPoints, a.InitialActionPoints, a.VisionRange, a.ShootingRange, a.ShootCost, a.StandingDamage, a.KneelingDamage, a.ProneDamage, a.Damage, a.IsHoldingGrenade, a.IsHoldingMedikit, a.IsHoldingFieldRation);
         }
     }
 }
