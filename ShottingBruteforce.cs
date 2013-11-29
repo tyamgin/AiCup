@@ -331,6 +331,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             for (var idx = 0; idx < OpponentsCount; idx++)
             {
                 var opp = Opponents[idx];
+                
                 if (state.opphit[idx] > 0 && world.IsVisible(Troopers[id].ShootingRange, state.X, state.Y, getStance(state.Stance), opp.X, opp.Y, opp.Stance))
                 {
                     if (state.opphit[idx] < minHit)
@@ -392,7 +393,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             for (var i = 0; i < OpponentsCount; i++)
             {
                 var opp = Opponents[i];
-                if (state.opphit[i] > 0 && world.IsVisible(opp.ShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
+                // Чтобы не бояться одного снайпера
+                var oppShootingRange = OpponentsCount == 1 && opp.Type == TrooperType.Sniper
+                    ? opp.VisionRange
+                    : opp.ShootingRange;
+                if (state.opphit[i] > 0 && world.IsVisible(oppShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
                 {
                     state.hit[id] -= 200;
                     ok = true;

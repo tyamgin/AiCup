@@ -375,6 +375,32 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown TrooperStance");
         }
 
+        double GetShootingRange(Trooper trooper, int stance)
+        {
+            if (trooper.Type != TrooperType.Sniper)
+                return trooper.ShootingRange;
+            if (stance == 0)
+                return trooper.ShootingRange + game.SniperProneShootingRangeBonus;
+            if (stance == 1)
+                return trooper.ShootingRange + game.SniperKneelingShootingRangeBonus;
+            if (stance == 2)
+                return trooper.ShootingRange + game.SniperStandingShootingRangeBonus;
+            throw new Exception("Something wrong");
+        }
+
+        double GetShootingRange(Trooper trooper, TrooperStance stance)
+        {
+            if (trooper.Type != TrooperType.Sniper)
+                return trooper.ShootingRange;
+            if (stance == TrooperStance.Prone)
+                return trooper.ShootingRange + game.SniperProneShootingRangeBonus;
+            if (stance == TrooperStance.Kneeling)
+                return trooper.ShootingRange + game.SniperKneelingShootingRangeBonus;
+            if (stance == TrooperStance.Standing)
+                return trooper.ShootingRange + game.SniperStandingShootingRangeBonus;
+            throw new Exception("Something wrong");
+        }
+
         long getCurrentLeaderId()
         {
             if (BonusGoal != null)
