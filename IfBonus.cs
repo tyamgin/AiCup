@@ -60,7 +60,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 //if (getShoterPath(tr, bonus, map, beginFree: true, endFree: false) < Inf)
                 {
                     double weight = getShoterPath(tr, bonus, notFilledMap, beginFree: true, endFree: false) * (1 + 0.5 * getQueuePlace(tr, self.Id == tr.Id && self.ActionPoints >= self.InitialActionPoints));
-                    if (tr.Type == TrooperType.FieldMedic)
+                    if (tr.Type == TrooperType.FieldMedic || tr.Type == TrooperType.Sniper)
                         weight = getShoterPath(tr, bonus, map, beginFree: true, endFree: false) <= 2 ? weight : Inf;
                     if (!haveSuchBonus(tr, bonus) && weight < bestWeight)
                     {
