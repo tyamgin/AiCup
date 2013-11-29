@@ -288,9 +288,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     for (var j = 0; j < Height; j++)
                     {
-                        if (world.IsVisible(tr.ShootingRange, tr.X, tr.Y, tr.Stance, i, j, self.Stance))
+                        if (world.IsVisible(GetShootingRange(tr, tr.Stance), tr.X, tr.Y, tr.Stance, i, j, self.Stance))
                             danger[i, j]++;
-                        if (world.IsVisible(tr.VisionRange, tr.X, tr.Y, tr.Stance, i, j, self.Stance))
+                        if (world.IsVisible(GetVisionRange(tr, self, self.Stance), tr.X, tr.Y, tr.Stance, i, j, self.Stance))
                             danger[i, j]++;
                     }
                 }
@@ -386,6 +386,36 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (stance == 2)
                 return trooper.ShootingRange + game.SniperStandingShootingRangeBonus;
             throw new Exception("Something wrong");
+        }
+
+        public double GetVisionRange(Trooper a, Trooper b, TrooperStance st)
+        {
+            if (a.Type != TrooperType.Scout && b.Type == TrooperType.Sniper)
+            {
+                if (st == TrooperStance.Standing)
+                    return a.VisionRange - game.SniperStandingStealthBonus;
+                if (st == TrooperStance.Kneeling)
+                    return a.VisionRange - game.SniperKneelingStealthBonus;
+                if (st == TrooperStance.Prone)
+                    return a.VisionRange - game.SniperProneStealthBonus;
+                throw new Exception("Something wrong");
+            }
+            return a.VisionRange;
+        }
+
+        public double GetVisionRange(Trooper a, Trooper b, int st)
+        {
+            if (a.Type != TrooperType.Scout && b.Type == TrooperType.Sniper)
+            {
+                if (st == 2)
+                    return a.VisionRange - game.SniperStandingStealthBonus;
+                if (st == 1)
+                    return a.VisionRange - game.SniperKneelingStealthBonus;
+                if (st == 0)
+                    return a.VisionRange - game.SniperProneStealthBonus;
+                throw new Exception("Something wrong");
+            }
+            return a.VisionRange;
         }
 
         double GetShootingRange(Trooper trooper, TrooperStance stance)

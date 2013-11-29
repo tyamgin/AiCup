@@ -9,6 +9,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        public static int KillBonus = 50;
         public static int changedCommander = -1;
         public static Point BonusGoal = null;
         public static long WhoseBonus = -1;

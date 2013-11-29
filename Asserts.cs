@@ -57,7 +57,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (self.ShootCost > self.ActionPoints)
                     throw new Exception("");
-                if (!world.IsVisible(self.ShootingRange, self.X, self.Y, self.Stance, move.X, move.Y, GetTrooperAt(move.X, move.Y).Stance))
+                if (!world.IsVisible(GetShootingRange(self, self.Stance), self.X, self.Y, self.Stance, move.X, move.Y, GetTrooperAt(move.X, move.Y).Stance))
                     throw new Exception("");
                 if (move.X == self.X && move.Y == self.Y)
                     throw new Exception("");

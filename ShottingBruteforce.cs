@@ -15,7 +15,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         public static Trooper[] Troopers;
-        public static int KillBonus = 50;
         private int counter = 0;
         private int OpponentsCount;
         private int MyCount;
@@ -401,7 +400,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 var opp = Opponents[i];
                 // Чтобы не бояться одного снайпера
                 var oppShootingRange = OpponentsCount == 1 && opp.Type == TrooperType.Sniper
-                    ? opp.VisionRange
+                    ? GetVisionRange(opp, Troopers[id], state.Stance)
                     : GetShootingRange(opp, opp.Stance);
                 if (state.opphit[i] > 0 && world.IsVisible(oppShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, GetStance(state.Stance)))
                 {
@@ -414,7 +413,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 for (var i = 0; i < OpponentsCount; i++)
                 {
                     var opp = Opponents[i];
-                    if (state.opphit[i] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, GetStance(state.Stance)))
+                    if (state.opphit[i] > 0 && world.IsVisible(GetVisionRange(opp, Troopers[id], state.Stance), opp.X, opp.Y, opp.Stance, state.X, state.Y, GetStance(state.Stance)))
                     {
                         if (MyCount == 1 && self.Type == TrooperType.Sniper)
                             state.hit[id] -= 60;
@@ -538,6 +537,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             dfs_changeStance1();
 
+            // remove fictive from queue
+            queue.RemoveRange(queue.Count - fictive, fictive);
+
             if (bestStack[0] == null)
                 return null;
             var move = new Move();
@@ -597,7 +599,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 throw new NotImplementedException(cmd.ToString());
             }
-
             return move;
         }
     }
