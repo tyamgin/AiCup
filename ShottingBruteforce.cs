@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Text;
@@ -7,7 +8,7 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 using System.Collections;
 using System.IO;
 
-// TODO: граната
+// TODO: использовать скрытность sniper-а 
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -145,7 +146,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             var id = state.id;
             var stance = state.Stance;
-            var moveCost = getMoveCost(stance);
+            var moveCost = GetMoveCost(stance);
 
             var encircling = FastBfs(state.X, state.Y, bfsRadius, notFilledMap, state.Position);
             foreach (Point to in encircling)
@@ -248,11 +249,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                             var loop = 0;
                             foreach (var tr in Opponents)
                             {
-                                int dist = Math.Abs(ni - tr.X) + Math.Abs(nj - tr.Y);
-                                if (dist == 0)
-                                    profit += Math.Min(state.opphit[loop], game.GrenadeDirectDamage);
-                                else if (dist == 1)
-                                    profit += Math.Min(state.opphit[loop], game.GrenadeCollateralDamage);
+                                var distance = Math.Abs(ni - tr.X) + Math.Abs(nj - tr.Y);
+                                if (distance <= 1)
+                                {
+                                    var damage = distance == 0 ? game.GrenadeDirectDamage : game.GrenadeCollateralDamage;
+                                    profit += Math.Min(state.opphit[loop], damage);
+                                    if (damage >= state.opphit[loop])
+                                        profit += KillBonus;
+                                }
                                 loop++;
                             }
                             if (bestPoint.profit < profit)
@@ -334,7 +338,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 var opp = Opponents[idx];
                 
-                if (state.opphit[idx] > 0 && world.IsVisible(GetShootingRange(Troopers[id], state.Stance), state.X, state.Y, getStance(state.Stance), opp.X, opp.Y, opp.Stance))
+                if (state.opphit[idx] > 0 && world.IsVisible(GetShootingRange(Troopers[id], state.Stance), state.X, state.Y, GetStance(state.Stance), opp.X, opp.Y, opp.Stance))
                 {
                     if (state.opphit[idx] < minHit)
                     {
@@ -350,7 +354,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
                 var opp = Opponents[bestIdx];
                 var can = state.act[id]/Troopers[id].ShootCost;
-                var damage = Troopers[id].GetDamage(getStance(state.Stance));
+                var damage = Troopers[id].GetDamage(GetStance(state.Stance));
                 var need = Math.Min(can, (minHit + damage - 1)/damage);
                 for (var cnt = 1; cnt <= need; cnt++)
                 {
@@ -399,7 +403,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 var oppShootingRange = OpponentsCount == 1 && opp.Type == TrooperType.Sniper
                     ? opp.VisionRange
                     : GetShootingRange(opp, opp.Stance);
-                if (state.opphit[i] > 0 && world.IsVisible(oppShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
+                if (state.opphit[i] > 0 && world.IsVisible(oppShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, GetStance(state.Stance)))
                 {
                     state.hit[id] -= 200;
                     ok = true;
@@ -410,7 +414,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 for (var i = 0; i < OpponentsCount; i++)
                 {
                     var opp = Opponents[i];
-                    if (state.opphit[i] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, getStance(state.Stance)))
+                    if (state.opphit[i] > 0 && world.IsVisible(opp.VisionRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, GetStance(state.Stance)))
                     {
                         if (MyCount == 1 && self.Type == TrooperType.Sniper)
                             state.hit[id] -= 60;
@@ -495,9 +499,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (tr.IsTeammate)
                 {
-                    int pos = getQueuePlace2(tr, true) - 1;
+                    int pos = GetQueuePlace2(tr, true) - 1;
                     state.Position[pos] = new Point(tr);
-                    state.stance[pos] = getStanceId(tr.Stance);
+                    state.stance[pos] = GetStanceId(tr.Stance);
                     state.medikit[pos] = tr.IsHoldingMedikit;
                     state.grenade[pos] = tr.IsHoldingGrenade;
                     Troopers[pos] = tr;
@@ -555,7 +559,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 var x = int.Parse(cmd[1]);
                 var y = int.Parse(cmd[2]);
-                var To = goToUnit(self, new Point(x, y), map, beginFree: true, endFree: false);
+                var To = GoToUnit(self, new Point(x, y), map, beginFree: true, endFree: false);
                 move.Action = ActionType.Move;
                 move.X = To.X;
                 move.Y = To.Y;

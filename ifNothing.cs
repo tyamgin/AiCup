@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         void Reached(Point p)
         {
-            if (BonusGoal != null && Equal(BonusGoal, p) && getBonusAt(p) == null)
+            if (BonusGoal != null && Equal(BonusGoal, p) && GetBonusAt(p) == null)
                 BonusGoal = null;
             if (PointGoal != null && Equal(PointGoal, p))
                 PointGoal = null;
@@ -20,7 +20,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             SelectNewPointGoal();
         }
 
-        bool canMakeQuery()
+        bool IsCanMakeQuery()
         {
             if (self.Type != TrooperType.Commander || self.ActionPoints < game.CommanderRequestEnemyDispositionCost)
                 return false;
@@ -31,14 +31,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool IfMakeQuery()
         {
-            if (BonusGoal == null && (PointGoal == null || world.MoveIndex - PointGoal.profit > 4) && canMakeQuery())
+            if (BonusGoal == null && (PointGoal == null || world.MoveIndex - PointGoal.profit > 4) && IsCanMakeQuery())
                 return true;
             return false;
         }
 
         void SelectNewPointGoal()
         {
-            if (!canMakeQuery())
+            if (!IsCanMakeQuery())
             {
                 ArrayList places = new ArrayList();
 #if DEBUG
@@ -55,15 +55,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
-        bool isApproximationExist()
+        bool IsApproximationExist()
         {
-            foreach (var pl in world.Players)
-                if (pl.ApproximateX != -1)
-                    return true;
-            return false;
+            return world.Players.Any(
+                player => player.ApproximateX != -1
+            );
         }
 
-        Point getCoordinateByApproximation(int x, int y)
+        Point GetCoordinateByApproximation(int x, int y)
         {
             var nearestPoint = new Point(0, 0, Inf);
             for (var i = 0; i < Width; i++)
@@ -75,19 +74,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         void ProcessApproximation()
         {
-            if (!isApproximationExist())
+            if (!IsApproximationExist())
                 return;
             AlivePlayers = new ArrayList();
             var nearestPoint = new Point(0, 0, Inf);
-            foreach(var pl in world.Players)
+            foreach(var player in world.Players)
             {
-                if (pl.ApproximateX != -1)
+                if (player.ApproximateX != -1)
                 {
-                    AlivePlayers.Add(pl);
-                    if (pl.Id != self.PlayerId)
+                    AlivePlayers.Add(player);
+                    if (player.Id != self.PlayerId)
                     {
-                        var coordinate = getCoordinateByApproximation(pl.ApproximateX, pl.ApproximateY);
-                        var path = getShoterPath(commander, coordinate, map, beginFree: true, endFree: true);
+                        var coordinate = GetCoordinateByApproximation(player.ApproximateX, player.ApproximateY);
+                        var path = GetShoterPath(commander, coordinate, map, beginFree: true, endFree: true);
                         if (path < nearestPoint.profit)
                             nearestPoint = new Point(coordinate.X, coordinate.Y, path);
                     }
@@ -108,44 +107,42 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return null;
         }
 
-        int howManyCanShoot(Point position, TrooperStance stance)
+        int HowManyCanShoot(Point position, TrooperStance stance)
         {
-            int cnt = 0;
-            foreach (var tr in Opponents)
-                if (world.IsVisible(self.ShootingRange, position.X, position.Y, stance, tr.X, tr.Y, tr.Stance))
-                    cnt++;
-            return cnt;
+            return Opponents.Count(
+                trooper => world.IsVisible(GetShootingRange(self, self.Stance), position.X, position.Y, stance, trooper.X, trooper.Y, trooper.Stance)
+            );
         }
 
         Point GoToEncircling(Trooper center, Point goal, bool needShootingPosition)
         {
             var bestPoint = new Point(0, 0, Inf);
             double optDanger = self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper ? Inf : -Inf;
-            for (int i = 0; i < Width; i++)
+            for (var i = 0; i < Width; i++)
             {   
-                for (int j = 0; j < Height; j++)
+                for (var j = 0; j < Height; j++)
                 {
                     if (map[i, j] == 0 || i == self.X && j == self.Y)
                     {
                         if (self.GetDistanceTo(i, j) > 10) // немного ускорить
                             continue;
-                        if (needShootingPosition && howManyCanShoot(new Point(i, j), self.Stance) == 0)
+                        if (needShootingPosition && HowManyCanShoot(new Point(i, j), self.Stance) == 0)
                             continue;
                         // Нужно чтобы хватило ходов
-                        int steps = getShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);
-                        if (self.ActionPoints / getMoveCost() >= steps)
+                        int steps = GetShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);
+                        if (self.ActionPoints / GetMoveCost() >= steps)
                         {
                             // и чтобы не закрывали кратчайший путь:
-                            int before = goal == null ? Inf : getShoterPath(center, goal, map, beginFree:true, endFree: false);
+                            int before = goal == null ? Inf : GetShoterPath(center, goal, map, beginFree:true, endFree: false);
                             map[self.X, self.Y] = 0;
                             map[i, j] = 1;
-                            int after = goal == null ? Inf : getShoterPath(center, goal, map, beginFree: true, endFree: false);
+                            int after = goal == null ? Inf : GetShoterPath(center, goal, map, beginFree: true, endFree: false);
                             map[i, j] = 0;
                             map[self.X, self.Y] = 1;
 
                             if ((goal == null || after < Inf) && after <= before)
                             {
-                                double sum = getShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
+                                double sum = GetShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
                                 double dang = danger[i, j] + (goal == null ? 0 : goal.GetDistanceTo(i, j) * 0.01);
                                 if (sum < bestPoint.profit || sum == bestPoint.profit && (self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper ? (dang < optDanger) : ((dang > optDanger))))
                                 {

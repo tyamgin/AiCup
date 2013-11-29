@@ -14,7 +14,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         static StreamWriter file = null;
 
-        void _Go(ActionType type, int toX, int toY)
+        private void _Go(ActionType type, int toX, int toY)
         {
             move.X = toX;
             move.Y = toY;
@@ -32,7 +32,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 move.Action = ActionType.EndTurn;
             SaveHitpoints();
             RemoveKilledOpponents();
-            validateMove();
+            ValidateMove();
         }
 
         void Go(ActionType type, Point to = null)
@@ -44,17 +44,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 _Go(type, to.X, to.Y);
         }
 
-        int getMoveCost()
+        int GetMoveCost()
         {
-            return getMoveCost(this.self);
+            return GetMoveCost(this.self);
         }
 
-        int getMoveCost(Trooper self)
+        int GetMoveCost(Trooper self)
         {
-            return getMoveCost(self.Stance);
+            return GetMoveCost(self.Stance);
         }
 
-        int getMoveCost(TrooperStance stance)
+        int GetMoveCost(TrooperStance stance)
         {
             if (stance == TrooperStance.Prone)
                 return game.ProneMoveCost;
@@ -65,7 +65,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("something wrong");
         }
 
-        int getMoveCost(int stance)
+        int GetMoveCost(int stance)
         {
             if (stance == 0)
                 return game.ProneMoveCost;
@@ -80,7 +80,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (move.Action == ActionType.Shoot)
             {
-                var trooper = getTrooperAt(move.X, move.Y);
+                var trooper = GetTrooperAt(move.X, move.Y);
                 
                 for (var i = 0; i < PastTroopersInfo.Count; i += 3)
                 {
@@ -110,7 +110,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             if (move.Action == ActionType.Heal)
             {
-                var at = getTrooperAt(new Point(move.X, move.Y));
+                var at = GetTrooperAt(new Point(move.X, move.Y));
                 if (at.Id == self.Id)
                     Hitpoints[at.Id] = Math.Min(at.MaximalHitpoints, (int)Hitpoints[at.Id] + game.FieldMedicHealSelfBonusHitpoints);
                 else
@@ -118,7 +118,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             if (move.Action == ActionType.UseMedikit)
             {
-                var at = getTrooperAt(new Point(move.X, move.Y));
+                var at = GetTrooperAt(new Point(move.X, move.Y));
                 if (at.Id == self.Id)
                     Hitpoints[at.Id] = Math.Min(at.MaximalHitpoints, (int)Hitpoints[at.Id] + game.MedikitHealSelfBonusHitpoints);
                 else
@@ -150,22 +150,22 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return true;
         }
 
-        Trooper getTrooperAt(Point point)
+        Trooper GetTrooperAt(Point point)
         {
-            return getTrooperAt(point.X, point.Y);
+            return GetTrooperAt(point.X, point.Y);
         }
 
-        Trooper getTrooperAt(int x, int y)
+        Trooper GetTrooperAt(int x, int y)
         {
             return troopers.FirstOrDefault(tr => tr.X == x && tr.Y == y);
         }
 
-        Trooper getTrooper(long id)
+        Trooper GetTrooper(long id)
         {
             return troopers.FirstOrDefault(tr => tr.Id == id);
         }
 
-        Bonus getBonusAt(Point p)
+        Bonus GetBonusAt(Point p)
         {
             return Bonuses.FirstOrDefault(bo => bo.X == p.X && bo.Y == p.Y);
         }
@@ -178,7 +178,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 changedCommander = -1;
         }
 
-        Trooper getCommander()
+        Trooper GetCommander()
         {
             var cnt = 0;
             foreach (var type in commanderPriority)
@@ -279,7 +279,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (changedCommander != -1 && world.MoveIndex - changedCommander >= 6)
                 ChangeCommander();
-            commander = getCommander();
+            commander = GetCommander();
 
             danger = new int[Width, Height];
             foreach (var tr in Opponents)
@@ -328,32 +328,32 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return List;
         }
 
-        bool canMove()
+        bool IsCanMove()
         {
-            return self.ActionPoints >= getMoveCost();
+            return self.ActionPoints >= GetMoveCost();
         }
 
-        bool canLower()
+        bool IsCanLower()
         {
             return self.Stance != TrooperStance.Prone && self.ActionPoints >= game.StanceChangeCost;
         }
 
-        bool canUpper()
+        bool IsCanUpper()
         {
-            return canUpper(this.self);
+            return IsCanUpper(this.self);
         }
 
-        bool canUpper(TrooperStance stance, int actionPoints)
+        bool IsCanUpper(TrooperStance stance, int actionPoints)
         {
             return stance != TrooperStance.Standing && actionPoints >= game.StanceChangeCost;
         }
 
-        bool canUpper(Trooper self)
+        bool IsCanUpper(Trooper self)
         {
-            return canUpper(self.Stance, self.ActionPoints);
+            return IsCanUpper(self.Stance, self.ActionPoints);
         }
 
-        int getStanceId(TrooperStance stance)
+        int GetStanceId(TrooperStance stance)
         {
             if (stance == TrooperStance.Prone)
                 return 0;
@@ -364,7 +364,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown TrooperStance");
         }
 
-        TrooperStance getStance(int stance)
+        TrooperStance GetStance(int stance)
         {
             if (stance == 0)
                 return TrooperStance.Prone;
@@ -401,17 +401,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Something wrong");
         }
 
-        long getCurrentLeaderId()
+        long GetCurrentLeaderId()
         {
             if (BonusGoal != null)
                 return MyStrategy.WhoseBonus;
             return commander.Id;
         }
 
-        Trooper getCurrentLeader()
+        Trooper GetCurrentLeader()
         {
             if (BonusGoal != null)
-                return getTrooper(MyStrategy.WhoseBonus);
+                return GetTrooper(MyStrategy.WhoseBonus);
             return commander;
         }
 

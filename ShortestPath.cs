@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
 
         // Указывает путь на to.
-        Point goToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree, ref int distance)
+        Point GoToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree, ref int distance)
         {
             if (Equal(to, self))
                 return to;
@@ -121,29 +121,29 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestTurn;
         }
 
-        Point goToUnit(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
+        Point GoToUnit(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            return goToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
+            return GoToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
         }
 
-        int getShoterPath(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
+        int GetShoterPath(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            goToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
+            GoToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
             return distance;
         }
 
-        Point goToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
+        Point GoToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            return goToUnit(self, to, map, beginFree, endFree, ref distance);
+            return GoToUnit(self, to, map, beginFree, endFree, ref distance);
         }
 
-        int getShoterPath(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
+        int GetShoterPath(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            goToUnit(self, to, map, beginFree, endFree, ref distance);
+            GoToUnit(self, to, map, beginFree, endFree, ref distance);
             return distance;
         }
     }

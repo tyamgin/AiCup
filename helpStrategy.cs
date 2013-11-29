@@ -15,9 +15,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return self.Hitpoints / (double)self.MaximalHitpoints < 0.8;
         }
 
-        double getHelperQuality(Trooper tr)
+        double GetHelperQuality(Trooper tr)
         {
-            double quality = 1.0 / getShoterPath(self, tr, notFilledMap, beginFree: true, endFree: true);
+            double quality = 1.0 / GetShoterPath(self, tr, notFilledMap, beginFree: true, endFree: true);
             if (tr.Type == TrooperType.FieldMedic)
                 return quality * 2;
             if (!tr.IsHoldingMedikit)
@@ -25,12 +25,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return quality;
         }
 
-        Point getBestHelper()
+        Point GetBestHelper()
         {
             var bestHelper = Point.Inf;
             foreach(var tr in Friends)
             {
-                double quality = getHelperQuality(tr);
+                double quality = GetHelperQuality(tr);
                 if (quality > bestHelper.profit)
                     bestHelper = new Point(tr.X, tr.Y, quality);
             }
@@ -68,7 +68,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             foreach (Trooper tr in Team)
             {
                 double profit = Math.Min(Math.Max(0, tr.MaximalHitpoints - tr.Hitpoints),
-                                         (self.ActionPoints - Math.Max(0.0, (double)getShoterPath(self, tr, map, beginFree: true, endFree: true) - 1) * getMoveCost()) / game.FieldMedicHealCost * (tr.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)
+                                         (self.ActionPoints - Math.Max(0.0, (double)GetShoterPath(self, tr, map, beginFree: true, endFree: true) - 1) * GetMoveCost()) / game.FieldMedicHealCost * (tr.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)
                                 );
                 if (profit > bestPoint.profit)
                     bestPoint = new Point(tr.X, tr.Y, profit);

@@ -10,17 +10,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        void validateMove()
+        void ValidateMove()
         {
 #if DEBUG
-            if (file == null)
-            {
-                string path = "TestFolder\\" + "log" + game.MoveCount + ".txt";
-                FileStream fs = File.Create(path);
-                fs.Close();
-                file = new StreamWriter(path, true);
-            }
-            file   .WriteLine(world.MoveIndex + ") " + self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
             Console.WriteLine(world.MoveIndex + ") " + self.Type.ToString() + " " + move.Action.ToString() + " " + move.X + " " + move.Y);
             Thread.Sleep(50);
 #endif
@@ -49,7 +41,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             else if (move.Action == ActionType.Move)
             {
-                if (self.ActionPoints < getMoveCost())
+                if (self.ActionPoints < GetMoveCost())
                     throw new Exception("");
                 Point to = new Point(move.X, move.Y);
                 Point ths = new Point(self.X, self.Y);
@@ -65,7 +57,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (self.ShootCost > self.ActionPoints)
                     throw new Exception("");
-                if (!world.IsVisible(self.ShootingRange, self.X, self.Y, self.Stance, move.X, move.Y, getTrooperAt(move.X, move.Y).Stance))
+                if (!world.IsVisible(self.ShootingRange, self.X, self.Y, self.Stance, move.X, move.Y, GetTrooperAt(move.X, move.Y).Stance))
                     throw new Exception("");
                 if (move.X == self.X && move.Y == self.Y)
                     throw new Exception("");
