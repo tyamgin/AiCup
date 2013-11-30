@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestHeal;
         }
 
-        Point ifHelpTeammate()
+        Point IfHelpTeammate()
         {
             // Перебираю кого лечить: min(max(0, maxhitpoints - hitpoints), 
             //                            (Очки - (длина пути - 1) * (стоимость пути)) / (стоимость лечения) * (сколько жизней восстанавливыает)

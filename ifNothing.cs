@@ -18,22 +18,24 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (BonusGoal != null || PointGoal != null)
                 return;
             SelectNewPointGoal();
+            if (PointGoal != null)
+                PointGoal.profit = 0;
         }
 
         bool IsCanMakeQuery()
         {
             if (self.Type != TrooperType.Commander || self.ActionPoints < game.CommanderRequestEnemyDispositionCost)
                 return false;
-            if (world.MoveIndex < 3) // TODO: Только для первого типа боя
+            if (world.Players.Count() == 4 && world.MoveIndex < 3)
                 return false;
             return true;
         }
 
         bool IfRequestEnemyDisposition()
         {
-            if (BonusGoal == null && (PointGoal == null || world.MoveIndex - PointGoal.profit > 4) && IsCanMakeQuery())
-                return true;
-            return false;
+            return BonusGoal == null 
+                && (PointGoal == null || world.MoveIndex - PointGoal.profit > 4) 
+                && IsCanMakeQuery();
         }
 
         void SelectNewPointGoal()
@@ -114,7 +116,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             );
         }
 
-        Point GoToEncircling(Trooper center, Point goal, bool needShootingPosition)
+        Point GoToEncircling(Trooper center, Point goal)
         {
             var bestPoint = new Point(0, 0, Inf);
             double optDanger = self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper ? Inf : -Inf;
@@ -124,9 +126,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     if (map[i, j] == 0 || i == self.X && j == self.Y)
                     {
-                        if (self.GetDistanceTo(i, j) > 10) // немного ускорить
-                            continue;
-                        if (needShootingPosition && HowManyCanShoot(new Point(i, j), self.Stance) == 0)
+                        if (self.GetDistanceTo(i, j) > 10) // немного ускорит
                             continue;
                         // Нужно чтобы хватило ходов
                         int steps = GetShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);
@@ -144,7 +144,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                             {
                                 double sum = GetShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
                                 double dang = danger[i, j] + (goal == null ? 0 : goal.GetDistanceTo(i, j) * 0.01);
-                                if (sum < bestPoint.profit || sum == bestPoint.profit && (self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper ? (dang < optDanger) : ((dang > optDanger))))
+                                if (sum < bestPoint.profit || 
+                                    EqualF(sum, bestPoint.profit) && 
+                                    (self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper ? (dang < optDanger) : (dang > optDanger))
+                                   )
                                 {
                                     bestPoint = new Point(i, j, sum);
                                     optDanger = dang;
@@ -154,20 +157,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
-            if (bestPoint.profit >= Inf)
-            {
-                if (needShootingPosition)
-                    return GoToEncircling(center, goal, false);
-                return null;
-            }
-            return bestPoint;
+            return bestPoint.profit >= Inf ? null : bestPoint;
         }
 
         Point IfNothing()
         {
             if (commander.Id == self.Id)
                 return IfNothingCommander();
-            return GoToEncircling(commander, PointGoal, needShootingPosition: false);
+            return GoToEncircling(commander, PointGoal);
         }
     }
 }

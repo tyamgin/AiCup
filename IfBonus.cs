@@ -89,7 +89,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return bestPoint;
         }
 
-        Point SkipPath(Trooper center, Point goal, bool needShootingPosition)
+        Point SkipPath(Trooper center, Point goal)
         {
             // В первую очередь минимизировать путь center до goal
             var bestPoint = new Point(0, 0, Inf);
@@ -101,8 +101,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     if (map[i, j] == 0 || i == self.X && j == self.Y)
                     {
                         if (self.GetDistanceTo(i, j) > 10) // немного ускорит
-                            continue;
-                        if (needShootingPosition && HowManyCanShoot(new Point(i, j), self.Stance) == 0)
                             continue;
                         // Нужно чтобы хватило ходов
                         int steps = GetShoterPath(self, new Point(i, j), map, beginFree: true, endFree: true);
@@ -125,13 +123,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
-            if (bestPoint.profit >= Inf)
-            {
-                if (needShootingPosition)
-                    return SkipPath(center, goal, false);
-                return null;
-            }
-            return bestPoint;
+            return bestPoint.profit >= Inf ? null : bestPoint;
         }
 
         bool IfFieldRationNeed()

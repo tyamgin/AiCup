@@ -378,16 +378,38 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new Exception("Unknown TrooperStance");
         }
 
-        double GetShootingRange(Trooper trooper, int stance)
+        // Возврящает ShootingRange без учета бонуса
+        double GetInitialShootingRange(Trooper trooper)
         {
             if (trooper.Type != TrooperType.Sniper)
                 return trooper.ShootingRange;
+            if (trooper.Stance == TrooperStance.Prone)
+                return trooper.ShootingRange - game.SniperProneShootingRangeBonus;
+            if (trooper.Stance == TrooperStance.Kneeling)
+                return trooper.ShootingRange - game.SniperKneelingShootingRangeBonus;
+            if (trooper.Stance == TrooperStance.Standing)
+                return trooper.ShootingRange - game.SniperStandingShootingRangeBonus;
+            throw new Exception("Something wrong");
+        }
+
+        // Возврящает ShootingRange с учетом бонуса
+        double GetShootingRange(Trooper trooper, TrooperStance stance)
+        {
+            return GetShootingRange(trooper, GetStanceId(stance));
+        }
+
+        // Возврящает ShootingRange с учетом бонуса
+        double GetShootingRange(Trooper trooper, int stance)
+        {
+            var range = GetInitialShootingRange(trooper);
+            if (trooper.Type != TrooperType.Sniper)
+                return range;
             if (stance == 0)
-                return trooper.ShootingRange + game.SniperProneShootingRangeBonus;
+                return range + game.SniperProneShootingRangeBonus;
             if (stance == 1)
-                return trooper.ShootingRange + game.SniperKneelingShootingRangeBonus;
+                return range + game.SniperKneelingShootingRangeBonus;
             if (stance == 2)
-                return trooper.ShootingRange + game.SniperStandingShootingRangeBonus;
+                return range + game.SniperStandingShootingRangeBonus;
             throw new Exception("Something wrong");
         }
 
@@ -421,19 +443,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return a.VisionRange;
         }
 
-        double GetShootingRange(Trooper trooper, TrooperStance stance)
-        {
-            if (trooper.Type != TrooperType.Sniper)
-                return trooper.ShootingRange;
-            if (stance == TrooperStance.Prone)
-                return trooper.ShootingRange + game.SniperProneShootingRangeBonus;
-            if (stance == TrooperStance.Kneeling)
-                return trooper.ShootingRange + game.SniperKneelingShootingRangeBonus;
-            if (stance == TrooperStance.Standing)
-                return trooper.ShootingRange + game.SniperStandingShootingRangeBonus;
-            throw new Exception("Something wrong");
-        }
-
         long GetCurrentLeaderId()
         {
             if (BonusGoal != null)
@@ -463,6 +472,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         static bool Equal(Unit point, Unit unit)
         {
             return point.X == unit.X && point.Y == unit.Y;
+        }
+        static bool EqualF(double a, double b)
+        {
+            return Math.Abs(a - b) < Eps;
         }
 
         void Swap(ref int a, ref int b)

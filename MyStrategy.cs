@@ -15,9 +15,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            //if (world.MoveIndex == 24 && self.Type == TrooperType.Soldier)
-            //    world = world;
-            bool allowHill = !CheckShootMe();
+            var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
             if (BonusGoal != null && IsHaveBonus(GetTrooper(MyStrategy.WhoseBonus), GetBonusAt(BonusGoal)))
@@ -44,7 +42,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (self.Type == TrooperType.FieldMedic)
             {
-                var ifHelp = ifHelpTeammate();
+                var ifHelp = IfHelpTeammate();
                 if (ifHelp != null)
                 {
                     var goal = GetTrooperAt(ifHelp.X, ifHelp.Y);
@@ -79,10 +77,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 BonusGoal = ifTeamBonus;
                 MyStrategy.WhoseBonus = whoseBonus.Id;
             }
-            
-            bool waitingHelp = allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && GetBestHelper() != null;
-            waitingHelp = false;
-            bool allowNothing = true;
+
+            var waitingHelp = false; //allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && GetBestHelper() != null;
+            var allowNothing = true;
             if (!waitingHelp && IsCanMove() && BonusGoal != null && MyStrategy.WhoseBonus == self.Id)
             {
                 if (IsCanUpper())
@@ -102,7 +99,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                if (getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                if (getTeamRadius(self.Id, to) <= MaxTeamRadius && self.ActionPoints >= 2 * GetMoveCost(self))
                 {
                     Go(ActionType.Move, to);
                     return;
@@ -123,7 +120,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.RaiseStance);
                     return;
                 }
-                var bestTurn = SkipPath(GetTrooper(MyStrategy.WhoseBonus), BonusGoal, needShootingPosition: false);
+                var bestTurn = SkipPath(GetTrooper(MyStrategy.WhoseBonus), BonusGoal);
                 var to = bestTurn == null ? null : GoToUnit(self, bestTurn, map, beginFree: true, endFree: false);
                 if (to == null || Equal(to, self))
                     Go(ActionType.EndTurn);
@@ -155,7 +152,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                else if (!waitingHelp && (self.Id != GetCurrentLeaderId() || getTeamRadius(self.Id, to) <= MaxTeamRadius))
+                else if (!waitingHelp && (self.Id != GetCurrentLeaderId() || getTeamRadius(self.Id, to) <= MaxTeamRadius && self.ActionPoints >= 2 * GetMoveCost(self)))
                 {
                     Go(ActionType.Move, to);
                     return;
