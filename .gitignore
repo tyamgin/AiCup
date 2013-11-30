@@ -25,6 +25,7 @@ build/
 *_i.c
 *_p.c
 *.ilk
+*.exe
 *.meta
 *.obj
 *.pch
@@ -155,3 +156,6 @@ $RECYCLE.BIN/
 
 # Python
 *.pyc
+
+# Project
+/local_runner/result.txt

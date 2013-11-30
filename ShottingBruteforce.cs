@@ -388,8 +388,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             centerX /= MyCount;
             centerY /= MyCount;
-            foreach (var position in state.Position)
-                profit -= position.GetDistanceTo(centerX, centerY);
+            for (var i = 0; i < MyCount; i++)
+            {
+                if (HowManyCanShoot(state.Position[i], GetStance(state.stance[i])) != 0)
+                    profit += 10;
+                if (Troopers[i].Type != TrooperType.Sniper)
+                    profit -= state.Position[i].GetDistanceTo(centerX, centerY);
+            }
 
             var oldHit = state.hit[id];
             var ok = false;
