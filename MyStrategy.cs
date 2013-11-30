@@ -93,13 +93,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 if (to == null)
                 {
                     to = GoToUnit(self, BonusGoal, notFilledMap, beginFree: true, endFree: true);
-                    if (to != null && map[to.X, to.Y] == 0 && getTeamRadius(self.Id, to) <= MaxTeamRadius)
+                    if (to != null && map[to.X, to.Y] == 0 && self.ActionPoints >= 2 * GetMoveCost(self))
                     {
                         Go(ActionType.Move, to);
                         return;
                     }
                 }
-                if (getTeamRadius(self.Id, to) <= MaxTeamRadius && self.ActionPoints >= 2 * GetMoveCost(self))
+                if (self.ActionPoints >= 2 * GetMoveCost(self))
                 {
                     Go(ActionType.Move, to);
                     return;
@@ -152,7 +152,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                else if (!waitingHelp && (self.Id != GetCurrentLeaderId() || getTeamRadius(self.Id, to) <= MaxTeamRadius && self.ActionPoints >= 2 * GetMoveCost(self)))
+                else if (!waitingHelp && (self.Id != GetCurrentLeaderId() || self.ActionPoints >= 2 * GetMoveCost(self)))
                 {
                     Go(ActionType.Move, to);
                     return;

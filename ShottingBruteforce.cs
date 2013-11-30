@@ -391,7 +391,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             for (var i = 0; i < MyCount; i++)
             {
                 if (HowManyCanShoot(state.Position[i], GetStance(state.stance[i])) != 0)
-                    profit += 10;
+                    profit += 3;
                 if (Troopers[i].Type != TrooperType.Sniper)
                     profit -= state.Position[i].GetDistanceTo(centerX, centerY);
             }

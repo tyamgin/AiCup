@@ -113,7 +113,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // Если вариантов несколько - выбрать где будет меньше радиус
             foreach (Point n in Nearest(self, map))
             {
-                double radius = getTeamRadius(self.Id, n);
+                double radius = 5;//getTeamRadius(self.Id, n);
                 Point point = new Point(n.X, n.Y, radius);
                 if (d[n.X, n.Y] + 1 == d[self.X, self.Y] && bestTurn.profit > radius)
                     bestTurn = point;

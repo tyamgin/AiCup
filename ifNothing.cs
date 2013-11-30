@@ -18,8 +18,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (BonusGoal != null || PointGoal != null)
                 return;
             SelectNewPointGoal();
-            if (PointGoal != null)
-                PointGoal.profit = 0;
+            //if (PointGoal != null)
+            //    PointGoal.profit = 0;
         }
 
         bool IsCanMakeQuery()
