@@ -12,8 +12,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        static StreamWriter file = null;
-
         private void _Go(ActionType type, int toX, int toY)
         {
             move.X = toX;
@@ -246,8 +244,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     OpponentsMemoryId = Append(OpponentsMemoryId, self.Id);
                 }
             }
-            
-            MaxTeamRadius = Team.Count() <= 3 ? 2 : 3;
+
+
+            // Менять радиус в зависимости от количества оставшихся ходов:
+            // Тогда будет возможность отбежать обратно
+            MaxTeamRadius = 2;
+            if (Team.Count() > 3 && self.ActionPoints >= 2*GetMoveCost(self))
+                MaxTeamRadius += 1;
 
             // Загружаем труперов с прошлого хода, и сохраняем с текущего
             // past - трупер

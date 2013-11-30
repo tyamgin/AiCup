@@ -8,18 +8,16 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 using System.Collections;
 using System.IO;
 
-// TODO: использовать скрытность sniper-а 
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        public static Trooper[] Troopers;
-        private int counter = 0;
-        private int OpponentsCount;
-        private int MyCount;
+        private static Trooper[] Troopers;
+        private static int counter = 0;
+        private static int OpponentsCount;
+        private static int MyCount;
 
-        public class State
+        private class State
         {
             public int[] stance;
             public int[] hit;
@@ -97,23 +95,23 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
-        static int CommanderId; // индекс Commandera, или -1 если его нет
+        private static int CommanderId; // индекс Commandera, или -1 если его нет
         private static State state;
         private static ArrayList[] stack;
         private static ArrayList[] bestStack;
         private static double bestProfit;
 
-        void StackPush(object obj)
+        private static void StackPush(object obj)
         {
             stack[state.id].Add(obj);
         }
 
-        void StackPop()
+        private static void StackPop()
         {
             stack[state.id].RemoveAt(stack[state.id].Count - 1);
         }
 
-        void dfs_changeStance1(bool allowShot = true)
+        private void dfs_changeStance1(bool allowShot = true)
         {
             var id = state.id;
 

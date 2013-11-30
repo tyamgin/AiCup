@@ -13,10 +13,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.world = world;
             this.game = game;
             this.move = move;
-            //if (world.MoveIndex == 2 && self.Type == TrooperType.Commander)
-            //    world = world;
             InitializeConstants();
             ProcessApproximation();
+            //if (world.MoveIndex == 24 && self.Type == TrooperType.Soldier)
+            //    world = world;
             bool allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
@@ -109,7 +109,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            if (IfMakeQuery())
+            if (allowHill && IfRequestEnemyDisposition())
             {
                 Go(ActionType.RequestEnemyDisposition);
                 return;

@@ -29,7 +29,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return true;
         }
 
-        bool IfMakeQuery()
+        bool IfRequestEnemyDisposition()
         {
             if (BonusGoal == null && (PointGoal == null || world.MoveIndex - PointGoal.profit > 4) && IsCanMakeQuery())
                 return true;
