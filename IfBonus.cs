@@ -93,7 +93,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             // В первую очередь минимизировать путь center до goal
             var bestPoint = new Point(0, 0, Inf);
-            int minDistToCenter = Inf;
+            double minPenalty = Inf;
             for (var i = 0; i < Width; i++)
             {
                 for (var j = 0; j < Height; j++)
@@ -113,11 +113,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                             map[i, j] = 0;
                             map[self.X, self.Y] = 1;
 
-                            int path = GetShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
-                            if (after < bestPoint.profit || after == bestPoint.profit && path < minDistToCenter)
+                            double penalty = GetShoterPath(center, new Point(i, j), notFilledMap, beginFree: true, endFree: true);
+                            penalty += 2*Math.Max(0, goal.GetDistanceTo(center) - goal.GetDistanceTo(i, j) + 1);
+
+                            if (after < bestPoint.profit || EqualF(after, bestPoint.profit) && penalty < minPenalty)
                             {
                                 bestPoint = new Point(i, j, after);
-                                minDistToCenter = path;
+                                minPenalty = penalty;
                             }
                         }
                     }

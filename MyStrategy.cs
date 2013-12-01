@@ -35,7 +35,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 var action = BruteForceDo();
                 if (action != null)
                 {
-                    Go(action.Action, new Point(action.X, action.Y));
+                    if (Equal(self, action) && self.ActionPoints < GetMoveCost())
+                        Go(ActionType.EndTurn);
+                    else
+                        Go(action.Action, new Point(action.X, action.Y));
                     return;
                 }
             }
@@ -93,7 +96,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 if (to == null)
                 {
                     to = GoToUnit(self, BonusGoal, notFilledMap, beginFree: true, endFree: true);
-                    if (to != null && map[to.X, to.Y] == 0 && self.ActionPoints >= 2 * GetMoveCost(self))
+                    if (to != null && map[to.X, to.Y] == 0 && self.ActionPoints >= 2 * GetMoveCost(self)) // TODO: ???
                     {
                         Go(ActionType.Move, to);
                         return;
@@ -121,8 +124,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return;
                 }
                 var bestTurn = SkipPath(GetTrooper(MyStrategy.WhoseBonus), BonusGoal);
-                var to = bestTurn == null ? null : GoToUnit(self, bestTurn, map, beginFree: true, endFree: false);
-                if (to == null || Equal(to, self))
+                var to = bestTurn == null ? null : GoScouting(bestTurn, IfNothingCommander() ?? new Point(commander));//GoToUnit(self, bestTurn, map, beginFree: true, endFree: false);
+                if (to == null || Equal(to, self) && self.ActionPoints < GetMoveCost()) // если Equal(to, self)) тоже делаем move, иначе он не дойдет обратно
                     Go(ActionType.EndTurn);
                 else
                     Go(ActionType.Move, to);
@@ -137,8 +140,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.RaiseStance);
                     return;
                 }
-                var to = GoToUnit(self, ifNothing, map, beginFree: true, endFree: false);
-                if (to == null || Equal(self, to))
+                //Point lookAt = IfNothingCommander();
+                //if (lookAt == null)
+                //    lookAt = new Point(self); // TODO: подумать что делать
+                //var to = GoScouting(ifNothing, lookAt); //GoToUnit(self, ifNothing, map, beginFree: true, endFree: false);
+                var to = self.Id == commander.Id || IfNothingCommander() == null
+                    ? GoToUnit(self, ifNothing, map, beginFree: true, endFree: false)
+                    : GoScouting(ifNothing, IfNothingCommander());
+                if (to == null || Equal(self, to) && self.ActionPoints < GetMoveCost())
                 {
                     if (to == null && changedCommander == -1) // значит мы застряли
                     {
@@ -152,14 +161,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                else if (!waitingHelp && (self.Id != GetCurrentLeaderId() || self.ActionPoints >= 2 * GetMoveCost(self)))
+                else if (!waitingHelp/* && (self.Id != GetCurrentLeaderId() || self.ActionPoints >= 2 * GetMoveCost(self))*/)
                 {
                     Go(ActionType.Move, to);
                     return;
                 }
             }
 
-            Go(ActionType.EndTurn);
+            Point go = GoScouting(new Point(self), IfNothingCommander() ?? new Point(self)); // подумать что делатб
+            if (Equal(self, go) && self.ActionPoints < GetMoveCost())
+                Go(ActionType.EndTurn);
+            else
+                Go(ActionType.Move, go);
         }
     }
 }

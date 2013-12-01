@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
 
         // Указывает путь на to.
-        Point GoToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree, ref int distance)
+        Point GoToUnit(Point self, Point to, int[,] map, bool beginFree, bool endFree, ref int distance)
         {
             if (Equal(to, self))
                 return to;
@@ -74,8 +74,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             q.Enqueue(to.X);
             q.Enqueue(to.Y);
             int[,] d = new int[Width, Height];
-            for (int i = 0; i < Width; i++)
-                for (int j = 0; j < Height; j++)
+            for (var i = 0; i < Width; i++)
+                for (var j = 0; j < Height; j++)
                     d[i, j] = Inf;
             if (map[to.X, to.Y] != 0 && !endFree)
             {
@@ -91,11 +91,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             d[to.X, to.Y] = 0;
             while (q.Count != 0 && d[self.X, self.Y] >= Inf)
             {
-                int x = (int)q.Dequeue();
-                int y = (int)q.Dequeue();
+                var x = q.Dequeue();
+                var y = q.Dequeue();
                 for (int k = 0; k < 4; k++)
                 {
-                    Point n = new Point(x + _i[k], y + _j[k]);
+                    var n = new Point(x + _i[k], y + _j[k]);
                     if (n.X >= 0 && n.Y >= 0 && n.X < Width && n.Y < Height && map[n.X, n.Y] == 0 && d[n.X, n.Y] == Inf)
                     {
                         d[n.X, n.Y] = d[x, y] + 1;
@@ -124,26 +124,33 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Point GoToUnit(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            return GoToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
+            return GoToUnit(new Point(self), new Point(unit), map, beginFree, endFree, ref distance);
         }
 
         int GetShoterPath(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            GoToUnit(self, new Point(unit), map, beginFree, endFree, ref distance);
+            GoToUnit(new Point(self), new Point(unit), map, beginFree, endFree, ref distance);
+            return distance;
+        }
+
+        int GetShoterPath(Point from, Point to, int[,] map, bool beginFree, bool endFree)
+        {
+            int distance = 0;
+            GoToUnit(from, to, map, beginFree, endFree, ref distance);
             return distance;
         }
 
         Point GoToUnit(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            return GoToUnit(self, to, map, beginFree, endFree, ref distance);
+            return GoToUnit(new Point(self), to, map, beginFree, endFree, ref distance);
         }
 
         int GetShoterPath(Trooper self, Point to, int[,] map, bool beginFree, bool endFree)
         {
             int distance = 0;
-            GoToUnit(self, to, map, beginFree, endFree, ref distance);
+            GoToUnit(new Point(self), to, map, beginFree, endFree, ref distance);
             return distance;
         }
     }

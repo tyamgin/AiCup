@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk

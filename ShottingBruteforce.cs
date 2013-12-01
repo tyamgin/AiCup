@@ -543,15 +543,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // remove fictive from queue
             queue.RemoveRange(queue.Count - fictive, fictive);
 
-            if (bestStack[0] == null)
-                return null;
             var move = new Move();
             if (bestStack[0].Count == 0)
-                return move; // EndTurn
+            {
+                // EndTurn
+                bestStack[0].Add("at " + self.X + " " + self.Y);
+            }
             var cmd = ((string)bestStack[0][0]).Split(' ');
             if (cmd[0] == "st")
             {
-                // change stance
+                // Change stance
                 var ds = int.Parse(cmd[1]);
                 if (ds < 0)
                     move.Action = ActionType.LowerStance;
@@ -564,10 +565,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 var x = int.Parse(cmd[1]);
                 var y = int.Parse(cmd[2]);
-                var To = GoToUnit(self, new Point(x, y), map, beginFree: true, endFree: false);
+                var to = bestStack[0].Count == 1 
+                    ? GoScouting(new Point(x, y), new Point(Opponents[0]))
+                    : GoToUnit(self, new Point(x, y), map, beginFree: true, endFree: false);
                 move.Action = ActionType.Move;
-                move.X = To.X;
-                move.Y = To.Y;
+                move.X = to.X;
+                move.Y = to.Y;
             }
             else if (cmd[0] == "sh")
             {

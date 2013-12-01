@@ -73,7 +73,6 @@
     <Compile Include="IfBonus.cs" />
     <Compile Include="ShortestPath.cs" />
     <Compile Include="ShottingBruteforce.cs" />
-    <Compile Include="TeamGrouping.cs" />
     <Compile Include="Utils.cs" />
     <Compile Include="Variables.cs" />
     <Compile Include="HelpStrategy.cs" />

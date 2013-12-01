@@ -16,18 +16,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             move.X = toX;
             move.Y = toY;
-            if (move.Action == ActionType.Move && self.X == toX && self.Y == toY) // это костыль
-            {
-                int x = move.X, y = move.Y;
-                foreach(Point n in Nearest(move.X, move.Y, map))
-                {
-                    move.X = n.X;
-                    move.Y = n.Y;
-                    break;
-                }
-            }
-            if (move.Action == ActionType.Move && map[move.X, move.Y] != 0) // это костыль
-                move.Action = ActionType.EndTurn;
             SaveHitpoints();
             RemoveKilledOpponents();
             ValidateMove();
@@ -318,6 +306,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return Nearest(unit.X, unit.Y, map);
         }
 
+        ArrayList Nearest(Point unit, int[,] map)
+        {
+            return Nearest(unit.X, unit.Y, map);
+        }
+
         ArrayList Nearest(int x, int y, int[,] map)
         {
             ArrayList List = new ArrayList();
@@ -468,6 +461,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         static bool Equal(Point point, Point unit)
         {
             return point.X == unit.X && point.Y == unit.Y;
+        }
+        static bool Equal(Unit unit, Move move)
+        {
+            return unit.X == move.X && unit.Y == move.Y;
+        }
+        static bool Equal(Point point, Move move)
+        {
+            return point.X == move.X && point.Y == move.Y;
         }
         static bool Equal(Unit point, Unit unit)
         {

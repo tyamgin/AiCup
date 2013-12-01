@@ -45,7 +45,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     throw new Exception("");
                 Point to = new Point(move.X, move.Y);
                 Point ths = new Point(self.X, self.Y);
-                if (!to.Nearest(ths) || to.X < 0 || to.Y < 0 || to.X >= Width || to.Y >= Height || map[to.X, to.Y] != 0)
+                if (!to.Nearest(ths) || to.X < 0 || to.Y < 0 || to.X >= Width || to.Y >= Height || !Equal(to, ths) && map[to.X, to.Y] != 0)
                     throw new Exception("");
             }
             else if (move.Action == ActionType.RaiseStance)
