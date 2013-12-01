@@ -70,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Asserts.cs" />
+    <Compile Include="CircleGenerator.cs" />
     <Compile Include="IfBonus.cs" />
     <Compile Include="ShortestPath.cs" />
     <Compile Include="ShottingBruteforce.cs" />

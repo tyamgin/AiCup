@@ -168,7 +168,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            Point go = GoScouting(new Point(self), IfNothingCommander() ?? new Point(self)); // подумать что делатб
+            Point go = GoScouting(new Point(self), IfNothingCommander() ?? new Point(self)); // подумать что делать
             if (Equal(self, go) && self.ActionPoints < GetMoveCost())
                 Go(ActionType.EndTurn);
             else

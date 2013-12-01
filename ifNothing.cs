@@ -166,36 +166,5 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return IfNothingCommander();
             return GoToEncircling(commander, PointGoal);
         }
-
-        Point GoScouting(Point goal, Point lookAt)
-        {
-            var middle = new Point(0, 0);
-            var bestPoint = new Point(0, 0, Inf);
-            
-            for (middle.X = 0; middle.X < Width; middle.X++)
-            {
-                for (middle.Y = 0; middle.Y < Height; middle.Y++)
-                {
-                    if (Equal(self, middle))
-                        continue;
-                    if (middle.GetDistanceTo(self) + middle.GetDistanceTo(self.X, self.Y) - Eps <=
-                        self.ActionPoints/GetMoveCost(self))
-                    {
-                        // длина пути туда и обратно
-                        var pathLenght = GetShoterPath(self, middle, map, beginFree: true, endFree: false)
-                                            + GetShoterPath(middle, goal, map, beginFree: true, endFree: Equal(self, goal));
-                        if ((long) pathLenght*GetMoveCost(self) <= self.ActionPoints)
-                        {
-                            if (lookAt.GetDistanceTo(middle) < bestPoint.profit)
-                                bestPoint.Set(middle.X, middle.Y, lookAt.GetDistanceTo(middle));
-                        }
-                    }
-                }
-            }
-
-            if (bestPoint.profit >= Inf)
-                return GoToUnit(self, goal, map, beginFree: true, endFree: false);
-            return GoToUnit(self, bestPoint, map, beginFree: true, endFree: false);
-        }
     }
 }

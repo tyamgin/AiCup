@@ -25,6 +25,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Y = unit.Y;
         }
 
+        public Point(Point point)
+        {
+            profit = point.profit;
+            X = point.X;
+            Y = point.Y;
+        }
+
         public double GetDistanceTo(double x, double y)
         {
             return Math.Sqrt((X - x) * (X - x) + (Y - y) * (Y - y));
