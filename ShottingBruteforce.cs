@@ -544,6 +544,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             queue.RemoveRange(queue.Count - fictive, fictive);
 
             var move = new Move();
+            ReduceStack(bestStack[0]);
             if (bestStack[0].Count == 0)
             {
                 // EndTurn
@@ -606,6 +607,24 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 throw new NotImplementedException(cmd.ToString());
             }
             return move;
+        }
+
+        private void ReduceStack(ArrayList stack)
+        {
+            for (var i = 1; i < stack.Count; i++)
+            {
+                string prev = (string) stack[i - 1];
+                string cur = (string)stack[i];
+                if (prev.StartsWith("st") && cur.StartsWith("st"))
+                {
+                    int a = int.Parse(prev.Split(' ')[1]);
+                    int b = int.Parse(cur.Split(' ')[1]);
+                    stack.RemoveRange(i - 1, 2);
+                    if (a + b != 0)
+                        stack.Insert(i - 1, "st " + (a + b));
+                    i--;
+                }
+            }
         }
     }
 }
