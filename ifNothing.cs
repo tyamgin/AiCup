@@ -166,5 +166,22 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return IfNothingCommander();
             return GoToEncircling(commander, PointGoal);
         }
+
+        double GetTeamRadius(long removedTrooperId = -1, Point addedTrooper = null)
+        {
+            double radius = Inf;
+            for (var i = 0; i < Width; i++)
+            {
+                for (var j = 0; j < Height; j++)
+                {
+                    double maxV = addedTrooper == null ? -Inf : addedTrooper.GetDistanceTo(i, j);
+                    foreach (var trooper in Team)
+                        if (removedTrooperId != trooper.Id)
+                            maxV = Math.Max(maxV, trooper.GetDistanceTo(i, j));
+                    radius = Math.Min(radius, maxV);
+                }
+            }
+            return radius;
+        }
     }
 }

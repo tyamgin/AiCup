@@ -15,6 +15,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
+            //if (world.MoveIndex == 23 && self.Type == TrooperType.Commander)
+            //    world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
@@ -91,7 +93,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return;
                 }
                 allowNothing = false;
-                var to = GoToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
+                var to = GoScouting(BonusGoal, BonusGoal); //GoToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
                 // Если путь до бонуса пока что занят, то все равно идти к нему
                 if (to == null)
                 {
@@ -102,8 +104,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                if (self.ActionPoints >= 2 * GetMoveCost(self))
+                else
                 {
+                    if (GetTeamRadius(self.Id, to) > MaxTeamRadius)
+                        to = GoScouting(new Point(self), BonusGoal);
                     Go(ActionType.Move, to);
                     return;
                 }
@@ -140,19 +144,24 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.RaiseStance);
                     return;
                 }
-                //Point lookAt = IfNothingCommander();
-                //if (lookAt == null)
-                //    lookAt = new Point(self); // TODO: подумать что делать
-                //var to = GoScouting(ifNothing, lookAt); //GoToUnit(self, ifNothing, map, beginFree: true, endFree: false);
-                var to = self.Id == commander.Id || IfNothingCommander() == null
-                    ? GoToUnit(self, ifNothing, map, beginFree: true, endFree: false)
-                    : GoScouting(ifNothing, IfNothingCommander());
+
+                Point to;
+                if (self.Id == commander.Id)
+                {
+                    to = GoToUnit(self, ifNothing, map, beginFree: true, endFree: false);
+                    if (GetTeamRadius(self.Id, to) > MaxTeamRadius)
+                        to = GoScouting(new Point(self), ifNothing);
+                }
+                else
+                {
+                    to = GoScouting(ifNothing, ifNothing);
+                }
                 if (to == null || Equal(self, to) && self.ActionPoints < GetMoveCost())
                 {
-                    if (to == null && changedCommander == -1) // значит мы застряли
+                    if (to == null && changedCommander == -1) 
                     {
+                        // значит мы застряли
                         // передать коммандование
-                        // невалидные бонусы
                         ChangeCommander();
                     }
                     else
@@ -161,7 +170,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         return;
                     }
                 }
-                else if (!waitingHelp/* && (self.Id != GetCurrentLeaderId() || self.ActionPoints >= 2 * GetMoveCost(self))*/)
+                else if (!waitingHelp)
                 {
                     Go(ActionType.Move, to);
                     return;
