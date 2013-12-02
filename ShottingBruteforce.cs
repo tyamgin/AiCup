@@ -237,8 +237,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     for (var k = 0; k < 5; k++)
                     {
-                        var ni = trooper.X + (k < 4 ? _i[k] : 0);
-                        var nj = trooper.Y + (k < 4 ? _j[k] : 0);
+                        var ni = trooper.X + _i_[k];
+                        var nj = trooper.Y + _j_[k];
                         if (ni >= 0 && nj >= 0 && ni < Width && nj < Height && notFilledMap[ni, nj] == 0
                             && state.Position[id].GetDistanceTo(ni, nj) <= game.GrenadeThrowRange)
                         {

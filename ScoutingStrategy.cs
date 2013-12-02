@@ -17,29 +17,29 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private static double[,] circle_visible_profit;
         private static Point[] circle_extra_objects;
 
-        private void SetVisible(double visionRange, TrooperStance stance, int X, int Y)
+        private void SetVisible(double visionRange, TrooperStance stance, int x, int y)
         {
             for (var i = 0; i < Width; i++)
             {
                 for (var j = 0; j < Height; j++)
                 {
-                    circle_visible[0, i, j] |= world.IsVisible(visionRange, X, Y, stance, i, j, TrooperStance.Prone);
-                    circle_visible[1, i, j] |= world.IsVisible(visionRange, X, Y, stance, i, j, TrooperStance.Kneeling);
-                    circle_visible[2, i, j] |= world.IsVisible(visionRange, X, Y, stance, i, j, TrooperStance.Standing);
+                    circle_visible[0, i, j] |= world.IsVisible(visionRange, x, y, stance, i, j, TrooperStance.Prone);
+                    circle_visible[1, i, j] |= world.IsVisible(visionRange, x, y, stance, i, j, TrooperStance.Kneeling);
+                    circle_visible[2, i, j] |= world.IsVisible(visionRange, x, y, stance, i, j, TrooperStance.Standing);
                 }
             }
         }
 
-        private void SetVisibleProfit(int X, int Y)
+        private void SetVisibleProfit(int x, int y)
         {
-            var p = new Point(X, Y);
+            var position = new Point(x, y);
             for(var i = 0; i < Width; i++)
                 for (var j = 0; j < Height; j++)
-                    if (X != i || Y != j)
-                        circle_visible_profit[i, j] += 1.0/p.GetDistanceTo(i, j);
+                    if (x != i || y != j)
+                        circle_visible_profit[i, j] += 1.0/position.GetDistanceTo(i, j);
         }
 
-        double getCircleProfit()
+        private double getCircleProfit()
         {
             // circle_visible initializing
             for (var i = 0; i < Width; i++)
@@ -49,15 +49,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             foreach (var tr in Team)
                 SetVisible(tr.VisionRange, tr.Stance, tr.X, tr.Y);
 
-            // circle_visible_profit initializing
-            for (var i = 0; i < Width; i++)
-                for (var j = 0; j < Height; j++)
-                    circle_visible_profit[i, j] = 0.01;
-            foreach (var tr in Opponents)
-                SetVisibleProfit(tr.X, tr.Y);
-            foreach (var obj in circle_extra_objects)
-                SetVisibleProfit(obj.X, obj.Y);
-
+            // profit calculation
             foreach (Move mv in circle_stack)
                 SetVisible(self.VisionRange, self.Stance, mv.X, mv.Y);
             double profit = 0;
@@ -69,11 +61,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return profit;
         }
 
-        public void circle_dfs(int actionPoints)
+        private void circle_dfs(int actionPoints)
         {
             if (Equal(circle_pos, circle_end_pos))
             {
-                double profit = getCircleProfit();
+                var profit = getCircleProfit();
                 if (profit > circle_best_profit)
                 {
                     circle_best_profit = profit;
@@ -84,17 +76,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 for (var k = 0; k < 5; k++)
                 {
-                    var ni = circle_pos.X + (k < 4 ? _i[k] : 0);
-                    var nj = circle_pos.Y + (k < 4 ? _j[k] : 0);
+                    var ni = circle_pos.X + _i_[k];
+                    var nj = circle_pos.Y + _j_[k];
                     if (ni >= 0 && nj >= 0 && ni < Width && nj < Height && map[ni, nj] == 0)
                     {
-                        var mv = new Move {Action = ActionType.Move, X = ni, Y = nj};
-                        circle_stack.Add(mv);
-                        circle_pos.X += k < 4 ? _i[k] : 0;
-                        circle_pos.Y += k < 4 ? _j[k] : 0;
+                        circle_stack.Add(new Move { Action = ActionType.Move, X = ni, Y = nj });
+                        circle_pos.X += _i_[k];
+                        circle_pos.Y += _j_[k];
                         circle_dfs(actionPoints - GetMoveCost());
-                        circle_pos.X -= k < 4 ? _i[k] : 0;
-                        circle_pos.Y -= k < 4 ? _j[k] : 0;
+                        circle_pos.X -= _i_[k];
+                        circle_pos.Y -= _j_[k];
                         circle_stack.RemoveAt(circle_stack.Count - 1);
                     }
                 }
@@ -115,6 +106,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (circle_visible_profit == null)
                 circle_visible_profit = new double[Width, Height];
 
+            // circle_visible_profit initializing
+            for (var i = 0; i < Width; i++)
+                for (var j = 0; j < Height; j++)
+                    circle_visible_profit[i, j] = 0.01;
+            foreach (var tr in Opponents)
+                SetVisibleProfit(tr.X, tr.Y);
+            foreach (var obj in circle_extra_objects)
+                SetVisibleProfit(obj.X, obj.Y);
+
             map[self.X, self.Y] = 0;
             circle_dfs(self.ActionPoints);
             map[self.X, self.Y] = 1;
@@ -126,10 +126,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point GoScouting(Point goal, Point lookAt)
         {
-            var mv = GetScoutingMove(goal, new []{lookAt});
-            if (mv == null)
+            var result = GetScoutingMove(goal, new []{lookAt});
+            if (result == null)
+            {
+                // Значит нужно идти не обходным путем, а кратчайшим
                 return GoToUnit(self, goal, map, beginFree: true, endFree: false);
-            return new Point(mv.X, mv.Y);
+            }
+            return new Point(result.X, result.Y);
         }
     }
 }

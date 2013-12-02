@@ -301,6 +301,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         static int[] _i = { 0, 0, 1, -1 };
         static int[] _j = { 1, -1, 0, 0 };
 
+        static int[] _i_ = { 0, 0, 0, 1, -1 };
+        static int[] _j_ = { 0, 1, -1, 0, 0 };
+
         ArrayList Nearest(Unit unit, int[,] map)
         {
             return Nearest(unit.X, unit.Y, map);
