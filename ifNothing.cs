@@ -53,7 +53,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 #endif
                 var pl = places.ToArray();
                 PointGoal = pl[random.Next(places.Count)] as Point;
-                PointGoal.profit = world.MoveIndex;
+                PointGoal.profit = 0;//world.MoveIndex;
             }
         }
 

@@ -3,6 +3,13 @@ using System.Collections;
 using System.Linq;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
+
+//# сид 396024554092466 скаут отбегает в начале
+//# не идут в бой когда даже не могут встать в позицию стрелдяьб
+// застрявают в лабиринте
+// TODO: вероятностные противники - более точное определение
+// TODO: более точная оценка позиции в переборе: расчитывать чколько ходов нужно противнику чтобы попасть в меня
+
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -15,8 +22,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            //if (world.MoveIndex == 23 && self.Type == TrooperType.Commander)
-            //    world = world;
+            if (world.MoveIndex == 24 && self.Type == TrooperType.Soldier)
+                world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
@@ -85,6 +92,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             var waitingHelp = false; //allowHill && IfNeedHelp() && self.Type != TrooperType.FieldMedic && GetBestHelper() != null;
             var allowNothing = true;
+
             if (!waitingHelp && IsCanMove() && BonusGoal != null && MyStrategy.WhoseBonus == self.Id)
             {
                 if (IsCanUpper())

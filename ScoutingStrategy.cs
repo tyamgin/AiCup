@@ -109,7 +109,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // circle_visible_profit initializing
             for (var i = 0; i < Width; i++)
                 for (var j = 0; j < Height; j++)
-                    circle_visible_profit[i, j] = 0.01;
+                    circle_visible_profit[i, j] = 0.005;
             foreach (var tr in Opponents)
                 SetVisibleProfit(tr.X, tr.Y);
             foreach (var obj in circle_extra_objects)
