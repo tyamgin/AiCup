@@ -28,7 +28,23 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         public static Random random = new Random();
 
-        TrooperType[] commanderPriority = { TrooperType.Scout, TrooperType.Commander, TrooperType.Sniper, TrooperType.Soldier, TrooperType.FieldMedic };
+        public static TrooperType[] CommanderPriority =
+        {
+            TrooperType.Scout, 
+            TrooperType.Commander,
+            TrooperType.FieldMedic,
+            TrooperType.Sniper, 
+            TrooperType.Soldier 
+        };
+
+        public static TrooperType[] ShootingPriority =
+        {
+            TrooperType.Scout, 
+            TrooperType.Commander,
+            TrooperType.FieldMedic,
+            TrooperType.Sniper, 
+            TrooperType.Soldier, 
+        };
 
         public World world;
         public Move move;

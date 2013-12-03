@@ -328,20 +328,24 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             var id = state.id;
 
+            var can = state.act[id] / Troopers[id].ShootCost;
+            var damage = Troopers[id].GetDamage(GetStance(state.Stance));
+
             var bestIdx = -1;
             var minHit = Inf;
-            // Выбираю цель с меньшим количеством жизней
+            var bestPriority = ShootingPriority.Length;
+            
             for (var idx = 0; idx < OpponentsCount; idx++)
             {
                 var opp = Opponents[idx];
-                
-                if (state.opphit[idx] > 0 && world.IsVisible(GetShootingRange(Troopers[id], state.Stance), state.X, state.Y, GetStance(state.Stance), opp.X, opp.Y, opp.Stance))
+                if (state.opphit[idx] > 0  // если он ещё жив
+                    && world.IsVisible(GetShootingRange(Troopers[id], state.Stance), state.X, state.Y, GetStance(state.Stance), opp.X, opp.Y, opp.Stance)
+                    && (state.opphit[idx] < minHit || state.opphit[idx] == minHit && GetShootingPriority(opp) < bestPriority)
+                   )
                 {
-                    if (state.opphit[idx] < minHit)
-                    {
-                        minHit = state.opphit[idx];
-                        bestIdx = idx;
-                    }
+                    minHit = state.opphit[idx];
+                    bestIdx = idx;
+                    bestPriority = GetShootingPriority(opp);
                 }
             }
             if (bestIdx != -1)
@@ -350,8 +354,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 var oldProfit = state.profit;
 
                 var opp = Opponents[bestIdx];
-                var can = state.act[id]/Troopers[id].ShootCost;
-                var damage = Troopers[id].GetDamage(GetStance(state.Stance));
                 var need = Math.Min(can, (minHit + damage - 1)/damage);
                 for (var cnt = 1; cnt <= need; cnt++)
                 {
@@ -462,6 +464,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             state.hit[id] = oldHit;
         }
 
+
+        public int GetShootingPriority(Trooper opponent)
+        {
+            for(var i = 0; i < ShootingPriority.Length; i++)
+                if (opponent.Type == ShootingPriority[i])
+                    return i;
+            throw new InvalidDataException();
+        }
+
         int getInitialActionPoints(Trooper tr)
         {
             var points = tr.InitialActionPoints;
@@ -565,7 +576,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 else if (ds > 0)
                     move.Action = ActionType.RaiseStance;
                 else
-                    throw new Exception("");
+                    throw new InvalidDataException();
             }
             else if (cmd[0] == "at")
             {

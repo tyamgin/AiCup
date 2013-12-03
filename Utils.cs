@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return game.KneelingMoveCost;
             if (stance == TrooperStance.Standing)
                 return game.StandingMoveCost;
-            throw new Exception("something wrong");
+            throw new InvalidDataException();
         }
 
         int GetMoveCost(int stance)
@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return game.KneelingMoveCost;
             if (stance == 2)
                 return game.StandingMoveCost;
-            throw new Exception("something wrong");
+            throw new InvalidDataException();
         }
 
         void RemoveKilledOpponents()
@@ -167,7 +167,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Trooper GetCommander()
         {
             var cnt = 0;
-            foreach (var type in commanderPriority)
+            foreach (var type in CommanderPriority)
             {
                 foreach (var trooper in Team)
                 {
@@ -182,7 +182,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
-            throw new Exception("Have no player in my team");
+            throw new InvalidDataException();
         }
 
         void InitializeConstants()
@@ -360,7 +360,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return 1;
             if (stance == TrooperStance.Standing)
                 return 2;
-            throw new Exception("Unknown TrooperStance");
+            throw new InvalidDataException();
         }
 
         TrooperStance GetStance(int stance)
@@ -371,7 +371,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return TrooperStance.Kneeling;
             if (stance == 2)
                 return TrooperStance.Standing;
-            throw new Exception("Unknown TrooperStance");
+            throw new InvalidDataException();
         }
 
         // Возврящает ShootingRange без учета бонуса
@@ -385,7 +385,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return trooper.ShootingRange - game.SniperKneelingShootingRangeBonus;
             if (trooper.Stance == TrooperStance.Standing)
                 return trooper.ShootingRange - game.SniperStandingShootingRangeBonus;
-            throw new Exception("Something wrong");
+            throw new InvalidDataException();
         }
 
         // Возврящает ShootingRange с учетом бонуса
@@ -406,7 +406,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return range + game.SniperKneelingShootingRangeBonus;
             if (stance == 2)
                 return range + game.SniperStandingShootingRangeBonus;
-            throw new Exception("Something wrong");
+            throw new InvalidDataException();
         }
 
         public double GetVisionRange(Trooper a, Trooper b, TrooperStance st)
@@ -419,7 +419,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return a.VisionRange - game.SniperKneelingStealthBonus;
                 if (st == TrooperStance.Prone)
                     return a.VisionRange - game.SniperProneStealthBonus;
-                throw new Exception("Something wrong");
+                throw new InvalidDataException();
             }
             return a.VisionRange;
         }
@@ -434,7 +434,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return a.VisionRange - game.SniperKneelingStealthBonus;
                 if (st == 0)
                     return a.VisionRange - game.SniperProneStealthBonus;
-                throw new Exception("Something wrong");
+                throw new InvalidDataException();
             }
             return a.VisionRange;
         }

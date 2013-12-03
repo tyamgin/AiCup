@@ -5,10 +5,12 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 
 //# сид 396024554092466 скаут отбегает в начале
-//# не идут в бой когда даже не могут встать в позицию стрелдяьб
+//# не идут в бой когда даже не могут встать в позицию стрелдяь
 // застрявают в лабиринте
 // TODO: вероятностные противники - более точное определение
-// TODO: более точная оценка позиции в переборе: расчитывать чколько ходов нужно противнику чтобы попасть в меня
+// TODO: выбирать цель не с наименьшим количеством жизней, а в первую очередь ту, которую можно убить ||||||||| не всегда выгодно
+
+//TODO:# ~ 20 ход командир почему то лег от снайпера 84459066605270
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -22,7 +24,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 24 && self.Type == TrooperType.Soldier)
+            if (world.MoveIndex == 5 && self.Type == TrooperType.FieldMedic)
                 world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)

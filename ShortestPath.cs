@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             q.Clear();
             q.Enqueue(to.X);
             q.Enqueue(to.Y);
-            int[,] d = new int[Width, Height];
+            var d = new int[Width, Height];
             for (var i = 0; i < Width; i++)
                 for (var j = 0; j < Height; j++)
                     d[i, j] = Inf;
@@ -83,7 +83,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 distance = Inf;
                 return null;
             }
-            int tmp = 0;
+            var tmp = 0;
             if (beginFree)
             {
                 tmp = map[self.X, self.Y];
@@ -94,7 +94,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 var x = q.Dequeue();
                 var y = q.Dequeue();
-                for (int k = 0; k < 4; k++)
+                for (var k = 0; k < 4; k++)
                 {
                     var n = new Point(x + _i[k], y + _j[k]);
                     if (n.X >= 0 && n.Y >= 0 && n.X < Width && n.Y < Height && map[n.X, n.Y] == 0 && d[n.X, n.Y] == Inf)
@@ -110,16 +110,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 map[self.X, self.Y] = tmp;
             if (distance >= Inf)
                 return null;
-            Point bestTurn = new Point(0, 0, Inf);
-            // Если вариантов несколько - выбрать где будет меньше радиус
+            // Если вариантов несколько - выбрать любой
             foreach (Point n in Nearest(self, map))
-            {
-                double radius = 5;//getTeamRadius(self.Id, n);
-                Point point = new Point(n.X, n.Y, radius);
-                if (d[n.X, n.Y] + 1 == d[self.X, self.Y] && bestTurn.profit > radius)
-                    bestTurn = point;
-            }
-            return bestTurn;
+                if (d[n.X, n.Y] + 1 == d[self.X, self.Y])
+                    return new Point(n.X, n.Y, 0);
+            return new Point(0, 0, Inf);
         }
 
         Point GoToUnit(Trooper self, Unit unit, int[,] map, bool beginFree, bool endFree)

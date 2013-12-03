@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
@@ -47,7 +48,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return self.IsHoldingGrenade;
             if (bonus == BonusType.FieldRation)
                 return self.IsHoldingFieldRation;
-            throw new Exception("Unknown bonus type");
+            throw new InvalidDataException();
         }
 
         double GetTeamBonusProfit(Bonus bonus, ref Trooper trooper)
