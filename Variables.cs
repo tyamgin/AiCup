@@ -43,6 +43,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public int[,] map, notFilledMap;
         public int[,] danger;
         public int Width, Height;
+        public static int[][,,][,,] Distance = new int[20][,,][,,];
+
         private static ArrayList PastTroopersInfo = new ArrayList();
         private static int[] OpponentsMemoryAppearTime;
         private static long[] OpponentsMemoryId;

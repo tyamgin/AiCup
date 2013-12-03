@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
@@ -152,6 +153,87 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             int distance = 0;
             GoToUnit(new Point(self), to, map, beginFree, endFree, ref distance);
             return distance;
+        }
+
+        private static int[, ,] sh;
+
+        void fillDistanceToShoot(int shootingRange, int x, int y, int z, int[,,] result)
+        {
+            if (sh == null)
+                sh = new int[Width, Height, 3];
+            for (var i = 0; i < Width; i++)
+            {
+                for (var j = 0; j < Height; j++)
+                {
+                    for (var k = 0; k < 3; k++)
+                    {
+                        sh[i, j, k] = Inf;
+                        result[i, j, k] = Inf;
+                    }
+                }
+            }
+            sh[x, y, z] = 0;
+            q.Clear();
+            q.Enqueue(x);
+            q.Enqueue(y);
+            q.Enqueue(z);
+            while (q.Count != 0)
+            {
+                x = q.Dequeue();
+                y = q.Dequeue();
+                z = q.Dequeue();
+
+                // mark visible cells
+                for(var i = x - shootingRange; i <= x + shootingRange; i++)
+                    for(var j = y - shootingRange; j <= y + shootingRange; j++)
+                        if (i >= 0 && j >= 0 && i < Width && j < Height)
+                            for(var k = 0; k < 3; k++)
+                                if (sh[x, y, z] < result[i, j, k] && world.IsVisible(shootingRange, x, y, GetStance(z), i, j, GetStance(k)))
+                                    result[i, j, k] = sh[x, y, z];
+
+                // Change stance
+                for (var dz = -1; dz <= 1; dz += 2)
+                {
+                    var nz = dz + z;
+                    if (nz >= 0 && nz < 3 && sh[x, y, nz] == Inf)
+                    {
+                        sh[x, y, nz] = sh[x, y, z] + 1;
+                        q.Enqueue(x);
+                        q.Enqueue(y);
+                        q.Enqueue(nz);
+                    }
+                }
+
+                // change Position
+                if (z == 2) // ходить можно только стоя
+                {
+                    for (var k = 0; k < 4; k++)
+                    {
+                        var nx = _i[k] + x;
+                        var ny = _j[k] + y;
+                        if (nx >= 0 && ny >= 0 && nx < Width && ny < Height && notFilledMap[nx, ny] == 0 && sh[nx, ny, z] == Inf)
+                        {
+                            sh[nx, ny, z] = sh[x, y, z] + 1;
+                            q.Enqueue(nx);
+                            q.Enqueue(ny);
+                            q.Enqueue(z);
+                        }
+                    }
+                }
+            }
+        }
+
+        int GetDistanceToShoot(int fromShootingRange, int fromX, int fromY, int fromStance, int toX, int toY, int toStance)
+        {
+            if (Distance[fromShootingRange] == null)
+                Distance[fromShootingRange] = new int[Width, Height, 3][,,];
+            if (Distance[fromShootingRange][fromX, fromY, fromStance] == null)
+            {
+                Distance[fromShootingRange][fromX, fromY, fromStance] = new int[Width, Height, 3];
+                fillDistanceToShoot(fromShootingRange, fromX, fromY, fromStance,
+                    Distance[fromShootingRange][fromX, fromY, fromStance]);
+            }
+            return Distance[fromShootingRange][fromX, fromY, fromStance][toX, toY, toStance];
         }
     }
 }

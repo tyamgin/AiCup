@@ -374,6 +374,36 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
+        private double getDanger(Trooper opp, int x, int y, int st, int h)
+        {
+            // Чтобы не бояться одного снайпера
+            var oppShootingRange = OpponentsCount == 1 && opp.Type == TrooperType.Sniper
+                ? GetVisionRange(opp, Troopers[state.id], state.Stance)
+                : GetShootingRange(opp, opp.Stance);
+            int d = GetDistanceToShoot((int)(oppShootingRange + Eps), opp.X, opp.Y, GetStanceId(opp.Stance), x, y, st);
+            // если он достреливает сразу:
+            if (d == 0)
+            {
+                return 200;
+            }
+
+            // если он подходит и убивает
+            int act = opp.InitialActionPoints - d*2; // TODO: ???
+            int can = act/opp.ShootCost;
+            int dam = can*opp.StandingDamage;
+            if (dam >= h)
+                return 150;
+
+            // если он подходит и отнимает жизни
+            // тогда теперь он вынужден отбегать
+            act = opp.InitialActionPoints - d * 2 * 2; // TODO: ???
+            can = act / opp.ShootCost;
+            dam = can * opp.StandingDamage;
+            if (dam <= 0)
+                return 0;
+            return dam;
+        }
+
         void dfs_end()
         {
             var id = state.id;
@@ -397,34 +427,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             var oldHit = state.hit[id];
-            var ok = false;
             for (var i = 0; i < OpponentsCount; i++)
             {
-                var opp = Opponents[i];
-                // Чтобы не бояться одного снайпера
-                var oppShootingRange = OpponentsCount == 1 && opp.Type == TrooperType.Sniper
-                    ? GetVisionRange(opp, Troopers[id], state.Stance)
-                    : GetShootingRange(opp, opp.Stance);
-                if (state.opphit[i] > 0 && world.IsVisible(oppShootingRange, opp.X, opp.Y, opp.Stance, state.X, state.Y, GetStance(state.Stance)))
-                {
-                    state.hit[id] -= 200;
-                    ok = true;
-                }
-            }
-            if (!ok)
-            {
-                for (var i = 0; i < OpponentsCount; i++)
-                {
-                    var opp = Opponents[i];
-                    if (state.opphit[i] > 0 && world.IsVisible(GetVisionRange(opp, Troopers[id], state.Stance), opp.X, opp.Y, opp.Stance, state.X, state.Y, GetStance(state.Stance)))
-                    {
-                        if (MyCount == 1 && self.Type == TrooperType.Sniper)
-                            state.hit[id] -= 60;
-                        else
-                            state.hit[id] -= 100;
-                        break;
-                    }
-                }
+                state.hit[id] -= (int)getDanger(Opponents[i], state.X, state.Y, state.Stance, state.hit[id]);
             }
 
             if (id == 1 || id == MyCount - 1)
@@ -613,12 +618,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             for (var i = 1; i < stack.Count; i++)
             {
-                string prev = (string) stack[i - 1];
-                string cur = (string)stack[i];
+                var prev = (string) stack[i - 1];
+                var cur = (string)stack[i];
                 if (prev.StartsWith("st") && cur.StartsWith("st"))
                 {
-                    int a = int.Parse(prev.Split(' ')[1]);
-                    int b = int.Parse(cur.Split(' ')[1]);
+                    var a = int.Parse(prev.Split(' ')[1]);
+                    var b = int.Parse(cur.Split(' ')[1]);
                     stack.RemoveRange(i - 1, 2);
                     if (a + b != 0)
                         stack.Insert(i - 1, "st " + (a + b));
