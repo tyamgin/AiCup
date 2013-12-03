@@ -11,10 +11,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public int X, Y;
         public double profit;
         
-        public Point(int X, int Y, double profit = 0)
+        public Point(int x, int y, double profit = 0)
         {
-            this.X = X;
-            this.Y = Y;
+            X = x;
+            Y = y;
             this.profit = profit;
         }
 
@@ -105,12 +105,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         public void Set(int x, int y, double profit)
         {
-            this.X = x;
-            this.Y = y;
+            X = x;
+            Y = y;
             this.profit = profit;
         }
 
-        public static Point Inf
+        public static Point MInf
         {
             get
             {

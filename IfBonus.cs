@@ -12,8 +12,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         int GetQueuePlace(Trooper trooper, bool MayFirst)
         {
-            int current = queue.IndexOf(self.Id);
-            for (int idx = current + (MayFirst ? 0 : 1); idx < queue.Count; idx++)
+            var current = queue.IndexOf(self.Id);
+            for (var idx = current + (MayFirst ? 0 : 1); idx < queue.Count; idx++)
                 if ((long)queue[idx] == trooper.Id)
                     return idx - current + 1;
             return 1;
@@ -73,15 +73,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         Point IfTeamBonus(ref Trooper result)
         {
-            var bestPoint = Point.Inf;
+            var bestPoint = Point.MInf;
             result = null;
-            foreach (var bo in Bonuses)
+            foreach (var bonus in Bonuses)
             {
                 Trooper whose = null; ;
-                double profit = GetTeamBonusProfit(bo, ref whose);
+                double profit = GetTeamBonusProfit(bonus, ref whose);
                 if (profit > bestPoint.profit)
                 {
-                    bestPoint = new Point(bo.X, bo.Y, profit);
+                    bestPoint = new Point(bonus.X, bonus.Y, profit);
                     result = whose;
                 }
             }

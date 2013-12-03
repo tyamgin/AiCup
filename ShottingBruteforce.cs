@@ -232,7 +232,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (state.Grenade && state.act[id] >= game.GrenadeThrowCost)
             {
-                var bestPoint = Point.Inf;
+                var bestPoint = Point.MInf;
                 foreach (var trooper in Opponents)
                 {
                     for (var k = 0; k < 5; k++)

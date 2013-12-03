@@ -25,14 +25,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return quality;
         }
 
+
+        // TODO: заюзать
         Point GetBestHelper()
         {
-            var bestHelper = Point.Inf;
-            foreach(var tr in Friends)
+            var bestHelper = Point.MInf;
+            foreach(var friend in Friends)
             {
-                double quality = GetHelperQuality(tr);
+                var quality = GetHelperQuality(friend);
                 if (quality > bestHelper.profit)
-                    bestHelper = new Point(tr.X, tr.Y, quality);
+                    bestHelper = new Point(friend.X, friend.Y, quality);
             }
             if (bestHelper.profit <= 0)
                 bestHelper = null;
@@ -43,16 +45,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (!self.IsHoldingMedikit || self.ActionPoints < game.MedikitUseCost)
                 return null;
-            foreach (var tr in Friends)
-                if (IfNeedHelp(tr) && new Point(tr).Nearest(self))
-                    return new Point(tr);
+            foreach (var friend in Friends)
+                if (IfNeedHelp(friend) && new Point(friend).Nearest(self))
+                    return new Point(friend);
              
-            var bestHeal = Point.Inf;
-            foreach (var tr in Team)
+            var bestHeal = Point.MInf;
+            foreach (var trooper in Team)
             {
-                double profit = (double)self.MaximalHitpoints - Math.Min(self.MaximalHitpoints, self.Hitpoints + (tr.Id == self.Id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
-                if (profit > bestHeal.profit && new Point(tr).Nearest(self))
-                    bestHeal = new Point(tr);
+                double profit = (double)self.MaximalHitpoints - Math.Min(self.MaximalHitpoints, self.Hitpoints + (trooper.Id == self.Id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
+                if (profit > bestHeal.profit && new Point(trooper).Nearest(self))
+                    bestHeal = new Point(trooper);
             }
             if (bestHeal.profit <= 0)
                 bestHeal = null;
@@ -64,18 +66,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // Перебираю кого лечить: min(max(0, maxhitpoints - hitpoints), 
             //                            (Очки - (длина пути - 1) * (стоимость пути)) / (стоимость лечения) * (сколько жизней восстанавливыает)
             //                        ) 
-            Point bestPoint = Point.Inf;
-            foreach (Trooper tr in Team)
+            var bestPoint = Point.MInf;
+            foreach (var trooper in Team)
             {
-                double profit = Math.Min(Math.Max(0, tr.MaximalHitpoints - tr.Hitpoints),
-                                         (self.ActionPoints - Math.Max(0.0, (double)GetShoterPath(self, tr, map, beginFree: true, endFree: true) - 1) * GetMoveCost()) / game.FieldMedicHealCost * (tr.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)
+                double profit = Math.Min(Math.Max(0, trooper.MaximalHitpoints - trooper.Hitpoints),
+                                         (self.ActionPoints - Math.Max(0.0, (double)GetShoterPath(self, trooper, map, beginFree: true, endFree: true) - 1) * GetMoveCost()) / game.FieldMedicHealCost * (trooper.Id == self.Id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints)
                                 );
                 if (profit > bestPoint.profit)
-                    bestPoint = new Point(tr.X, tr.Y, profit);
+                    bestPoint = new Point(trooper.X, trooper.Y, profit);
             }
-            if (bestPoint.profit <= 0)
-                return null;
-            return bestPoint;
+            return bestPoint.profit <= 0 ? null : bestPoint;
         }
     }
 }

@@ -496,9 +496,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return array;
         }
 
-        Trooper GetClone(Trooper a, int minus_hitpoints)
+        Trooper GetClone(Trooper a, int minusHitpoints)
         {
-            return new Trooper(a.Id, a.X, a.Y, a.PlayerId, a.TeammateIndex, a.IsTeammate, a.Type, a.Stance, a.Hitpoints - minus_hitpoints, a.MaximalHitpoints, a.ActionPoints, a.InitialActionPoints, a.VisionRange, a.ShootingRange, a.ShootCost, a.StandingDamage, a.KneelingDamage, a.ProneDamage, a.Damage, a.IsHoldingGrenade, a.IsHoldingMedikit, a.IsHoldingFieldRation);
+            return new Trooper(a.Id, a.X, a.Y, a.PlayerId, a.TeammateIndex, a.IsTeammate, a.Type, a.Stance, a.Hitpoints - minusHitpoints, a.MaximalHitpoints, a.ActionPoints, a.InitialActionPoints, a.VisionRange, a.ShootingRange, a.ShootCost, a.StandingDamage, a.KneelingDamage, a.ProneDamage, a.Damage, a.IsHoldingGrenade, a.IsHoldingMedikit, a.IsHoldingFieldRation);
         }
     }
 }

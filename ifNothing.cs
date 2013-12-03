@@ -42,7 +42,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (!IsCanMakeQuery())
             {
-                ArrayList places = new ArrayList();
+                var places = new ArrayList();
 #if DEBUG
                 places.Add(new Point(Width - 1, 1));
 #else

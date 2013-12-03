@@ -10,8 +10,6 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 // TODO: вероятностные противники - более точное определение
 // TODO: выбирать цель не с наименьшим количеством жизней, а в первую очередь ту, которую можно убить ||||||||| не всегда выгодно
 
-//TODO:# ~ 20 ход командир почему то лег от снайпера 84459066605270
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -24,8 +22,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 5 && self.Type == TrooperType.FieldMedic)
-                world = world;
+            //if (world.MoveIndex == 5 && self.Type == TrooperType.FieldMedic)
+            //    world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;

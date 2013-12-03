@@ -39,15 +39,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         circle_visible_profit[i, j] += 1.0/position.GetDistanceTo(i, j);
         }
 
-        private double getCircleProfit()
+        private double GetCircleProfit()
         {
             // circle_visible initializing
             for (var i = 0; i < Width; i++)
                 for (var j = 0; j < Height; j++)
                     for (var k = 0; k < 3; k++)
                         circle_visible[k, i, j] = false;
-            foreach (var tr in Team)
-                SetVisible(tr.VisionRange, tr.Stance, tr.X, tr.Y);
+            foreach (var trooper in Team)
+                SetVisible(trooper.VisionRange, trooper.Stance, trooper.X, trooper.Y);
 
             // profit calculation
             foreach (Move mv in circle_stack)
@@ -65,7 +65,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             if (Equal(circle_pos, circle_end_pos))
             {
-                var profit = getCircleProfit();
+                var profit = GetCircleProfit();
                 if (profit > circle_best_profit)
                 {
                     circle_best_profit = profit;
