@@ -379,7 +379,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private double getDanger(Trooper opp, int x, int y, int st, int h)
         {
             // Чтобы не бояться одного снайпера
-            var oppShootingRange = OpponentsCount == 1 && opp.Type == TrooperType.Sniper
+            var oppShootingRange = state.opphit.Count(e => e > 0) == 1 && opp.Type == TrooperType.Sniper
                 ? GetVisionRange(opp, Troopers[state.id], state.Stance)
                 : GetShootingRange(opp, opp.Stance);
             int d = GetDistanceToShoot((int)(oppShootingRange + Eps), opp.X, opp.Y, GetStanceId(opp.Stance), x, y, st);
@@ -389,18 +389,23 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return 200;
             }
 
+            var visiblePenalty = world.IsVisible(GetVisionRange(opp, Troopers[state.id], state.Stance),
+                opp.X, opp.Y, opp.Stance, x, y, GetStance(state.Stance))
+                ? 50
+                : 0;
+
             // если он подходит и убивает
-            int act = opp.InitialActionPoints - d*2; // TODO: ???
-            int can = act/opp.ShootCost;
-            int dam = can*opp.StandingDamage;
+            int act = opp.InitialActionPoints - d * 2; // TODO: ???
+            int can = act / opp.ShootCost;
+            int dam = can * opp.StandingDamage;
             if (dam >= h)
-                return 150;
+                return 150 + visiblePenalty;
 
             // если он подходит и отнимает жизни
             // тогда теперь он вынужден отбегать
             act = opp.InitialActionPoints - d * 2 * 2; // TODO: ???
             can = act / opp.ShootCost;
-            dam = can * opp.StandingDamage;
+            dam = Math.Max(0, can * opp.StandingDamage) + visiblePenalty;
             if (dam <= 0)
                 return 0;
             return dam;
@@ -431,7 +436,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var oldHit = state.hit[id];
             for (var i = 0; i < OpponentsCount; i++)
             {
-                state.hit[id] -= (int)getDanger(Opponents[i], state.X, state.Y, state.Stance, state.hit[id]);
+                if (state.opphit[i] > 0)
+                {
+                    state.hit[id] -= (int) getDanger(Opponents[i], state.X, state.Y, state.Stance, state.hit[id]);
+                }
             }
 
             if (id == 1 || id == MyCount - 1)

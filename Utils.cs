@@ -268,7 +268,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 PastTroopersInfo.Add(OpponentsMemoryId[i]);
             }
 
-            if (changedCommander != -1 && world.MoveIndex - changedCommander >= 6)
+            if (changedCommander != -1 && world.MoveIndex - changedCommander >= 3)
                 ChangeCommander();
             commander = GetCommander();
 

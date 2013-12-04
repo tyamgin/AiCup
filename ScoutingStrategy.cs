@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             if (actionPoints >= GetMoveCost())
             {
-                for (var k = 0; k < 5; k++)
+                for (var k = 4; k >= 0; k--)
                 {
                     var ni = circle_pos.X + _i_[k];
                     var nj = circle_pos.Y + _j_[k];
