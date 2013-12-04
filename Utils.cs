@@ -409,34 +409,24 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new InvalidDataException();
         }
 
-        public double GetVisionRange(Trooper a, Trooper b, TrooperStance st)
+        public double GetVisionRange(Trooper viewer, Trooper objectTr, TrooperStance objectStance)
         {
-            if (a.Type != TrooperType.Scout && b.Type == TrooperType.Sniper)
-            {
-                if (st == TrooperStance.Standing)
-                    return a.VisionRange - game.SniperStandingStealthBonus;
-                if (st == TrooperStance.Kneeling)
-                    return a.VisionRange - game.SniperKneelingStealthBonus;
-                if (st == TrooperStance.Prone)
-                    return a.VisionRange - game.SniperProneStealthBonus;
-                throw new InvalidDataException();
-            }
-            return a.VisionRange;
+            return GetVisionRange(viewer, objectTr, GetStanceId(objectStance));
         }
 
-        public double GetVisionRange(Trooper a, Trooper b, int st)
+        public double GetVisionRange(Trooper viewer, Trooper objectTr, int objectStance)
         {
-            if (a.Type != TrooperType.Scout && b.Type == TrooperType.Sniper)
+            if (viewer.Type != TrooperType.Scout && objectTr.Type == TrooperType.Sniper)
             {
-                if (st == 2)
-                    return a.VisionRange - game.SniperStandingStealthBonus;
-                if (st == 1)
-                    return a.VisionRange - game.SniperKneelingStealthBonus;
-                if (st == 0)
-                    return a.VisionRange - game.SniperProneStealthBonus;
+                if (objectStance == 2)
+                    return viewer.VisionRange - game.SniperStandingStealthBonus;
+                if (objectStance == 1)
+                    return viewer.VisionRange - game.SniperKneelingStealthBonus;
+                if (objectStance == 0)
+                    return viewer.VisionRange - game.SniperProneStealthBonus;
                 throw new InvalidDataException();
             }
-            return a.VisionRange;
+            return viewer.VisionRange;
         }
 
         long GetCurrentLeaderId()

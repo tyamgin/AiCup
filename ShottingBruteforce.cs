@@ -183,13 +183,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 state.Medikit = false;
                 for (var i = 0; i < MyCount; i++)
                 {
-                    var to = Troopers[i];
+                    var to = state.Position[i];
                     // если имеет смысл юзать, и если он рядом
-                    if (state.hit[i] < 0.8*to.MaximalHitpoints && state.Position[id].Nearest(to))
+                    if (state.hit[i] < 0.8*Troopers[i].MaximalHitpoints && state.Position[id].Nearest(to))
                     {
                         var oldhit = state.hit[i];
                         state.act[id] -= game.MedikitUseCost;
-                        state.hit[i] = Math.Min(to.MaximalHitpoints, state.hit[i] + (i == id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
+                        state.hit[i] = Math.Min(Troopers[i].MaximalHitpoints, state.hit[i] + (i == id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
                         StackPush("med " + to.X + " " + to.Y);
                         dfs_move(4);
                         StackPop();
@@ -203,19 +203,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 for (var i = 0; i < MyCount; i++)
                 {
-                    var to = Troopers[i];
+                    var to = state.Position[i];
                     // если он рядом
-                    if (state.hit[i] < to.MaximalHitpoints && state.Position[id].Nearest(to))
+                    if (state.hit[i] < Troopers[i].MaximalHitpoints && state.Position[id].Nearest(to))
                     {
                         var can = state.act[id]/game.FieldMedicHealCost;
                         var by = i == id ? game.FieldMedicHealSelfBonusHitpoints : game.FieldMedicHealBonusHitpoints;
-                        var need = Math.Min(can, (to.MaximalHitpoints - state.hit[i] + by - 1) / by);
+                        var need = Math.Min(can, (Troopers[i].MaximalHitpoints - state.hit[i] + by - 1) / by);
                         var cost = need*game.FieldMedicHealCost;
                         var healBy = by*need;
 
                         var oldhit = state.hit[i];
                         state.act[id] -= cost;
-                        state.hit[i] = Math.Min(to.MaximalHitpoints, state.hit[i] + healBy);
+                        state.hit[i] = Math.Min(Troopers[i].MaximalHitpoints, state.hit[i] + healBy);
                         StackPush("heal " + to.X + " " + to.Y + " " + need);
                         dfs_move(4, false);
                         StackPop();
