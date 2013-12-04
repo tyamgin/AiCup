@@ -22,8 +22,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            //if (world.MoveIndex == 5 && self.Type == TrooperType.FieldMedic)
-            //    world = world;
+            if (world.MoveIndex == 30 && self.Type == TrooperType.Scout)
+                world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
                 BonusGoal = null;
@@ -40,6 +40,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 // Чтобы знали куда бежать если противник отступит
                 PointGoal = new Point(Opponents[0]);
+                PointGoal.profit = world.MoveIndex; // TODO: ПРОВЕТИТЬ ЧТО КОРРЕКТНО РАБОТАЕТ
 
                 var action = BruteForceDo();
                 if (action != null)
