@@ -15,6 +15,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private static Trooper[] Troopers;
         private static int counter = 0;
         private static int OpponentsCount;
+        private static Trooper OpponentCommander; // работает для игры 2x5
         private static int MyCount;
 
         private class State
@@ -394,8 +395,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 ? 50
                 : 0;
 
+            var oppAct = opp.InitialActionPoints;
+            if (opp.Type != TrooperType.Scout && opp.Type != TrooperType.Soldier && OpponentCommander != null && OpponentCommander.GetDistanceTo(opp) <= game.CommanderAuraRange)
+                oppAct += game.CommanderAuraBonusActionPoints;
+
             // если он подходит и убивает
-            int act = opp.InitialActionPoints - d * 2; // TODO: ???
+            int act = oppAct - d * 2; // TODO: ???
             int can = act / opp.ShootCost;
             int dam = can * opp.StandingDamage;
             if (dam >= h)
@@ -403,7 +408,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             // если он подходит и отнимает жизни
             // тогда теперь он вынужден отбегать
-            act = opp.InitialActionPoints - d * 2 * 2; // TODO: ???
+            act = oppAct - (d * 2) * 2; // TODO: ???
             can = act / opp.ShootCost;
             dam = Math.Max(0, can * opp.StandingDamage) + visiblePenalty;
             if (dam <= 0)
@@ -434,10 +439,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 if (distance > MaxTeamRadius)
                     profit -= distance * 0.01;
                 // бонус за близость к ближайшему врагу - ???
-                double minDist = Inf;
-                foreach (var opp in Opponents)
-                    minDist = Math.Min(minDist, state.Position[i].GetDistanceTo(opp));
-                profit -= minDist*0.1;
+                if (Troopers[i].Type != TrooperType.Sniper)
+                {
+                    double minDist = Inf;
+                    foreach (var opp in Opponents)
+                        minDist = Math.Min(minDist, state.Position[i].GetDistanceTo(opp));
+                    profit -= minDist*0.1;
+                }
             }
 
             var oldHit = state.hit[id];
@@ -519,6 +527,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
+            OpponentCommander = Opponents.FirstOrDefault(opp => opp.Type == TrooperType.Commander);
             state = new State();
             state.Position = new Point[Team.Count()];
             state.stance = new int[Team.Count()];

@@ -32,9 +32,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         {
             TrooperType.Scout, 
             TrooperType.Commander,
-            TrooperType.FieldMedic,
+            TrooperType.Soldier,
             TrooperType.Sniper, 
-            TrooperType.Soldier 
+            TrooperType.FieldMedic,
         };
 
         public static TrooperType[] ShootingPriority =
