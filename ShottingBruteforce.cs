@@ -416,7 +416,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var id = state.id;
             double profit = state.profit;
 
-            // Штраф за большой радиус
             double centerX = 0, centerY = 0;
             foreach (var position in state.Position)
             {
@@ -427,10 +426,18 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             centerY /= MyCount;
             for (var i = 0; i < MyCount; i++)
             {
+                // бонус за то что может стрелять на следующем ходу
                 if (HowManyCanShoot(state.Position[i], GetStance(state.stance[i])) != 0)
                     profit += 3;
-                if (Troopers[i].Type != TrooperType.Sniper)
-                    profit -= state.Position[i].GetDistanceTo(centerX, centerY);
+                // штраф за то что далеко от команды
+                var distance = state.Position[i].GetDistanceTo(centerX, centerY);
+                if (distance > MaxTeamRadius)
+                    profit -= distance * 0.01;
+                // бонус за близость к ближайшему врагу - ???
+                double minDist = Inf;
+                foreach (var opp in Opponents)
+                    minDist = Math.Min(minDist, state.Position[i].GetDistanceTo(opp));
+                profit -= minDist*0.1;
             }
 
             var oldHit = state.hit[id];

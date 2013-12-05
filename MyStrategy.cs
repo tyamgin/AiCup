@@ -9,8 +9,9 @@ using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 // застрявают в лабиринте
 // TODO: вероятностные противники - более точное определение
 // TODO: выбирать цель не с наименьшим количеством жизней, а в первую очередь ту, которую можно убить ||||||||| не всегда выгодно
-// TODO: отбегание
+// TODO: отбегание, особенно когда медик лечится
 // TODO: группировка, радиус, костыли на карты
+// TODO: Попробовать перебрать в кого стрелять
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -24,7 +25,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 6 && self.Type == TrooperType.FieldMedic)
+            if (world.MoveIndex == 5 && self.Type == TrooperType.Sniper)
                 world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
@@ -42,7 +43,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 // Чтобы знали куда бежать если противник отступит
                 PointGoal = new Point(Opponents[0]);
-                PointGoal.profit = world.MoveIndex; // TODO: ПРОВЕТИТЬ ЧТО КОРРЕКТНО РАБОТАЕТ
+                PointGoal.profit = world.MoveIndex;
 
                 var action = BruteForceDo();
                 if (action != null)
