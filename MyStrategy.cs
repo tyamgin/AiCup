@@ -25,7 +25,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeConstants();
             ProcessApproximation();
-            if (world.MoveIndex == 25 && self.Type == TrooperType.Sniper)
+            if (world.MoveIndex == 9 && self.Type == TrooperType.Scout)
                 world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Threading;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
@@ -17,6 +18,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             else
             {
                 new Runner(new[] {"localhost", "31001", "0000000000000000"}).run();
+                Thread.Sleep(4000);
             }
         }
 

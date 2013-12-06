@@ -101,6 +101,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private static ArrayList[] stack;
         private static ArrayList[] bestStack;
         private static double bestProfit;
+        private static int Multiplier;
 
         private static void StackPush(object obj)
         {
@@ -453,7 +454,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 if (state.opphit[i] > 0)
                 {
-                    state.hit[id] -= (int) getDanger(Opponents[i], state.X, state.Y, state.Stance, state.hit[id]);
+                    profit -= (int)getDanger(Opponents[i], state.X, state.Y, state.Stance, state.hit[id]) * Multiplier;
                 }
             }
 
@@ -461,7 +462,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 // К профиту прибавляю итоговое количество жизней
                 for (var i = 0; i < MyCount; i++)
-                    profit += state.hit[i] * Math.Min(MyCount, 3);
+                    profit += state.hit[i] * Multiplier;
 
                 // counter - количество состояний - для дебага
                 counter++;
@@ -570,6 +571,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             counter = 0;
             OpponentsCount = Opponents.Count();
             MyCount = state.Position.Count();
+            Multiplier = Math.Min(MyCount, 3);
             state.opphit = new int[OpponentsCount];
             for (var i = 0; i < OpponentsCount; i++)
             {
