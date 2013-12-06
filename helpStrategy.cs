@@ -54,7 +54,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 double profit = (double)self.MaximalHitpoints - Math.Min(self.MaximalHitpoints, self.Hitpoints + (trooper.Id == self.Id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
                 if (profit > bestHeal.profit && new Point(trooper).Nearest(self))
-                    bestHeal = new Point(trooper);
+                    bestHeal = new Point(trooper.X, trooper.Y, profit);
             }
             if (bestHeal.profit <= 0)
                 bestHeal = null;
