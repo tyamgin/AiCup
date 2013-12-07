@@ -237,7 +237,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // Менять радиус в зависимости от количества оставшихся ходов:
             // Тогда будет возможность отбежать обратно
             MaxTeamRadius = 2;
-            if (Team.Count() > 3 && self.ActionPoints >= 2*GetMoveCost(self))
+            if (Team.Count() > 3/* && self.ActionPoints >= 2*GetMoveCost(self)*/)
                 MaxTeamRadius += 1;
 
             // Загружаем труперов с прошлого хода, и сохраняем с текущего
@@ -249,7 +249,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 var past = PastTroopersInfo[i] as Trooper;
                 var when = (int) PastTroopersInfo[i + 1];
                 var who = (long) PastTroopersInfo[i + 2];
-                if (world.MoveIndex - when > 1)
+                if (world.MoveIndex - when > 2)
                     continue;
 
                 if (!Opponents.Any(trooper => trooper.Id == past.Id) && !IsVisible(past.X, past.Y))

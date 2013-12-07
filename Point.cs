@@ -25,6 +25,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Y = unit.Y;
         }
 
+        public Point(Move move)
+        {
+            profit = 0;
+            X = move.X;
+            Y = move.Y;
+        }
+
         public Point(Point point)
         {
             profit = point.profit;
@@ -108,6 +115,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             X = x;
             Y = y;
             this.profit = profit;
+        }
+
+        public static Point Inf
+        {
+            get
+            {
+                return new Point(0, 0, MyStrategy.Inf);
+            }
         }
 
         public static Point MInf

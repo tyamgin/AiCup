@@ -17,6 +17,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private static int OpponentsCount;
         private static Trooper OpponentCommander; // работает для игры 2x5
         private static int MyCount;
+        private static double[] probab;
 
         private class State
         {
@@ -118,7 +119,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var id = state.id;
 
             const int upper = 2, lower = -2;
-            for (var deltaStance = lower; deltaStance <= upper; deltaStance++)
+            //for (var deltaStance = lower; deltaStance <= upper; deltaStance++)
+            for (var deltaStance = upper; deltaStance >= lower; deltaStance--)
             {
                 // Изменяю stance на deltaStance
                 state.Stance += deltaStance;
@@ -263,7 +265,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         }
                     }
                 }
-                if (bestPoint.profit >= game.GrenadeDirectDamage)
+                if (bestPoint.profit >= game.GrenadeCollateralDamage)
                 {
                     var loop = 0;
                     var Damage = new int[OpponentsCount];
@@ -303,8 +305,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var id = state.id;
 
             const int upper = 2, lower = -2;
-            //for (var deltaStance = upper; deltaStance >= lower; deltaStance--)
-            for (var deltaStance = lower; deltaStance <= upper; deltaStance++)
+            for (var deltaStance = upper; deltaStance >= lower; deltaStance--)
+            //for (var deltaStance = lower; deltaStance <= upper; deltaStance++)
             {
                 state.Stance += deltaStance;
                 if (state.Stance >= 0 && state.Stance < 3)
@@ -334,53 +336,61 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var can = state.act[id] / Troopers[id].ShootCost;
             var damage = Troopers[id].GetDamage(GetStance(state.Stance));
 
-            var bestIdx = -1;
-            var minHit = Inf;
-            var bestPriority = ShootingPriority.Length;
-            
-            for (var idx = 0; idx < OpponentsCount; idx++)
+            double maxProbab = 0.0;
+            for (var i = 0; i < OpponentsCount; i++)
             {
-                var opp = Opponents[idx];
-                if (state.opphit[idx] > 0  // если он ещё жив
+                var opp = Opponents[i];
+                if (probab[i] > maxProbab
+                    && state.opphit[i] > 0
                     && world.IsVisible(GetShootingRange(Troopers[id], state.Stance), state.X, state.Y, GetStance(state.Stance), opp.X, opp.Y, opp.Stance)
-                    && (state.opphit[idx] < minHit || state.opphit[idx] == minHit && GetShootingPriority(opp) < bestPriority)
                    )
-                {
-                    minHit = state.opphit[idx];
-                    bestIdx = idx;
-                    bestPriority = GetShootingPriority(opp);
-                }
+                    maxProbab = probab[i];
             }
-            if (bestIdx != -1)
+
+            for(var bestIdx = 0; bestIdx < OpponentsCount; bestIdx++)
             {
                 var oldOppHit = state.opphit[bestIdx];
                 var oldProfit = state.profit;
-
                 var opp = Opponents[bestIdx];
-                var need = Math.Min(can, (minHit + damage - 1)/damage);
-                for (var cnt = 1; cnt <= need; cnt++)
+
+                if (oldOppHit > 0 // если он ещё жив
+                    && EqualF(probab[bestIdx], maxProbab)
+                    && world.IsVisible(GetShootingRange(Troopers[id], state.Stance), state.X, state.Y, GetStance(state.Stance), opp.X, opp.Y, opp.Stance)
+                    )
                 {
-                    // cnt - сколько выстрелов сделаю
-                    var p = damage*cnt;
-                    state.opphit[bestIdx] = Math.Max(0, oldOppHit - p);
-                    state.profit += id == 0 ? p * 1.2 : p;
-                    if (oldOppHit - p <= 0)
-                        state.profit += KillBonus;
-                    state.act[id] -= cnt*Troopers[id].ShootCost;
-                    var oldStackSize = stack[id].Count;
-                    for (var k = 0; k < cnt; k++)
-                        StackPush("sh " + opp.X + " " + opp.Y);
-                    dfs_changeStance1(allowShot: false);
-                    stack[id].RemoveRange(oldStackSize, stack[id].Count - oldStackSize);
-                    state.act[id] += cnt*Troopers[id].ShootCost;
-                    state.profit = oldProfit;
-                    state.opphit[bestIdx] = oldOppHit;
+                    state.profit += GetShootingPriority(opp)*0.001;
+                    var need = Math.Min(can, (oldOppHit + damage - 1)/damage);
+                    for (var cnt = 1; cnt <= need; cnt++)
+                    {
+                        // cnt - сколько выстрелов сделаю
+                        var p = damage*cnt;
+                        state.opphit[bestIdx] = Math.Max(0, oldOppHit - p);
+                        state.profit += id == 0 ? p*1.2 : p;
+                        if (oldOppHit - p <= 0)
+                            state.profit += KillBonus;
+                        state.act[id] -= cnt*Troopers[id].ShootCost;
+                        var oldStackSize = stack[id].Count;
+                        for (var k = 0; k < cnt; k++)
+                            StackPush("sh " + opp.X + " " + opp.Y);
+                        dfs_changeStance1(allowShot: false);
+                        stack[id].RemoveRange(oldStackSize, stack[id].Count - oldStackSize);
+                        state.act[id] += cnt*Troopers[id].ShootCost;
+                        state.profit = oldProfit;
+                        state.opphit[bestIdx] = oldOppHit;
+                    }
                 }
             }
         }
 
+        public Player GetPlayer(long id)
+        {
+            return world.Players.FirstOrDefault(player => player.Id == id);
+        }
+
         private double getDanger(Trooper opp, int x, int y, int st, int h)
         {
+            if (GetPlayer(opp.PlayerId) != null && GetPlayer(opp.PlayerId).IsStrategyCrashed)
+                return 0;
             // Чтобы не бояться одного снайпера
             var oppShootingRange = state.opphit.Count(e => e > 0) == 1 && opp.Type == TrooperType.Sniper
                 ? GetVisionRange(opp, Troopers[state.id], state.Stance)
@@ -392,10 +402,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return 200;
             }
 
-            var visiblePenalty = world.IsVisible(GetVisionRange(opp, Troopers[state.id], state.Stance),
-                opp.X, opp.Y, opp.Stance, x, y, GetStance(state.Stance))
-                ? 50
-                : 0;
+            int v;
+            if (world.IsVisible(GetVisionRange(opp, Troopers[state.id], state.Stance), opp.X, opp.Y, opp.Stance, x, y, GetStance(state.Stance)))
+                v = 0;
+            else
+                v = GetDistanceTo((int)(GetVisionRange(opp, Troopers[state.id], state.Stance) + Eps),
+                    opp.X, opp.Y, GetStanceId(opp.Stance), x, y, st);
+
+            double visiblePenalty = 50 * (v == 0 ? 1 : Math.Exp(-v));
 
             var oppAct = opp.InitialActionPoints;
             if (opp.Type != TrooperType.Scout && opp.Type != TrooperType.Soldier && OpponentCommander != null && OpponentCommander.GetDistanceTo(opp) <= game.CommanderAuraRange)
@@ -404,7 +418,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // если он подходит и убивает
             int act = oppAct - d * 2; // TODO: ???
             int can = act / opp.ShootCost;
-            int dam = can * opp.StandingDamage;
+            double dam = can * opp.StandingDamage;
             if (dam >= h)
                 return 150 + visiblePenalty;
 
@@ -574,12 +588,15 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             MyCount = state.Position.Count();
             Multiplier = Math.Min(MyCount, 3);
             state.opphit = new int[OpponentsCount];
+            probab = new double[OpponentsCount];
+            for (var i = 0; i < probab.Length; i++)
+                probab[i] = 1.0;
             for (var i = 0; i < OpponentsCount; i++)
             {
                 state.opphit[i] = Opponents[i].Hitpoints;
                 // Чтобы уменьшить приоритет стрельбы в "мнимую" цель
                 if (OpponentsMemoryId[i] != self.Id)
-                    state.opphit[i] += 100;
+                    probab[i] /= 2;
             }
             dfs_changeStance1();
 
@@ -609,12 +626,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 var x = int.Parse(cmd[1]);
                 var y = int.Parse(cmd[2]);
-                var to = bestStack[0].Count == 1 
-                    ? GoScouting(new Point(x, y), new Point(Opponents[0]))
+                var to = bestStack[0].Count == 1 // TODO: ????????????????? мб только для move???
+                    ? GoScouting(new Point(x, y), new Point(Opponents[0]), changeStanceAllow: true)
                     : GoToUnit(self, new Point(x, y), map, beginFree: true, endFree: false);
-                move.Action = ActionType.Move;
-                move.X = to.X;
-                move.Y = to.Y;
+                if (to.X == -1)
+                    move.Action = to.Y == -1 ? ActionType.LowerStance : ActionType.RaiseStance;
+                else
+                {
+                    move.Action = ActionType.Move;
+                    move.X = to.X;
+                    move.Y = to.Y;
+                }
             }
             else if (cmd[0] == "sh")
             {

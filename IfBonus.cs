@@ -51,7 +51,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new InvalidDataException();
         }
 
-        double GetTeamBonusProfit(Bonus bonus, ref Trooper trooper)
+        double GetTeamBonusProfit(Bonus bonus, ref Trooper trooper, bool allowTakeBonus)
         {
             // нужен минимальный вес
             double bestWeight = Inf;
@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 double weight = GetShoterPath(tr, bonus, notFilledMap, beginFree: true, endFree: false) * (1 + 0.5 * GetQueuePlace(tr, self.Id == tr.Id && self.ActionPoints >= self.InitialActionPoints));
 
-                if (tr.Id != commander.Id)
+                if (tr.Id != commander.Id || !allowTakeBonus)
                 {
                     var L = GetShoterPath(tr, bonus, map, beginFree: true, endFree: false);
                     weight = L <= 2
@@ -78,14 +78,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return 1.0 / bestWeight;
         }
 
-        Point IfTeamBonus(ref Trooper result)
+        Point IfTeamBonus(ref Trooper result, bool allowTakeBonus)
         {
             var bestPoint = Point.MInf;
             result = null;
             foreach (var bonus in Bonuses)
             {
                 Trooper whose = null; ;
-                double profit = GetTeamBonusProfit(bonus, ref whose);
+                double profit = GetTeamBonusProfit(bonus, ref whose, allowTakeBonus);
                 if (profit > bestPoint.profit)
                 {
                     bestPoint = new Point(bonus.X, bonus.Y, profit);

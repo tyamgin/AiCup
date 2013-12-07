@@ -220,15 +220,20 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         int GetDistanceToShoot(int fromShootingRange, int fromX, int fromY, int fromStance, int toX, int toY, int toStance)
         {
-            if (Distance[fromShootingRange] == null)
-                Distance[fromShootingRange] = new int[Width, Height, 3][,,];
-            if (Distance[fromShootingRange][fromX, fromY, fromStance] == null)
+            return GetDistanceTo(fromShootingRange, fromX, fromY, fromStance, toX, toY, toStance);
+        }
+
+        int GetDistanceTo(int fromRange, int fromX, int fromY, int fromStance, int toX, int toY, int toStance)
+        {
+            if (Distance[fromRange] == null)
+                Distance[fromRange] = new int[Width, Height, 3][,,];
+            if (Distance[fromRange][fromX, fromY, fromStance] == null)
             {
-                Distance[fromShootingRange][fromX, fromY, fromStance] = new int[Width, Height, 3];
-                fillDistanceToShoot(fromShootingRange, fromX, fromY, fromStance,
-                    Distance[fromShootingRange][fromX, fromY, fromStance]);
+                Distance[fromRange][fromX, fromY, fromStance] = new int[Width, Height, 3];
+                fillDistanceToShoot(fromRange, fromX, fromY, fromStance,
+                    Distance[fromRange][fromX, fromY, fromStance]);
             }
-            return Distance[fromShootingRange][fromX, fromY, fromStance][toX, toY, toStance];
+            return Distance[fromRange][fromX, fromY, fromStance][toX, toY, toStance];
         }
     }
 }

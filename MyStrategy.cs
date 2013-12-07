@@ -3,15 +3,10 @@ using System.Collections;
 using System.Linq;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
-
-//# сид 396024554092466 скаут отбегает в начале
-//# не идут в бой когда даже не могут встать в позицию стрелд€ь
-// застр€вают в лабиринте
 // TODO: веро€тностные противники - более точное определение
-// TODO: выбирать цель не с наименьшим количеством жизней, а в первую очередь ту, которую можно убить ||||||||| не всегда выгодно
-// TODO: отбегание, особенно когда медик лечитс€
-// TODO: группировка, радиус, костыли на карты
 // TODO: ѕопробовать перебрать в кого стрел€ть
+
+// TODO: commander request!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
@@ -25,7 +20,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeVariables();
             ProcessApproximation();
-            if (world.MoveIndex == 9 && self.Type == TrooperType.Scout)
+            if (world.MoveIndex == 3 && self.Type == TrooperType.Commander)
                 world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
@@ -62,6 +57,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (Opponents.Count() != 0)
             {
+                AllowTakeBonus = false;
                 // „тобы знали куда бежать если противник отступит
                 PointGoal = new Point(Opponents[0]);
                 PointGoal.profit = world.MoveIndex;
@@ -69,10 +65,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 var action = BruteForceDo();
                 if (action != null)
                 {
-                    if (Equal(self, action) && self.ActionPoints < GetMoveCost())
+                    if (Equal(self, action) && action.Action == ActionType.Move && self.ActionPoints < GetMoveCost())
+                    {
                         Go(ActionType.EndTurn);
+                    }
                     else
+                    {
                         Go(action.Action, new Point(action.X, action.Y));
+                    }
                     return;
                 }
             }
@@ -107,8 +107,40 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return;
             }
 
+            if (allowHill && IfRequestEnemyDisposition())
+            {
+                Go(ActionType.RequestEnemyDisposition);
+                return;
+            }
+
+            // √руппировка
+            if (GetTeamRadius() > MaxTeamRadius && self.ActionPoints >= GetMoveCost())
+            {
+                var bestTurn = new Point(0, 0, Inf);
+                for (var i = 0; i < Width; i++)
+                {
+                    for (var j = 0; j < Height; j++)
+                    {
+                        var r = Math.Max(MaxTeamRadius, GetTeamRadius(self.Id, new Point(i, j)));
+                        if (r < bestTurn.profit && r < GetTeamRadius())
+                        {
+                            bestTurn.Set(i, j, r);
+                        }
+                    }
+                }
+                if (bestTurn.profit < Inf)
+                {
+                    var to = GoScouting(bestTurn, PointGoal ?? (BonusGoal ?? bestTurn));
+                    if (to != null)
+                    {
+                        Go(ActionType.Move, to);
+                        return;
+                    }
+                }
+            }
+            
             Trooper whoseBonus = null;
-            var ifTeamBonus = IfTeamBonus(ref whoseBonus);
+            var ifTeamBonus = IfTeamBonus(ref whoseBonus, AllowTakeBonus);
             if (ifTeamBonus != null && BonusGoal == null && map[ifTeamBonus.X, ifTeamBonus.Y] == 0 && !Equal(ifTeamBonus, self))
             {
                 BonusGoal = ifTeamBonus;
@@ -126,7 +158,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     return;
                 }
                 allowNothing = false;
-                var to = GoScouting(BonusGoal, BonusGoal); //GoToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
+                var to = GoScouting(BonusGoal, PointGoal ?? BonusGoal); //GoToUnit(self, BonusGoal, map, beginFree: true, endFree: false);
                 // ≈сли путь до бонуса пока что зан€т, то все равно идти к нему
                 if (to == null)
                 {
@@ -140,16 +172,10 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 else
                 {
                     if (GetTeamRadius(self.Id, to) > MaxTeamRadius && GetTeamRadius() > GetTeamRadius(self.Id, to))
-                        to = GoScouting(new Point(self), BonusGoal);
+                        to = GoScouting(new Point(self), PointGoal ?? BonusGoal);
                     Go(ActionType.Move, to);
                     return;
                 }
-            }
-
-            if (allowHill && IfRequestEnemyDisposition())
-            {
-                Go(ActionType.RequestEnemyDisposition);
-                return;
             }
 
             // ѕытаюсь освободить дорогу до бонуса
@@ -160,8 +186,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.RaiseStance);
                     return;
                 }
-                var bestTurn = SkipPath(GetTrooper(MyStrategy.WhoseBonus), BonusGoal);
-                var to = bestTurn == null ? null : GoScouting(bestTurn, IfNothingCommander() ?? new Point(commander));//GoToUnit(self, bestTurn, map, beginFree: true, endFree: false);
+                var bestTurn = SkipPath(GetTrooper(MyStrategy.WhoseBonus), PointGoal ?? BonusGoal);
+                var to = bestTurn == null ? null : GoScouting(bestTurn, PointGoal ?? (BonusGoal ?? new Point(commander)));//GoToUnit(self, bestTurn, map, beginFree: true, endFree: false);
                 if (to == null || Equal(to, self) && self.ActionPoints < GetMoveCost()) // если Equal(to, self)) тоже делаем move, иначе он не дойдет обратно
                     Go(ActionType.EndTurn);
                 else

@@ -33,8 +33,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         bool IfRequestEnemyDisposition()
         {
-            return BonusGoal == null 
-                && (PointGoal == null || world.MoveIndex - PointGoal.profit > 4) 
+            return (PointGoal == null || world.MoveIndex - PointGoal.profit >= 3)
                 && IsCanMakeQuery();
         }
 

@@ -9,13 +9,16 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         private static Point circle_pos;
+        private static int circle_stance;
         private static Point circle_end_pos;
+        private static int circle_end_stance;
         private static ArrayList circle_stack = new ArrayList();
         private static ArrayList circle_best_stack;
         private static double circle_best_profit;
         private static bool[,,] circle_visible;
         private static double[,] circle_visible_profit;
         private static Point[] circle_extra_objects;
+        private static bool circle_change_stance_allow;
 
         private void SetVisible(double visionRange, TrooperStance stance, int x, int y)
         {
@@ -50,20 +53,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 SetVisible(trooper.VisionRange, trooper.Stance, trooper.X, trooper.Y);
 
             // profit calculation
+            var st = GetStanceId(self.Stance);
             foreach (Move mv in circle_stack)
-                SetVisible(self.VisionRange, self.Stance, mv.X, mv.Y);
+            {
+                if (mv.Action == ActionType.LowerStance)
+                    st--;
+                else if (mv.Action == ActionType.RaiseStance)
+                    st++;
+                SetVisible(self.VisionRange, GetStance(st), mv.X, mv.Y);
+            }
             double profit = 0;
             for (var i = 0; i < Width; i++)
                 for (var j = 0; j < Height; j++)
                     for(var k = 0; k < 3; k++)
                         if (circle_visible[k, i, j])
-                            profit += circle_visible_profit[i, j] / 3.0;
+                            profit += circle_visible_profit[i, j] / 3.0 * (k == 0 ? 1.5 : 1);
             return profit;
         }
 
         private void circle_dfs(int actionPoints)
         {
-            if (Equal(circle_pos, circle_end_pos))
+            if (Equal(circle_pos, circle_end_pos) && circle_stance == circle_end_stance)
             {
                 var profit = GetCircleProfit();
                 if (profit > circle_best_profit)
@@ -90,12 +100,28 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     }
                 }
             }
+            if (circle_change_stance_allow && actionPoints >= game.StanceChangeCost)
+            {
+                for (var ds = -1; ds <= 1; ds += 2)
+                {
+                    circle_stance += ds;
+                    if (circle_stance >= 0 && circle_stance < 2)
+                    {
+                        circle_stack.Add(new Move {Action = ds < 0 ? ActionType.LowerStance : ActionType.RaiseStance, X = circle_pos.X, Y = circle_pos.Y});
+                        circle_dfs(actionPoints - game.StanceChangeCost);
+                        circle_stack.RemoveAt(circle_stack.Count - 1);
+                    }
+                    circle_stance -= ds;
+                }
+            }
         }
 
         public Move GetScoutingMove(Point goal, Point[] objects)
         {
             circle_end_pos = new Point(goal);
             circle_pos = new Point(self);
+            circle_stance = GetStanceId(self.Stance);
+            circle_end_stance = circle_stance;
             circle_stack.Clear();
             circle_best_stack = null;
             circle_best_profit = -Inf;
@@ -124,15 +150,20 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         }
 
 
-        Point GoScouting(Point goal, Point lookAt)
+        Point GoScouting(Point goal, Point lookAt, bool changeStanceAllow = false)
         {
-            var result = GetScoutingMove(goal, new []{lookAt});
+            circle_change_stance_allow = changeStanceAllow;
+            var result = GetScoutingMove(goal, new[] { lookAt });
             if (result == null)
             {
                 // Значит нужно идти не обходным путем, а кратчайшим
                 return GoToUnit(self, goal, map, beginFree: true, endFree: false);
             }
-            return new Point(result.X, result.Y);
+            if (result.Action == ActionType.RaiseStance)
+                world = world;
+            if (result.Action == ActionType.Move)
+                return new Point(result);
+            return new Point(-1, result.Action == ActionType.RaiseStance ? 1 : -1);
         }
     }
 }
