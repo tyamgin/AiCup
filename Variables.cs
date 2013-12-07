@@ -25,6 +25,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public static int DangerVisible = 1;
         public static int DangerShoot = 2;
         public static int DangerHighShoot = 3;
+        public static long MapHash = -1;
 
         public static Random random = new Random();
 

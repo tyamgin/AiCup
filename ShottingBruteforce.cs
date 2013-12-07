@@ -118,7 +118,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var id = state.id;
 
             const int upper = 2, lower = -2;
-            for (var deltaStance = upper; deltaStance >= lower; deltaStance--)
+            for (var deltaStance = lower; deltaStance <= upper; deltaStance++)
             {
                 // Изменяю stance на deltaStance
                 state.Stance += deltaStance;
@@ -131,7 +131,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         if (deltaStance != 0)
                             StackPush("st " + deltaStance);
                         // Отсечение: после того как сел - нет смысла идти
-                        dfs_move(deltaStance < 0 ? 0 : 4, true, allowShot);
+                        dfs_move(deltaStance < 0 ? 0 : 5, true, allowShot);
                         if (deltaStance != 0)
                             StackPop();
                         state.act[id] += cost;
@@ -193,7 +193,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         state.act[id] -= game.MedikitUseCost;
                         state.hit[i] = Math.Min(Troopers[i].MaximalHitpoints, state.hit[i] + (i == id ? game.MedikitHealSelfBonusHitpoints : game.MedikitBonusHitpoints));
                         StackPush("med " + to.X + " " + to.Y);
-                        dfs_move(4);
+                        dfs_move(5);
                         StackPop();
                         state.hit[i] = oldhit;
                         state.act[id] += game.MedikitUseCost;
@@ -219,7 +219,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                         state.act[id] -= cost;
                         state.hit[i] = Math.Min(Troopers[i].MaximalHitpoints, state.hit[i] + healBy);
                         StackPush("heal " + to.X + " " + to.Y + " " + need);
-                        dfs_move(4, false);
+                        dfs_move(5, false);
                         StackPop();
                         state.hit[i] = oldhit;
                         state.act[id] += cost;
@@ -287,7 +287,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     StackPush("gr " + bestPoint.X + " " + bestPoint.Y);
                     state.act[id] -= game.GrenadeThrowCost;
                     state.profit += bestPoint.profit;
-                    dfs_move(4);
+                    dfs_move(5);
                     state.profit -= bestPoint.profit;
                     state.act[id] += game.GrenadeThrowCost;
                     StackPop();
@@ -303,7 +303,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var id = state.id;
 
             const int upper = 2, lower = -2;
-            for (var deltaStance = upper; deltaStance >= lower; deltaStance--)
+            //for (var deltaStance = upper; deltaStance >= lower; deltaStance--)
+            for (var deltaStance = lower; deltaStance <= upper; deltaStance++)
             {
                 state.Stance += deltaStance;
                 if (state.Stance >= 0 && state.Stance < 3)
@@ -462,7 +463,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 // К профиту прибавляю итоговое количество жизней
                 for (var i = 0; i < MyCount; i++)
-                    profit += state.hit[i] * Multiplier;
+                    profit += state.hit[i] * (Troopers[i].Type == TrooperType.FieldMedic ? 1 : Multiplier);
 
                 // counter - количество состояний - для дебага
                 counter++;

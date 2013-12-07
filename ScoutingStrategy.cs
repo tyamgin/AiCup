@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             for(var i = 0; i < Width; i++)
                 for (var j = 0; j < Height; j++)
                     if (x != i || y != j)
-                        circle_visible_profit[i, j] += 1.0/position.GetDistanceTo(i, j);
+                        circle_visible_profit[i, j] += 10.0/position.GetDistanceTo(i, j);
         }
 
         private double GetCircleProfit()

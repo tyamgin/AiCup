@@ -23,7 +23,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.world = world;
             this.game = game;
             this.move = move;
-            InitializeConstants();
+            InitializeVariables();
             ProcessApproximation();
             if (world.MoveIndex == 9 && self.Type == TrooperType.Scout)
                 world = world;
@@ -32,6 +32,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 BonusGoal = null;
             if (BonusGoal != null && IsHaveBonus(GetTrooper(MyStrategy.WhoseBonus), GetBonusAt(BonusGoal)))
                 BonusGoal = null;
+
+            // Карта где медик и снайпер отдельно (map03)
+            // Координаты где собираться:
+            // 18 13
+            // 11 6
+            if (MapHash == 8060058084774534976L
+                && world.MoveIndex <= 2
+                && (self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper)
+               )
+            {
+                var rightLower = new Point(18, 14);
+                var leftUpper = new Point(11, 5);
+                var goal = rightLower.GetDistanceTo(self) < leftUpper.GetDistanceTo(self) ? rightLower : leftUpper;
+                var to = GoScouting(goal, goal);
+                if (to != null)
+                {
+                    Go(ActionType.Move, to);
+                    return;
+                }
+            }
+
             if (IfFieldRationNeed())
             {
                 Go(ActionType.EatFieldRation);

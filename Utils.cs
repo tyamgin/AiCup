@@ -185,7 +185,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             throw new InvalidDataException();
         }
 
-        void InitializeConstants()
+        void InitializeVariables()
         {
             this.troopers = world.Troopers;
             this.Bonuses = world.Bonuses;
@@ -289,6 +289,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (queue.Count == 0 || (long)queue[queue.Count - 1] != self.Id)
                 queue.Add(self.Id);
+
+            if (MapHash == -1)
+            {
+                MapHash = GetMapHash();
+#if DEBUG
+                Console.WriteLine(MapHash);
+#endif
+            }
         }
 
         bool IsVisible(int x, int y, TrooperStance stance = TrooperStance.Prone)
@@ -489,6 +497,35 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         Trooper GetClone(Trooper a, int minusHitpoints)
         {
             return new Trooper(a.Id, a.X, a.Y, a.PlayerId, a.TeammateIndex, a.IsTeammate, a.Type, a.Stance, a.Hitpoints - minusHitpoints, a.MaximalHitpoints, a.ActionPoints, a.InitialActionPoints, a.VisionRange, a.ShootingRange, a.ShootCost, a.StandingDamage, a.KneelingDamage, a.ProneDamage, a.Damage, a.IsHoldingGrenade, a.IsHoldingMedikit, a.IsHoldingFieldRation);
+        }
+
+        int GetCellTypeId(CellType type)
+        {
+            switch (type)
+            {
+                case CellType.Free:
+                    return 0;
+                case CellType.LowCover:
+                    return 1;
+                case CellType.MediumCover:
+                    return 2;
+                case CellType.HighCover:
+                    return 3;
+                default:
+                    throw new ArgumentException();
+            }
+        }
+
+        long GetMapHash()
+        {
+            long hash = 0;
+            unchecked
+            {
+                for(var i = 0; i < Width; i++)
+                    for (var j = 0; j < Height; j++)
+                        hash = hash*31 + GetCellTypeId(Cells[i][j]);
+            }
+            return hash;
         }
     }
 }
