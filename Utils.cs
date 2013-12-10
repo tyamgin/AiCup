@@ -233,12 +233,23 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
+            if (MapHash == -1)
+            {
+                MapHash = GetMapHash();
+#if DEBUG
+                Console.WriteLine(MapHash);
+#endif
+            }
 
             // Менять радиус в зависимости от количества оставшихся ходов:
             // Тогда будет возможность отбежать обратно
             MaxTeamRadius = 2;
             if (Team.Count() > 3/* && self.ActionPoints >= 2*GetMoveCost(self)*/)
                 MaxTeamRadius += 1;
+            if (Team.Count() > 4)
+                MaxTeamRadius += 0.5;
+            if (MapHash == CheeserMap)
+                MaxTeamRadius += 4;
 
             // Загружаем труперов с прошлого хода, и сохраняем с текущего
             // past - трупер
@@ -289,14 +300,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
             if (queue.Count == 0 || (long)queue[queue.Count - 1] != self.Id)
                 queue.Add(self.Id);
-
-            if (MapHash == -1)
-            {
-                MapHash = GetMapHash();
-#if DEBUG
-                Console.WriteLine(MapHash);
-#endif
-            }
         }
 
         bool IsVisible(int x, int y, TrooperStance stance = TrooperStance.Prone)

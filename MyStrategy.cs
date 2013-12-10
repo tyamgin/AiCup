@@ -20,7 +20,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             this.move = move;
             InitializeVariables();
             ProcessApproximation();
-            if (world.MoveIndex == 3 && self.Type == TrooperType.Commander)
+            if (world.MoveIndex == 37 && self.Type == TrooperType.Commander)
                 world = world;
             var allowHill = !CheckShootMe();
             if (BonusGoal != null && GetTrooper(MyStrategy.WhoseBonus) == null)
@@ -32,7 +32,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             // Координаты где собираться:
             // 18 13
             // 11 6
-            if (MapHash == 8060058084774534976L
+            if (MapHash == Lab2Map
                 && world.MoveIndex <= 2
                 && (self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper)
                )
@@ -114,7 +114,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
 
             // Группировка
-            if (GetTeamRadius() > MaxTeamRadius && self.ActionPoints >= GetMoveCost())
+            if ((GetTeamRadius() > MaxTeamRadius && self.Id == commander.Id || 
+                GetTeamRadius() > MaxTeamRadius/2 && self.Id != commander.Id) 
+                && self.ActionPoints >= GetMoveCost())
             {
                 var bestTurn = new Point(0, 0, Inf);
                 for (var i = 0; i < Width; i++)

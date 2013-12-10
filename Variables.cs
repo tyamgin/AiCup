@@ -66,5 +66,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         private static ArrayList PastTroopersInfo = new ArrayList();
         private static int[] OpponentsMemoryAppearTime;
         private static long[] OpponentsMemoryId;
+
+        public static long CheeserMap = 2050471340533109056L;
+        public static long Lab2Map = 8060058084774534976L;
     }
 }

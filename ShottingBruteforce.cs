@@ -459,7 +459,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     double minDist = Inf;
                     foreach (var opp in Opponents)
+                    {
+                        //double d = GetDistanceTo(1, state.Position[i].X, state.Position[i].Y, state.stance[i], 
+                        //    opp.X, opp.Y, GetStanceId(opp.Stance));
                         minDist = Math.Min(minDist, state.Position[i].GetDistanceTo(opp));
+                    }
                     profit -= minDist*0.1;
                 }
             }

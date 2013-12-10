@@ -1,4 +1,4 @@
-var pagesCount = 54;
+var pagesCount = 104;
 var playersCount = 2;
 var myName = 'tyamgin';
 var result = {};
@@ -28,7 +28,7 @@ for(var page = 1; page <= pagesCount; page++) {
 		$('td[style*=important]', data).each(function(idx, el) {
 			var text = el.innerHTML.split('<hr style="margin-bottom: 8px; margin-top: 8px; width: 100%;">');
 			for(var i = 0; i < text.length; i++) {
-				if (i == myIdx[idx]) {
+				if (i == myIdx[idx] && (first[idx] == 'Milanin' || second[idx] == 'Milanin')) {
 					if (!result[maps[idx]])
 						result[maps[idx]] = 0;
 					result[maps[idx]] += parseInt(text[i].substr(3));
