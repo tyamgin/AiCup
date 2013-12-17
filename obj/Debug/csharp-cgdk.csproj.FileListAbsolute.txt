@@ -1,5 +1,0 @@
-C:\Users\Ivan\Desktop\ai\bin\Debug\csharp-cgdk.exe
-C:\Users\Ivan\Desktop\ai\bin\Debug\csharp-cgdk.pdb
-C:\Users\Ivan\Desktop\ai\obj\Debug\csharp-cgdk.csprojResolveAssemblyReference.cache
-C:\Users\Ivan\Desktop\ai\obj\Debug\csharp-cgdk.exe
-C:\Users\Ivan\Desktop\ai\obj\Debug\csharp-cgdk.pdb

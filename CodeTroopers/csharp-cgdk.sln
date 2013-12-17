@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual C# Express 2010
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "csharp-cgdk", "csharp-cgdk.csproj", "{9C830E12-33C9-429B-914E-BBDAA478D495}"
 EndProject
 Global
