@@ -16,6 +16,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public static Point PointGoal = null;
         public static ArrayList AlivePlayers = null;
         public static ArrayList queue = new ArrayList();
+        public static ArrayList TypeQueue = new ArrayList();
         public static int Inf = 0x3f3f3f3f;
         public static double Eps = 1e-9;
         public static double MaxTeamRadius;
@@ -65,9 +66,13 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 
         private static ArrayList PastTroopersInfo = new ArrayList();
         private static int[] OpponentsMemoryAppearTime;
-        private static long[] OpponentsMemoryId;
+        private static TrooperType[] OpponentsMemoryType;
 
         public static long CheeserMap = 2050471340533109056L;
         public static long Lab2Map = 8060058084774534976L;
+
+        public static double[,,] CellDangerFrom;
+        public static double[,,] CellDangerTo;
+        public static double[,,] CellDanger;
     }
 }

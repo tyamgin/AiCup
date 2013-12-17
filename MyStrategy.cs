@@ -3,11 +3,6 @@ using System.Collections;
 using System.Linq;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
-// TODO: вероятностные противники - более точное определение
-// TODO: Попробовать перебрать в кого стрелять
-
-// TODO: commander request!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -35,6 +30,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             if (MapHash == Lab2Map
                 && world.MoveIndex <= 2
                 && (self.Type == TrooperType.FieldMedic || self.Type == TrooperType.Sniper)
+                && Opponents.Count() == 0
                )
             {
                 var rightLower = new Point(18, 14);
@@ -46,6 +42,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     Go(ActionType.Move, to);
                     return;
                 }
+                
             }
 
             if (IfFieldRationNeed())

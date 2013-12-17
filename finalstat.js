@@ -1,3 +1,5 @@
+// Статистика финала по картам
+
 var pagesCount = 104;
 var playersCount = 2;
 var myName = 'tyamgin';
@@ -40,7 +42,7 @@ for(var page = 1; page <= pagesCount; page++) {
 }
 
 /*
-
+// первая половина финала
 logo-cheeser.map.png: 158
 logo-default.map.png: 156
 logo-fefer.map.png: 146

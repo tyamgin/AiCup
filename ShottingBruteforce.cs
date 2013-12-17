@@ -457,14 +457,14 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 // бонус за близость к ближайшему врагу - ???
                 if (Troopers[i].Type != TrooperType.Sniper)
                 {
+                    if (Troopers[i].Type == TrooperType.Scout)
+                        profit -= CellDanger[state.Position[i].X, state.Position[i].Y, state.stance[i]];
                     double minDist = Inf;
                     foreach (var opp in Opponents)
                     {
-                        //double d = GetDistanceTo(1, state.Position[i].X, state.Position[i].Y, state.stance[i], 
-                        //    opp.X, opp.Y, GetStanceId(opp.Stance));
                         minDist = Math.Min(minDist, state.Position[i].GetDistanceTo(opp));
                     }
-                    profit -= minDist*0.1;
+                    profit -= minDist * 0.1;
                 }
             }
 
@@ -599,7 +599,12 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 state.opphit[i] = Opponents[i].Hitpoints;
                 // Чтобы уменьшить приоритет стрельбы в "мнимую" цель
-                if (OpponentsMemoryId[i] != self.Id)
+                if (world.MoveIndex - OpponentsMemoryAppearTime[i] > 1)
+                    probab[i] /= 2;
+                else if (OpponentsMemoryType[i] == self.Type && world.MoveIndex - OpponentsMemoryAppearTime[i] == 1)
+                    probab[i] /= 2;
+                    // TODO: можно точнее
+                else if (!(OpponentsMemoryType[i] == self.Type || IsBetween(OpponentsMemoryType[i], self.Type, Opponents[i].Type)))
                     probab[i] /= 2;
             }
             dfs_changeStance1();
@@ -630,7 +635,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 var x = int.Parse(cmd[1]);
                 var y = int.Parse(cmd[2]);
-                var to = bestStack[0].Count == 1 // TODO: ????????????????? мб только для move???
+                var to = bestStack[0].Count == 1
                     ? GoScouting(new Point(x, y), new Point(Opponents[0]), changeStanceAllow: true)
                     : GoToUnit(self, new Point(x, y), map, beginFree: true, endFree: false);
                 if (to.X == -1)

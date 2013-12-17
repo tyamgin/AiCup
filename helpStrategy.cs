@@ -25,22 +25,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return quality;
         }
 
-
-        // TODO: заюзать
-        Point GetBestHelper()
-        {
-            var bestHelper = Point.MInf;
-            foreach(var friend in Friends)
-            {
-                var quality = GetHelperQuality(friend);
-                if (quality > bestHelper.profit)
-                    bestHelper = new Point(friend.X, friend.Y, quality);
-            }
-            if (bestHelper.profit <= 0)
-                bestHelper = null;
-            return bestHelper;
-        }
-
         Point IfUseMedikit()
         {
             if (!self.IsHoldingMedikit || self.ActionPoints < game.MedikitUseCost)

@@ -210,11 +210,48 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                     notFilledMap[i, j] = map[i, j];
                 }
             }
+            if (CellDanger == null)
+            {
+                CellDanger = new double[Width, Height, 3];
+                CellDangerFrom = new double[Width, Height, 3];
+                CellDangerTo = new double[Width, Height, 3];
+                for (var i = 0; i < Width; i++)
+                {
+                    for (var j = 0; j < Height; j++)
+                    {
+                        if (notFilledMap[i, j] == 0)
+                        {
+                            for (var s = 0; s < 3; s++)
+                            {
+                                for (var x = 0; x < Width; x++)
+                                {
+                                    for (var y = 0; y < Height; y++)
+                                    {
+                                        if (notFilledMap[x, y] == 0)
+                                        {
+                                            for (var z = 0; z < 3; z++)
+                                            {
+                                                if (world.IsVisible(7, i, j, GetStance(s), x, y, GetStance(z)))
+                                                {
+                                                    CellDangerFrom[i, j, s] += 1;
+                                                    CellDangerTo[x, y, z] += 1;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                CellDanger[i, j, s] = CellDangerTo[i, j, s]/CellDangerFrom[i, j, s];
+                            }
+                        }
+                    }
+                }
+            }
+
             Opponents = new Trooper[0];
             Team = new Trooper[0];
             Friends = new Trooper[0];
             OpponentsMemoryAppearTime = new int[0];
-            OpponentsMemoryId = new long[0];
+            OpponentsMemoryType = new TrooperType[0];
 
             foreach (var tr in troopers)
             {
@@ -229,7 +266,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     Opponents = Append(Opponents, tr);
                     OpponentsMemoryAppearTime = Append(OpponentsMemoryAppearTime, world.MoveIndex);
-                    OpponentsMemoryId = Append(OpponentsMemoryId, self.Id);
+                    OpponentsMemoryType = Append(OpponentsMemoryType, self.Type);
                 }
             }
 
@@ -259,7 +296,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 var past = PastTroopersInfo[i] as Trooper;
                 var when = (int) PastTroopersInfo[i + 1];
-                var who = (long) PastTroopersInfo[i + 2];
+                var who = (TrooperType) PastTroopersInfo[i + 2];
                 if (world.MoveIndex - when > 2)
                     continue;
 
@@ -267,7 +304,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 {
                     Opponents = Append(Opponents, past);
                     OpponentsMemoryAppearTime = Append(OpponentsMemoryAppearTime, when);
-                    OpponentsMemoryId = Append(OpponentsMemoryId, who);
+                    OpponentsMemoryType = Append(OpponentsMemoryType, who);
                     troopers = Append(troopers, past);
                 }
             }
@@ -276,7 +313,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             {
                 PastTroopersInfo.Add(GetClone(Opponents[i], 0));
                 PastTroopersInfo.Add(OpponentsMemoryAppearTime[i]);
-                PastTroopersInfo.Add(OpponentsMemoryId[i]);
+                PastTroopersInfo.Add(OpponentsMemoryType[i]);
             }
 
             if (changedCommander != -1 && world.MoveIndex - changedCommander >= 3)
@@ -298,8 +335,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 }
             }
 
-            if (queue.Count == 0 || (long)queue[queue.Count - 1] != self.Id)
+            if (queue.Count == 0 || (long) queue[queue.Count - 1] != self.Id)
+            {
                 queue.Add(self.Id);
+                TypeQueue.Add(self.Type);
+            }
         }
 
         bool IsVisible(int x, int y, TrooperStance stance = TrooperStance.Prone)

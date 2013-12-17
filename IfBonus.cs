@@ -10,6 +10,27 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        bool IsBetween(TrooperType a, TrooperType b, TrooperType c)
+        {
+            if (a == b || b == c)
+                return false;
+            if (!TypeQueue.Contains(a) || !TypeQueue.Contains(b) || !TypeQueue.Contains(c))
+                return false;
+            for (var i = 0;; i = (i + 1)%TypeQueue.Count)
+            {
+                if ((TrooperType)TypeQueue[i] == a)
+                {
+                    for (var j = (i + 1)%TypeQueue.Count;; j = (j + 1)%TypeQueue.Count)
+                    {
+                        if (b == (TrooperType)TypeQueue[j])
+                            return true;
+                        if (c == (TrooperType)TypeQueue[j])
+                            return false;
+                    }
+                }
+            }
+        }
+
         int GetQueuePlace(Trooper trooper, bool MayFirst)
         {
             var current = queue.IndexOf(self.Id);
