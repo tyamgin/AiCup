@@ -1,14 +1,40 @@
 using System;
 using System.Collections;
+using System.Drawing;
 using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
+using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Drawing;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        private static Main form;
+        private static Thread thread;
+
+        private static void showWindow()
+        {
+            form = new Main();
+            form.ShowDialog();
+        }
+
         public void Move(Trooper self, World world, Game game, Move move)
         {
+            if (form == null)
+            {
+                thread = new Thread(showWindow);
+                thread.Start();
+                Thread.Sleep(1000);
+            }
+            var panel = form.panel;
+            var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
+            panel.Image = drawArea;
+            Graphics g = Graphics.FromImage(drawArea);
+            Pen pen = new Pen(Brushes.Black);
+            g.DrawLine(pen, 1, 1, 40, 40);
+
             this.self = self;
             this.world = world;
             this.game = game;

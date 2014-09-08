@@ -8,7 +8,7 @@
     <ProjectGuid>{9C830E12-33C9-429B-914E-BBDAA478D495}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk</RootNamespace>
+    <RootNamespace>Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk</RootNamespace>
     <AssemblyName>csharp-cgdk</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -16,6 +16,7 @@
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -28,7 +29,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -52,15 +52,13 @@
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Runner</StartupObject>
+    <StartupObject>Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Runner</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -71,29 +69,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Asserts.cs" />
-    <Compile Include="Drawing\Main.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Drawing\Main.Designer.cs">
-      <DependentUpon>Main.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ScoutingStrategy.cs" />
-    <Compile Include="IfBonus.cs" />
-    <Compile Include="ShortestPath.cs" />
-    <Compile Include="ShottingBruteforce.cs" />
-    <Compile Include="Utils.cs" />
-    <Compile Include="Variables.cs" />
-    <Compile Include="HelpStrategy.cs" />
-    <Compile Include="IfNothing.cs" />
-    <Compile Include="Model\Bonus.cs" />
-    <Compile Include="Model\BonusType.cs" />
     <Compile Include="Model\ActionType.cs" />
-    <Compile Include="Model\CellType.cs" />
     <Compile Include="IStrategy.cs" />
-    <Compile Include="Model\TrooperStance.cs" />
+    <Compile Include="Model\Puck.cs" />
+    <Compile Include="Model\HockeyistState.cs" />
     <Compile Include="Model\Game.cs" />
-    <Compile Include="Model\Direction.cs" />
     <Compile Include="Model\Move.cs" />
     <Compile Include="MyStrategy.cs" />
     <Compile Include="Model\Player.cs" />
@@ -102,8 +82,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteProcessClient.cs" />
     <Compile Include="Runner.cs" />
-    <Compile Include="Model\Trooper.cs" />
-    <Compile Include="Model\TrooperType.cs" />
+    <Compile Include="Model\Hockeyist.cs" />
+    <Compile Include="Model\HockeyistType.cs" />
     <Compile Include="Model\Unit.cs" />
     <Compile Include="Model\World.cs" />
   </ItemGroup>
@@ -128,11 +108,6 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Drawing\Main.resx">
-      <DependentUpon>Main.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

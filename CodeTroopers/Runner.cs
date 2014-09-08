@@ -17,8 +17,8 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
             else
             {
-                new Runner(new[] {"localhost", "31001", "0000000000000000"}).run();
-                Thread.Sleep(4000);
+                new Runner(new[] {"localhost", "31000", "0000000000000000"}).run();
+                //Thread.Sleep(4000);
             }
         }
 
