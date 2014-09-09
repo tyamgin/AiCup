@@ -8,7 +8,20 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
     {
         private static double eps = 1e-9;
         public double X, Y;
-        
+
+        public static double GetAngleBetween(Point a, Point b, Point c)
+        {
+            var ac = a.GetDistanceTo(c);
+            var ab = a.GetDistanceTo(b);
+            var bc = b.GetDistanceTo(c);
+            var arg = (ac*ac - ab*ab - bc*bc)/2/ab/bc;
+            if (arg < -1)
+                arg = -1;
+            if (arg > 1)
+                arg = 1;
+            return Math.Acos(arg);
+        }
+
         public Point(double x, double y)
         {
             X = x;
