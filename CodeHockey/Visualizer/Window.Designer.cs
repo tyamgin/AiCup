@@ -46,6 +46,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1040, 664);
             this.Controls.Add(this.panel);
+            this.Location = new System.Drawing.Point(100, 0);
             this.Name = "Window";
             this.Text = "Window";
             ((System.ComponentModel.ISupportInitialize)(this.panel)).EndInit();

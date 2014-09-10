@@ -6,39 +6,80 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        Point PuckMove(int ticks)
+        Point PuckMove(int ticks, Point _pos, Point _speed)
         {
-            Point p = new Point(puck);
-            Point sp = new Point(puck.SpeedX, puck.SpeedY);
+            var pos = new Point(_pos);
+            var speed = new Point(_speed);
             var angle = puck.Angle;
             for (int tick = 0; tick < ticks; tick++)
             {
-                p.X += sp.X;
-                p.Y += sp.Y;
-                if (p.Y < game.RinkTop)
+                pos.X += speed.X;
+                pos.Y += speed.Y;
+                if (pos.Y < game.RinkTop)
                 {
-                    p.Y = game.RinkTop;
-                    sp.Y *= -1;
+                    pos.Y = game.RinkTop;
+                    speed.Y *= -1;
                 }
-                if (p.Y > game.RinkBottom)
+                if (pos.Y > game.RinkBottom)
                 {
-                    p.Y = game.RinkBottom;
-                    sp.Y *= -1;
+                    pos.Y = game.RinkBottom;
+                    speed.Y *= -1;
                 }
-                if (p.X > game.RinkRight)
+                if (pos.X > game.RinkRight)
                 {
-                    p.X = game.RinkRight;
-                    sp.X *= -1;
+                    pos.X = game.RinkRight;
+                    speed.X *= -1;
                 }
-                if (p.X < game.RinkLeft)
+                if (pos.X < game.RinkLeft)
                 {
-                    p.X = game.RinkLeft;
-                    sp.X *= -1;
+                    pos.X = game.RinkLeft;
+                    speed.X *= -1;
                 }
                 //if (puck.OwnerHockeyistId != -1)
                 //    drawPathQueue.Enqueue(new Point(p));
             }
-            return p;
+            return pos;
+        }
+
+        int PuckTicksToBorder(Point _pos, Point _speed)
+        {
+            var pos = new Point(_pos);
+            var speed = new Point(_speed);
+            const int limit = 1000;
+            for (int tick = 0; tick < limit; tick++)
+            {
+                if (pos.Y < game.RinkTop || pos.Y > game.RinkBottom || pos.X > game.RinkRight || pos.X < game.RinkLeft)
+                    return tick;
+                pos.X += speed.X;
+                pos.Y += speed.Y;
+            }
+            return limit;
+        }
+
+        bool IsBetween(double left, double x, double right)
+        {
+            return left <= x && x <= right;
+        }
+
+        bool Eq(double a, double b)
+        {
+            return Math.Abs(a - b) < eps;
+        }
+
+        bool Strike(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker)
+        {
+            var strikerDir = new Point(Math.Cos(AngleStriker), Math.Sin(AngleStriker));
+            var SpeedStriker = strikerSpeed.Length;
+            var SpeedAngleStriker = Math.Atan2(strikerSpeed.Y, strikerSpeed.X);
+            var puckSpeed = 20.0 * StrikePower + SpeedStriker * Math.Cos(AngleStriker - SpeedAngleStriker);
+            var puckSpeedDir = strikerDir.Mul(puckSpeed);
+            int ticksToBorder = PuckTicksToBorder(puckPos, puckSpeedDir);
+            Point p = PuckMove(ticksToBorder, puckPos, puckSpeedDir);
+            if (Eq(p.X, opp.NetFront) && IsBetween(game.GoalNetTop, p.Y, game.GoalNetTop + game.GoalNetHeight))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

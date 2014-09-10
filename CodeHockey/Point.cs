@@ -22,6 +22,26 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return Math.Acos(arg);
         }
 
+        public double Length
+        {
+            get { return Math.Sqrt(X*X + Y*Y); }
+        }
+
+        public Point Normalized()
+        {
+            return new Point(X / Length, Y / Length);
+        }
+
+        public Point Mul(double x)
+        {
+            return new Point(X * x, Y * x);
+        }
+
+        public Point Add(Point x)
+        {
+            return new Point(X + x.X, Y + x.Y);
+        }
+
         public Point(double x, double y)
         {
             X = x;

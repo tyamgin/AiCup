@@ -6,6 +6,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
+#if DEBUG
+using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Visualizer;
+#endif
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
@@ -13,8 +16,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        private Queue<Point> drawPathQueue = new Queue<Point>();
-        private Queue<Point> drawGoalQueue = new Queue<Point>(); 
+        private static Queue<Point> drawPathQueue = new Queue<Point>();
+        private static Queue<Point> drawGoalQueue = new Queue<Point>();
+        private static Queue<Point> drawGoal2Queue = new Queue<Point>();
+        private static Queue<Pair<Point, int>> drawDangerQueue = new Queue<Pair<Point, int>>();
 #if DEBUG
         private static Window form;
 #else
@@ -69,6 +74,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             panel.Image = drawArea;
             g = Graphics.FromImage(drawArea);
 
+            while (drawDangerQueue.Count != 0)
+            {
+                var p = drawDangerQueue.Dequeue();
+                if (p.first.X > game.RinkLeft && p.first.X < game.RinkRight && p.first.Y > game.RinkTop && p.first.Y < game.RinkBottom)
+                {
+                    var br = p.second >= DangerC ? Brushes.Red : (p.second >= DangerB ? Brushes.Orange : Brushes.White);
+                    DrawCircleC(br, p.first.X, p.first.Y, 1);
+                }
+            }
+
             // Хоккеисты
             foreach (var ho in world.Hockeyists)
             {
@@ -95,7 +110,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             // Шайба
             DrawCircle(Brushes.Black, puck.X, puck.Y, puck.Radius, solid:true);
-
+            var puckCenter = new Point(puck);
+            if (Math.Abs(puck.SpeedX) > Double.Epsilon && Math.Abs(puck.SpeedY) > Double.Epsilon)
+            {
+                var puckDirection = puckCenter.Add(new Point(puck.SpeedX, puck.SpeedY).Normalized().Mul(puck.Radius));
+                g.DrawLine(new Pen(Brushes.White), (int) puckCenter.X, (int) puckCenter.Y, (int) puckDirection.X, (int) puckDirection.Y);
+            }
             // Ворота
             foreach (var player in world.Players)
             {
@@ -108,8 +128,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 //g.DrawLine(new Pen(Brushes.Black), x1, y1, x1, y2);
                 g.DrawLine(new Pen(Brushes.Black), x2, y1, x2, y2);
             }
-            //g.DrawLine(new Pen(Brushes.Black), 0, 0, 0, (int)height);
-            //g.DrawLine(new Pen(Brushes.Black), 0, 0, (int)width, 0);
 
             // Поле
             {
@@ -132,6 +150,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 var p = drawGoalQueue.Dequeue();
                 DrawCircleC(Brushes.DarkGreen, p.X, p.Y, 3);
+            }
+            while (drawGoal2Queue.Count != 0)
+            {
+                var p = drawGoal2Queue.Dequeue();
+                DrawCircleC(Brushes.BlueViolet, p.X, p.Y, 5);
             }
         }
 

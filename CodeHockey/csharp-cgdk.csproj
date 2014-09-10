@@ -82,6 +82,7 @@
     <Compile Include="Model\Player.cs" />
     <Compile Include="Model\PlayerContext.cs" />
     <Compile Include="Point.cs" />
+    <Compile Include="PriorityQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PuckMoving.cs" />
     <Compile Include="RemoteProcessClient.cs" />
