@@ -14,7 +14,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             var ac = a.GetDistanceTo(c);
             var ab = a.GetDistanceTo(b);
             var bc = b.GetDistanceTo(c);
-            var arg = (ac*ac - ab*ab - bc*bc)/2/ab/bc;
+            var arg = -(ac*ac - ab*ab - bc*bc)/2/ab/bc;
             if (arg < -1)
                 arg = -1;
             if (arg > 1)

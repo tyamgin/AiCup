@@ -84,10 +84,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
 
-            g.DrawLine(new Pen(Brushes.OrangeRed), (int) game.RinkLeft, (int) (game.RinkTop + StrikeZoneWidth),
+            g.DrawLine(new Pen(Brushes.PeachPuff), (int) game.RinkLeft, (int) (game.RinkTop + StrikeZoneWidth),
                 (int) game.RinkRight, (int) (game.RinkTop + StrikeZoneWidth));
-            g.DrawLine(new Pen(Brushes.OrangeRed), (int)game.RinkLeft, (int)(game.RinkBottom - StrikeZoneWidth),
+            g.DrawLine(new Pen(Brushes.PeachPuff), (int)game.RinkLeft, (int)(game.RinkBottom - StrikeZoneWidth),
                 (int)game.RinkRight, (int)(game.RinkBottom - StrikeZoneWidth));
+            if (MyRight())
+                g.DrawLine(new Pen(Brushes.PeachPuff), (int)(StrikeZoneWidthBesideNet + game.RinkLeft), (int)game.RinkTop,
+                    (int)(StrikeZoneWidthBesideNet + game.RinkLeft), (int)game.RinkBottom);
+            else
+                g.DrawLine(new Pen(Brushes.PeachPuff), (int)(game.RinkRight - StrikeZoneWidthBesideNet), (int)game.RinkTop,
+                    (int)(game.RinkRight - StrikeZoneWidthBesideNet), (int)game.RinkBottom);
 
 
             // Хоккеисты
