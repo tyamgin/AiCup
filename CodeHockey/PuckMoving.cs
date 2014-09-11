@@ -10,8 +10,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var pos = new Point(_pos);
             var speed = new Point(_speed);
-            var angle = puck.Angle;
-            for (int tick = 0; tick < ticks; tick++)
+            for (var tick = 0; tick < ticks; tick++)
             {
                 pos.X += speed.X;
                 pos.Y += speed.Y;

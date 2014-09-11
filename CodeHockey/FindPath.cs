@@ -33,22 +33,22 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         //}
         int XEncode(double x)
         {
-            return (int)(x * xParts / width);
+            return (int)(x * xParts / world.Width);
         }
 
         int YEncode(double y)
         {
-            return (int)(y * yParts / height);
+            return (int)(y * yParts / world.Height);
         }
 
         double XDecode(int x)
         {
-            return x * width / xParts;
+            return x * world.Width / xParts;
         }
 
         double YDecode(int y)
         {
-            return y * height / yParts;
+            return y * world.Height / yParts;
         }
 
         //double fmod(double a)

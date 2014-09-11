@@ -84,13 +84,19 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
 
+            g.DrawLine(new Pen(Brushes.OrangeRed), (int) game.RinkLeft, (int) (game.RinkTop + StrikeZoneWidth),
+                (int) game.RinkRight, (int) (game.RinkTop + StrikeZoneWidth));
+            g.DrawLine(new Pen(Brushes.OrangeRed), (int)game.RinkLeft, (int)(game.RinkBottom - StrikeZoneWidth),
+                (int)game.RinkRight, (int)(game.RinkBottom - StrikeZoneWidth));
+
+
             // Хоккеисты
             foreach (var ho in world.Hockeyists)
             {
                 var brush = ho.IsTeammate ? Brushes.Blue : Brushes.Red;
                 if (ho.Type != HockeyistType.Goalie)
                 {
-                    DrawCircle(Brushes.Honeydew, ho.X, ho.Y, game.StickLength);
+                    //DrawCircle(Brushes.Honeydew, ho.X, ho.Y, game.StickLength);
                     g.DrawLine(new Pen(brush), (int)ho.X, (int)ho.Y,
                         (int)(ho.X + Math.Cos(ho.Angle) * game.StickLength),
                         (int)(ho.Y + Math.Sin(ho.Angle) * game.StickLength)
@@ -111,10 +117,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             // Шайба
             DrawCircle(Brushes.Black, puck.X, puck.Y, puck.Radius, solid:true);
             var puckCenter = new Point(puck);
-            if (Math.Abs(puck.SpeedX) > Double.Epsilon && Math.Abs(puck.SpeedY) > Double.Epsilon)
+            if (Math.Abs(puck.SpeedX) > Double.Epsilon || Math.Abs(puck.SpeedY) > Double.Epsilon)
             {
-                var puckDirection = puckCenter.Add(new Point(puck.SpeedX, puck.SpeedY).Normalized().Mul(puck.Radius));
-                g.DrawLine(new Pen(Brushes.White), (int) puckCenter.X, (int) puckCenter.Y, (int) puckDirection.X, (int) puckDirection.Y);
+                if (puck.OwnerPlayerId == -1)
+                {
+                    var puckDirection = puckCenter.Add(new Point(puck.SpeedX, puck.SpeedY).Normalized().Mul(puck.Radius));
+                    g.DrawLine(new Pen(Brushes.White), (int) puckCenter.X, (int) puckCenter.Y, (int) puckDirection.X,
+                        (int) puckDirection.Y);
+                }
             }
             // Ворота
             foreach (var player in world.Players)
