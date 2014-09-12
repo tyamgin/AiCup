@@ -67,6 +67,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         bool Strike(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker)
         {
+            if (MyRight() && Math.Cos(AngleStriker) > 0)
+                return false;
+            if (MyLeft() && Math.Cos(AngleStriker) < 0)
+                return false;
+
             var strikerDir = new Point(Math.Cos(AngleStriker), Math.Sin(AngleStriker));
             var SpeedStriker = strikerSpeed.Length;
             var SpeedAngleStriker = Math.Atan2(strikerSpeed.Y, strikerSpeed.X);
