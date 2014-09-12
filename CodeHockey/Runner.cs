@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Threading;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
@@ -9,12 +10,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
 
         public static void Main(string[] args) {
 
-            //Process.Start("D:\\Projects\\AiCup\\CodeHockey\\local_runner\\local-runner.bat");
-            //Thread.Sleep(2000);
+            Process.Start("D:\\Projects\\AiCup\\CodeHockey\\local_runner\\local-runner.bat");
+            Thread.Sleep(2000);
+            var oldStrategy = new Process();
+            oldStrategy.StartInfo.FileName = "D:\\Projects\\AiCup\\CodeHockey\\local_runner\\old.exe";
+            oldStrategy.StartInfo.Arguments = "127.0.0.1 31002 0000000000000000";
+            oldStrategy.Start();
 
             if (args.Length == 3) {
                 new Runner(args).run();
             } else {
+                Console.WriteLine("no");
                 new Runner(new[] { "127.0.0.1", "31001", "0000000000000000" }).run();
             }
         }

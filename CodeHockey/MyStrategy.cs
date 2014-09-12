@@ -3,7 +3,9 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Windows.Forms;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
@@ -14,6 +16,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         //private const int Inf = 0x3f3f3f3f;
 
         private Puck puck;
+        private Move move;
         private Player opp, my;
         private Hockeyist oppGoalkipper;
         private Hockeyist myGoalkipper;
@@ -48,10 +51,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         Point GetStrikeFrom(Point myPositionPoint, Point mySpeed, double myAngle)
         {
-            var x1 = game.RinkLeft + RinkWidth * 0.44;
-            var x2 = game.RinkRight - RinkWidth * 0.44;
-            var y1 = game.RinkTop + RinkHeight * 0.23;
-            var y2 = game.RinkBottom - RinkHeight * 0.23;
+            var x1 = game.RinkLeft + RinkWidth * 0.4;
+            var x2 = game.RinkRight - RinkWidth * 0.4;
+            var y1 = game.RinkTop + RinkHeight * 0.20;
+            var y2 = game.RinkBottom - RinkHeight * 0.20;
 
             var a = new Point(MyRight() ? x1 : x2, y1);
             var b = new Point(MyRight() ? x1 : x2, y2);
@@ -169,6 +172,54 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 ) != 0;
         }
 
+        public void StayOn(Hockeyist self, Point to, double needAngle)
+        {
+            if (to.GetDistanceTo(self) < 1.5 * HoRadius)
+            {
+                move.SpeedUp = 0;
+                move.Turn = needAngle;
+                return;
+            }
+
+            var v0 = GetSpeed(self).Length;
+            var S = to.GetDistanceTo(self);
+            var s1Res = 0.0;
+            var tRes = Inf + 0.0;
+            for (double s1 = 0; s1 <= S; s1 += 2)
+            {
+                var s2 = S - s1;
+                var t1 = Math.Sqrt(v0*v0 + 2*s1) - v0;
+                var vm = v0 + t1;
+                var a = vm*vm/2/s2;
+                var t2 = Math.Sqrt(2*s2/a);
+                var t = t1 + t2;
+                if (t < tRes)
+                {
+                    tRes = t;
+                    s1Res = s1;
+                }
+            }
+
+            double angle = self.GetAngleTo(to.X, to.Y); // заменить на вектор скорости
+
+            if (Math.Abs(angle) > Deg(90))
+                move.Turn = angle < 0 ? Deg(180) + angle : angle - Deg(180); // ??
+            else
+                move.Turn = angle;
+            
+            if (s1Res > eps)
+            {
+                move.SpeedUp = Math.Abs(angle) > Deg(90) ? -1 : 1;
+            }
+            else
+            {
+                var curSpeed = GetSpeed(self).Length;
+                var restDist = to.GetDistanceTo(self);
+                var a = curSpeed * curSpeed / 2 / restDist;
+                move.SpeedUp = a;
+            }
+        }
+
         public void Move(Hockeyist self, World world, Game game, Move move) 
         {
             drawPathQueue.Clear();
@@ -184,7 +235,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 Thread.Sleep(2000);
             }
 #endif
-
+            this.move = move;
             this.world = world;
             this.game = game;
             this.puck = world.Puck;
@@ -234,12 +285,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     move.Action = ActionType.Swing;
                 }
-                else if (self.GetDistanceTo(net.X, net.Y) > RinkWidth * 0.6)
+                else if (self.GetDistanceTo(net.X, net.Y) > RinkWidth * 0.7)
                 {
                     var to = GetStrikeFrom(new Point(self), GetSpeed(self), self.Angle);
                     drawGoal2Queue.Enqueue(to);
                     move.Turn = self.GetAngleTo(to.X, to.Y);
                 }
+                if (Math.Abs(move.Turn) > Deg(50))
+                    move.SpeedUp = 0.6;
+                else if (Math.Abs(move.Turn) > Deg(70))
+                    move.SpeedUp = 0.2;
             }
             else
             {
@@ -262,9 +317,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     Point to = GetDefendPos2(new Point(self));
                     if (puck.OwnerPlayerId == my.Id ||
-                        //GetTicksToPuck(new Point(self), GetSpeed(self), self.Angle) >= GetTicksToPuck(new Point(friend), GetSpeed(friend), friend.Angle)
                         to.GetDistanceTo(self) < to.GetDistanceTo(friend)
-                        //self.GetDistanceTo(puck) > self.GetDistanceTo(puck)
                         )
                     {
                         if (game.StickLength >= self.GetDistanceTo(puck) && puck.OwnerPlayerId != self.PlayerId)
@@ -273,31 +326,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            var angle = self.GetAngleTo(to.X, to.Y);
-                            if (self.GetDistanceTo(to.X, to.Y) < RinkHeight/2/* && Math.Abs(angle) > Deg(90)*/)
-                            {
-                                var curSpeed = GetSpeed(self).Length;
-                                var restDist = to.GetDistanceTo(self);
-                                var a = curSpeed*curSpeed/2/restDist;
-                                if (curSpeed < 1 && self.GetDistanceTo(to.X, to.Y) > self.Radius)
-                                    move.SpeedUp = -0.5;
-                                else
-                                    move.SpeedUp = a;
-
-                                if (self.GetDistanceTo(to.X, to.Y) < self.Radius)
-                                    move.Turn = self.GetAngleTo(puck);
-                                else
-                                    move.Turn = angle < 0 ? Deg(180) + angle : angle - Deg(180);
-                            }
-                            else
-                            {
-                                //var turnTime = Math.PI/game.HockeyistTurnAngleFactor;
-                                //var curSpeed = GetSpeed(self).Length;
-                                //var turnDist = turnTime*curSpeed;
-                                //var restDist = self.GetDistanceTo(to.X, to.Y) - turnDist;
-                                move.Turn = self.GetAngleTo(to.X, to.Y);
-                                move.SpeedUp = 1;
-                            }
+                            StayOn(self, to, self.GetAngleTo(puck));
                         }
                     }
                     else
