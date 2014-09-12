@@ -48,8 +48,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var x1 = game.RinkLeft + RinkWidth * 0.4;
             var x2 = game.RinkRight - RinkWidth * 0.4;
-            var y1 = game.RinkTop + RinkHeight * 0.23;
-            var y2 = game.RinkBottom - RinkHeight * 0.23;
+            var y1 = game.RinkTop + RinkHeight * 0.2;
+            var y2 = game.RinkBottom - RinkHeight * 0.2;
 
             var a = new Point(MyRight() ? x1 : x2, y1);
             var b = new Point(MyRight() ? x1 : x2, y2);
@@ -152,8 +152,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         Point GetDefendPos2(Point myPosition)
         {
             var y = myGoalkipper.Y > RinkCenter.Y ? my.NetTop + 1.2 * HoRadius : my.NetBottom - 1.2 * HoRadius;
-            var a = new Point(game.RinkLeft + RinkWidth * 0.07, y);
-            var b = new Point(game.RinkRight - RinkWidth * 0.07, y);
+            var a = new Point(game.RinkLeft + RinkWidth * 0.06, y);
+            var b = new Point(game.RinkRight - RinkWidth * 0.06, y);
             return MyLeft() ? a : b;
         }
 
