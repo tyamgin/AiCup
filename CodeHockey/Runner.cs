@@ -9,8 +9,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
 
         public static void Main(string[] args) {
 
-            Process.Start("D:\\Projects\\AiCup\\CodeHockey\\local_runner\\local-runner.bat");
-            Thread.Sleep(2000);
+            //Process.Start("D:\\Projects\\AiCup\\CodeHockey\\local_runner\\local-runner.bat");
+            //Thread.Sleep(2000);
 
             if (args.Length == 3) {
                 new Runner(args).run();
