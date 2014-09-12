@@ -1,11 +1,6 @@
 using System;
-using System.Drawing;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
-using System.Windows.Forms;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
@@ -53,8 +48,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var x1 = game.RinkLeft + RinkWidth * 0.4;
             var x2 = game.RinkRight - RinkWidth * 0.4;
-            var y1 = game.RinkTop + RinkHeight * 0.20;
-            var y2 = game.RinkBottom - RinkHeight * 0.20;
+            var y1 = game.RinkTop + RinkHeight * 0.23;
+            var y2 = game.RinkBottom - RinkHeight * 0.23;
 
             var a = new Point(MyRight() ? x1 : x2, y1);
             var b = new Point(MyRight() ? x1 : x2, y2);
@@ -156,27 +151,22 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         Point GetDefendPos2(Point myPosition)
         {
-            var y = myGoalkipper.Y > RinkCenter.Y ? my.NetTop + HoRadius : my.NetBottom - HoRadius;
+            var y = myGoalkipper.Y > RinkCenter.Y ? my.NetTop + 1.2 * HoRadius : my.NetBottom - 1.2 * HoRadius;
             var a = new Point(game.RinkLeft + RinkWidth * 0.07, y);
             var b = new Point(game.RinkRight - RinkWidth * 0.07, y);
             return MyLeft() ? a : b;
-        }
-
-        bool StrikeHo(Point pos)
-        {
-            return
-                world.Hockeyists.Count(
-                    x => !x.IsTeammate 
-                        && x.Type != HockeyistType.Goalie 
-                        && pos.GetDistanceTo(x) <= game.StickLength
-                ) != 0;
         }
 
         public void StayOn(Hockeyist self, Point to, double needAngle)
         {
             if (to.GetDistanceTo(self) < 1.5 * HoRadius)
             {
-                move.SpeedUp = 0;
+                var dx = self.Angle*Math.Cos(self.Angle)/100;
+                var dy = self.Angle*Math.Sin(self.Angle)/100;
+                if (to.GetDistanceTo(self.X + dx, self.Y + dy) < to.GetDistanceTo(self.X - dx, self.Y - dy))
+                    move.SpeedUp = 0.02;
+                else
+                    move.SpeedUp = -0.02;
                 move.Turn = needAngle;
                 return;
             }
@@ -200,7 +190,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
 
-            double angle = self.GetAngleTo(to.X, to.Y); // заменить на вектор скорости
+            double angle = self.GetAngleTo(to.X, to.Y); // заменить на вектор скорости?
 
             if (Math.Abs(angle) > Deg(90))
                 move.Turn = angle < 0 ? Deg(180) + angle : angle - Deg(180); // ??
@@ -247,7 +237,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             this.myGoalkipper = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Type == HockeyistType.Goalie);
             this.HoRadius = self.Radius;
             this.RinkCenter = new Point(game.RinkLeft + RinkWidth / 2, game.RinkTop + RinkHeight / 2);
-            this.StrikeZoneWidth = RinkHeight*0.3;
+            this.StrikeZoneWidth = RinkHeight*0.32;
             this.StrikeZoneWidthBesideNet = RinkWidth*0.16;
             var friend = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie);
 
@@ -292,18 +282,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     move.Turn = self.GetAngleTo(to.X, to.Y);
                 }
                 if (Math.Abs(move.Turn) > Deg(50))
-                    move.SpeedUp = 0.6;
+                    move.SpeedUp = 0.4;
                 else if (Math.Abs(move.Turn) > Deg(70))
-                    move.SpeedUp = 0.2;
+                    move.SpeedUp = 0.1;
             }
             else
             {
-                //if (StrikeHo(new Point(self)))
-                //{
-                //    move.Action = ActionType.Strike;
-                //}
-                //else 
-                    if (puck.OwnerPlayerId != my.Id
+                if (puck.OwnerPlayerId != my.Id
                     && self.GetDistanceTo(net.X, net.Y) < 0.3 * RinkWidth
                     && Strike(new Point(puck), new Point(self.SpeedX, self.SpeedY), power, self.Angle))
                 {
