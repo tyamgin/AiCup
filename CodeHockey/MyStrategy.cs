@@ -159,14 +159,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void StayOn(Hockeyist self, Point to, double needAngle)
         {
-            if (to.GetDistanceTo(self) < 1.5 * HoRadius)
+            if (to.GetDistanceTo(self) < 1 * HoRadius)
             {
                 var dx = self.Angle*Math.Cos(self.Angle)/100;
                 var dy = self.Angle*Math.Sin(self.Angle)/100;
+                var speed = GetSpeed(self);
+                var an = Math.Abs(self.GetAngleTo(speed.X, speed.Y));
                 if (to.GetDistanceTo(self.X + dx, self.Y + dy) < to.GetDistanceTo(self.X - dx, self.Y - dy))
-                    move.SpeedUp = 0.02;
+                    move.SpeedUp = an > Deg(90) ? 1 : 0.2;
                 else
-                    move.SpeedUp = -0.02;
+                    move.SpeedUp = an < Deg(90) ? -1 : -0.2;
                 move.Turn = needAngle;
                 return;
             }
@@ -175,27 +177,32 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var S = to.GetDistanceTo(self);
             var s1Res = 0.0;
             var tRes = Inf + 0.0;
+
+            double aS = 0.116;
+            double angle = self.GetAngleTo(to.X, to.Y); // заменить на вектор скорости?
+
+            if (Math.Abs(angle) > Deg(90))
+            {
+                move.Turn = angle < 0 ? Deg(180) + angle : angle - Deg(180); // ??
+                aS = 0.069;
+            }
+            else
+                move.Turn = angle;
+
             for (double s1 = 0; s1 <= S; s1 += 2)
             {
                 var s2 = S - s1;
-                var t1 = Math.Sqrt(v0*v0 + 2*s1) - v0;
-                var vm = v0 + t1;
+                var t1 = (Math.Sqrt(v0 * v0 + 2 * aS * s1) - v0) / aS;
+                var vm = v0 + aS * t1;
                 var a = vm*vm/2/s2;
                 var t2 = Math.Sqrt(2*s2/a);
                 var t = t1 + t2;
-                if (t < tRes)
+                if (t < tRes && IsBetween(-1, a / aS, 1))
                 {
                     tRes = t;
                     s1Res = s1;
                 }
             }
-
-            double angle = self.GetAngleTo(to.X, to.Y); // заменить на вектор скорости?
-
-            if (Math.Abs(angle) > Deg(90))
-                move.Turn = angle < 0 ? Deg(180) + angle : angle - Deg(180); // ??
-            else
-                move.Turn = angle;
             
             if (s1Res > eps)
             {
@@ -203,10 +210,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             else
             {
-                var curSpeed = GetSpeed(self).Length;
-                var restDist = to.GetDistanceTo(self);
-                var a = curSpeed * curSpeed / 2 / restDist;
-                move.SpeedUp = a;
+                var a = v0 * v0/ 2 / S;
+                move.SpeedUp = a / aS;
             }
         }
 
@@ -281,10 +286,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     drawGoal2Queue.Enqueue(to);
                     move.Turn = self.GetAngleTo(to.X, to.Y);
                 }
-                if (Math.Abs(move.Turn) > Deg(50))
+                if (Math.Abs(move.Turn) > Deg(40))
                     move.SpeedUp = 0.4;
-                else if (Math.Abs(move.Turn) > Deg(70))
-                    move.SpeedUp = 0.1;
+                else if (Math.Abs(move.Turn) > Deg(60))
+                    move.SpeedUp = 0.05;
             }
             else
             {
@@ -326,7 +331,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 move.SpeedUp = 1;
 #if DEBUG
             draw();
-            Thread.Sleep(20);
+            Thread.Sleep(15);
 #endif
         }
 

@@ -12,9 +12,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
 
             Process.Start("D:\\Projects\\AiCup\\CodeHockey\\local_runner\\local-runner.bat");
             Thread.Sleep(2000);
-            var oldStrategy = new Process();
-            oldStrategy.StartInfo.FileName = "D:\\Projects\\AiCup\\CodeHockey\\local_runner\\old.exe";
-            oldStrategy.StartInfo.Arguments = "127.0.0.1 31002 0000000000000000";
+            var oldStrategy = new Process
+            {
+                StartInfo =
+                {
+                    FileName = "D:\\Projects\\AiCup\\CodeHockey\\local_runner\\old.exe",
+                    Arguments = "127.0.0.1 31002 0000000000000000",
+                    CreateNoWindow = true
+                }
+            };
             oldStrategy.Start();
 
             if (args.Length == 3) {

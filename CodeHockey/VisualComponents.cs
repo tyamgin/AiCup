@@ -74,6 +74,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             panel.Image = drawArea;
             g = Graphics.FromImage(drawArea);
 
+            form.TickLabel.Text = world.Tick + "";
+
             while (drawDangerQueue.Count != 0)
             {
                 var p = drawDangerQueue.Dequeue();
@@ -180,6 +182,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             form = new Window();
 #endif
             form.ShowDialog();
+            form.Focus();
         }
     }
 }
