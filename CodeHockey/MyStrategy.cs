@@ -48,8 +48,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var x1 = game.RinkLeft + RinkWidth * 0.4;
             var x2 = game.RinkRight - RinkWidth * 0.4;
-            var y1 = game.RinkTop + RinkHeight * 0.2;
-            var y2 = game.RinkBottom - RinkHeight * 0.2;
+            var y1 = game.RinkTop + RinkHeight * 0.23;
+            var y2 = game.RinkBottom - RinkHeight * 0.23;
 
             var a = new Point(MyRight() ? x1 : x2, y1);
             var b = new Point(MyRight() ? x1 : x2, y2);
@@ -152,17 +152,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         Point GetDefendPos2(Point myPosition)
         {
             var y = myGoalkipper.Y > RinkCenter.Y ? my.NetTop + 1.2 * HoRadius : my.NetBottom - 1.2 * HoRadius;
-            var a = new Point(game.RinkLeft + RinkWidth * 0.06, y);
-            var b = new Point(game.RinkRight - RinkWidth * 0.06, y);
+            var a = new Point(game.RinkLeft + RinkWidth * 0.07, y);
+            var b = new Point(game.RinkRight - RinkWidth * 0.07, y);
             return MyLeft() ? a : b;
         }
 
         public void StayOn(Hockeyist self, Point to, double needAngle)
         {
-            if (to.GetDistanceTo(self) < 1 * HoRadius)
+            if (to.GetDistanceTo(self) < 1.5 * HoRadius)
             {
-                var dx = self.Angle*Math.Cos(self.Angle)/100;
-                var dy = self.Angle*Math.Sin(self.Angle)/100;
+                var dx = self.Angle * Math.Cos(self.Angle) / 100;
+                var dy = self.Angle * Math.Sin(self.Angle) / 100;
                 var speed = GetSpeed(self);
                 var an = Math.Abs(self.GetAngleTo(speed.X, speed.Y));
                 if (to.GetDistanceTo(self.X + dx, self.Y + dy) < to.GetDistanceTo(self.X - dx, self.Y - dy))
@@ -189,7 +189,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             else
                 move.Turn = angle;
 
-            for (double s1 = 0; s1 <= S; s1 += 2)
+            for (double s1 = 0; s1 <= S; s1 += 0.5)
             {
                 var s2 = S - s1;
                 var t1 = (Math.Sqrt(v0 * v0 + 2 * aS * s1) - v0) / aS;
@@ -197,7 +197,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var a = vm*vm/2/s2;
                 var t2 = Math.Sqrt(2*s2/a);
                 var t = t1 + t2;
-                if (t < tRes && IsBetween(-1, a / aS, 1))
+                if (t < tRes && IsBetween(-1.02, a / aS, 1.02))
                 {
                     tRes = t;
                     s1Res = s1;
@@ -211,6 +211,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             else
             {
                 var a = v0 * v0/ 2 / S;
+                if (Math.Abs(angle) < Deg(90))
+                    a = -a;
                 move.SpeedUp = a / aS;
             }
         }
@@ -245,6 +247,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             this.StrikeZoneWidth = RinkHeight*0.32;
             this.StrikeZoneWidthBesideNet = RinkWidth*0.16;
             var friend = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie);
+
+            Research1();
+            return;
 
             if (null == oppGoalkipper)
                 return;
@@ -340,9 +345,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return Math.PI/180*deg;
         }
 
-        public Point GetSpeed(Hockeyist ho)
+        public Point GetSpeed(Unit unit)
         {
-            return new Point(ho.SpeedX, ho.SpeedY);
+            return new Point(unit.SpeedX, unit.SpeedY);
         }
 
         public bool MyLeft()

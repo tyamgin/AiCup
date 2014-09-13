@@ -67,14 +67,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
 #if DEBUG
             var panel = form.panel;
+
+            form.TickLabel.Text = world.Tick + "";
+            form.ScoreLabel.Text = MyRight()
+                ? opp.GoalCount + " : " + my.GoalCount
+                : my.GoalCount + " : " + opp.GoalCount;
 #else
             var panel = new PictureBox();
 #endif
             var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
             panel.Image = drawArea;
             g = Graphics.FromImage(drawArea);
-
-            form.TickLabel.Text = world.Tick + "";
 
             while (drawDangerQueue.Count != 0)
             {
@@ -183,6 +186,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 #endif
             form.ShowDialog();
             form.Focus();
+        }
+
+        private bool TK(int tick)
+        {
+            return tick == world.Tick;
         }
     }
 }

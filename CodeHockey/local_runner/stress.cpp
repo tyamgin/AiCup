@@ -66,7 +66,7 @@ int main(int argc, char** argv)
 	for (int port = 31001, game = 0; game < games; port += 2, game++)
 	{
 		Config conf;
-		conf.Add("render-to-screen", "true");
+		conf.Add("render-to-screen", "false");
 		conf.Add("render-to-screen-sync", "false");
 		conf.Add("team-size", "2");
 		conf.Add("player-count", "2");
