@@ -21,7 +21,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
                     CreateNoWindow = true
                 }
             };
-            //oldStrategy.Start();
+            oldStrategy.Start();
 
             if (args.Length == 3) {
                 new Runner(args).run();
