@@ -19,7 +19,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private static Queue<Point> drawPathQueue = new Queue<Point>();
         private static Queue<Point> drawGoalQueue = new Queue<Point>();
         private static Queue<Point> drawGoal2Queue = new Queue<Point>();
-        private static Queue<Pair<Point, int>> drawDangerQueue = new Queue<Pair<Point, int>>();
 #if DEBUG
         private static Window form;
 #else
@@ -78,16 +77,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
             panel.Image = drawArea;
             g = Graphics.FromImage(drawArea);
-
-            while (drawDangerQueue.Count != 0)
-            {
-                var p = drawDangerQueue.Dequeue();
-                if (p.first.X > game.RinkLeft && p.first.X < game.RinkRight && p.first.Y > game.RinkTop && p.first.Y < game.RinkBottom)
-                {
-                    var br = p.second >= DangerC ? Brushes.Red : (p.second >= DangerB ? Brushes.Orange : Brushes.White);
-                    DrawCircleC(br, p.first.X, p.first.Y, 1);
-                }
-            }
 
             g.DrawLine(new Pen(Brushes.PeachPuff), (int) game.RinkLeft, (int) (game.RinkTop + StrikeZoneWidth),
                 (int) game.RinkRight, (int) (game.RinkTop + StrikeZoneWidth));

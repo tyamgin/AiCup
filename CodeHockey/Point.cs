@@ -60,6 +60,17 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Y = point.Y;
         }
 
+        public Point(double angle)
+        {
+            X = Math.Cos(angle);
+            Y = Math.Sin(angle);
+        }
+
+        public double Angle
+        {
+            get { return Math.Atan2(Y, X); }
+        }
+
         public double GetDistanceTo(double x, double y)
         {
             return Math.Sqrt((X - x) * (X - x) + (Y - y) * (Y - y));
@@ -115,5 +126,6 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 return new Point(0, 0);
             }
         }
+
     }
 }

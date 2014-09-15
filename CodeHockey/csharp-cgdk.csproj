@@ -71,7 +71,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AHo.cs" />
+    <Compile Include="APuck.cs" />
+    <Compile Include="AUnit.cs" />
     <Compile Include="FindPath.cs" />
+    <Compile Include="Global.cs" />
     <Compile Include="Model\ActionType.cs" />
     <Compile Include="IStrategy.cs" />
     <Compile Include="Model\Puck.cs" />
@@ -92,6 +96,7 @@
     <Compile Include="Model\HockeyistType.cs" />
     <Compile Include="Model\Unit.cs" />
     <Compile Include="Model\World.cs" />
+    <Compile Include="Utility.cs" />
     <Compile Include="VisualComponents.cs" />
     <Compile Include="Visualizer\Window.cs">
       <SubType>Form</SubType>
