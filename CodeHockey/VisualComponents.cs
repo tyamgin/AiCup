@@ -16,9 +16,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        private string tooltipText = "";
         private static Queue<Point> drawPathQueue = new Queue<Point>();
         private static Queue<Point> drawGoalQueue = new Queue<Point>();
         private static Queue<Point> drawGoal2Queue = new Queue<Point>();
+        private static Queue<string> drawInfo = new Queue<string>(); 
 #if DEBUG
         private static Window form;
 #else
@@ -121,7 +123,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 if (puck.OwnerPlayerId == -1)
                 {
-                    var puckDirection = puckCenter.Add(new Point(puck.SpeedX, puck.SpeedY).Normalized().Mul(puck.Radius));
+                    var puckDirection = puckCenter + (new Point(puck.SpeedX, puck.SpeedY).Normalized() * puck.Radius);
                     g.DrawLine(new Pen(Brushes.White), (int) puckCenter.X, (int) puckCenter.Y, (int) puckDirection.X,
                         (int) puckDirection.Y);
                 }
@@ -166,6 +168,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var p = drawGoal2Queue.Dequeue();
                 DrawCircleC(Brushes.BlueViolet, p.X, p.Y, 5);
             }
+
+            string ttip = "";
+            while (drawInfo.Count != 0)
+            {
+                var p = drawInfo.Dequeue();
+                ttip += p + "\n";
+            }
+            if (ttip != "")
+                form.infoLabel.Text = ttip;
         }
 
         private static void ShowWindow()

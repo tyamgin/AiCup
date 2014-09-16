@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return Math.PI / 180 * deg;
         }
 
-        public Point GetSpeed(Unit unit)
+        public static Point GetSpeed(Unit unit)
         {
             return new Point(unit.SpeedX, unit.SpeedY);
         }
@@ -42,9 +42,20 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return left <= x && x <= right;
         }
 
-        bool Eq(double a, double b)
+        public static bool Eq(double a, double b)
         {
             return Math.Abs(a - b) < Eps;
+        }
+        public static double AngleNormalize(double angle)
+        {
+            for (; angle < -Math.PI; angle += Math.PI * 2) ;
+            for (; angle > Math.PI; angle -= Math.PI * 2) ;
+            return angle;
+        }
+
+        public static double Gauss(double x, double mu, double sigma)
+        {
+            return Math.Exp(-Math.Pow(x - mu, 2)/2/sigma/sigma)/sigma/Math.Sqrt(2*Math.PI);
         }
 
         bool CanStrike(Hockeyist ho, Unit to)

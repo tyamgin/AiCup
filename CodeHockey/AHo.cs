@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var force = (speedUp >= 0 ? Global.game.HockeyistSpeedUpFactor : Global.game.HockeyistSpeedDownFactor) * speedUp;
 
             var dir = new Point(Angle).Normalized();
-            Speed = dir.Mul(force).Add(Speed).Mul(Global.FrictionHockCoeff);
+            Speed = (dir * force + Speed) * Global.FrictionHockCoeff;
             Angle = MyStrategy.AngleNormalize(Angle + turn);
 
             X += Speed.X;

@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
                 StartInfo =
                 {
                     FileName = "D:\\Projects\\AiCup\\CodeHockey\\local_runner\\old.exe",
-                    Arguments = "127.0.0.1 31001 0000000000000000",
+                    Arguments = "127.0.0.1 31002 0000000000000000",
                     CreateNoWindow = true
                 }
             };
@@ -26,7 +26,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
             if (args.Length == 3) {
                 new Runner(args).run();
             } else {
-                new Runner(new[] { "127.0.0.1", "31002", "0000000000000000" }).run();
+                new Runner(new[] { "127.0.0.1", "31001", "0000000000000000" }).run();
             }
         }
 

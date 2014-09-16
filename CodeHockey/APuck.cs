@@ -32,7 +32,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var breakCount = 0;
             for (var tick = 1; tick <= ticks; tick++)
             {
-                Speed = Speed.Mul(Global.FrictionPuckCoeff);
+                Speed = Speed * Global.FrictionPuckCoeff;
                 X += Speed.X;
                 Y += Speed.Y;
                 if (Y < Global.game.RinkTop + Global.PuckRadius)

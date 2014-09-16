@@ -93,12 +93,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             int ticks;
             return GoToPuck(myPosition, mySpeed, myAngle, out ticks);
         }
-        public int GetTicksToPuck(Point myPosition, Point mySpeed, double myAngle)
-        {
-            int ticks;
-            GoToPuck(myPosition, mySpeed, myAngle, out ticks);
-            return ticks;
-        }
 
         Point GetDefendPos2(Point myPosition)
         {
@@ -106,13 +100,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var a = new Point(game.RinkLeft + RinkWidth * 0.07, y);
             var b = new Point(game.RinkRight - RinkWidth * 0.07, y);
             return MyLeft() ? a : b;
-        }
-
-        public static double AngleNormalize(double angle)
-        {
-            for (; angle < -Math.PI; angle += Math.PI*2) ;
-            for (; angle > Math.PI; angle -= Math.PI * 2) ;
-            return angle;
         }
 
         public void StayOn(Hockeyist self, Point to, double needAngle)
@@ -231,17 +218,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         bool CanStrikeAfter(int wait, int swingTime, Hockeyist self)
         {
-            var pwr = Math.Min(game.MaxEffectiveSwingTicks, swingTime) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
+            var power = Math.Min(game.MaxEffectiveSwingTicks, swingTime) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
             var I = new AHo(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
             I.Move(0, 0, wait);
-            return Strike(new Point(I.Angle).Mul(self.GetDistanceTo(puck)).Add(I), I.Speed, pwr, I.Angle);
+            return Strike(new Point(I.Angle) * self.GetDistanceTo(puck) + I, I.Speed, power, I.Angle);
         }
         public void Move(Hockeyist self, World world, Game game, Move move) 
         {
-            drawPathQueue.Clear();
-            drawGoalQueue.Clear();
-            drawGoal2Queue.Clear();
-
 #if DEBUG
             if (form == null)
             {
@@ -279,17 +262,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 return;
             move.SpeedUp = Inf;
 
-            //var ar = new APuck[50];
-            //for (int i = 0; i < 50; i++)
-            //{
-            //    ar[i] = new APuck(Get(puck), GetSpeed(puck), Get(oppGoalie));
-            //    ar[i].Move(i);
-            //}
-
             var net = GetStrikePoint();
             var angleToNet = self.GetAngleTo(net.X, net.Y);
             var power = Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
             
+            if (self.Id == puck.OwnerHockeyistId)
+                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks) * 0.25 / game.MaxEffectiveSwingTicks + 0.75, self.Angle) + "");
+
             if (self.State == HockeyistState.Swinging && (!IsInStrikeZone(new Point(self)) || self.Id != puck.OwnerHockeyistId))
             {
                 move.Action = ActionType.CancelStrike;
@@ -375,8 +354,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     move.Action = ActionType.TakePuck;
                 }
-                else if (puck.OwnerPlayerId == opp.Id 
-                    &&CanStrike(self, owner))
+                else if (puck.OwnerPlayerId == opp.Id
+                    && (CanStrike(self, owner) || CanStrike(self, puck)))
                 {
                     move.Action = ActionType.Strike;
                 }
@@ -423,6 +402,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             draw();
             Thread.Sleep(15);
 #endif
+            drawPathQueue.Clear();
+            drawGoalQueue.Clear();
+            drawGoal2Queue.Clear();
+            drawInfo.Clear();
         }
 
         public bool IsInStrikeZone(Point pos)

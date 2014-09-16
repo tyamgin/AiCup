@@ -59,11 +59,16 @@ string ToString(int a)
 	return buf;
 }
 
+#include <windows.h>
+
 int main(int argc, char** argv)
 {
-	int games = argc > 1 ? ParseInt(argv[1]) : 1;
+	string first = argv[1];
+	string second = argv[2];
+	int games = argc > 3 ? ParseInt(argv[3]) : 1;
 	int newWins = 0, oldWins = 0, ties = 0;
-	for (int port = 31001 + 2, game = 0; game < games; port += 2, game++)
+	srand(time(0));
+	for (int port = 31001 + 2 + rand()/10, game = 0; game < games; port += 2, game++)
 	{
 		Config conf;
 		conf.Add("render-to-screen", "false");
@@ -72,8 +77,8 @@ int main(int argc, char** argv)
 		conf.Add("player-count", "2");
 		conf.Add("p1-type", "Local");
 		conf.Add("p2-type", "Local");
-		conf.Add("p1-name", "New");
-		conf.Add("p2-name", "Old");
+		conf.Add("p1-name", first.c_str());
+		conf.Add("p2-name", second.c_str());
 		conf.Add("seed", "");
 
 		string resultFilename = "result0.txt";
@@ -85,9 +90,9 @@ int main(int argc, char** argv)
 
 		string javaStart = string() + "start /B java -cp \".;*;%~dp0/*\" -jar \"" + localRunnerPath + "\\local-runner.jar\" \"" + localRunnerPath + "\\local-runner-stress.properties\"";
 		system(javaStart.c_str());
-		system("timeout 1");
-		system(((string)"start /B new 127.0.0.1 " + ToString(port) + " 0000000000000000").c_str());
-		system(((string)"old 127.0.0.1 " + ToString(port + 1) + " 0000000000000000").c_str());
+		Sleep(1000);
+		system(((string)"start /B " + first + " 127.0.0.1 " + ToString(port) + " 0000000000000000").c_str());
+		system((second + " 127.0.0.1 " + ToString(port + 1) + " 0000000000000000").c_str());
 
 		ifstream result(resultFilename);
 		string t;
@@ -101,10 +106,11 @@ int main(int argc, char** argv)
 			oldWins++;
 		else
 			ties++;
-		printf("new: %d %d :old (%d)\n", newWins, oldWins, ties);
+		cout << first << ": " << newWins << "  " << oldWins << " :" << second << "  (" << ties << ")" << endl;
 		result.close();
 		system(("type " + resultFilename).c_str());
 	}
 	puts("----- Total results -----");
-	printf("new: %d %d :old\n", newWins, oldWins);
+	cout << first << ": " << newWins << "  " << oldWins << " :" << second << "  (" << ties << ")" << endl;
+	system("pause");
 }
