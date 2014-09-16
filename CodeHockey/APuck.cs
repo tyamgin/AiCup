@@ -12,6 +12,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         // На вратаря действует трение?
 
         public Point Goalie;
+        public bool IsDefend = false;
 
         public APuck(double x, double y, double speedX, double speedY, Point goalie) 
             : base(x, y, speedX, speedY, 0)
@@ -29,8 +30,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var mayGoal = -1;
             var breakCount = 0;
-            for (var tick = 1; tick < ticks; tick++)
+            for (var tick = 1; tick <= ticks; tick++)
             {
+                Speed = Speed.Mul(Global.FrictionPuckCoeff);
                 X += Speed.X;
                 Y += Speed.Y;
                 if (Y < Global.game.RinkTop + Global.PuckRadius)
@@ -61,59 +63,47 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     mayGoal = tick;
                     breakCount++;
                 }
-                Speed = Speed.Mul(Global.FrictionPuckCoeff);
+
+                var opp = IsDefend ? Global.my : Global.opp;
+
+                if (IntersectPuckAngGoalie())
+                    return 0;
+                var dx = Math.Abs(X - opp.NetFront);
+                if (Math.Abs((opp.NetFront < opp.NetBack ? (opp.NetFront - Global.PuckRadius) : (opp.NetFront + Global.PuckRadius)) - X) < 0.01 // (это стена ворот)
+                    && MyStrategy.IsBetween(Global.game.GoalNetTop + Global.PuckRadius, Y + dx * (Speed.Y / Speed.X), Global.game.GoalNetTop + Global.game.GoalNetHeight - Global.PuckRadius) // (в воротах)
+                    && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
+                    )
+                    return 1; // Goal !!
 
                 if (Goalie.Y > Y)
                     Goalie.Y -= Math.Min(Global.game.GoalieMaxSpeed, Goalie.Y - Y);
                 else
                     Goalie.Y += Math.Min(Global.game.GoalieMaxSpeed, Y - Goalie.Y);
 
-                var MinY = Global.opp.NetTop + Global.HoRadius;
-                var MaxY = Global.opp.NetBottom - Global.HoRadius;
+                var MinY = opp.NetTop + Global.HoRadius;
+                var MaxY = opp.NetBottom - Global.HoRadius;
                 if (Goalie.Y < MinY)
                     Goalie.Y = MinY;
                 if (Goalie.Y > MaxY)
                     Goalie.Y = MaxY;
-                if (IntersectPuckAngGoalie())
-                    return 0;
-                var dx = Math.Abs(X - Global.opp.NetFront);
-                if (Math.Abs(Global.opp.NetFront + Global.PuckRadius - X) < 0.01
-                    &&
-                    MyStrategy.IsBetween(Global.game.GoalNetTop + Global.PuckRadius, Y + dx * (Speed.Y / Speed.X), Global.game.GoalNetTop + Global.game.GoalNetHeight - Global.PuckRadius)
-                    && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1))
-                    )
-                    return 1; // Goal !!
             }
             return 0;
         }
-
-        //public int GetTicksToBorder()
-        //{
-        //    var clone = Clone();
-        //    const int limit = 1000;
-        //    for (int tick = 0; tick < limit; tick++)
-        //    {
-        //        if (clone.Y < Global.game.RinkTop + Global.PuckRadius
-        //            || clone.Y > Global.game.RinkBottom - Global.PuckRadius
-        //            || clone.X > Global.game.RinkRight - Global.PuckRadius
-        //            || clone.X < Global.game.RinkLeft + Global.PuckRadius
-        //            )
-        //            return tick;
-        //        clone.X += clone.Speed.X;
-        //        clone.Y += clone.Speed.Y;
-        //        clone.Speed = clone.Speed.Mul(Global.FrictionPuckCoeff);
-        //    }
-        //    return limit;
-        //}
-
         bool IntersectPuckAngGoalie()
         {
-            return GetDistanceTo(Goalie) < Global.HoRadius + Global.PuckRadius - 2;
+            return GetDistanceTo(Goalie) < Global.HoRadius + Global.PuckRadius - /* костыль -> */2;
         }
 
         public APuck Clone()
         {
-            return new APuck(X, Y, Speed.X, Speed.Y, Goalie);
+            var clone = new APuck(X, Y, Speed.X, Speed.Y, Goalie);
+            clone.IsDefend = IsDefend;
+            return clone;
+        }
+
+        public override string ToString()
+        {
+            return base.ToString() + ", " + Goalie.Y;
         }
     }
 }

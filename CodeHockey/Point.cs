@@ -42,6 +42,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             return new Point(X + x.X, Y + x.Y);
         }
 
+        public Point Sub(Point x)
+        {
+            return new Point(X - x.X, Y - x.Y);
+        }
+
         public Point(double x, double y)
         {
             X = x;

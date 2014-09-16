@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Security.Policy;
 using System.Threading;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
@@ -66,11 +68,19 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             pl.Move(0.8, Global.game.HockeyistTurnAngleFactor / 2, 20);
         }
 
-        // Проверка движение шайбы
+        private APuck __puck;
+
+        // Проверка движение шайбы - OK
         void Research4(Hockeyist self, Move move)
         {
-            var pk = new APuck(Get(puck), GetSpeed(puck), Get(oppGoalie));
-            pk.Move(30);
+            if (TK(190))
+            {
+                __puck = new APuck(Get(puck), GetSpeed(puck), Get(oppGoalie));
+                __puck.Move(10);
+            }
+            if (TK(190 + 10))
+            {     
+            }
         }
     }
 }

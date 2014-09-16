@@ -62,8 +62,8 @@ string ToString(int a)
 int main(int argc, char** argv)
 {
 	int games = argc > 1 ? ParseInt(argv[1]) : 1;
-	int newWins = 0, oldWins = 0;
-	for (int port = 31001, game = 0; game < games; port += 2, game++)
+	int newWins = 0, oldWins = 0, ties = 0;
+	for (int port = 31001 + 2, game = 0; game < games; port += 2, game++)
 	{
 		Config conf;
 		conf.Add("render-to-screen", "false");
@@ -91,14 +91,19 @@ int main(int argc, char** argv)
 
 		ifstream result(resultFilename);
 		string t;
-		int place;
-		result >> t >> t >> t >> place;
-		if (place == 1)
+		int place1, place2;
+		result >> t >> t >> t;
+		result >> place1 >> t >> t;
+		result >> place2 >> t >> t;
+		if (place1 == 1 && place2 == 2)
 			newWins++;
-		else
+		else if (place2 == 1 && place1 == 2)
 			oldWins++;
-		printf("new: %d %d :old\n", newWins, oldWins);
+		else
+			ties++;
+		printf("new: %d %d :old (%d)\n", newWins, oldWins, ties);
 		result.close();
+		system(("type " + resultFilename).c_str());
 	}
 	puts("----- Total results -----");
 	printf("new: %d %d :old\n", newWins, oldWins);

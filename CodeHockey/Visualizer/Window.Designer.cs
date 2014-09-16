@@ -38,7 +38,7 @@
             // 
             this.panel.Location = new System.Drawing.Point(13, -121);
             this.panel.Name = "panel";
-            this.panel.Size = new System.Drawing.Size(1024, 768);
+            this.panel.Size = new System.Drawing.Size(1224, 768);
             this.panel.TabIndex = 0;
             this.panel.TabStop = false;
             // 
@@ -52,12 +52,12 @@
             this.TickLabel.TabIndex = 1;
             this.TickLabel.Text = "Tick";
             // 
-            // label1
+            // ScoreLabel
             // 
             this.ScoreLabel.AutoSize = true;
             this.ScoreLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
             this.ScoreLabel.Location = new System.Drawing.Point(167, 13);
-            this.ScoreLabel.Name = "label1";
+            this.ScoreLabel.Name = "ScoreLabel";
             this.ScoreLabel.Size = new System.Drawing.Size(45, 24);
             this.ScoreLabel.TabIndex = 2;
             this.ScoreLabel.Text = "0 : 0";
@@ -66,7 +66,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1040, 664);
+            this.ClientSize = new System.Drawing.Size(1240, 664);
             this.Controls.Add(this.ScoreLabel);
             this.Controls.Add(this.TickLabel);
             this.Controls.Add(this.panel);

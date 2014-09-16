@@ -46,5 +46,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             return Math.Abs(a - b) < Eps;
         }
+
+        bool CanStrike(Hockeyist ho, Unit to)
+        {
+            return Math.Abs(ho.GetAngleTo(to)) <= game.StickSector/2
+                   && ho.GetDistanceTo(to) <= game.StickLength
+                   && ho.RemainingKnockdownTicks == 0;
+        }
     }
 }
