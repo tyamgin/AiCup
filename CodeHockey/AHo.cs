@@ -9,22 +9,22 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public class AHo : AUnit
     {
-        private const double angleSpeedCoeff = 0.0270190131;
+        public const double AngularSpeedCoeff = 0.972981;
         public Hockeyist baseParams;
-        public double AngleSpeed;
+        public double AngularSpeed;
 
         public AHo(double x, double y, double speedX, double speedY, double angle, double angleSpeed, Hockeyist from) 
             : base(x, y, speedX, speedY, angle)
         {
             baseParams = from;
-            AngleSpeed = angleSpeed;
+            AngularSpeed = angleSpeed;
         }
 
         public AHo(Point pos, Point speed, double angle, double angleSpeed, Hockeyist from)
             : base(pos, speed, angle)
         {
             baseParams = from;
-            AngleSpeed = angleSpeed;
+            AngularSpeed = angleSpeed;
             Angle = angle;
         }
 
@@ -33,6 +33,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (speedUp < -1 || speedUp > 1 || turn > Global.game.HockeyistTurnAngleFactor || turn < -Global.game.HockeyistTurnAngleFactor)
                 throw new Exception();
 
+            turn += AngularSpeed;
+            AngularSpeed *= AngularSpeedCoeff;
             var force = (speedUp >= 0 ? Global.game.HockeyistSpeedUpFactor : Global.game.HockeyistSpeedDownFactor) * speedUp;
 
             var dir = new Point(Angle).Normalized();

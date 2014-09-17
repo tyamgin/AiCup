@@ -9,7 +9,6 @@ using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 #if DEBUG
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Visualizer;
 #endif
-using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
@@ -23,20 +22,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private static Queue<string> drawInfo = new Queue<string>(); 
 #if DEBUG
         private static Window form;
-#else
-        private static Form form;
-#endif
+
         private static Thread thread;
         private Graphics g;
 
         private delegate void DrawDelegate();
-
-        private void drawThread()
-        {
-#if DEBUG
-            draw();
-#endif
-        }
 
         private void DrawCircle(Brush brush, double x, double y, double radius, float width = 1, bool solid = false)
         {
@@ -66,16 +56,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 form.BeginInvoke(new DrawDelegate(draw), new object[] { });
                 return;
             }
-#if DEBUG
+
             var panel = form.panel;
 
             form.TickLabel.Text = world.Tick + "";
             form.ScoreLabel.Text = MyRight()
                 ? opp.GoalCount + " : " + my.GoalCount
                 : my.GoalCount + " : " + opp.GoalCount;
-#else
-            var panel = new PictureBox();
-#endif
+
             var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
             panel.Image = drawArea;
             g = Graphics.FromImage(drawArea);
@@ -178,15 +166,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (ttip != "")
                 form.infoLabel.Text = ttip;
         }
-
         private static void ShowWindow()
         {
-#if DEBUG
             form = new Window();
-#endif
             form.ShowDialog();
             form.Focus();
         }
+#endif
 
         private bool TK(int tick)
         {

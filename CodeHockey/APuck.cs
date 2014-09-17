@@ -26,11 +26,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             Goalie = new Point(goalie);
         }
         
-        public int Move(int ticks)
+        public int Move(int ticks, bool goalCheck = false)
         {
             var mayGoal = -1;
             var breakCount = 0;
-            for (var tick = 1; tick <= ticks; tick++)
+            for (var tick = 1; tick <= ticks && breakCount < 1; tick++)
             {
                 Speed = Speed * Global.FrictionPuckCoeff;
                 X += Speed.X;
@@ -69,6 +69,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (IntersectPuckAngGoalie())
                     return 0;
                 var dx = Math.Abs(X - opp.NetFront);
+                // TODO: не правильно: Y + dx * (Speed.Y / Speed.X)
                 if (Math.Abs((opp.NetFront < opp.NetBack ? (opp.NetFront - Global.PuckRadius) : (opp.NetFront + Global.PuckRadius)) - X) < 0.01 // (это стена ворот)
                     && MyStrategy.IsBetween(Global.game.GoalNetTop + Global.PuckRadius, Y + dx * (Speed.Y / Speed.X), Global.game.GoalNetTop + Global.game.GoalNetHeight - Global.PuckRadius) // (в воротах)
                     && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
@@ -91,7 +92,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         }
         bool IntersectPuckAngGoalie()
         {
-            return GetDistanceTo(Goalie) < Global.HoRadius + Global.PuckRadius - /* костыль -> */2;
+            return GetDistanceTo2(Goalie) < Sqr(Global.HoRadius + Global.PuckRadius - /* костыль -> */2);
+        }
+
+        double Sqr(double x)
+        {
+            return x*x;
         }
 
         public APuck Clone()

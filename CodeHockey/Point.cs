@@ -71,14 +71,19 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             Y = Math.Sin(angle);
         }
 
-        public double Angle
+        public double GetAngle()
         {
-            get { return Math.Atan2(Y, X); }
+            return Math.Atan2(Y, X);
         }
 
         public double GetDistanceTo(double x, double y)
         {
             return Math.Sqrt((X - x) * (X - x) + (Y - y) * (Y - y));
+        }
+
+        public double GetDistanceTo2(double x, double y)
+        {
+            return (X - x) * (X - x) + (Y - y) * (Y - y);
         }
 
         public double GetDistanceTo(Unit unit)
@@ -89,6 +94,11 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
         public double GetDistanceTo(Point point)
         {
             return GetDistanceTo(point.X, point.Y);
+        }
+
+        public double GetDistanceTo2(Point point)
+        {
+            return GetDistanceTo2(point.X, point.Y);
         }
 
         public bool Same(double otherX, double otherY)

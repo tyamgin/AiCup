@@ -85,24 +85,51 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         #endregion
     }
 
-    public class Pair<First, Second> : IComparable<Pair<First, Second>>
-        where First : IComparable<First>
-        where Second : IComparable<Second>
+    public class Pair<FirstType, SecondType> : IComparable<Pair<FirstType, SecondType>>
+        where FirstType : IComparable<FirstType>
+        where SecondType : IComparable<SecondType>
     {
-        public First first;
-        public Second second;
+        public FirstType First;
+        public SecondType Second;
 
-        public int CompareTo(Pair<First, Second> other)
+        public int CompareTo(Pair<FirstType, SecondType> other)
         {
-            if (first.CompareTo(other.first) == 0)
-                return second.CompareTo(other.second);
-            return first.CompareTo(other.first);
+            if (First.CompareTo(other.First) == 0)
+                return Second.CompareTo(other.Second);
+            return First.CompareTo(other.First);
         }
 
-        public Pair(First first, Second second)
+        public Pair(FirstType first, SecondType second)
         {
-            this.first = first;
-            this.second = second;
+            this.First = first;
+            this.Second = second;
+        }
+
+        public override string ToString()
+        {
+            return "(" + First + ", " + Second + ")";
+        }
+    }
+
+    public class Tuple<FirstType, SecondType, ThirdType> : Pair<FirstType, SecondType>
+        where FirstType : IComparable<FirstType>
+        where SecondType : IComparable<SecondType>
+        where ThirdType : IComparable<ThirdType>
+    {
+        public ThirdType Third;
+
+        public Tuple(FirstType first, SecondType second, ThirdType third) : base(first, second)
+        {
+            this.Third = third;
+        }
+
+        public int CompareTo(Tuple<FirstType, SecondType, ThirdType> other)
+        {
+            if (First.CompareTo(other.First) != 0)
+                return First.CompareTo(other.First);
+            if (Second.CompareTo(other.Second) != 0)
+                return Second.CompareTo(other.Second);
+            return Third.CompareTo(other.Third);
         }
     }
 }

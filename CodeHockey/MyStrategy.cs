@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -216,13 +217,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        bool CanStrikeAfter(int wait, int swingTime, Hockeyist self)
+        double ProbabStrikeAfter(int wait, int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move)
         {
+            // TODO: use game.StrikePowerGrowthFactor
             var power = Math.Min(game.MaxEffectiveSwingTicks, swingTime) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
             var I = new AHo(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
-            I.Move(0, 0, wait);
-            return Strike(new Point(I.Angle) * self.GetDistanceTo(puck) + I, I.Speed, power, I.Angle);
+            foreach(var action in move)
+            {
+                I.Move(action.Second, action.Third, action.First);
+            }
+            return StrikeProbability(new Point(I.Angle) * self.GetDistanceTo(puck) + I, I.Speed, power, I.Angle);
         }
+
         public void Move(Hockeyist self, World world, Game game, Move move) 
         {
 #if DEBUG
@@ -265,60 +271,89 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var net = GetStrikePoint();
             var angleToNet = self.GetAngleTo(net.X, net.Y);
             var power = Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
-            
-            if (self.Id == puck.OwnerHockeyistId)
-                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks) * 0.25 / game.MaxEffectiveSwingTicks + 0.75, self.Angle) + "");
-
-            if (self.State == HockeyistState.Swinging && (!IsInStrikeZone(new Point(self)) || self.Id != puck.OwnerHockeyistId))
+           
+            if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
             {
                 move.Action = ActionType.CancelStrike;
             }
             else if (puck.OwnerHockeyistId == self.Id)
             {
+                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks) * 0.25 / game.MaxEffectiveSwingTicks + 0.75, self.Angle) + "");
+
                 move.Turn = angleToNet;
                 int wait = Inf;
+                double selTurn = 0, selSpeedUp = 0;
                 bool willSwing = false;
+                double maxProb = 0.6;
 
                 if (self.State != HockeyistState.Swinging)
                 {
                     // если не замахнулся
-                    for (int ticks = 0; ticks < 20; ticks++)
+                    for (int ticks = 0; ticks < 40; ticks++)
                     {
-                        if (net.GetDistanceTo(self) < RinkWidth*0.4 && CanStrikeAfter(ticks + 10, ticks + 10, self))
+                        double p;
+                        // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
+                        var da = 0.01;
+                        for (int dir = -1; dir <= 1; dir += 2)
                         {
-                            // если буду замахиваться, то нужно подождать минимум 10
-                            wait = ticks + 10;
-                            willSwing = true;
-                            break;
-                        }
-                        if (net.GetDistanceTo(self) < RinkWidth*0.2 && CanStrikeAfter(ticks, 0, self))
-                        {
-                            // если не буду
-                            wait = ticks;
-                            willSwing = false;
-                            break;
+                            for (var _turn = 0.0; _turn <= 2*da; _turn += da)
+                            {
+                                if (_turn == 0 && dir == 1)
+                                    continue;
+                                var turn = dir*_turn;
+
+                                var end = ticks + game.SwingActionCooldownTicks;
+                                var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
+                                    // когда начинаем замахиваться
+                                p = ProbabStrikeAfter(start, end - start, self, new[]
+                                {
+                                    new Tuple<int, double, double>(start, 1, turn),
+                                    new Tuple<int, double, double>(end - start, 0, 0)
+                                });
+                                if (p > maxProb)
+                                {
+                                    wait = start;
+                                    willSwing = true;
+                                    maxProb = p;
+                                    selTurn = turn;
+                                    selSpeedUp = 1;
+                                }
+
+                                // если не буду
+                                p = ProbabStrikeAfter(ticks, 0, self,
+                                    new[] {new Tuple<int, double, double>(ticks, 0, turn)});
+                                if (p > maxProb)
+                                {
+                                    wait = ticks;
+                                    willSwing = false;
+                                    maxProb = p;
+                                    selTurn = turn;
+                                    selSpeedUp = 0;
+                                }
+                            }
                         }
                     }
                 }
                 else
                 {
                     // если уже замахнулся
-                    for (int ticks = Math.Max(0, 10 - self.SwingTicks); ticks < 30; ticks++)
+                    for (int ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks); ticks < 60; ticks++)
                     {
-                        if (CanStrikeAfter(ticks, ticks + self.SwingTicks, self))
+                        var p = ProbabStrikeAfter(ticks, ticks + self.SwingTicks, self, new[] { new Tuple<int, double, double>(ticks, 0, 0) });
+                        if (p > maxProb)
                         {
                             wait = ticks;
                             willSwing = true;
-                            break;
+                            maxProb = p;
                         }
                     }
                 }
-
+                drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
                 if (!willSwing && self.State == HockeyistState.Swinging)
                 {
                     move.Action = ActionType.CancelStrike;
                 }
-                else if (willSwing && self.State != HockeyistState.Swinging)
+                else if (willSwing && wait == 0 && self.State != HockeyistState.Swinging)
                 {
                     move.Action = ActionType.Swing;
                 }
@@ -336,8 +371,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    move.SpeedUp = 0;
-                    move.Turn = 0;
+                    move.SpeedUp = selSpeedUp;
+                    move.Turn = selTurn;
                 }
                 
                 if (Math.Abs(move.Turn) > Deg(40))

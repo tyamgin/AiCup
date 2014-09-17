@@ -68,7 +68,8 @@ int main(int argc, char** argv)
 	int games = argc > 3 ? ParseInt(argv[3]) : 1;
 	int newWins = 0, oldWins = 0, ties = 0;
 	srand(time(0));
-	for (int port = 31001 + 2 + rand()/10, game = 0; game < games; port += 2, game++)
+	int startPort = 31001 + 2 + rand() / 10;
+	for (int port = startPort, game = 0; game < games; port += 2, game++)
 	{
 		Config conf;
 		conf.Add("render-to-screen", "false");
@@ -81,7 +82,7 @@ int main(int argc, char** argv)
 		conf.Add("p2-name", second.c_str());
 		conf.Add("seed", "");
 
-		string resultFilename = "result0.txt";
+		string resultFilename = "result" + ToString(startPort) + ".txt";
 		conf.Add("results-file", resultFilename);
 		conf.Add("base-adapter-port", ToString(port));
 		ofstream propFile("local-runner-stress.properties");
