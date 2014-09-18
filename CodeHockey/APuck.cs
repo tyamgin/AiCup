@@ -32,57 +32,57 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var breakCount = 0;
             for (var tick = 1; tick <= ticks && breakCount < 1; tick++)
             {
-                Speed = Speed * Global.FrictionPuckCoeff;
+                Speed = Speed * MyStrategy.FrictionPuckCoeff;
                 X += Speed.X;
                 Y += Speed.Y;
-                if (Y < Global.game.RinkTop + Global.PuckRadius)
+                if (Y < MyStrategy.game.RinkTop + MyStrategy.PuckRadius)
                 {
-                    Y = Global.game.RinkTop + Global.PuckRadius;
+                    Y = MyStrategy.game.RinkTop + MyStrategy.PuckRadius;
                     Speed.Y *= -1;
                     mayGoal = tick;
                     breakCount++;
                 }
-                if (Y > Global.game.RinkBottom - Global.PuckRadius)
+                if (Y > MyStrategy.game.RinkBottom - MyStrategy.PuckRadius)
                 {
-                    Y = Global.game.RinkBottom - Global.PuckRadius;
+                    Y = MyStrategy.game.RinkBottom - MyStrategy.PuckRadius;
                     Speed.Y *= -1;
                     mayGoal = tick;
                     breakCount++;
                 }
-                if (X > Global.game.RinkRight - Global.PuckRadius)
+                if (X > MyStrategy.game.RinkRight - MyStrategy.PuckRadius)
                 {
-                    X = Global.game.RinkRight - Global.PuckRadius;
+                    X = MyStrategy.game.RinkRight - MyStrategy.PuckRadius;
                     Speed.X *= -1;
                     mayGoal = tick;
                     breakCount++;
                 }
-                if (X < Global.game.RinkLeft + Global.PuckRadius)
+                if (X < MyStrategy.game.RinkLeft + MyStrategy.PuckRadius)
                 {
-                    X = Global.game.RinkLeft + Global.PuckRadius;
+                    X = MyStrategy.game.RinkLeft + MyStrategy.PuckRadius;
                     Speed.X *= -1;
                     mayGoal = tick;
                     breakCount++;
                 }
 
-                var opp = IsDefend ? Global.my : Global.opp;
+                var opp = IsDefend ? MyStrategy.my : MyStrategy.opp;
 
                 if (IntersectPuckAngGoalie())
                     return 0;
                 var dx = Math.Abs(X - opp.NetFront);
                 // TODO: не правильно: Y + dx * (Speed.Y / Speed.X)
-                if (Math.Abs((opp.NetFront < opp.NetBack ? (opp.NetFront - Global.PuckRadius) : (opp.NetFront + Global.PuckRadius)) - X) < 0.01 // (это стена ворот)
-                    && MyStrategy.IsBetween(Global.game.GoalNetTop + Global.PuckRadius, Y + dx * (Speed.Y / Speed.X), Global.game.GoalNetTop + Global.game.GoalNetHeight - Global.PuckRadius) // (в воротах)
+                if (Math.Abs((opp.NetFront < opp.NetBack ? (opp.NetFront - MyStrategy.PuckRadius) : (opp.NetFront + MyStrategy.PuckRadius)) - X) < 0.01 // (это стена ворот)
+                    && MyStrategy.IsBetween(MyStrategy.game.GoalNetTop + MyStrategy.PuckRadius, Y + dx * (Speed.Y / Speed.X), MyStrategy.game.GoalNetTop + MyStrategy.game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
                     && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
                     )
                     return 1; // Goal !!
 
                 if (Goalie.Y > Y)
-                    Goalie.Y -= Math.Min(Global.game.GoalieMaxSpeed, Goalie.Y - Y);
+                    Goalie.Y -= Math.Min(MyStrategy.game.GoalieMaxSpeed, Goalie.Y - Y);
                 else
-                    Goalie.Y += Math.Min(Global.game.GoalieMaxSpeed, Y - Goalie.Y);
+                    Goalie.Y += Math.Min(MyStrategy.game.GoalieMaxSpeed, Y - Goalie.Y);
 
-                var MinY = opp.NetTop + Global.HoRadius;
-                var MaxY = opp.NetBottom - Global.HoRadius;
+                var MinY = opp.NetTop + MyStrategy.HoRadius;
+                var MaxY = opp.NetBottom - MyStrategy.HoRadius;
                 if (Goalie.Y < MinY)
                     Goalie.Y = MinY;
                 if (Goalie.Y > MaxY)
@@ -92,7 +92,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         }
         bool IntersectPuckAngGoalie()
         {
-            return GetDistanceTo2(Goalie) < Sqr(Global.HoRadius + Global.PuckRadius - /* костыль -> */2);
+            return GetDistanceTo2(Goalie) < Sqr(MyStrategy.HoRadius + MyStrategy.PuckRadius - /* костыль -> */2);
         }
 
         double Sqr(double x)

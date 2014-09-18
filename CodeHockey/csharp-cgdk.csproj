@@ -75,7 +75,6 @@
     <Compile Include="APuck.cs" />
     <Compile Include="AUnit.cs" />
     <Compile Include="FindPath.cs" />
-    <Compile Include="Global.cs" />
     <Compile Include="Model\ActionType.cs" />
     <Compile Include="IStrategy.cs" />
     <Compile Include="Model\Puck.cs" />

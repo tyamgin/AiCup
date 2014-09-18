@@ -85,21 +85,21 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         #endregion
     }
 
-    public class Pair<FirstType, SecondType> : IComparable<Pair<FirstType, SecondType>>
-        where FirstType : IComparable<FirstType>
-        where SecondType : IComparable<SecondType>
+    public class Pair<TFirst, TSecond> : IComparable<Pair<TFirst, TSecond>>
+        where TFirst : IComparable<TFirst>
+        where TSecond : IComparable<TSecond>
     {
-        public FirstType First;
-        public SecondType Second;
+        public TFirst First;
+        public TSecond Second;
 
-        public int CompareTo(Pair<FirstType, SecondType> other)
+        public int CompareTo(Pair<TFirst, TSecond> other)
         {
             if (First.CompareTo(other.First) == 0)
                 return Second.CompareTo(other.Second);
             return First.CompareTo(other.First);
         }
 
-        public Pair(FirstType first, SecondType second)
+        public Pair(TFirst first, TSecond second)
         {
             this.First = first;
             this.Second = second;
@@ -107,29 +107,34 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public override string ToString()
         {
-            return "(" + First + ", " + Second + ")";
+            return "(" + First + "; " + Second + ")";
         }
     }
 
-    public class Tuple<FirstType, SecondType, ThirdType> : Pair<FirstType, SecondType>
-        where FirstType : IComparable<FirstType>
-        where SecondType : IComparable<SecondType>
-        where ThirdType : IComparable<ThirdType>
+    public class Tuple<TFirst, TSecond, TThird> : Pair<TFirst, TSecond>
+        where TFirst : IComparable<TFirst>
+        where TSecond : IComparable<TSecond>
+        where TThird : IComparable<TThird>
     {
-        public ThirdType Third;
+        public TThird Third;
 
-        public Tuple(FirstType first, SecondType second, ThirdType third) : base(first, second)
+        public Tuple(TFirst first, TSecond second, TThird third) : base(first, second)
         {
             this.Third = third;
         }
 
-        public int CompareTo(Tuple<FirstType, SecondType, ThirdType> other)
+        public int CompareTo(Tuple<TFirst, TSecond, TThird> other)
         {
             if (First.CompareTo(other.First) != 0)
                 return First.CompareTo(other.First);
             if (Second.CompareTo(other.Second) != 0)
                 return Second.CompareTo(other.Second);
             return Third.CompareTo(other.Third);
+        }
+
+        public override string ToString()
+        {
+            return "(" + First + "; " + Second + "; " + Third + ")";
         }
     }
 }

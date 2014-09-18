@@ -11,23 +11,21 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        private const double FrictionPuckCoeff = 0.999;
-        private const double FrictionHockCoeff = 0.98;
+        public static double FrictionPuckCoeff = 0.999;
+        public static double FrictionHockCoeff = 0.98;
 
-        private Puck puck;
-        private Move move;
-        private Player opp, my;
+        public Puck puck;
+        public Move move;
+        public static Player opp, my;
         private Hockeyist oppGoalie;
         private Hockeyist myGoalie;
-        private World world;
-        private Game game;
+        public static World world;
+        public static Game game;
         
-        private double HoRadius;
-        private double RinkWidth, RinkHeight;
-        private Point RinkCenter;
-        private double StrikeZoneWidth;
-        private double StrikeZoneWidthBesideNet;
-        private double PuckRadius;
+        public static double HoRadius;
+        public static double RinkWidth, RinkHeight;
+        public static Point RinkCenter;
+        public static double PuckRadius;
 
         public Point GetStrikePoint()
         {
@@ -229,40 +227,24 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return StrikeProbability(new Point(I.Angle) * self.GetDistanceTo(puck) + I, I.Speed, power, I.Angle);
         }
 
-        public void Move(Hockeyist self, World world, Game game, Move move) 
+        public void Move(Hockeyist self, World world, Game game, Move move)
         {
-#if DEBUG
-            if (form == null)
-            {
-                thread = new Thread(ShowWindow);
-                thread.Start();
-                Thread.Sleep(2000);
-            }
-#endif
+            ShowWindow();
             this.move = move;
-            this.world = world;
-            this.game = game;
+            MyStrategy.world = world;
+            MyStrategy.game = game;
             this.puck = world.Puck;
-            this.opp = world.GetOpponentPlayer();
-            this.my = world.GetMyPlayer();
-            this.RinkWidth = game.RinkRight - game.RinkLeft;
-            this.RinkHeight = game.RinkBottom - game.RinkTop;
+            MyStrategy.opp = world.GetOpponentPlayer();
+            MyStrategy.my = world.GetMyPlayer();
+            MyStrategy.RinkWidth = game.RinkRight - game.RinkLeft;
+            MyStrategy.RinkHeight = game.RinkBottom - game.RinkTop;
             this.oppGoalie = world.Hockeyists.FirstOrDefault(x => !x.IsTeammate && x.Type == HockeyistType.Goalie);
             this.myGoalie = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Type == HockeyistType.Goalie);
-            this.HoRadius = self.Radius;
-            this.RinkCenter = new Point(game.RinkLeft + RinkWidth / 2, game.RinkTop + RinkHeight / 2);
-            this.StrikeZoneWidth = RinkHeight*0.32;
-            this.StrikeZoneWidthBesideNet = RinkWidth*0.16;
-            this.PuckRadius = puck.Radius;
-            var friend = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie);
-
-            Global.FrictionHockCoeff = FrictionHockCoeff;
-            Global.FrictionPuckCoeff = FrictionPuckCoeff;
-            Global.game = game;
-            Global.HoRadius = HoRadius;
-            Global.PuckRadius = PuckRadius;
-            Global.my = my;
-            Global.opp = opp;
+            MyStrategy.HoRadius = self.Radius;
+            MyStrategy.RinkCenter = new Point(game.RinkLeft + RinkWidth/2, game.RinkTop + RinkHeight/2);
+            MyStrategy.PuckRadius = puck.Radius;
+            var friend =
+                world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie);
 
             if (null == oppGoalie)
                 return;
@@ -270,15 +252,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             var net = GetStrikePoint();
             var angleToNet = self.GetAngleTo(net.X, net.Y);
-            var power = Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
-           
+            var power = Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks)*0.25/game.MaxEffectiveSwingTicks + 0.75;
+
             if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
             {
                 move.Action = ActionType.CancelStrike;
             }
             else if (puck.OwnerHockeyistId == self.Id)
             {
-                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks) * 0.25 / game.MaxEffectiveSwingTicks + 0.75, self.Angle) + "");
+                drawInfo.Enqueue(
+                    StrikeProbability(Get(puck), GetSpeed(self),
+                        Math.Min(game.MaxEffectiveSwingTicks, self.SwingTicks)*0.25/game.MaxEffectiveSwingTicks + 0.75,
+                        self.Angle) + "");
 
                 move.Turn = angleToNet;
                 int wait = Inf;
@@ -304,7 +289,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
                                 var end = ticks + game.SwingActionCooldownTicks;
                                 var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
-                                    // когда начинаем замахиваться
+                                // когда начинаем замахиваться
                                 p = ProbabStrikeAfter(start, end - start, self, new[]
                                 {
                                     new Tuple<int, double, double>(start, 1, turn),
@@ -339,7 +324,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     // если уже замахнулся
                     for (int ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks); ticks < 60; ticks++)
                     {
-                        var p = ProbabStrikeAfter(ticks, ticks + self.SwingTicks, self, new[] { new Tuple<int, double, double>(ticks, 0, 0) });
+                        var p = ProbabStrikeAfter(ticks, ticks + self.SwingTicks, self,
+                            new[] {new Tuple<int, double, double>(ticks, 0, 0)});
                         if (p > maxProb)
                         {
                             wait = ticks;
@@ -374,7 +360,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     move.SpeedUp = selSpeedUp;
                     move.Turn = selTurn;
                 }
-                
+
                 if (Math.Abs(move.Turn) > Deg(40))
                     move.SpeedUp = 0.2;
                 else if (Math.Abs(move.Turn) > Deg(60))
@@ -390,18 +376,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     move.Action = ActionType.TakePuck;
                 }
                 else if (puck.OwnerPlayerId == opp.Id
-                    && (CanStrike(self, owner) || CanStrike(self, puck)))
+                         && (CanStrike(self, owner) || CanStrike(self, puck)))
                 {
                     move.Action = ActionType.Strike;
                 }
                 else if (puck.OwnerPlayerId != my.Id
-                    && CanStrike(self, puck)
-                    && Strike(new Point(puck), GetSpeed(self), power, self.Angle))
+                         && CanStrike(self, puck)
+                         && Strike(new Point(puck), GetSpeed(self), power, self.Angle))
                 {
                     move.Action = ActionType.Strike;
                 }
                 else if (puck.OwnerPlayerId != self.PlayerId
-                    && CanStrike(self, puck))
+                         && CanStrike(self, puck))
                 {
                     var pk = new APuck(Get(puck), GetSpeed(puck), Get(myGoalie));
                     pk.IsDefend = true;
@@ -441,12 +427,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             drawGoalQueue.Clear();
             drawGoal2Queue.Clear();
             drawInfo.Clear();
-        }
-
-        public bool IsInStrikeZone(Point pos)
-        {
-            return (IsBetween(game.RinkTop, pos.Y, game.RinkTop + StrikeZoneWidth) || IsBetween(game.RinkBottom - StrikeZoneWidth, pos.Y, game.RinkBottom)) 
-                && (MyRight() ? !IsBetween(game.RinkLeft, pos.X, game.RinkLeft + StrikeZoneWidthBesideNet) : !IsBetween(game.RinkRight - StrikeZoneWidthBesideNet, pos.X, game.RinkRight));
         }
     }
 }

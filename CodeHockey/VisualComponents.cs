@@ -15,11 +15,23 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        private string tooltipText = "";
         private static Queue<Point> drawPathQueue = new Queue<Point>();
         private static Queue<Point> drawGoalQueue = new Queue<Point>();
         private static Queue<Point> drawGoal2Queue = new Queue<Point>();
-        private static Queue<string> drawInfo = new Queue<string>(); 
+        private static Queue<string> drawInfo = new Queue<string>();
+
+        private void ShowWindow()
+        {
+#if DEBUG
+            if (form == null)
+            {
+                thread = new Thread(_ShowWindow);
+                thread.Start();
+                Thread.Sleep(2000);
+            }
+#endif
+        }
+
 #if DEBUG
         private static Window form;
 
@@ -68,25 +80,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             panel.Image = drawArea;
             g = Graphics.FromImage(drawArea);
 
-            g.DrawLine(new Pen(Brushes.PeachPuff), (int) game.RinkLeft, (int) (game.RinkTop + StrikeZoneWidth),
-                (int) game.RinkRight, (int) (game.RinkTop + StrikeZoneWidth));
-            g.DrawLine(new Pen(Brushes.PeachPuff), (int)game.RinkLeft, (int)(game.RinkBottom - StrikeZoneWidth),
-                (int)game.RinkRight, (int)(game.RinkBottom - StrikeZoneWidth));
-            if (MyRight())
-                g.DrawLine(new Pen(Brushes.PeachPuff), (int)(StrikeZoneWidthBesideNet + game.RinkLeft), (int)game.RinkTop,
-                    (int)(StrikeZoneWidthBesideNet + game.RinkLeft), (int)game.RinkBottom);
-            else
-                g.DrawLine(new Pen(Brushes.PeachPuff), (int)(game.RinkRight - StrikeZoneWidthBesideNet), (int)game.RinkTop,
-                    (int)(game.RinkRight - StrikeZoneWidthBesideNet), (int)game.RinkBottom);
-
-
             // Хоккеисты
             foreach (var ho in world.Hockeyists)
             {
                 var brush = ho.IsTeammate ? Brushes.Blue : Brushes.Red;
                 if (ho.Type != HockeyistType.Goalie)
                 {
-                    //DrawCircle(Brushes.Honeydew, ho.X, ho.Y, game.StickLength);
                     g.DrawLine(new Pen(brush), (int)ho.X, (int)ho.Y,
                         (int)(ho.X + Math.Cos(ho.Angle) * game.StickLength),
                         (int)(ho.Y + Math.Sin(ho.Angle) * game.StickLength)
@@ -157,16 +156,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 DrawCircleC(Brushes.BlueViolet, p.X, p.Y, 5);
             }
 
-            string ttip = "";
+            string info = "";
             while (drawInfo.Count != 0)
             {
                 var p = drawInfo.Dequeue();
-                ttip += p + "\n";
+                info += p + "\n";
             }
-            if (ttip != "")
-                form.infoLabel.Text = ttip;
+            if (info != "")
+                form.infoLabel.Text = info;
         }
-        private static void ShowWindow()
+        private static void _ShowWindow()
         {
             form = new Window();
             form.ShowDialog();
