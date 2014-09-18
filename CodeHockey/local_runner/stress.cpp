@@ -24,6 +24,7 @@
 #define eps 1e-9
 using namespace std;
 typedef pair<int, int> pii;
+#include <windows.h>
 
 const string localRunnerPath = "D:\\Projects\\AiCup\\CodeHockey\\local_runner"; // локал раннер, стратегии old.exe, new.exe должны находиться в этой папке. И этот экзешник тоже.
 
@@ -59,7 +60,10 @@ string ToString(int a)
 	return buf;
 }
 
-#include <windows.h>
+void system(string cmd)
+{
+	system(cmd.c_str());
+}
 
 int main(int argc, char** argv)
 {
@@ -68,7 +72,11 @@ int main(int argc, char** argv)
 	int games = argc > 3 ? ParseInt(argv[3]) : 1;
 	int newWins = 0, oldWins = 0, ties = 0;
 	srand(time(0));
+	
 	int startPort = 31001 + 2 + rand() / 10;
+	string resultFilename = "result" + ToString(startPort) + ".txt";
+	string propFilename = "local-runner-stress" + ToString(startPort) + ".properties";
+	
 	for (int port = startPort, game = 0; game < games; port += 2, game++)
 	{
 		Config conf;
@@ -82,18 +90,17 @@ int main(int argc, char** argv)
 		conf.Add("p2-name", second.c_str());
 		conf.Add("seed", "");
 
-		string resultFilename = "result" + ToString(startPort) + ".txt";
 		conf.Add("results-file", resultFilename);
 		conf.Add("base-adapter-port", ToString(port));
-		ofstream propFile("local-runner-stress.properties");
+		ofstream propFile(propFilename.c_str());
 		propFile << conf.ToString();
 		propFile.close();
 
-		string javaStart = string() + "start /B java -cp \".;*;%~dp0/*\" -jar \"" + localRunnerPath + "\\local-runner.jar\" \"" + localRunnerPath + "\\local-runner-stress.properties\"";
-		system(javaStart.c_str());
+		string javaStart = "start /B java -cp \".;*;%~dp0/*\" -jar \"" + localRunnerPath + "\\local-runner.jar\" \"" + localRunnerPath + "\\" + propFilename + "\"";
+		system(javaStart);
 		Sleep(1000);
-		system(((string)"start /B " + first + " 127.0.0.1 " + ToString(port) + " 0000000000000000").c_str());
-		system((second + " 127.0.0.1 " + ToString(port + 1) + " 0000000000000000").c_str());
+		system("start /B " + first + " 127.0.0.1 " + ToString(port) + " 0000000000000000");
+		system(second + " 127.0.0.1 " + ToString(port + 1) + " 0000000000000000");
 
 		ifstream result(resultFilename);
 		string t;
@@ -109,7 +116,9 @@ int main(int argc, char** argv)
 			ties++;
 		cout << first << ": " << newWins << "  " << oldWins << " :" << second << "  (" << ties << ")" << endl;
 		result.close();
-		system(("type " + resultFilename).c_str());
+		system("type " + resultFilename);
+		system("del " + propFilename);
+		system("del " + resultFilename);
 	}
 	puts("----- Total results -----");
 	cout << first << ": " << newWins << "  " << oldWins << " :" << second << "  (" << ties << ")" << endl;
