@@ -60,18 +60,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         }
 
         // Проверка движение хоккеиста
-        void Research3(Hockeyist self, Move move)
+        void Research3(Hockeyist self)
         {
-            move.Turn = MyStrategy.game.HockeyistTurnAngleFactor / 2;
+            move.Turn = game.HockeyistTurnAngleFactor / 2;
             move.SpeedUp = 0.8;
             var pl = new AHo(new Point(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
-            pl.Move(0.8, MyStrategy.game.HockeyistTurnAngleFactor / 2, 20);
+            pl.Move(0.8, game.HockeyistTurnAngleFactor / 2, 20);
         }
 
         private APuck __puck;
 
         // Проверка движение шайбы - OK
-        void Research4(Hockeyist self, Move move)
+        void Research4(Hockeyist self)
         {
             if (TK(190))
             {
