@@ -9,7 +9,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public class APuck : AUnit
     {
-        // На вратаря действует трение?
+        public static readonly double PenetrationCoeff = 0.2;
+        public static readonly double BoundSpeedChangeCoeff = -0.25;
+        public static readonly double FrictionCoeff = 0.999;
 
         public Point Goalie;
         public bool IsDefend = false;
@@ -25,41 +27,52 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             Goalie = new Point(goalie);
         }
-        
+
+        // TODO: не в том порядке обрабатывается отскок
         public int Move(int ticks, bool goalCheck = false)
         {
             var mayGoal = -1;
             var breakCount = 0;
-            for (var tick = 1; tick <= ticks && breakCount < 1; tick++)
+
+            var top = MyStrategy.game.RinkTop + MyStrategy.PuckRadius;
+            var bottom = MyStrategy.game.RinkBottom - MyStrategy.PuckRadius;
+            var right = MyStrategy.game.RinkRight - MyStrategy.PuckRadius;
+            var left = MyStrategy.game.RinkLeft + MyStrategy.PuckRadius;
+
+            for (var tick = 1; tick <= ticks && (!goalCheck || breakCount < 1); tick++)
             {
-                Speed = Speed * MyStrategy.FrictionPuckCoeff;
+                Speed = Speed * APuck.FrictionCoeff;
                 X += Speed.X;
                 Y += Speed.Y;
-                if (Y < MyStrategy.game.RinkTop + MyStrategy.PuckRadius)
+                if (Y < top)
                 {
-                    Y = MyStrategy.game.RinkTop + MyStrategy.PuckRadius;
-                    Speed.Y *= -1;
+                    var penetration = top - Y;
+                    Y = top + PenetrationCoeff * penetration;
+                    Speed.Y *= BoundSpeedChangeCoeff;
                     mayGoal = tick;
                     breakCount++;
                 }
-                if (Y > MyStrategy.game.RinkBottom - MyStrategy.PuckRadius)
+                if (Y > bottom)
                 {
-                    Y = MyStrategy.game.RinkBottom - MyStrategy.PuckRadius;
-                    Speed.Y *= -1;
+                    var penetration = Y - bottom;
+                    Y = bottom - PenetrationCoeff * penetration;
+                    Speed.Y *= BoundSpeedChangeCoeff;
                     mayGoal = tick;
                     breakCount++;
                 }
-                if (X > MyStrategy.game.RinkRight - MyStrategy.PuckRadius)
+                if (X > right)
                 {
-                    X = MyStrategy.game.RinkRight - MyStrategy.PuckRadius;
-                    Speed.X *= -1;
+                    var penetration = 0.0;//X - right;
+                    X = right - PenetrationCoeff * penetration;
+                    Speed.X *= BoundSpeedChangeCoeff;
                     mayGoal = tick;
                     breakCount++;
                 }
-                if (X < MyStrategy.game.RinkLeft + MyStrategy.PuckRadius)
+                if (X < left)
                 {
-                    X = MyStrategy.game.RinkLeft + MyStrategy.PuckRadius;
-                    Speed.X *= -1;
+                    var penetration = 0.0;//left - X;
+                    X = left + PenetrationCoeff * penetration;
+                    Speed.X *= BoundSpeedChangeCoeff;
                     mayGoal = tick;
                     breakCount++;
                 }
@@ -69,7 +82,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (IntersectPuckAngGoalie())
                     return 0;
                 var dx = Math.Abs(X - opp.NetFront);
-                // TODO: не правильно: Y + dx * (Speed.Y / Speed.X)
+                // TODO: не правильно: Y + dx * (Speed.Y / Speed.X) (а может и правильно)
                 if (Math.Abs((opp.NetFront < opp.NetBack ? (opp.NetFront - MyStrategy.PuckRadius) : (opp.NetFront + MyStrategy.PuckRadius)) - X) < 0.01 // (это стена ворот)
                     && MyStrategy.IsBetween(MyStrategy.game.GoalNetTop + MyStrategy.PuckRadius, Y + dx * (Speed.Y / Speed.X), MyStrategy.game.GoalNetTop + MyStrategy.game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
                     && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
@@ -81,12 +94,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 else
                     Goalie.Y += Math.Min(MyStrategy.game.GoalieMaxSpeed, Y - Goalie.Y);
 
-                var MinY = opp.NetTop + MyStrategy.HoRadius;
-                var MaxY = opp.NetBottom - MyStrategy.HoRadius;
-                if (Goalie.Y < MinY)
-                    Goalie.Y = MinY;
-                if (Goalie.Y > MaxY)
-                    Goalie.Y = MaxY;
+                var minY = opp.NetTop + MyStrategy.HoRadius;
+                var maxY = opp.NetBottom - MyStrategy.HoRadius;
+                if (Goalie.Y < minY)
+                    Goalie.Y = minY;
+                if (Goalie.Y > maxY)
+                    Goalie.Y = maxY;
             }
             return 0;
         }

@@ -11,9 +11,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        public static double FrictionPuckCoeff = 0.999;
-        public static double FrictionHockCoeff = 0.98;
-
         public Puck puck;
         public static Move move;
         public static Player opp, my;
@@ -103,6 +100,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void StayOn(Hockeyist self, Point to, double needAngle)
         {
+            //var f = FindPath(self, Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, to, needAngle);
+
             if (to.GetDistanceTo(self) < 1.5 * HoRadius)
             {
                 move.SpeedUp = 0;

@@ -35,23 +35,40 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        // Расчет отскока (пока нет результатов)
+        // Расчет отскока
         void Research2()
         {
+            if (TK(90))
+            {
+                __puck = new APuck(Get(puck), GetSpeed(puck), Get(oppGoalie));
+                __puck.Move(30);
+            }
+
             if (puck.OwnerPlayerId == -1)
             {
-                Point nPoint = new Point(puck);
+                Point nPoint = Get(puck);
                 var t = 1;
                 var prevTick = world.Tick - t;
                 if (iPoint.ContainsKey(prevTick))
                 {
                     var sp = (Point)iSpeed[prevTick];
-                    var m = (sp.Length - GetSpeed(puck).Length) / t;
-                    if (!Double.IsNaN(m) && Math.Abs(m / sp.Length - 0.001) > 1e-5)
+                    if (sp.Length > 0.0001 && Math.Abs(sp.Length * APuck.FrictionCoeff - GetSpeed(puck).Length) > 0.00001)
                     {
-                        var str = (sp.Length / GetSpeed(puck).Length / sp.X).ToString().Replace(',', '.');
-                        //System.IO.File.AppendAllText("a.txt", str);
-                        Console.WriteLine(str);
+                        var pk = new APuck(iPoint[prevTick] as Point, sp, Get(oppGoalie));
+                        pk.Move(1);
+                        pk.Move(1);
+                        pk.Move(1);
+                        if (IsBetween(0, puck.Y, game.RinkTop + 2*PuckRadius) ||
+                            IsBetween(game.RinkBottom - 2*PuckRadius, puck.Y, Inf))
+                        {
+                            var ut = (sp * APuck.FrictionCoeff).Y / puck.SpeedY;
+                            Console.WriteLine("          " + ut.ToString().Replace(',', '.'));
+                        }
+                        else
+                        {
+                            var ut = (sp * APuck.FrictionCoeff).X / puck.SpeedX;
+                            Console.WriteLine(ut.ToString().Replace(',', '.'));
+                        }
                     }
                 }
                 iPoint[world.Tick] = nPoint;
