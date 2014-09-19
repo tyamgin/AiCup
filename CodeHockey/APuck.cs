@@ -89,17 +89,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     )
                     return 1; // Goal !!
 
-                if (Goalie.Y > Y)
-                    Goalie.Y -= Math.Min(MyStrategy.game.GoalieMaxSpeed, Goalie.Y - Y);
-                else
-                    Goalie.Y += Math.Min(MyStrategy.game.GoalieMaxSpeed, Y - Goalie.Y);
-
-                var minY = opp.NetTop + MyStrategy.HoRadius;
-                var maxY = opp.NetBottom - MyStrategy.HoRadius;
-                if (Goalie.Y < minY)
-                    Goalie.Y = minY;
-                if (Goalie.Y > maxY)
-                    Goalie.Y = maxY;
+                MyStrategy.GoalieMove(Goalie, 1, this);
             }
             return 0;
         }

@@ -61,9 +61,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public double GetTicksTo(Point myPosition, Point mySpeed, double myAngle, Point to)
         {
             var totalSpeed = mySpeed.Length;
-            var an = Point.GetAngleBetween(to, myPosition, new Point(myPosition.X + mySpeed.X, myPosition.Y + mySpeed.Y));
+            var an = Point.GetAngleBetween(to, myPosition, myPosition + mySpeed);
             var speed = totalSpeed * Math.Cos(an);
-            return Math.Sqrt(speed*speed + 2*myPosition.GetDistanceTo(to.X, to.Y)) - speed;
+            var a = game.HockeyistSpeedUpFactor;
+            return (Math.Sqrt(speed*speed + 2*a*myPosition.GetDistanceTo(to)) - speed)/a;
         }
 
         public Point GoToPuck(Point myPosition, Point mySpeed, double myAngle, out int ticks)
@@ -72,7 +73,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var result = new Point(myPosition);
             for (ticks = 0; ticks < 400; ticks++)
             {
-                var puckPosition = PuckMove(ticks, new Point(puck), new Point(puck.SpeedX, puck.SpeedY));
+                var puckPosition = puck.OwnerHockeyistId == -1
+                    ? PuckMove(ticks, new Point(puck), new Point(puck.SpeedX, puck.SpeedY)) // если шайба катится
+                    : Get(puck); // если шайбы у противника
                 var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, puckPosition);
 
                 if (needTicks <= ticks && ticks - needTicks < best)
@@ -220,17 +223,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return Math.Min(game.MaxEffectiveSwingTicks, swingTime) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
         }
 
-        double ProbabStrikeAfter(int wait, int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move)
-        {
-            var power = GetPower(swingTime);
-            var I = new AHo(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
-            foreach(var action in move)
-            {
-                I.Move(action.Second, action.Third, action.First);
-            }
-            return StrikeProbability(new Point(I.Angle) * self.GetDistanceTo(puck) + I, I.Speed, power, I.Angle);
-        }
-
         public void Move(Hockeyist self, World world, Game game, Move move)
         {
             ShowWindow();
@@ -264,7 +256,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             else if (puck.OwnerHockeyistId == self.Id)
             {
-                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle) + "");
+                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle, new Point(oppGoalie)) + "");
 
                 move.Turn = angleToNet;
                 int wait = Inf;
@@ -379,7 +371,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     move.Action = ActionType.Strike;
                 }
-                else if (puck.OwnerPlayerId != my.Id && CanStrike(self, puck) && Strike(new Point(puck), GetSpeed(self), power, self.Angle))
+                else if (puck.OwnerPlayerId != my.Id && CanStrike(self, puck) 
+                    && Strike(new Point(puck), GetSpeed(self), power, self.Angle, new Point(oppGoalie)))
                 {
                     move.Action = ActionType.Strike;
                 }

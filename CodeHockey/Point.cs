@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
@@ -19,7 +20,7 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
                 arg = -1;
             if (arg > 1)
                 arg = 1;
-            return Math.Acos(arg);
+            return MyStrategy.AngleNormalize(Math.Acos(arg));
         }
 
         public double Length

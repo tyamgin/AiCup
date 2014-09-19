@@ -53,7 +53,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        public int FindPath(Hockeyist self, Point from, Point speed, double angle, double angularSpeed, Point to, double needAngle)
+        public int FindPath(Hockeyist self, Point from, Point speed, double angle, double angularSpeed, Point to, double needAngle, Point goalie)
         {
             _bestTime = Inf;
             _bestStack.Clear();
