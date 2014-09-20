@@ -19,12 +19,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public static Point GetSpeed(Unit unit)
         {
-            return new Point(unit.SpeedX, unit.SpeedY);
+            return unit == null ? null : new Point(unit.SpeedX, unit.SpeedY);
         }
 
         public Point Get(Unit unit)
         {
-            return new Point(unit.X, unit.Y);
+            return unit == null ? null : new Point(unit.X, unit.Y);
         }
 
         public bool MyLeft()

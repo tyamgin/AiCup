@@ -19,13 +19,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public APuck(double x, double y, double speedX, double speedY, Point goalie) 
             : base(x, y, speedX, speedY, 0)
         {
-            Goalie = new Point(goalie);
+            if (goalie != null)
+                Goalie = new Point(goalie);
         }
 
         public APuck(Point pos, Point speed, Point goalie)
             : base(pos, speed, 0)
         {
-            Goalie = new Point(goalie);
+            if (goalie != null)
+                Goalie = new Point(goalie);
         }
 
         // TODO: не в том порядке обрабатывается отскок
@@ -97,6 +99,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         }
         bool IntersectPuckAngGoalie()
         {
+            if (Goalie == null)
+                return false;
             return GetDistanceTo2(Goalie) < Sqr(MyStrategy.HoRadius + MyStrategy.PuckRadius - /* костыль -> */2);
         }
 
@@ -113,6 +117,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public override string ToString()
         {
+            if (Goalie == null)
+                return base.ToString();
             return base.ToString() + ", " + Goalie.Y;
         }
     }

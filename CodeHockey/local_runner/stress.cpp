@@ -69,7 +69,9 @@ int main(int argc, char** argv)
 {
 	string first = argv[1];
 	string second = argv[2];
-	int games = argc > 3 ? ParseInt(argv[3]) : 1;
+	int games = ParseInt(argv[3]);
+	string ticksCount = argc > 4 ? argv[4] : "";
+	
 	int newWins = 0, oldWins = 0, ties = 0;
 	srand(time(0));
 	
@@ -89,6 +91,7 @@ int main(int argc, char** argv)
 		conf.Add("p1-name", first.c_str());
 		conf.Add("p2-name", second.c_str());
 		conf.Add("seed", "");
+		conf.Add("tick-count", ticksCount);
 
 		conf.Add("results-file", resultFilename);
 		conf.Add("base-adapter-port", ToString(port));

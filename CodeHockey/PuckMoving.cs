@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
     {
         Point PuckMove(int ticks, Point _pos, Point _speed)
         {
-            var pk = new APuck(_pos, _speed, new Point(OppGoalie));
+            var pk = new APuck(_pos, _speed, Get(OppGoalie));
             var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
             if (owner == null)
             {
@@ -68,6 +68,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public static void GoalieMove(Point goalie, int ticks, Point to)
         {
+            if (goalie == null)
+                return;
             for (var tick = 0; tick < ticks; tick++)
             {
                 if (goalie.Y > to.Y)
@@ -96,7 +98,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 totalTime += action.First;
             }
             var pk = GetPuckPos(I, I.Angle);
-            var goalie = new Point(OppGoalie);
+            var goalie = Get(OppGoalie);
             GoalieMove(goalie, totalTime, pk);
             return StrikeProbability(pk, I.Speed, power, I.Angle, goalie);
         }

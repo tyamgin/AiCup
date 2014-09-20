@@ -36,6 +36,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 bestY = 0,
                 minY = Math.Min(Opp.NetBottom, Opp.NetTop),
                 maxY = Math.Max(Opp.NetBottom, Opp.NetTop);
+            var OppGoalie = Get(MyStrategy.OppGoalie) ?? Point.Zero;
             for (var y = minY + shift; y <= maxY - shift; y += delta)
             {
                 if (OppGoalie.GetDistanceTo(x, y) > bestDist)
@@ -96,12 +97,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return GoToPuck(myPosition, mySpeed, myAngle, out ticks);
         }
 
-        Point GetDefendPos2(Point myPosition)
+        Point GetDefendPos2()
         {
+            if (MyGoalie == null)
+                return new Point(Game.RinkLeft + RinkWidth*0.07, RinkCenter.Y);
             var y = MyGoalie.Y > RinkCenter.Y ? My.NetTop + 1.2 * HoRadius : My.NetBottom - 1.2 * HoRadius;
-            var a = new Point(Game.RinkLeft + RinkWidth * 0.07, y);
-            var b = new Point(Game.RinkRight - RinkWidth * 0.07, y);
-            return MyLeft() ? a : b;
+            return MyLeft() ? new Point(Game.RinkLeft + RinkWidth*0.07, y) : new Point(Game.RinkRight - RinkWidth*0.07, y);
         }
 
         public void StayOn(Hockeyist self, Point to, double needAngle)
@@ -173,8 +174,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var friend =
                 world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie);
 
-            if (null == OppGoalie)
-                return;
+            //if (null == OppGoalie)
+            //    return;
             move.SpeedUp = Inf;
 
             var net = GetStrikePoint();
@@ -187,7 +188,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             else if (puck.OwnerHockeyistId == self.Id)
             {
-                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle, new Point(OppGoalie)) + "");
+                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle, Get(OppGoalie)) + "");
 
                 move.Turn = angleToNet;
                 int wait = Inf;
@@ -301,7 +302,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     move.Action = ActionType.Strike;
                 }
                 else if (puck.OwnerPlayerId != My.Id && CanStrike(self, puck) 
-                    && Strike(new Point(puck), GetSpeed(self), power, self.Angle, new Point(OppGoalie)))
+                    && Strike(new Point(puck), GetSpeed(self), power, self.Angle, Get(OppGoalie)))
                 {
                     move.Action = ActionType.Strike;
                 }
@@ -314,7 +315,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    var to = GetDefendPos2(new Point(self));
+                    var to = GetDefendPos2();
                     if (puck.OwnerPlayerId == My.Id || to.GetDistanceTo(self) < to.GetDistanceTo(friend))
                     {
                         var will = Math.Abs(self.GetAngleTo(puck)) >= Deg(90)
