@@ -64,5 +64,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                    && ho.GetDistanceTo(to) <= game.StickLength
                    && ho.RemainingKnockdownTicks == 0;
         }
+
+        double GetPower(int swingTime)
+        {
+            // TODO: use game.StrikePowerGrowthFactor
+            return Math.Min(game.MaxEffectiveSwingTicks, swingTime) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
+        }
+
+        public static Point GetPuckPos(Point hoPos, double hoAngle)
+        {
+            return hoPos + new Point(hoAngle)*HoPuckDist;
+        }
     }
 }

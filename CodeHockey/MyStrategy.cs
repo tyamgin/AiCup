@@ -3,9 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
+
+// TODO: нет вратаря
+// TODO: моделировать по тикам блок
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -23,6 +27,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static double RinkWidth, RinkHeight;
         public static Point RinkCenter;
         public static double PuckRadius;
+        public static double HoPuckDist = 55.0;
 
         public Point GetStrikePoint()
         {
@@ -64,18 +69,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var an = Point.GetAngleBetween(to, myPosition, myPosition + mySpeed);
             var speed = totalSpeed * Math.Cos(an);
             var a = game.HockeyistSpeedUpFactor;
-            return (Math.Sqrt(speed*speed + 2*a*myPosition.GetDistanceTo(to)) - speed)/a;
+            var dist = myPosition.GetDistanceTo(to);
+            dist = Math.Max(0.0, dist - game.StickLength);
+            return (Math.Sqrt(speed*speed + 2*a*dist) - speed)/a;
         }
 
         public Point GoToPuck(Point myPosition, Point mySpeed, double myAngle, out int ticks)
         {
             double best = Inf;
             var result = new Point(myPosition);
-            for (ticks = 0; ticks < 400; ticks++)
+            for (ticks = 0; ticks < 600; ticks++)
             {
-                var puckPosition = puck.OwnerHockeyistId == -1
-                    ? PuckMove(ticks, new Point(puck), new Point(puck.SpeedX, puck.SpeedY)) // если шайба катится
-                    : Get(puck); // если шайбы у противника
+                var puckPosition = PuckMove(ticks, new Point(puck), new Point(puck.SpeedX, puck.SpeedY));
                 var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, puckPosition);
 
                 if (needTicks <= ticks && ticks - needTicks < best)
@@ -108,7 +113,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (to.GetDistanceTo(self) < 1.5 * HoRadius)
             {
                 move.SpeedUp = 0;
-                move.Turn = needAngle;
+                move.Turn = needAngle;//!
                 return;
             }
 
@@ -147,7 +152,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var curSpeed = GetSpeed(self).Length;
                 var restDist = to.GetDistanceTo(self);
                 var a = curSpeed * curSpeed / 2 / restDist;
-                move.SpeedUp = a;
+                move.SpeedUp = a / (Math.Abs(angle) > Deg(90) ? game.HockeyistSpeedDownFactor : game.HockeyistSpeedUpFactor);
             }
         }
 
@@ -215,12 +220,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     a = -a;
                 move.SpeedUp = a / aS;
             }
-        }
-
-        double GetPower(int swingTime)
-        {
-            // TODO: use game.StrikePowerGrowthFactor
-            return Math.Min(game.MaxEffectiveSwingTicks, swingTime) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
         }
 
         public void Move(Hockeyist self, World world, Game game, Move move)
@@ -363,11 +362,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
 
-                if (puck.OwnerPlayerId == -1 && CanStrike(self, puck))
-                {
-                    move.Action = ActionType.TakePuck;
-                }
-                else if (puck.OwnerPlayerId == opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
+                var pk = new APuck(Get(puck), GetSpeed(puck), Get(myGoalie));
+                pk.IsDefend = true;
+
+                if (puck.OwnerPlayerId == opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
                 {
                     move.Action = ActionType.Strike;
                 }
@@ -378,9 +376,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
                 else if (puck.OwnerPlayerId != self.PlayerId && CanStrike(self, puck))
                 {
-                    var pk = new APuck(Get(puck), GetSpeed(puck), Get(myGoalie));
-                    pk.IsDefend = true;
-                    if (pk.Move(200) == 1) // если вратарь не отобьёт
+                    if (pk.Move(200, goalCheck: true) == 1) // если вратарь не отобьёт
                     {
                         move.Action = ActionType.Strike;
                     }
@@ -394,7 +390,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var to = GetDefendPos2(new Point(self));
                     if (puck.OwnerPlayerId == my.Id || to.GetDistanceTo(self) < to.GetDistanceTo(friend))
                     {
-                        StayOn(self, to, self.GetAngleTo(puck));
+                        var will = Math.Abs(self.GetAngleTo(puck)) >= Deg(90)
+                            ? PuckMove(100, new Point(puck), new Point(puck.SpeedX, puck.SpeedY))
+                            : Get(puck);
+                        StayOn(self, to, self.GetAngleTo(will.X, will.Y));
                     }
                     else
                     {

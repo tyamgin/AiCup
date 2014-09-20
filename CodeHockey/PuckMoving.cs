@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -10,8 +11,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         Point PuckMove(int ticks, Point _pos, Point _speed)
         {
             var pk = new APuck(_pos, _speed, new Point(oppGoalie));
-            pk.Move(ticks);
-            return pk;
+            var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
+            if (owner == null)
+            {
+                pk.Move(ticks);
+                return pk;
+            }
+            var ho = new AHo(Get(owner), GetSpeed(owner), owner.Angle, owner.AngularSpeed, owner);
+            ho.Move(1, 0, ticks); // TODO
+            return GetPuckPos(ho, ho.Angle);
         }
 
         double StrikeProbability(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker, Point goalie)
@@ -87,9 +95,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 I.Move(action.Second, action.Third, action.First);
                 totalTime += action.First;
             }
-            var pk = new Point(I.Angle) * pDist + I;
+            var pk = GetPuckPos(I, I.Angle);
             var goalie = new Point(oppGoalie);
-            //GoalieMove(goalie, totalTime, pk);
+            GoalieMove(goalie, totalTime, pk);
             return StrikeProbability(pk, I.Speed, power, I.Angle, goalie);
         }
     }

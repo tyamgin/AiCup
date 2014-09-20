@@ -38,12 +38,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bottom = MyStrategy.game.RinkBottom - MyStrategy.PuckRadius;
             var right = MyStrategy.game.RinkRight - MyStrategy.PuckRadius;
             var left = MyStrategy.game.RinkLeft + MyStrategy.PuckRadius;
+            var opp = IsDefend ? MyStrategy.my : MyStrategy.opp;
+            var isLeft = opp.NetFront > opp.NetBack;
 
             for (var tick = 1; tick <= ticks && (!goalCheck || breakCount < 1); tick++)
             {
                 Speed = Speed * APuck.FrictionCoeff;
                 X += Speed.X;
                 Y += Speed.Y;
+                var psx = Speed.X;
+                var psy = Speed.Y;
                 if (Y < top)
                 {
                     var penetration = top - Y;
@@ -77,14 +81,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     breakCount++;
                 }
 
-                var opp = IsDefend ? MyStrategy.my : MyStrategy.opp;
-
                 if (IntersectPuckAngGoalie())
                     return 0;
                 var dx = Math.Abs(X - opp.NetFront);
                 // TODO: не правильно: Y + dx * (Speed.Y / Speed.X) (а может и правильно)
-                if (Math.Abs((opp.NetFront < opp.NetBack ? (opp.NetFront - MyStrategy.PuckRadius) : (opp.NetFront + MyStrategy.PuckRadius)) - X) < 0.01 // (это стена ворот)
-                    && MyStrategy.IsBetween(MyStrategy.game.GoalNetTop + MyStrategy.PuckRadius, Y + dx * (Speed.Y / Speed.X), MyStrategy.game.GoalNetTop + MyStrategy.game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
+                if (Math.Abs((!isLeft ? (opp.NetFront - MyStrategy.PuckRadius) : (opp.NetFront + MyStrategy.PuckRadius)) - X) < 0.01 // (это стена ворот)
+                    && MyStrategy.IsBetween(MyStrategy.game.GoalNetTop + MyStrategy.PuckRadius, Y - (isLeft ? 1 : -1) * dx * psy / psx, MyStrategy.game.GoalNetTop + MyStrategy.game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
                     && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
                     )
                     return 1; // Goal !!
@@ -105,8 +107,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public APuck Clone()
         {
-            var clone = new APuck(X, Y, Speed.X, Speed.Y, Goalie);
-            clone.IsDefend = IsDefend;
+            var clone = new APuck(X, Y, Speed.X, Speed.Y, Goalie) {IsDefend = IsDefend};
             return clone;
         }
 
