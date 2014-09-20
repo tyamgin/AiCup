@@ -88,13 +88,27 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         double ProbabStrikeAfter(int wait, int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move)
         {
-            double pDist = self.GetDistanceTo(puck);
             var power = GetPower(swingTime);
             var I = new AHo(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
             var totalTime = 0;
+            var opps = World.Hockeyists.Where(
+                x => x.PlayerId == Opp.Id
+                     && x.State == HockeyistState.Active
+                     && x.Type != HockeyistType.Goalie
+                ).Select(x => new AHo(Get(x), GetSpeed(x), x.Angle, x.AngularSpeed, x)).ToArray();
+
             foreach (var action in move)
             {
-                I.Move(action.Second, action.Third, action.First);
+                for (int i = 0; i < action.First; i++)
+                {
+                    I.Move(action.Second, action.Third);
+                    foreach (var opp in opps)
+                    {
+                        opp.Move(1, 0);
+                        if (CanStrike(opp, I) || CanStrike(opp, GetPuckPos(I, I.Angle)))
+                            return 0.0;
+                    }
+                }
                 totalTime += action.First;
             }
             var pk = GetPuckPos(I, I.Angle);

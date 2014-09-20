@@ -194,7 +194,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 int wait = Inf;
                 double selTurn = 0, selSpeedUp = 0;
                 bool willSwing = false;
-                double maxProb = 0.6;
+                double maxProb = 0.5;
 
                 if (self.State != HockeyistState.Swinging)
                 {
