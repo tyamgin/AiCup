@@ -294,7 +294,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             else
             {
                 var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
-
                 var pk = new APuck(Get(puck), GetSpeed(puck), Get(MyGoalie)) {IsDefend = true};
 
                 if (puck.OwnerPlayerId == Opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
@@ -318,10 +317,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var to = GetDefendPos2();
                     if (puck.OwnerPlayerId == My.Id || to.GetDistanceTo(self) < to.GetDistanceTo(friend))
                     {
-                        var will = Math.Abs(self.GetAngleTo(puck)) >= Deg(90)
+                        var puckBe = Math.Abs(self.GetAngleTo(puck)) >= Deg(90)
                             ? PuckMove(100, new Point(puck), new Point(puck.SpeedX, puck.SpeedY))
                             : Get(puck);
-                        StayOn(self, to, self.GetAngleTo(will.X, will.Y));
+                        if (self.GetDistanceTo(puck) > 300 || !Defend(self, pk.Move(200, goalCheck: true) == 1))
+                        {
+                            StayOn(self, to, self.GetAngleTo(puckBe.X, puckBe.Y));
+                        }
                     }
                     else
                     {

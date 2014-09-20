@@ -74,6 +74,7 @@
     <Compile Include="AHo.cs" />
     <Compile Include="APuck.cs" />
     <Compile Include="AUnit.cs" />
+    <Compile Include="Defend.cs" />
     <Compile Include="FindPath.cs" />
     <Compile Include="Model\ActionType.cs" />
     <Compile Include="IStrategy.cs" />

@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -58,11 +60,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return Math.Exp(-Math.Pow(x - mu, 2)/2/sigma/sigma)/sigma/Math.Sqrt(2*Math.PI);
         }
 
-        bool CanStrike(Hockeyist ho, Unit to)
+        public static bool CanStrike(Hockeyist ho, Unit to)
         {
             return Math.Abs(ho.GetAngleTo(to)) <= Game.StickSector/2
                    && ho.GetDistanceTo(to) <= Game.StickLength
                    && ho.RemainingKnockdownTicks == 0;
+        }
+
+        public static bool CanStrike(AUnit ho, Point to)
+        {
+            return Math.Abs(ho.GetAngleTo(to)) <= Game.StickSector/2
+                   && ho.GetDistanceTo(to) <= Game.StickLength;
         }
 
         double GetPower(int swingTime)
@@ -74,6 +82,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static Point GetPuckPos(Point hoPos, double hoAngle)
         {
             return hoPos + new Point(hoAngle)*HoPuckDist;
+        }
+
+        public static void Pop(ArrayList a)
+        {
+            a.RemoveAt(a.Count - 1);
         }
     }
 }
