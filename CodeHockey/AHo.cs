@@ -32,12 +32,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void Move(double speedUp, double turn)
         {
-            if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.game.HockeyistTurnAngleFactor || turn < -MyStrategy.game.HockeyistTurnAngleFactor)
+            if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.Game.HockeyistTurnAngleFactor || turn < -MyStrategy.Game.HockeyistTurnAngleFactor)
                 throw new Exception();
 
             turn += AngularSpeed;
             AngularSpeed *= AngularSpeedCoeff;
-            var force = (speedUp >= 0 ? MyStrategy.game.HockeyistSpeedUpFactor : MyStrategy.game.HockeyistSpeedDownFactor) * speedUp;
+            var force = (speedUp >= 0 ? MyStrategy.Game.HockeyistSpeedUpFactor : MyStrategy.Game.HockeyistSpeedDownFactor) * speedUp;
 
             var dir = new Point(Angle).Normalized();
             Speed = (dir * force + Speed) * AHo.FrictionCoeff;

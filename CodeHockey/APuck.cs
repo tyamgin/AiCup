@@ -34,11 +34,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var mayGoal = -1;
             var breakCount = 0;
 
-            var top = MyStrategy.game.RinkTop + MyStrategy.PuckRadius;
-            var bottom = MyStrategy.game.RinkBottom - MyStrategy.PuckRadius;
-            var right = MyStrategy.game.RinkRight - MyStrategy.PuckRadius;
-            var left = MyStrategy.game.RinkLeft + MyStrategy.PuckRadius;
-            var opp = IsDefend ? MyStrategy.my : MyStrategy.opp;
+            var top = MyStrategy.Game.RinkTop + MyStrategy.PuckRadius;
+            var bottom = MyStrategy.Game.RinkBottom - MyStrategy.PuckRadius;
+            var right = MyStrategy.Game.RinkRight - MyStrategy.PuckRadius;
+            var left = MyStrategy.Game.RinkLeft + MyStrategy.PuckRadius;
+            var opp = IsDefend ? MyStrategy.My : MyStrategy.Opp;
             var isLeft = opp.NetFront > opp.NetBack;
 
             for (var tick = 1; tick <= ticks && (!goalCheck || breakCount < 1); tick++)
@@ -86,7 +86,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var dx = Math.Abs(X - opp.NetFront);
                 // TODO: не правильно: Y + dx * (Speed.Y / Speed.X) (а может и правильно)
                 if (Math.Abs((!isLeft ? (opp.NetFront - MyStrategy.PuckRadius) : (opp.NetFront + MyStrategy.PuckRadius)) - X) < 0.01 // (это стена ворот)
-                    && MyStrategy.IsBetween(MyStrategy.game.GoalNetTop + MyStrategy.PuckRadius, Y - (isLeft ? 1 : -1) * dx * psy / psx, MyStrategy.game.GoalNetTop + MyStrategy.game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
+                    && MyStrategy.IsBetween(MyStrategy.Game.GoalNetTop + MyStrategy.PuckRadius, Y - (isLeft ? 1 : -1) * dx * psy / psx, MyStrategy.Game.GoalNetTop + MyStrategy.Game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
                     && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
                     )
                     return 1; // Goal !!

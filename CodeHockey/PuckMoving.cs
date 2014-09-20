@@ -10,8 +10,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
     {
         Point PuckMove(int ticks, Point _pos, Point _speed)
         {
-            var pk = new APuck(_pos, _speed, new Point(oppGoalie));
-            var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
+            var pk = new APuck(_pos, _speed, new Point(OppGoalie));
+            var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
             if (owner == null)
             {
                 pk.Move(ticks);
@@ -24,26 +24,26 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         double StrikeProbability(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker, Point goalie)
         {
-            double range = game.StrikeAngleDeviation * 2,
-                dx = game.StrikeAngleDeviation / 20,
+            double range = Game.StrikeAngleDeviation * 2,
+                dx = Game.StrikeAngleDeviation / 20,
                 result = 0;
 
             for (double L = -range; L + dx <= range; L += dx)
             {
                 double x = L + dx;
                 if (Strike(puckPos, strikerSpeed, StrikePower, AngleStriker + x, goalie))
-                    result += dx*Gauss(x, 0, game.StrikeAngleDeviation);
+                    result += dx*Gauss(x, 0, Game.StrikeAngleDeviation);
             }
             return result;
         }
 
         bool Strike(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker, Point goalie)
         {
-            if (Math.Abs(puckPos.X - opp.NetFront) > RinkWidth/2)
+            if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth/2)
                 return false;
 
             // TODO: временный костыль
-            if (Math.Abs(puckPos.X - opp.NetFront) < 2*HoRadius)
+            if (Math.Abs(puckPos.X - Opp.NetFront) < 2*HoRadius)
                 return false;
 
             if (MyRight())
@@ -71,12 +71,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             for (var tick = 0; tick < ticks; tick++)
             {
                 if (goalie.Y > to.Y)
-                    goalie.Y -= Math.Min(game.GoalieMaxSpeed, goalie.Y - to.Y);
+                    goalie.Y -= Math.Min(Game.GoalieMaxSpeed, goalie.Y - to.Y);
                 else
-                    goalie.Y += Math.Min(game.GoalieMaxSpeed, to.Y - goalie.Y);
+                    goalie.Y += Math.Min(Game.GoalieMaxSpeed, to.Y - goalie.Y);
 
-                var minY = opp.NetTop + HoRadius;
-                var maxY = opp.NetBottom - HoRadius;
+                var minY = Opp.NetTop + HoRadius;
+                var maxY = Opp.NetBottom - HoRadius;
                 if (goalie.Y < minY)
                     goalie.Y = minY;
                 if (goalie.Y > maxY)
@@ -96,7 +96,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 totalTime += action.First;
             }
             var pk = GetPuckPos(I, I.Angle);
-            var goalie = new Point(oppGoalie);
+            var goalie = new Point(OppGoalie);
             GoalieMove(goalie, totalTime, pk);
             return StrikeProbability(pk, I.Speed, power, I.Angle, goalie);
         }

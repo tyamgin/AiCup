@@ -1,27 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 // TODO: нет вратаря
 // TODO: моделировать по тикам блок
+// TODO: когда хочу бить - смотреть что отберут шайбу
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
     public partial class MyStrategy : IStrategy
     {
         public Puck puck;
-        public static Move move;
-        public static Player opp, my;
-        private Hockeyist oppGoalie;
-        private Hockeyist myGoalie;
-        public static World world;
-        public static Game game;
+        public Move move;
+        public static Player Opp, My;
+        public static Hockeyist OppGoalie;
+        public static Hockeyist MyGoalie;
+        public static World World;
+        public static Game Game;
         
         public static double HoRadius;
         public static double RinkWidth, RinkHeight;
@@ -31,18 +29,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Point GetStrikePoint()
         {
-            double delta = 1;
-            double shift = 15;
-            double x = opp.NetFront;
-            double bestDist = 0;
-            double bestY = 0;
-            double minY = Math.Min(opp.NetBottom, opp.NetTop);
-            double maxY = Math.Max(opp.NetBottom, opp.NetTop);
-            for (double y = minY + shift; y <= maxY - shift; y += delta)
+            const double delta = 1;
+            const double shift = 15;
+            double x = Opp.NetFront,
+                bestDist = 0,
+                bestY = 0,
+                minY = Math.Min(Opp.NetBottom, Opp.NetTop),
+                maxY = Math.Max(Opp.NetBottom, Opp.NetTop);
+            for (var y = minY + shift; y <= maxY - shift; y += delta)
             {
-                if (oppGoalie.GetDistanceTo(x, y) > bestDist)
+                if (OppGoalie.GetDistanceTo(x, y) > bestDist)
                 {
-                    bestDist = oppGoalie.GetDistanceTo(x, y);
+                    bestDist = OppGoalie.GetDistanceTo(x, y);
                     bestY = y;
                 }
             }
@@ -51,10 +49,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         Point GetStrikeFrom(Point myPositionPoint, Point mySpeed, double myAngle)
         {
-            var x1 = game.RinkLeft + RinkWidth * 0.4;
-            var x2 = game.RinkRight - RinkWidth * 0.4;
-            var y1 = game.RinkTop + RinkHeight * 0.18;
-            var y2 = game.RinkBottom - RinkHeight * 0.18;
+            var x1 = Game.RinkLeft + RinkWidth * 0.4;
+            var x2 = Game.RinkRight - RinkWidth * 0.4;
+            var y1 = Game.RinkTop + RinkHeight * 0.18;
+            var y2 = Game.RinkBottom - RinkHeight * 0.18;
 
             var a = new Point(MyRight() ? x1 : x2, y1);
             var b = new Point(MyRight() ? x1 : x2, y2);
@@ -68,9 +66,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var totalSpeed = mySpeed.Length;
             var an = Point.GetAngleBetween(to, myPosition, myPosition + mySpeed);
             var speed = totalSpeed * Math.Cos(an);
-            var a = game.HockeyistSpeedUpFactor;
+            var a = Game.HockeyistSpeedUpFactor;
             var dist = myPosition.GetDistanceTo(to);
-            dist = Math.Max(0.0, dist - game.StickLength);
+            dist = Math.Max(0.0, dist - Game.StickLength);
             return (Math.Sqrt(speed*speed + 2*a*dist) - speed)/a;
         }
 
@@ -100,9 +98,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         Point GetDefendPos2(Point myPosition)
         {
-            var y = myGoalie.Y > RinkCenter.Y ? my.NetTop + 1.2 * HoRadius : my.NetBottom - 1.2 * HoRadius;
-            var a = new Point(game.RinkLeft + RinkWidth * 0.07, y);
-            var b = new Point(game.RinkRight - RinkWidth * 0.07, y);
+            var y = MyGoalie.Y > RinkCenter.Y ? My.NetTop + 1.2 * HoRadius : My.NetBottom - 1.2 * HoRadius;
+            var a = new Point(Game.RinkLeft + RinkWidth * 0.07, y);
+            var b = new Point(Game.RinkRight - RinkWidth * 0.07, y);
             return MyLeft() ? a : b;
         }
 
@@ -152,96 +150,30 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var curSpeed = GetSpeed(self).Length;
                 var restDist = to.GetDistanceTo(self);
                 var a = curSpeed * curSpeed / 2 / restDist;
-                move.SpeedUp = a / (Math.Abs(angle) > Deg(90) ? game.HockeyistSpeedDownFactor : game.HockeyistSpeedUpFactor);
-            }
-        }
-
-        public void StayOn_(Hockeyist self, Point to, double needAngle)
-        {
-            if (to.GetDistanceTo(self) < 2 * HoRadius)
-            {
-                var dx = self.Angle * Math.Cos(self.Angle) / 100;
-                var dy = self.Angle * Math.Sin(self.Angle) / 100;
-                var speed = GetSpeed(self);
-                var an = Math.Abs(AngleNormalize(self.GetAngleTo(speed.X, speed.Y)));
-                if (to.GetDistanceTo(self.X + dx, self.Y + dy) < to.GetDistanceTo(self.X - dx, self.Y - dy))
-                {
-                    move.SpeedUp = an > Deg(90) ? 1 : 0.2;
-                    move.Turn = needAngle;
-                }
-                else
-                {
-                    move.SpeedUp = an < Deg(90) ? -1 : -0.2;
-                    //move.Turn = needAngle < 0 ? Deg(180) + needAngle : needAngle - Deg(180);
-                    move.Turn = needAngle;
-                }
-                return;
-            }
-
-            var v0 = GetSpeed(self).Length;
-            var S = to.GetDistanceTo(self);
-            var s1Res = 0.0;
-            var tRes = Inf + 0.0;
-
-            double aS = 0.116;
-            double angle = AngleNormalize(self.GetAngleTo(to.X, to.Y)); // заменить на вектор скорости?
-
-            if (Math.Abs(angle) > Deg(90))
-            {
-                move.Turn = angle < 0 ? Deg(180) + angle : angle - Deg(180); // ??
-                aS = 0.069;
-            }
-            else
-                move.Turn = angle;
-
-            for (double s1 = 0; s1 <= S; s1 += 0.5)
-            {
-                var s2 = S - s1;
-                var t1 = (Math.Sqrt(v0 * v0 + 2 * aS * s1) - v0) / aS;
-                var vm = v0 + aS * t1;
-                var a = vm*vm/2/s2;
-                var t2 = Math.Sqrt(2*s2/a);
-                var t = t1 + t2;
-                if (t < tRes && IsBetween(-1.02, a / aS, 1.02))
-                {
-                    tRes = t;
-                    s1Res = s1;
-                }
-            }
-            
-            if (s1Res > Eps)
-            {
-                move.SpeedUp = Math.Abs(angle) > Deg(90) ? -1 : 1;
-            }
-            else
-            {
-                var a = v0 * v0/ 2 / S;
-                if (Math.Abs(angle) < Deg(90))
-                    a = -a;
-                move.SpeedUp = a / aS;
+                move.SpeedUp = a / (Math.Abs(angle) > Deg(90) ? Game.HockeyistSpeedDownFactor : Game.HockeyistSpeedUpFactor);
             }
         }
 
         public void Move(Hockeyist self, World world, Game game, Move move)
         {
             ShowWindow();
-            MyStrategy.move = move;
-            MyStrategy.world = world;
-            MyStrategy.game = game;
             this.puck = world.Puck;
-            MyStrategy.opp = world.GetOpponentPlayer();
-            MyStrategy.my = world.GetMyPlayer();
+            this.move = move;
+            MyStrategy.World = world;
+            MyStrategy.Game = game;
+            MyStrategy.Opp = world.GetOpponentPlayer();
+            MyStrategy.My = world.GetMyPlayer();
             MyStrategy.RinkWidth = game.RinkRight - game.RinkLeft;
             MyStrategy.RinkHeight = game.RinkBottom - game.RinkTop;
-            this.oppGoalie = world.Hockeyists.FirstOrDefault(x => !x.IsTeammate && x.Type == HockeyistType.Goalie);
-            this.myGoalie = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Type == HockeyistType.Goalie);
+            MyStrategy.OppGoalie = world.Hockeyists.FirstOrDefault(x => !x.IsTeammate && x.Type == HockeyistType.Goalie);
+            MyStrategy.MyGoalie = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Type == HockeyistType.Goalie);
             MyStrategy.HoRadius = self.Radius;
             MyStrategy.RinkCenter = new Point(game.RinkLeft + RinkWidth/2, game.RinkTop + RinkHeight/2);
             MyStrategy.PuckRadius = puck.Radius;
             var friend =
                 world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie);
 
-            if (null == oppGoalie)
+            if (null == OppGoalie)
                 return;
             move.SpeedUp = Inf;
 
@@ -255,7 +187,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             else if (puck.OwnerHockeyistId == self.Id)
             {
-                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle, new Point(oppGoalie)) + "");
+                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle, new Point(OppGoalie)) + "");
 
                 move.Turn = angleToNet;
                 int wait = Inf;
@@ -362,33 +294,28 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
 
-                var pk = new APuck(Get(puck), GetSpeed(puck), Get(myGoalie));
-                pk.IsDefend = true;
+                var pk = new APuck(Get(puck), GetSpeed(puck), Get(MyGoalie)) {IsDefend = true};
 
-                if (puck.OwnerPlayerId == opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
+                if (puck.OwnerPlayerId == Opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
                 {
                     move.Action = ActionType.Strike;
                 }
-                else if (puck.OwnerPlayerId != my.Id && CanStrike(self, puck) 
-                    && Strike(new Point(puck), GetSpeed(self), power, self.Angle, new Point(oppGoalie)))
+                else if (puck.OwnerPlayerId != My.Id && CanStrike(self, puck) 
+                    && Strike(new Point(puck), GetSpeed(self), power, self.Angle, new Point(OppGoalie)))
                 {
                     move.Action = ActionType.Strike;
                 }
                 else if (puck.OwnerPlayerId != self.PlayerId && CanStrike(self, puck))
                 {
                     if (pk.Move(200, goalCheck: true) == 1) // если вратарь не отобьёт
-                    {
                         move.Action = ActionType.Strike;
-                    }
                     else
-                    {
                         move.Action = ActionType.TakePuck;
-                    }
                 }
                 else
                 {
                     var to = GetDefendPos2(new Point(self));
-                    if (puck.OwnerPlayerId == my.Id || to.GetDistanceTo(self) < to.GetDistanceTo(friend))
+                    if (puck.OwnerPlayerId == My.Id || to.GetDistanceTo(self) < to.GetDistanceTo(friend))
                     {
                         var will = Math.Abs(self.GetAngleTo(puck)) >= Deg(90)
                             ? PuckMove(100, new Point(puck), new Point(puck.SpeedX, puck.SpeedY))

@@ -23,15 +23,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 Point nPoint = new Point(puck);
                 var t = 1;
-                var prevTick = world.Tick - t;
+                var prevTick = World.Tick - t;
                 if (iPoint.ContainsKey(prevTick))
                 {
                     var sp = (Point) iSpeed[prevTick];
                     var m = (sp.Length - GetSpeed(puck).Length)/t;
                     Console.WriteLine(m / sp.Length);
                 }
-                iPoint[world.Tick] = nPoint;
-                iSpeed[world.Tick] = GetSpeed(puck);
+                iPoint[World.Tick] = nPoint;
+                iSpeed[World.Tick] = GetSpeed(puck);
             }
         }
 
@@ -40,7 +40,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             if (TK(90))
             {
-                __puck = new APuck(Get(puck), GetSpeed(puck), Get(oppGoalie));
+                __puck = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
                 __puck.Move(30);
             }
 
@@ -48,18 +48,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 Point nPoint = Get(puck);
                 var t = 1;
-                var prevTick = world.Tick - t;
+                var prevTick = World.Tick - t;
                 if (iPoint.ContainsKey(prevTick))
                 {
                     var sp = (Point)iSpeed[prevTick];
                     if (sp.Length > 0.0001 && Math.Abs(sp.Length * APuck.FrictionCoeff - GetSpeed(puck).Length) > 0.00001)
                     {
-                        var pk = new APuck(iPoint[prevTick] as Point, sp, Get(oppGoalie));
+                        var pk = new APuck(iPoint[prevTick] as Point, sp, Get(OppGoalie));
                         pk.Move(1);
                         pk.Move(1);
                         pk.Move(1);
-                        if (IsBetween(0, puck.Y, game.RinkTop + 2*PuckRadius) ||
-                            IsBetween(game.RinkBottom - 2*PuckRadius, puck.Y, Inf))
+                        if (IsBetween(0, puck.Y, Game.RinkTop + 2*PuckRadius) ||
+                            IsBetween(Game.RinkBottom - 2*PuckRadius, puck.Y, Inf))
                         {
                             var ut = (sp * APuck.FrictionCoeff).Y / puck.SpeedY;
                             Console.WriteLine("          " + ut.ToString().Replace(',', '.'));
@@ -71,18 +71,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                     }
                 }
-                iPoint[world.Tick] = nPoint;
-                iSpeed[world.Tick] = GetSpeed(puck);
+                iPoint[World.Tick] = nPoint;
+                iSpeed[World.Tick] = GetSpeed(puck);
             }
         }
 
         // Проверка движение хоккеиста
         void Research3(Hockeyist self)
         {
-            move.Turn = game.HockeyistTurnAngleFactor / 2;
+            move.Turn = Game.HockeyistTurnAngleFactor / 2;
             move.SpeedUp = 0.8;
             var pl = new AHo(new Point(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
-            pl.Move(0.8, game.HockeyistTurnAngleFactor / 2, 20);
+            pl.Move(0.8, Game.HockeyistTurnAngleFactor / 2, 20);
         }
 
         private APuck __puck;
@@ -92,7 +92,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             if (TK(190))
             {
-                __puck = new APuck(Get(puck), GetSpeed(puck), Get(oppGoalie));
+                __puck = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
                 __puck.Move(10);
             }
             if (TK(190 + 10))

@@ -36,8 +36,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             for (var dir = -1; dir <= 1; dir += 2)
             {
                 for (var _angle = 0.0;
-                    _angle <= game.HockeyistTurnAngleFactor;
-                    _angle += game.HockeyistTurnAngleFactor/angles)
+                    _angle <= Game.HockeyistTurnAngleFactor;
+                    _angle += Game.HockeyistTurnAngleFactor/angles)
                 {
                     if (Eq(0.0, _angle) && dir == -1)
                         continue;

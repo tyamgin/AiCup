@@ -71,24 +71,24 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             var panel = form.panel;
 
-            form.TickLabel.Text = world.Tick + "";
+            form.TickLabel.Text = World.Tick + "";
             form.ScoreLabel.Text = MyRight()
-                ? opp.GoalCount + " : " + my.GoalCount
-                : my.GoalCount + " : " + opp.GoalCount;
+                ? Opp.GoalCount + " : " + My.GoalCount
+                : My.GoalCount + " : " + Opp.GoalCount;
 
             var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
             panel.Image = drawArea;
             g = Graphics.FromImage(drawArea);
 
             // Хоккеисты
-            foreach (var ho in world.Hockeyists)
+            foreach (var ho in World.Hockeyists)
             {
                 var brush = ho.IsTeammate ? Brushes.Blue : Brushes.Red;
                 if (ho.Type != HockeyistType.Goalie)
                 {
                     g.DrawLine(new Pen(brush), (int)ho.X, (int)ho.Y,
-                        (int)(ho.X + Math.Cos(ho.Angle) * game.StickLength),
-                        (int)(ho.Y + Math.Sin(ho.Angle) * game.StickLength)
+                        (int)(ho.X + Math.Cos(ho.Angle) * Game.StickLength),
+                        (int)(ho.Y + Math.Sin(ho.Angle) * Game.StickLength)
                         );
                 }
                 var font = new Font(FontFamily.GenericMonospace, 10);
@@ -116,7 +116,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
             // Ворота
-            foreach (var player in world.Players)
+            foreach (var player in World.Players)
             {
                 var y1 = (int)player.NetBottom;
                 var y2 = (int)player.NetTop;
@@ -130,10 +130,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             // Поле
             {
-                var x1 = game.RinkLeft;
-                var x2 = game.RinkRight;
-                var y1 = game.RinkTop;
-                var y2 = game.RinkBottom;
+                var x1 = Game.RinkLeft;
+                var x2 = Game.RinkRight;
+                var y1 = Game.RinkTop;
+                var y2 = Game.RinkBottom;
                 DrawLine(Brushes.Black, x1, y1, x1, y2);
                 DrawLine(Brushes.Black, x2, y1, x2, y2);
                 DrawLine(Brushes.Black, x1, y1, x2, y1);
@@ -175,7 +175,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         private bool TK(int tick)
         {
-            return tick == world.Tick;
+            return tick == World.Tick;
         }
     }
 }

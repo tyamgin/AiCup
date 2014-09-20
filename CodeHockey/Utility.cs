@@ -34,7 +34,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public bool MyRight()
         {
-            return opp.NetFront < RinkCenter.X;
+            return Opp.NetFront < RinkCenter.X;
         }
 
         public static bool IsBetween(double left, double x, double right)
@@ -60,15 +60,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         bool CanStrike(Hockeyist ho, Unit to)
         {
-            return Math.Abs(ho.GetAngleTo(to)) <= game.StickSector/2
-                   && ho.GetDistanceTo(to) <= game.StickLength
+            return Math.Abs(ho.GetAngleTo(to)) <= Game.StickSector/2
+                   && ho.GetDistanceTo(to) <= Game.StickLength
                    && ho.RemainingKnockdownTicks == 0;
         }
 
         double GetPower(int swingTime)
         {
             // TODO: use game.StrikePowerGrowthFactor
-            return Math.Min(game.MaxEffectiveSwingTicks, swingTime) * 0.25 / game.MaxEffectiveSwingTicks + 0.75;
+            return Math.Min(Game.MaxEffectiveSwingTicks, swingTime) * 0.25 / Game.MaxEffectiveSwingTicks + 0.75;
         }
 
         public static Point GetPuckPos(Point hoPos, double hoAngle)
