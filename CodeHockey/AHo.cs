@@ -57,5 +57,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             return new AHo(X, Y, Speed.X, Speed.Y, Angle, AngularSpeed, baseParams);
         }
+        public Point PuckPos()
+        {
+            return MyStrategy.GetPuckPos(this, Angle);
+        }
+        public Point TakePos()
+        {
+            return this + new Point(Angle) * MyStrategy.Game.StickLength;
+        }
     }
 }

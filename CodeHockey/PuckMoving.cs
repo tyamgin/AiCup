@@ -8,18 +8,24 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        Point PuckMove(int ticks, Point _pos, Point _speed)
+        Point PuckMove(int ticks, APuck pk, AHo ho)
         {
-            var pk = new APuck(_pos, _speed, Get(OppGoalie));
-            var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
-            if (owner == null)
+            if (ho == null)
             {
                 pk.Move(ticks);
-                return pk;
+                return new Point(pk);
             }
-            var ho = new AHo(Get(owner), GetSpeed(owner), owner.Angle, owner.AngularSpeed, owner);
-            ho.Move(1, 0, ticks); // TODO
-            return GetPuckPos(ho, ho.Angle);
+            if (ho.Speed.Length > 10)
+                ho.Move(1, 0, ticks); // TODO
+            return ho.PuckPos();
+        }
+
+        Point PuckMove(int ticks, Point _pos, Point _speed)
+        {
+            var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
+            var ho = owner == null ? null : new AHo(Get(owner), GetSpeed(owner), owner.Angle, owner.AngularSpeed, owner);
+            var pk = new APuck(_pos, _speed, Get(OppGoalie));
+            return PuckMove(ticks, pk, ho);
         }
 
         double StrikeProbability(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker, Point goalie)

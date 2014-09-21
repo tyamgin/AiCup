@@ -88,5 +88,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             a.RemoveAt(a.Count - 1);
         }
+
+        public static double TurnNorm(double turn)
+        {
+            if (turn > Game.HockeyistTurnAngleFactor)
+                turn = Game.HockeyistTurnAngleFactor;
+            else if (turn < -Game.HockeyistTurnAngleFactor)
+                turn = -Game.HockeyistTurnAngleFactor;
+            return turn;
+        }
     }
 }
