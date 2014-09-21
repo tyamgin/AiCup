@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
 
         public static void Main(string[] args) {
 
-#if DEBUG
+#if !DEBUG
             Process.Start("D:\\Projects\\AiCup\\CodeHockey\\local_runner\\local-runner.bat");
             Thread.Sleep(2000);
             var oldStrategy = new Process

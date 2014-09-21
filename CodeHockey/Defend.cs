@@ -12,9 +12,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
     {
         private double defend_maxProbab;
         private APuck[] defend_puckState;
-        private int defend_spUps = 2;
+        private int defend_spUps = 1;
         private int defend_angles = 3;
-        private int defend_maxDeep = 10;
+        private int defend_maxDeep = 9;
         private int defend_sp_dir;
         private int defend_turn_dir;
         private ArrayList defend_stack = new ArrayList();
