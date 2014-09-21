@@ -15,7 +15,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 pk.Move(ticks);
                 return new Point(pk);
             }
-            if (ho.Speed.Length > 10)
+            if (Math.Abs(ho.GetAngleTo(ho + ho.Speed)) < Deg(5) && ho.Speed.Length > 4)
                 ho.Move(1, 0, ticks); // TODO
             return ho.PuckPos();
         }

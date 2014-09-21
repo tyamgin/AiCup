@@ -85,7 +85,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
             var ho = owner == null ? null : new AHo(Get(owner), GetSpeed(owner), owner.Angle, owner.AngularSpeed, owner);
 
-            for (var ticks = 0; ticks < 800; ticks++)
+            for (var ticks = 0; ticks < 300; ticks++)
             {
                 var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, myAngularSpeed, PuckMove(0, pk, ho), my);
 
@@ -98,7 +98,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 PuckMove(1, pk, ho);
             }
             if (result == null)
-                return new Point(myPosition);
+                return Get(puck);
             return result;
         }
 
@@ -106,6 +106,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             int ticks;
             return GoToPuck(myPosition, mySpeed, myAngle, myAngularSpeed, my, out ticks);
+        }
+
+        public int GetTicksToPuck(Point myPosition, Point mySpeed, double myAngle, double myAngularSpeed, Hockeyist my)
+        {
+            int ticks;
+            GoToPuck(myPosition, mySpeed, myAngle, myAngularSpeed, my, out ticks);
+            return ticks;
         }
 
         Point GetDefendPos2()
@@ -206,7 +213,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (self.State != HockeyistState.Swinging)
                 {
                     // если не замахнулся
-                    for (int ticks = 0; ticks < 40; ticks++)
+                    for (int ticks = 0; ticks < 60; ticks++)
                     {
                         double p;
                         // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
@@ -254,7 +261,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 else
                 {
                     // если уже замахнулся
-                    for (int ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks); ticks < 60; ticks++)
+                    for (int ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks); ticks < 80; ticks++)
                     {
                         var p = ProbabStrikeAfter(ticks, ticks + self.SwingTicks, self,
                             new[] {new Tuple<int, double, double>(ticks, 0, 0)});
@@ -322,7 +329,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 else
                 {
                     var to = GetDefendPos2();
-                    if (puck.OwnerPlayerId == My.Id || to.GetDistanceTo(self) < to.GetDistanceTo(friend))
+                    if (puck.OwnerPlayerId == My.Id 
+                        || to.GetDistanceTo(self) < to.GetDistanceTo(friend))
+                        //|| GetTicksToPuck(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self)
+                        //> GetTicksToPuck(Get(friend), GetSpeed(friend), friend.Angle, friend.AngularSpeed, friend))
                     {
                         var puckBe = Math.Abs(self.GetAngleTo(puck)) >= Deg(90)
                             ? PuckMove(100, Get(puck), GetSpeed(puck))
