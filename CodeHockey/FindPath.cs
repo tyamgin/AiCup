@@ -21,9 +21,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private int fp_minTime;
         private int fp_spUps = 1;
         private int fp_angles = 2;
-        private int fp_maxDeep = 6;
+        private int fp_maxDeep = 7;
         private int fp_sp_dir;
         private int fp_turn_dir;
+        private int fp_cut_count;
         private ArrayList fp_stack = new ArrayList();
         private ArrayList fp_best_stack = new ArrayList();
         private double[][] fp_turns = {
@@ -36,8 +37,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             if (deep > fp_maxDeep)
                 return;
-            if (time > fp_minTime) // TODO: + оценка снизу
+            if (time/* + Math.Min(GetTicksToUp(ho, fp_to, fp_okDist), GetTicksToDown(ho, fp_to, fp_okDist))*/ > fp_minTime)
+                // TODO: + оценка снизу
+            {
+                if (time <= fp_minTime)
+                    fp_cut_count++;
                 return;
+            }
 
             if (ho.GetDistanceTo2(fp_to) < fp_okDist*fp_okDist && Math.Abs(AngleNormalize(fp_need - ho.Angle)) < fp_okAngle)
             {
@@ -68,6 +74,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             fp_okDist = HoRadius*1.3;
             fp_per = (int)(from.GetDistanceTo(to)/fp_maxDeep + 2);
             fp_okAngle = from.GetDistanceTo(to) < 70 ? Deg(5) : Deg(15);
+            fp_cut_count = 0;
             var state = new AHo(from, speed, angle, angularSpeed, self);
             for (fp_sp_dir = -1; fp_sp_dir <= 1; fp_sp_dir += 2)
             {

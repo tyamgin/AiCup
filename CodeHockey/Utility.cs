@@ -97,5 +97,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 turn = -Game.HockeyistTurnAngleFactor;
             return turn;
         }
+
+        double GetSpeedTo(double turn)
+        {
+            var speedUp = 1.0;
+            if (Math.Abs(turn) > Deg(40))
+                speedUp = 0.2;
+            else if (Math.Abs(turn) > Deg(60))
+                speedUp = 0.05;
+            return speedUp;
+        }
     }
 }

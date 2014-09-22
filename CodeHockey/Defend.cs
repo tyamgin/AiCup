@@ -54,6 +54,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public bool Defend(Hockeyist ho, bool tmp)
         {
+            throw new NotImplementedException();
             if (!tmp)
                 return false;
             defend_puckState = new APuck[defend_maxDeep + 1];

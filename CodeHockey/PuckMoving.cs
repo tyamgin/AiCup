@@ -20,14 +20,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return ho.PuckPos();
         }
 
-        Point PuckMove(int ticks, Point _pos, Point _speed)
-        {
-            var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
-            var ho = owner == null ? null : new AHo(Get(owner), GetSpeed(owner), owner.Angle, owner.AngularSpeed, owner);
-            var pk = new APuck(_pos, _speed, Get(OppGoalie));
-            return PuckMove(ticks, pk, ho);
-        }
-
         double StrikeProbability(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker, Point goalie)
         {
             double range = Game.StrikeAngleDeviation * 2,
@@ -121,6 +113,25 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var goalie = Get(OppGoalie);
             GoalieMove(goalie, totalTime, pk);
             return StrikeProbability(pk, I.Speed, power, I.Angle, goalie);
+        }
+
+        public void Catch(Hockeyist self)
+        {
+            var pk = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
+            for (var i = 0; i < 200; i++)
+            {
+                
+            }
+        }
+
+        public Point Pass(Point striker, Point strikerSpeed, double angleStriker, double PassPower, double PassAngle, int ticks)
+        {
+            var puckSpeed = 15.0*PassPower + strikerSpeed.Length*Math.Cos(angleStriker + PassAngle - strikerSpeed.GetAngle());
+            var puckAngle = AngleNormalize(PassAngle + GetSpeed(puck).GetAngle());
+            var PuckSpeed = new Point(puckAngle)*puckSpeed;
+            var pk = new APuck(Get(puck), PuckSpeed, Get(OppGoalie));
+            pk.Move(ticks);
+            return pk;
         }
     }
 }

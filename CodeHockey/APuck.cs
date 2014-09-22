@@ -86,7 +86,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (IntersectPuckAngGoalie())
                     return 0;
                 var dx = Math.Abs(X - opp.NetFront);
-                // TODO: не правильно: Y + dx * (Speed.Y / Speed.X) (а может и правильно)
+                
                 if (Math.Abs((!isLeft ? (opp.NetFront - MyStrategy.PuckRadius) : (opp.NetFront + MyStrategy.PuckRadius)) - X) < 0.01 // (это стена ворот)
                     && MyStrategy.IsBetween(MyStrategy.Game.GoalNetTop + MyStrategy.PuckRadius, Y - (isLeft ? 1 : -1) * dx * psy / psx, MyStrategy.Game.GoalNetTop + MyStrategy.Game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
                     && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
