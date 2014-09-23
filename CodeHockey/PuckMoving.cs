@@ -139,12 +139,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (self.RemainingCooldownTicks != 0)
                 return false;
 
-            const int psss = 3;
-            const int pwrs = 4;
+            const int psss = 4;
             var bestAngle = 0.0;
             var minTime = Inf;
             var bestPower = 0.0;
-            for (var power = 0.0; power <= 1.0; power += 1.0/pwrs)
+            foreach (var power in new[] { 0.1, 0.3, 0.5, 0.8, 1.0 })
             {
                 for (var dir = -1; dir <= 1; dir += 2)
                 {

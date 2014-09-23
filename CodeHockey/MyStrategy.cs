@@ -78,6 +78,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var turn = ho.GetAngleTo(to);
                 var speedUp = GetSpeedTo(turn);
                 ho.Move(speedUp, TurnNorm(turn));
+
+                if (result > 1000)
+                    return result; // TODO: временный костыль, ибо почему-то падает
             }
             return result;
         }
