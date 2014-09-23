@@ -20,8 +20,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private double fp_okAngle;
         private int fp_minTime;
         private int fp_spUps = 1;
-        private int fp_angles = 2;
-        private int fp_maxDeep = 7;
+        private int fp_maxDeep = 6;
+        //private int fp_maxDeep = 4;
         private int fp_sp_dir;
         private int fp_turn_dir;
         private int fp_cut_count;

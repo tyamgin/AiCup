@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -102,7 +103,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     I.Move(action.Second, action.Third);
                     foreach (var opp in opps)
                     {
-                        opp.Move(1, 0);
+                        opp.Move(1, TurnNorm(opp.GetAngleTo(I)));
                         if (CanStrike(opp, I) || CanStrike(opp, GetPuckPos(I, I.Angle)))
                             return 0.0;
                     }
@@ -115,23 +116,68 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return StrikeProbability(pk, I.Speed, power, I.Angle, goalie);
         }
 
-        public void Catch(Hockeyist self)
+        int GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk)
         {
-            var pk = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
-            for (var i = 0; i < 200; i++)
-            {
-                
-            }
+            var cands = World.Hockeyists.Where(
+                x => x.State == HockeyistState.Active
+                     && x.Type != HockeyistType.Goalie
+                     && x.RemainingCooldownTicks == 0
+                     && except.Count(y => y.Id == x.Id) == 0
+                ).ToArray();
+            var times = cands.Select(x => GetTicksToPuck(Get(x), GetSpeed(x), x.Angle, x.AngularSpeed, x, pk)).ToArray();
+            int whereMin = 0;
+            for(var i = 1; i < times.Count(); i++)
+                if (times[i] < times[whereMin])
+                    whereMin = i;
+            if (cands[whereMin].PlayerId != My.Id)
+                return -1;
+            return times[whereMin];
         }
 
-        public Point Pass(Point striker, Point strikerSpeed, double angleStriker, double PassPower, double PassAngle, int ticks)
+        bool TryPass(Point striker, Point strikerSpeed, double angleStriker, Hockeyist self)
+        {
+            if (self.RemainingCooldownTicks != 0)
+                return false;
+
+            const int psss = 3;
+            const int pwrs = 4;
+            var bestAngle = 0.0;
+            var minTime = Inf;
+            var bestPower = 0.0;
+            for (var power = 0.0; power <= 1.0; power += 1.0/pwrs)
+            {
+                for (var dir = -1; dir <= 1; dir += 2)
+                {
+                    for (var _angle = 0.0; _angle <= Game.PassSector/2; _angle += Game.PassSector/psss)
+                    {
+                        var angle = _angle*dir;
+                        var pk = GetPassPuck(striker, strikerSpeed, angleStriker, power, angle);
+                        var tm = GetFirstOnPuck(new[] {self}, pk);
+                        if (tm == -1)
+                            continue;
+                        if (tm < minTime)
+                        {
+                            minTime = tm;
+                            bestAngle = angle;
+                            bestPower = power;
+                        }
+                    }
+                }
+            }
+            if (minTime == Inf)
+                return false;
+            move.Action = ActionType.Pass;
+            move.PassAngle = bestAngle;
+            move.PassPower = bestPower;
+            return true;
+        }
+
+        public APuck GetPassPuck(Point striker, Point strikerSpeed, double angleStriker, double PassPower, double PassAngle)
         {
             var puckSpeed = 15.0*PassPower + strikerSpeed.Length*Math.Cos(angleStriker + PassAngle - strikerSpeed.GetAngle());
             var puckAngle = AngleNormalize(PassAngle + GetSpeed(puck).GetAngle());
             var PuckSpeed = new Point(puckAngle)*puckSpeed;
-            var pk = new APuck(Get(puck), PuckSpeed, Get(OppGoalie));
-            pk.Move(ticks);
-            return pk;
+            return new APuck(Get(puck), PuckSpeed, Get(OppGoalie)); 
         }
     }
 }
