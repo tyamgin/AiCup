@@ -86,7 +86,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var ho = _ho.Clone();
             var result = 0;
-            const int limit = 200;
+            const int limit = 70;
             for (; result < limit && (take < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > take * take); result++)
             {
                 var turn = RevAngle(ho.GetAngleTo(to));
@@ -116,15 +116,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
             var ho = owner == null ? null : new AHo(Get(owner), GetSpeed(owner), owner.Angle, owner.AngularSpeed, owner);
             if (pk == null)
-            {
                 pk = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
-            }
             else
-            {
                 ho = null;
-            }
 
-            int tLeft = 0, tRight = 500;
+            int tLeft = 0, tRight = 300;
             var pks = new APuck[tRight + 1];
             var hhs = new AHo[tRight + 1];
             pks[0] = pk;
@@ -151,7 +147,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     tLeft = c + 1;
                 }
             }
-            const int by = 10;
+            const int by = 8;
             for (var c = 0; c <= 70; c += by)
             {
                 var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, myAngularSpeed, PuckMove(0, pks[c], hhs[c]), my);
