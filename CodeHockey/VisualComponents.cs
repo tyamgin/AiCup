@@ -19,6 +19,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private static Queue<Point> drawGoalQueue = new Queue<Point>();
         private static Queue<Point> drawGoal2Queue = new Queue<Point>();
         private static Queue<string> drawInfo = new Queue<string>();
+        private static Queue<Point> needPassQueue = new Queue<Point>(); 
 
         private void ShowWindow()
         {
@@ -143,17 +144,22 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             while (drawPathQueue.Count != 0)
             {
                 var p = drawPathQueue.Dequeue();
-                DrawCircleC(Brushes.BlueViolet, p.X, p.Y, 3);
+                DrawCircle(Brushes.BlueViolet, p.X, p.Y, 3);
             }
             while (drawGoalQueue.Count != 0)
             {
                 var p = drawGoalQueue.Dequeue();
-                DrawCircleC(Brushes.DarkGreen, p.X, p.Y, 3);
+                DrawCircle(Brushes.DarkGreen, p.X, p.Y, 3);
             }
             while (drawGoal2Queue.Count != 0)
             {
                 var p = drawGoal2Queue.Dequeue();
-                DrawCircleC(Brushes.BlueViolet, p.X, p.Y, 5);
+                DrawCircle(Brushes.BlueViolet, p.X, p.Y, 5);
+            }
+            while (needPassQueue.Count != 0)
+            {
+                var p = needPassQueue.Dequeue();
+                DrawCircle(Brushes.Yellow, p.X, p.Y, 12, solid:true);
             }
 
             string info = "";
@@ -164,6 +170,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             if (info != "")
                 form.infoLabel.Text = info;
+            foreach(Point p in WayPoints)
+                DrawCircleC(Brushes.BlueViolet, p.X, p.Y, 2);
         }
         private static void _ShowWindow()
         {

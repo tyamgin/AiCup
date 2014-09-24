@@ -32,6 +32,7 @@
             this.TickLabel = new System.Windows.Forms.Label();
             this.ScoreLabel = new System.Windows.Forms.Label();
             this.infoLabel = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.panel)).BeginInit();
             this.SuspendLayout();
             // 
@@ -42,6 +43,7 @@
             this.panel.Size = new System.Drawing.Size(1224, 796);
             this.panel.TabIndex = 0;
             this.panel.TabStop = false;
+            this.panel.Click += new System.EventHandler(this.panel_Click);
             // 
             // TickLabel
             // 
@@ -72,11 +74,21 @@
             this.infoLabel.TabIndex = 3;
             this.infoLabel.Text = "info";
             // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(651, 92);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.TabIndex = 4;
+            this.label1.Text = "label1";
+            // 
             // Window
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1240, 687);
+            this.Controls.Add(this.label1);
             this.Controls.Add(this.infoLabel);
             this.Controls.Add(this.ScoreLabel);
             this.Controls.Add(this.TickLabel);
@@ -96,5 +108,6 @@
         public System.Windows.Forms.Label TickLabel;
         public System.Windows.Forms.Label ScoreLabel;
         public System.Windows.Forms.Label infoLabel;
+        private System.Windows.Forms.Label label1;
     }
 }

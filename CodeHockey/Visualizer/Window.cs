@@ -15,5 +15,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Visualizer
         {
             InitializeComponent();
         }
+
+        private void panel_Click(object sender, EventArgs ea)
+        {
+            var e = ea as MouseEventArgs;
+            label1.Text = e.X + " " + e.Y;
+        }
     }
 }

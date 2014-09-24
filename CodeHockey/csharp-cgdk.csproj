@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="AHo.cs" />
     <Compile Include="APuck.cs" />
+    <Compile Include="Attack.cs" />
     <Compile Include="AUnit.cs" />
     <Compile Include="Defend.cs" />
     <Compile Include="FindPath.cs" />

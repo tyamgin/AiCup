@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
@@ -126,7 +127,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             int tLeft = 0, tRight = 300;
             var pks = new APuck[tRight + 1];
             var hhs = new AHo[tRight + 1];
-            pks[0] = pk;
+            pks[0] = pk.Clone();
             hhs[0] = ho;
             for (int i = 1; i <= tRight; i++)
             {
@@ -151,7 +152,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
             const int by = 8;
-            for (var c = 0; c <= 70; c += by)
+            for (var c = 0; c <= 70; c += c < by ? 1 : by)
             {
                 var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, myAngularSpeed, PuckMove(0, pks[c], hhs[c]), my);
                 if (Math.Abs(needTicks) <= c)
@@ -223,6 +224,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             MyStrategy.PuckRadius = puck.Radius;
             var friend =
                 world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie);
+            FillWayPoints();
+
+            if (My.IsJustMissedGoal || My.IsJustScoredGoal)
+                return;
 
             move.SpeedUp = Inf;
 
@@ -315,20 +320,26 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
                 else if (wait == Inf)
                 {
-                    if (!TryPass(Get(self), GetSpeed(self), self.Angle, self))
+                    var wayPoint = FindWayPoint(self);
+                    if (wayPoint == null)
                     {
-                        var to = GetStrikeFrom(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
-                        if (self.X < to.X && (MyLeft() && self.SpeedX > 0 || MyRight() && self.SpeedX < 0))
+                        needPassQueue.Enqueue(Get(self));
+                        if (!TryPass(Get(self), GetSpeed(self), self.Angle, self))
                         {
+                            move.SpeedUp = 0;
                             move.Turn = self.GetAngleTo(friend);
-                            move.SpeedUp = 1;
                         }
                         else
                         {
-                            if (self.GetDistanceTo(to.X, to.Y) < 200)
-                                to = GetStrikePoint();
-                            move.Turn = self.GetAngleTo(to.X, to.Y);
+                            // TODO: не правильно считает
+                            //var pk = GetPassPuck(Get(self), GetSpeed(self), self.Angle, move.PassPower, move.PassAngle);
+                            //pk.Move(1);
                         }
+                    }
+                    else
+                    {
+                        move.Turn = self.GetAngleTo(wayPoint.X, wayPoint.Y);
+                        move.SpeedUp = GetSpeedTo(move.Turn);
                     }
                 }
                 else if (wait == 0)
@@ -340,8 +351,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     move.SpeedUp = selSpeedUp;
                     move.Turn = selTurn;
                 }
-
-                move.SpeedUp = GetSpeedTo(move.Turn);
             }
             else
             {
@@ -402,6 +411,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             drawGoalQueue.Clear();
             drawGoal2Queue.Clear();
             drawInfo.Clear();
+            needPassQueue.Clear();
         }
     }
 }
