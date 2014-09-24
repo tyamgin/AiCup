@@ -44,7 +44,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             foreach (Point p in WayPoints)
             {
                 var I = new AHo(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
-                if (p.GetDistanceTo(I) <= OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
+                if (p.GetDistanceTo2(I) <= OkDist*OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
                     continue;
 
                 var cands = World.Hockeyists
@@ -53,13 +53,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
                 int time = 0;
                 bool ok = true;
-                while (p.GetDistanceTo(I) > OkDist && ok)
+                while (p.GetDistanceTo2(I) > OkDist*OkDist && ok)
                 {
                     MoveTo(I, p);
                     foreach (var c in cands)
                     {
                         MoveTo(c, I);
-                        if (CanStrike(c, I.PuckPos()) || I.GetDistanceTo(c) <= 2*HoRadius)
+                        if (CanStrike(c, I.PuckPos()) || I.GetDistanceTo2(c) <= 2*HoRadius*2*HoRadius)
                         {
                             ok = false;
                             break;

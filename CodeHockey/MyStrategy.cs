@@ -80,7 +80,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var speedUp = GetSpeedTo(turn);
                 ho.Move(speedUp, TurnNorm(turn));
 
-                if (result > 1000)
+                if (result > 500)
                     return result; // TODO: временный костыль, ибо почему-то падает
             }
             return result;
@@ -90,7 +90,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var ho = _ho.Clone();
             var result = 0;
-            const int limit = 70;
+            const int limit = 40;
             for (; result < limit && (take < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > take * take); result++)
             {
                 var turn = RevAngle(ho.GetAngleTo(to));
