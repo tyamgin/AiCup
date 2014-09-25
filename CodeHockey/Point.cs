@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 

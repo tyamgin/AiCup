@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
@@ -151,7 +149,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     tLeft = c + 1;
                 }
             }
-            const int by = 8;
+            const int by = 16;
             for (var c = 0; c <= 70; c += c < by ? 1 : by)
             {
                 var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, myAngularSpeed, PuckMove(0, pks[c], hhs[c]), my);
@@ -196,7 +194,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void StayOn(Hockeyist self, Point to, double needAngle)
         {
-            if (to.GetDistanceTo(self) < 200)
+            if (to.GetDistanceTo(self) < 150)
             {
                 if (FindPath(self, Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, to,
                     AngleNormalize(needAngle + self.Angle), Get(OppGoalie)))
@@ -328,12 +326,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         {
                             move.SpeedUp = 0;
                             move.Turn = self.GetAngleTo(friend);
-                        }
-                        else
-                        {
-                            // TODO: не правильно считает
-                            //var pk = GetPassPuck(Get(self), GetSpeed(self), self.Angle, move.PassPower, move.PassAngle);
-                            //pk.Move(1);
                         }
                     }
                     else

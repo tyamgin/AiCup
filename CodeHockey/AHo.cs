@@ -15,13 +15,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public Hockeyist baseParams;
         public double AngularSpeed;
 
-        public AHo(double x, double y, double speedX, double speedY, double angle, double angleSpeed, Hockeyist from) 
-            : base(x, y, speedX, speedY, angle)
-        {
-            baseParams = from;
-            AngularSpeed = angleSpeed;
-        }
-
         public AHo(Point pos, Point speed, double angle, double angularSpeed, Hockeyist from)
             : base(pos, speed, angle)
         {
@@ -55,7 +48,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public AHo Clone()
         {
-            return new AHo(X, Y, Speed.X, Speed.Y, Angle, AngularSpeed, baseParams);
+            return new AHo(this, Speed, Angle, AngularSpeed, baseParams);
         }
         public Point PuckPos()
         {

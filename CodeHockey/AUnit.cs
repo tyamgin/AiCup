@@ -12,12 +12,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public Point Speed;
         public double Angle;
 
-        public AUnit(double x, double y, double speedX, double speedY, double angle) : base(x, y)
-        {
-            Speed = new Point(speedX, speedY);
-            Angle = angle;
-        }
-
         public AUnit(Point pos, Point speed, double angle)
             : base(pos)
         {

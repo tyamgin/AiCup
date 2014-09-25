@@ -16,13 +16,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public Point Goalie;
         public bool IsDefend = false;
 
-        public APuck(double x, double y, double speedX, double speedY, Point goalie) 
-            : base(x, y, speedX, speedY, 0)
-        {
-            if (goalie != null)
-                Goalie = new Point(goalie);
-        }
-
         public APuck(Point pos, Point speed, Point goalie)
             : base(pos, speed, 0)
         {
@@ -111,8 +104,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public APuck Clone()
         {
-            var clone = new APuck(X, Y, Speed.X, Speed.Y, Goalie) {IsDefend = IsDefend};
-            return clone;
+            return new APuck(this, Speed, Goalie) {IsDefend = IsDefend};
         }
 
         public override string ToString()
