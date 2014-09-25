@@ -57,9 +57,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 g.DrawEllipse(new Pen(brush, width), (int)(x), (int)(y), (int)radius * 2, (int)radius * 2);
         }
 
-        private void DrawLine(Brush brush, double x, double y, double X, double Y)
+        private void DrawLine(Brush brush, double x, double y, double X, double Y, float width = 0F)
         {
-            g.DrawLine(new Pen(brush), (int)x, (int)y, (int)X, (int)Y);
+            g.DrawLine(new Pen(brush, width), (int)x, (int)y, (int)X, (int)Y);
         }
 
         private void draw()
@@ -87,21 +87,35 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var brush = ho.IsTeammate ? Brushes.Blue : Brushes.Red;
                 if (ho.Type != HockeyistType.Goalie)
                 {
-                    g.DrawLine(new Pen(brush), (int)ho.X, (int)ho.Y,
+                    g.DrawLine(new Pen(brush), 
+                        (int)(ho.X + Math.Cos(ho.Angle) * HoRadius),
+                        (int)(ho.Y + Math.Sin(ho.Angle) * HoRadius),
                         (int)(ho.X + Math.Cos(ho.Angle) * Game.StickLength),
                         (int)(ho.Y + Math.Sin(ho.Angle) * Game.StickLength)
                         );
                 }
-                var font = new Font(FontFamily.GenericMonospace, 10);
                 if (ho.SwingTicks != 0)
                 {
                     g.DrawString(ho.SwingTicks + "", new Font(FontFamily.GenericSansSerif, 14), Brushes.Chartreuse, (float)ho.X - 10, (float)ho.Y);
                 }
                 if (ho.RemainingKnockdownTicks != 0)
                 {
-                    g.DrawString(ho.RemainingKnockdownTicks + "", font, brush, (float)ho.X, (float)ho.Y);
+                    g.DrawString(ho.RemainingKnockdownTicks + "", new Font(FontFamily.GenericMonospace, 14), brush, (float)ho.X, (float)ho.Y);
+                    var a = Get(ho) + new Point(Deg(135)) * HoRadius;
+                    var b = Get(ho) + new Point(Deg(-45)) * HoRadius;
+                    var c = Get(ho) + new Point(Deg(45)) * HoRadius;
+                    var d = Get(ho) + new Point(Deg(-135)) * HoRadius;
+                    DrawLine(brush, a.X, a.Y, b.X, b.Y, 3);
+                    DrawLine(brush, c.X, c.Y, d.X, d.Y, 3);
                 }
                 DrawCircle(brush, ho.X, ho.Y, ho.Radius, width: ho.Id == puck.OwnerHockeyistId ? 4 : 1);
+                if (ho.RemainingCooldownTicks > 0)
+                {
+                    g.DrawString(ho.RemainingCooldownTicks + "", new Font(FontFamily.GenericMonospace, 9), brush, (float)ho.X, (float)ho.Y - 13);
+                    var a = Get(ho) + new Point(Deg(135))*HoRadius;
+                    var b = Get(ho) + new Point(Deg(-45))*HoRadius;
+                    DrawLine(brush, a.X, a.Y, b.X, b.Y);
+                }
             }
 
             // Шайба
@@ -125,7 +139,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var x2 = (int)player.NetBack;
                 g.DrawLine(new Pen(Brushes.Black), x1, y1, x2, y1);
                 g.DrawLine(new Pen(Brushes.Black), x1, y2, x2, y2);
-                //g.DrawLine(new Pen(Brushes.Black), x1, y1, x1, y2);
                 g.DrawLine(new Pen(Brushes.Black), x2, y1, x2, y2);
             }
 

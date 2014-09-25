@@ -59,7 +59,7 @@
             // 
             this.ScoreLabel.AutoSize = true;
             this.ScoreLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.ScoreLabel.Location = new System.Drawing.Point(647, 190);
+            this.ScoreLabel.Location = new System.Drawing.Point(597, 190);
             this.ScoreLabel.Name = "ScoreLabel";
             this.ScoreLabel.Size = new System.Drawing.Size(45, 24);
             this.ScoreLabel.TabIndex = 2;
@@ -68,20 +68,20 @@
             // infoLabel
             // 
             this.infoLabel.AutoSize = true;
-            this.infoLabel.Location = new System.Drawing.Point(648, 226);
+            this.infoLabel.Location = new System.Drawing.Point(594, 226);
             this.infoLabel.Name = "infoLabel";
-            this.infoLabel.Size = new System.Drawing.Size(24, 13);
+            this.infoLabel.Size = new System.Drawing.Size(54, 13);
             this.infoLabel.TabIndex = 3;
-            this.infoLabel.Text = "info";
+            this.infoLabel.Text = "Strike info";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(651, 92);
+            this.label1.Location = new System.Drawing.Point(648, 13);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
+            this.label1.Size = new System.Drawing.Size(52, 13);
             this.label1.TabIndex = 4;
-            this.label1.Text = "label1";
+            this.label1.Text = "Last click";
             // 
             // Window
             // 

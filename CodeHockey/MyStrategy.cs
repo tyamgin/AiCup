@@ -187,174 +187,183 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             FillWayPoints();
 
             if (My.IsJustMissedGoal || My.IsJustScoredGoal)
-                return;
-
-            move.SpeedUp = Inf;
-
-            var net = GetStrikePoint();
-            var angleToNet = self.GetAngleTo(net.X, net.Y);
-            var power = GetPower(self.SwingTicks);
-
-            if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
             {
-                move.Action = ActionType.CancelStrike;
-            }
-            else if (puck.OwnerHockeyistId == self.Id)
-            {
-                drawInfo.Enqueue(StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle, Get(OppGoalie)) + "");
 
-                move.Turn = angleToNet;
-                int wait = Inf;
-                double selTurn = 0, selSpeedUp = 0;
-                bool willSwing = false;
-                double maxProb = 0.35;
-
-                if (self.State != HockeyistState.Swinging)
-                {
-                    // если не замахнулся
-                    for (int ticks = 0; ticks < 50; ticks++)
-                    {
-                        double p;
-                        // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
-                        var da = 0.01;
-
-                        int dir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
-                        for (var _turn = 0.0; _turn <= 2*da; _turn += da)
-                        {
-                            var turn = dir*_turn;
-
-                            var end = ticks + game.SwingActionCooldownTicks;
-                            var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
-                            // когда начинаем замахиваться
-                            p = ProbabStrikeAfter(start, end - start, self, new[]
-                            {
-                                new Tuple<int, double, double>(start, 1, turn),
-                                new Tuple<int, double, double>(end - start, 0, 0)
-                            });
-                            if (p > maxProb)
-                            {
-                                wait = start;
-                                willSwing = true;
-                                maxProb = p;
-                                selTurn = turn;
-                                selSpeedUp = 1;
-                            }
-
-                            // если не буду
-                            p = ProbabStrikeAfter(ticks, 0, self,
-                                new[] {new Tuple<int, double, double>(ticks, 1, turn)});
-                            if (p > maxProb)
-                            {
-                                wait = ticks;
-                                willSwing = false;
-                                maxProb = p;
-                                selTurn = turn;
-                                selSpeedUp = 1;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    // если уже замахнулся
-                    for (int ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks); ticks < 80; ticks++)
-                    {
-                        var p = ProbabStrikeAfter(ticks, ticks + self.SwingTicks, self,
-                            new[] {new Tuple<int, double, double>(ticks, 0, 0)});
-                        if (p > maxProb)
-                        {
-                            wait = ticks;
-                            willSwing = true;
-                            maxProb = p;
-                        }
-                    }
-                }
-                drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
-                if (!willSwing && self.State == HockeyistState.Swinging)
-                {
-                    move.Action = ActionType.CancelStrike;
-                }
-                else if (willSwing && wait == 0 && self.State != HockeyistState.Swinging)
-                {
-                    move.Action = ActionType.Swing;
-                }
-                else if (wait == Inf)
-                {
-                    var wayPoint = FindWayPoint(self);
-                    if (wayPoint == null)
-                    {
-                        needPassQueue.Enqueue(Get(self));
-                        if (!TryPass(Get(self), GetSpeed(self), self.Angle, self))
-                        {
-                            move.SpeedUp = 0;
-                            move.Turn = self.GetAngleTo(friend);
-                        }
-                    }
-                    else
-                    {
-                        move.Turn = self.GetAngleTo(wayPoint.X, wayPoint.Y);
-                        move.SpeedUp = GetSpeedTo(move.Turn);
-                    }
-                }
-                else if (wait == 0)
-                {
-                    move.Action = ActionType.Strike;
-                }
-                else
-                {
-                    move.SpeedUp = selSpeedUp;
-                    move.Turn = selTurn;
-                }
             }
             else
             {
-                var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
-                var pk = new APuck(Get(puck), GetSpeed(puck), Get(MyGoalie)) {IsDefend = true};
 
-                if (puck.OwnerPlayerId == Opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
+                move.SpeedUp = Inf;
+
+                var net = GetStrikePoint();
+                var angleToNet = self.GetAngleTo(net.X, net.Y);
+                var power = GetPower(self.SwingTicks);
+
+                if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
                 {
-                    move.Action = ActionType.Strike;
+                    move.Action = ActionType.CancelStrike;
                 }
-                else if (puck.OwnerPlayerId != My.Id && CanStrike(self, puck) 
-                    && Strike(new Point(puck), GetSpeed(self), power, self.Angle, Get(OppGoalie)))
+                else if (puck.OwnerHockeyistId == self.Id)
                 {
-                    move.Action = ActionType.Strike;
-                }
-                else if (puck.OwnerPlayerId != self.PlayerId && CanStrike(self, puck))
-                {
-                    if (pk.Move(200, goalCheck: true) == 1) // если вратарь не отобьёт
-                        move.Action = ActionType.Strike;
-                    else
-                        move.Action = ActionType.TakePuck;
-                }
-                else
-                {
-                    var to = GetDefendPos2();
-                    if (puck.OwnerPlayerId == My.Id || GoToPuck(self, null).Third > GoToPuck(friend, null).Third)
+                    drawInfo.Enqueue(
+                        StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle,
+                            Get(OppGoalie)) + "");
+
+                    move.Turn = angleToNet;
+                    int wait = Inf;
+                    double selTurn = 0, selSpeedUp = 0;
+                    bool willSwing = false;
+                    double maxProb = 0.35;
+
+                    if (self.State != HockeyistState.Swinging)
                     {
-                        var puckBe = Get(puck);
-                        StayOn(self, to, self.GetAngleTo(puckBe.X, puckBe.Y));
+                        // если не замахнулся
+                        for (int ticks = 0; ticks < 50; ticks++)
+                        {
+                            double p;
+                            // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
+                            var da = 0.01;
+
+                            int dir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
+                            for (var _turn = 0.0; _turn <= 2*da; _turn += da)
+                            {
+                                var turn = dir*_turn;
+
+                                var end = ticks + game.SwingActionCooldownTicks;
+                                var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
+                                // когда начинаем замахиваться
+                                p = ProbabStrikeAfter(start, end - start, self, new[]
+                                {
+                                    new Tuple<int, double, double>(start, 1, turn),
+                                    new Tuple<int, double, double>(end - start, 0, 0)
+                                });
+                                if (p > maxProb)
+                                {
+                                    wait = start;
+                                    willSwing = true;
+                                    maxProb = p;
+                                    selTurn = turn;
+                                    selSpeedUp = 1;
+                                }
+
+                                // если не буду
+                                p = ProbabStrikeAfter(ticks, 0, self,
+                                    new[] {new Tuple<int, double, double>(ticks, 1, turn)});
+                                if (p > maxProb)
+                                {
+                                    wait = ticks;
+                                    willSwing = false;
+                                    maxProb = p;
+                                    selTurn = turn;
+                                    selSpeedUp = 1;
+                                }
+                            }
+                        }
                     }
                     else
                     {
-                        var To = GoToPuck(self, null);
-
-                        if (To.Second > 0)
+                        // если уже замахнулся
+                        for (int ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks);
+                            ticks < 80;
+                            ticks++)
                         {
-                            move.Turn = self.GetAngleTo(To.First.X, To.First.Y);
-                            move.SpeedUp = GetSpeedTo(move.Turn);
+                            var p = ProbabStrikeAfter(ticks, ticks + self.SwingTicks, self,
+                                new[] {new Tuple<int, double, double>(ticks, 0, 0)});
+                            if (p > maxProb)
+                            {
+                                wait = ticks;
+                                willSwing = true;
+                                maxProb = p;
+                            }
+                        }
+                    }
+                    drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
+                    if (!willSwing && self.State == HockeyistState.Swinging)
+                    {
+                        move.Action = ActionType.CancelStrike;
+                    }
+                    else if (willSwing && wait == 0 && self.State != HockeyistState.Swinging)
+                    {
+                        move.Action = ActionType.Swing;
+                    }
+                    else if (wait == Inf)
+                    {
+                        var wayPoint = FindWayPoint(self);
+                        if (wayPoint == null)
+                        {
+                            needPassQueue.Enqueue(Get(self));
+                            if (!TryPass(Get(self), GetSpeed(self), self.Angle, self))
+                            {
+                                move.SpeedUp = 0;
+                                move.Turn = self.GetAngleTo(friend);
+                            }
                         }
                         else
                         {
-                            move.Turn = RevAngle(self.GetAngleTo(To.First.X, To.First.Y));
-                            move.SpeedUp = -GetSpeedTo(move.Turn);
+                            move.Turn = self.GetAngleTo(wayPoint.X, wayPoint.Y);
+                            move.SpeedUp = GetSpeedTo(move.Turn);
                         }
                     }
-                    drawGoalQueue.Enqueue(new Point(to));
+                    else if (wait == 0)
+                    {
+                        move.Action = ActionType.Strike;
+                    }
+                    else
+                    {
+                        move.SpeedUp = selSpeedUp;
+                        move.Turn = selTurn;
+                    }
                 }
+                else
+                {
+                    var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
+                    var pk = new APuck(Get(puck), GetSpeed(puck), Get(MyGoalie)) {IsDefend = true};
+
+                    if (puck.OwnerPlayerId == Opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
+                    {
+                        move.Action = ActionType.Strike;
+                    }
+                    else if (puck.OwnerPlayerId != My.Id && CanStrike(self, puck)
+                             && Strike(new Point(puck), GetSpeed(self), power, self.Angle, Get(OppGoalie)))
+                    {
+                        move.Action = ActionType.Strike;
+                    }
+                    else if (puck.OwnerPlayerId != self.PlayerId && CanStrike(self, puck))
+                    {
+                        if (pk.Move(200, goalCheck: true) == 1) // если вратарь не отобьёт
+                            move.Action = ActionType.Strike;
+                        else
+                            move.Action = ActionType.TakePuck;
+                    }
+                    else
+                    {
+                        var to = GetDefendPos2();
+                        if (puck.OwnerPlayerId == My.Id || GoToPuck(self, null).Third > GoToPuck(friend, null).Third)
+                        {
+                            var puckBe = Get(puck);
+                            StayOn(self, to, self.GetAngleTo(puckBe.X, puckBe.Y));
+                        }
+                        else
+                        {
+                            var To = GoToPuck(self, null);
+
+                            if (To.Second > 0)
+                            {
+                                move.Turn = self.GetAngleTo(To.First.X, To.First.Y);
+                                move.SpeedUp = GetSpeedTo(move.Turn);
+                            }
+                            else
+                            {
+                                move.Turn = RevAngle(self.GetAngleTo(To.First.X, To.First.Y));
+                                move.SpeedUp = -GetSpeedTo(move.Turn);
+                            }
+                        }
+                        drawGoalQueue.Enqueue(new Point(to));
+                    }
+                }
+                if (Eq(move.SpeedUp, Inf))
+                    move.SpeedUp = 1;
             }
-            if (Eq(move.SpeedUp, Inf))
-                move.SpeedUp = 1;
 #if DEBUG
             draw();
             Thread.Sleep(15);
