@@ -67,7 +67,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             double OkDist = 5*HoRadius;
 
             var minTime = Inf;
-            var minLength = 0;
+            var maxLength = 0;
             Point sel = null;
             foreach (Point point in WayPoints)
             {
@@ -84,6 +84,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     .Select(x => new AHo(x)).ToArray();           
 
                 int time = 0;
+                int len = 0;
                 for (var p = point; p != null; p = GetNextWayPoint(p))
                 {
                     var ok = true;
@@ -103,12 +104,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                     if (!ok)
                         break;
-                    var len = GetWayPointPriority(p) + 1;
-                    if (len > minLength || len == minLength && time < minTime)
+                    len++;
+                    if (len > maxLength || len == maxLength && time < minTime)
                     {
                         sel = point.Clone();
                         minTime = time;
-                        minLength = len;
+                        maxLength = len;
                     }
                 }
             }

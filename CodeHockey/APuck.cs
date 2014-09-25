@@ -102,7 +102,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return x*x;
         }
 
-        public APuck Clone()
+        public new APuck Clone()
         {
             return new APuck(this, Speed, Goalie) {IsDefend = IsDefend};
         }

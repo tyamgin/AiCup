@@ -119,6 +119,7 @@ int main(int argc, char** argv)
 			ties++;
 		cout << first << ": " << newWins << "  " << oldWins << " :" << second << "  (" << ties << ")" << endl;
 		result.close();
+		Sleep(500);
 		system("type " + resultFilename);
 		system("del " + propFilename);
 		system("del " + resultFilename);

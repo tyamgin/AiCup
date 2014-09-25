@@ -13,14 +13,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static readonly double FrictionCoeff = 0.98;
         public static readonly double AngularSpeedCoeff = 0.972981;
 
-        public Hockeyist baseParams;
+        public Hockeyist BaseParams;
         public double AngularSpeed;
         public int CoolDown;
         public int KnockDown;
 
         public AHo(Hockeyist self) : base(MyStrategy.Get(self), MyStrategy.GetSpeed(self), self.Angle)
         {
-            baseParams = self;
+            BaseParams = self;
             AngularSpeed = self.AngularSpeed;
             Angle = self.Angle;
             CoolDown = self.RemainingCooldownTicks;
@@ -30,7 +30,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public AHo(Point pos, Point speed, double angle, double angularSpeed, int coolDown, int knockDown, Hockeyist from)
             : base(pos, speed, angle)
         {
-            baseParams = from;
+            BaseParams = from;
             AngularSpeed = angularSpeed;
             Angle = angle;
             CoolDown = coolDown;
@@ -65,18 +65,20 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void Move(double speedUp, double turn, int ticks)
         {
-            for(int tick = 0; tick < ticks; tick++)
+            for(var tick = 0; tick < ticks; tick++)
                 Move(speedUp, turn);
         }
 
-        public AHo Clone()
+        public new AHo Clone()
         {
-            return new AHo(this, Speed, Angle, AngularSpeed, CoolDown, KnockDown, baseParams);
+            return new AHo(this, Speed, Angle, AngularSpeed, CoolDown, KnockDown, BaseParams);
         }
+
         public Point PuckPos()
         {
             return MyStrategy.GetPuckPos(this, Angle);
         }
+
         public Point TakePos()
         {
             return this + new Point(Angle) * MyStrategy.Game.StickLength;
