@@ -49,8 +49,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     continue;
 
                 var cands = World.Hockeyists
-                    .Where(x => x.Type != HockeyistType.Goalie && !x.IsTeammate && x.State == HockeyistState.Active)
-                    .Select(x => new AHo(x)).ToArray();                
+                    .Where(x =>
+                        x.Type != HockeyistType.Goalie
+                        && !x.IsTeammate
+                        && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
+                    )
+                    .Select(x => new AHo(x)).ToArray();           
 
                 int time = 0;
                 bool ok = true;
@@ -125,7 +129,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var totalTime = 0;
             var opps = World.Hockeyists.Where(
                 x => x.PlayerId == Opp.Id
-                     && x.State == HockeyistState.Active
+                     && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
                      && x.Type != HockeyistType.Goalie
                 ).Select(x => new AHo(x)).ToArray();
 

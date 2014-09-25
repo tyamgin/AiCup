@@ -66,10 +66,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                    && ho.RemainingKnockdownTicks == 0;
         }
 
-        public static bool CanStrike(AUnit ho, Point to)
+        public static bool CanStrike(AHo ho, Point to)
         {
             return Math.Abs(ho.GetAngleTo(to)) <= Game.StickSector/2
-                   && ho.GetDistanceTo(to) <= Game.StickLength;
+                   && ho.GetDistanceTo(to) <= Game.StickLength
+                   && ho.KnockDown == 0 && ho.CoolDown == 0;
         }
 
         public static double GetPower(int swingTime)
