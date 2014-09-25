@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
-using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
+using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
@@ -14,19 +15,41 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Hockeyist baseParams;
         public double AngularSpeed;
+        public int CoolDown;
+        public int KnockDown;
 
-        public AHo(Point pos, Point speed, double angle, double angularSpeed, Hockeyist from)
+        public AHo(Hockeyist self) : base(MyStrategy.Get(self), MyStrategy.GetSpeed(self), self.Angle)
+        {
+            baseParams = self;
+            AngularSpeed = self.AngularSpeed;
+            Angle = self.Angle;
+            CoolDown = self.RemainingCooldownTicks;
+            KnockDown = self.RemainingKnockdownTicks;
+        }
+
+        public AHo(Point pos, Point speed, double angle, double angularSpeed, int coolDown, int knockDown, Hockeyist from)
             : base(pos, speed, angle)
         {
             baseParams = from;
             AngularSpeed = angularSpeed;
             Angle = angle;
+            CoolDown = coolDown;
+            KnockDown = knockDown;
         }
 
         public void Move(double speedUp, double turn)
         {
             if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.Game.HockeyistTurnAngleFactor || turn < -MyStrategy.Game.HockeyistTurnAngleFactor)
-                throw new Exception();
+                throw new Exception("AHo Move: " + speedUp + " " + turn);
+
+            if (CoolDown > 0)
+                CoolDown--;
+            if (KnockDown > 0)
+            {
+                KnockDown--;
+                speedUp = 0;
+                turn = 0;
+            }
 
             turn += AngularSpeed;
             AngularSpeed *= AngularSpeedCoeff;
@@ -48,7 +71,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public AHo Clone()
         {
-            return new AHo(this, Speed, Angle, AngularSpeed, baseParams);
+            return new AHo(this, Speed, Angle, AngularSpeed, CoolDown, KnockDown, baseParams);
         }
         public Point PuckPos()
         {

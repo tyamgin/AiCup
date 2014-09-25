@@ -13,12 +13,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         void FillWayPoints()
         {
-            WayPoints = new ArrayList();
-            WayPoints.Add(new Point(620, 242));
-            WayPoints.Add(new Point(286, 345));
-            WayPoints.Add(new Point(917, 350));
-            WayPoints.Add(new Point(443, 278));
-            WayPoints.Add(new Point(785, 289));
+            WayPoints = new ArrayList
+            {
+                new Point(620, 242),
+                new Point(286, 345),
+                new Point(917, 350),
+                new Point(443, 278),
+                new Point(785, 289)
+            };
             var len = WayPoints.Count;
             for (var i = 0; i < len; i++)
             {
@@ -42,13 +44,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             Point sel = null;
             foreach (Point p in WayPoints)
             {
-                var I = new AHo(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
+                var I = new AHo(self);
                 if (p.GetDistanceTo2(I) <= OkDist*OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
                     continue;
 
                 var cands = World.Hockeyists
                     .Where(x => x.Type != HockeyistType.Goalie && !x.IsTeammate && x.State == HockeyistState.Active)
-                    .Select(x => new AHo(Get(x), GetSpeed(x), x.Angle, x.AngularSpeed, x)).ToArray();                
+                    .Select(x => new AHo(x)).ToArray();                
 
                 int time = 0;
                 bool ok = true;
@@ -99,19 +101,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 return false;
 
             // TODO: временный костыль
-            if (Math.Abs(puckPos.X - Opp.NetFront) < 2 * HoRadius)
+            if (Math.Abs(puckPos.X - Opp.NetFront) < 2*HoRadius)
                 return false;
 
-            if (MyRight())
-            {
-                if (Math.Cos(AngleStriker) > 0)
-                    return false;
-            }
-            else
-            {
-                if (Math.Cos(AngleStriker) < 0)
-                    return false;
-            }
+            if (MyRight() && Math.Cos(AngleStriker) > 0)
+                return false;
+            if (MyLeft() && Math.Cos(AngleStriker) < 0)
+                return false;
 
             var strikerDirection = new Point(AngleStriker);
             var SpeedStriker = strikerSpeed.Length;
@@ -125,13 +121,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         double ProbabStrikeAfter(int wait, int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move)
         {
             var power = GetPower(swingTime);
-            var I = new AHo(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self);
+            var I = new AHo(self);
             var totalTime = 0;
             var opps = World.Hockeyists.Where(
                 x => x.PlayerId == Opp.Id
                      && x.State == HockeyistState.Active
                      && x.Type != HockeyistType.Goalie
-                ).Select(x => new AHo(Get(x), GetSpeed(x), x.Angle, x.AngularSpeed, x)).ToArray();
+                ).Select(x => new AHo(x)).ToArray();
 
             foreach (var action in move)
             {

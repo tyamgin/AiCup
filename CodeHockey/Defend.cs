@@ -71,7 +71,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 for (defend_turn_dir = -1; defend_turn_dir <= 1; defend_turn_dir += 2)
                 {
                     defend_stack.Clear();
-                    defend_Dfs(new AHo(Get(ho), GetSpeed(ho), ho.Angle, ho.AngularSpeed, ho), 0, 1.0, Game.HockeyistTurnAngleFactor);       
+                    defend_Dfs(new AHo(ho), 0, 1.0, Game.HockeyistTurnAngleFactor);       
                 }
             }
             if (defend_best_stack.Count == 0)

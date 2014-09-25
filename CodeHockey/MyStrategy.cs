@@ -44,30 +44,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new Point(x, bestY);
         }
 
-        Point GetStrikeFrom(Point myPositionPoint, Point mySpeed, double myAngle, double myAngularSpeed, Hockeyist my)
-        {
-            var x1 = Game.RinkLeft + RinkWidth * 0.4;
-            var x2 = Game.RinkRight - RinkWidth * 0.4;
-            var y1 = Game.RinkTop + RinkHeight * 0.12;
-            var y2 = Game.RinkBottom - RinkHeight * 0.12;
-
-            var a = new Point(MyRight() ? x1 : x2, y1);
-            var b = new Point(MyRight() ? x1 : x2, y2);
-            if (Math.Abs(myAngle) < Deg(20) || Math.Abs(myAngle) > Deg(160))
-                return a.GetDistanceTo(myPositionPoint) < b.GetDistanceTo(myPositionPoint) ? a : b;
-            return Math.Abs(GetTicksTo(myPositionPoint, mySpeed, myAngle, myAngularSpeed, a, my))
-                < Math.Abs(GetTicksTo(myPositionPoint, mySpeed, myAngle, myAngularSpeed, b, my)) ? a : b;
-        }
-
-        public double RevAngle(double angle)
-        {
-            if (Eq(angle, Math.PI))
-                return 0.0;
-            if (angle > 0)
-                return angle - Math.PI;
-            return Math.PI + angle;
-        }
-
         public int GetTicksToUp(AHo _ho, Point to, double take = -1)
         {
             var ho = _ho.Clone();
@@ -100,9 +76,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return result;
         }
 
-        public int GetTicksTo(Point myPosition, Point mySpeed, double myAngle, double myAngularSpeed, Point to, Hockeyist my)
+        public int GetTicksTo(Point to, Hockeyist my)
         {
-            var ho = new AHo(myPosition, mySpeed, myAngle, myAngularSpeed, my);
+            var ho = new AHo(my);
             var up = GetTicksToUp(ho, to);
             var down = GetTicksToDown(ho, to);
             if (up <= down)
@@ -110,13 +86,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return -down;
         }
 
-        public Pair<Point, int> GoToPuck(Point myPosition, Point mySpeed, double myAngle, double myAngularSpeed, Hockeyist my, APuck pk, out int res)
+        public Tuple<Point, int, int> GoToPuck(Hockeyist my, APuck pk)
         {
-            res = Inf;
+            var res = Inf;
             Point result = null;
-            int dir = 1;
+            var dir = 1;
             var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
-            var ho = owner == null ? null : new AHo(Get(owner), GetSpeed(owner), owner.Angle, owner.AngularSpeed, owner);
+            var ho = owner == null ? null : new AHo(owner);
             if (pk == null)
                 pk = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
             else
@@ -136,7 +112,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             while (tLeft <= tRight)
             {
                 var c = (tLeft + tRight)/2;
-                var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, myAngularSpeed, PuckMove(0, pks[c], hhs[c]), my);
+                var needTicks = GetTicksTo(PuckMove(0, pks[c], hhs[c]), my);
                 if (Math.Abs(needTicks) < c)
                 {
                     tRight = c - 1;
@@ -152,7 +128,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             const int by = 16;
             for (var c = 0; c <= 70; c += c < by ? 1 : by)
             {
-                var needTicks = GetTicksTo(myPosition, mySpeed, myAngle, myAngularSpeed, PuckMove(0, pks[c], hhs[c]), my);
+                var needTicks = GetTicksTo(PuckMove(0, pks[c], hhs[c]), my);
                 if (Math.Abs(needTicks) <= c)
                 {
                     for (var i = 0; i < by; i++, c--)
@@ -169,20 +145,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             if (result == null)
                 result = Get(puck);
-            return new Pair<Point, int>(result, dir);
-        }
-
-        public Pair<Point, int> GoToPuck(Point myPosition, Point mySpeed, double myAngle, double myAngularSpeed, Hockeyist my, APuck pk)
-        {
-            int ticks;
-            return GoToPuck(myPosition, mySpeed, myAngle, myAngularSpeed, my, pk, out ticks);
-        }
-
-        public int GetTicksToPuck(Point myPosition, Point mySpeed, double myAngle, double myAngularSpeed, Hockeyist my, APuck pk)
-        {
-            int ticks;
-            GoToPuck(myPosition, mySpeed, myAngle, myAngularSpeed, my, pk, out ticks);
-            return ticks;
+            return new Tuple<Point, int, int>(result, dir, res);
         }
 
         Point GetDefendPos2()
@@ -196,8 +159,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             if (to.GetDistanceTo(self) < 150)
             {
-                if (FindPath(self, Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, to,
-                    AngleNormalize(needAngle + self.Angle), Get(OppGoalie)))
+                if (FindPath(self, to, AngleNormalize(needAngle + self.Angle), Get(OppGoalie)))
                     return;
             }
             move.Turn = self.GetAngleTo(to.X, to.Y);
@@ -368,16 +330,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 else
                 {
                     var to = GetDefendPos2();
-                    if (puck.OwnerPlayerId == My.Id 
-                        || GetTicksToPuck(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self, null) > GetTicksToPuck(Get(friend), GetSpeed(friend), friend.Angle, friend.AngularSpeed, friend, null)
-                        )
+                    if (puck.OwnerPlayerId == My.Id || GoToPuck(self, null).Third > GoToPuck(friend, null).Third)
                     {
                         var puckBe = Get(puck);
                         StayOn(self, to, self.GetAngleTo(puckBe.X, puckBe.Y));
                     }
                     else
                     {
-                        var To = GoToPuck(Get(self), GetSpeed(self), self.Angle, self.AngularSpeed, self, null);
+                        var To = GoToPuck(self, null);
 
                         if (To.Second > 0)
                         {

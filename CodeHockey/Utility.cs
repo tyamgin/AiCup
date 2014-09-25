@@ -23,7 +23,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return unit == null ? null : new Point(unit.SpeedX, unit.SpeedY);
         }
 
-        public Point Get(Unit unit)
+        public static Point Get(Unit unit)
         {
             return unit == null ? null : new Point(unit.X, unit.Y);
         }
@@ -72,7 +72,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                    && ho.GetDistanceTo(to) <= Game.StickLength;
         }
 
-        double GetPower(int swingTime)
+        public static double GetPower(int swingTime)
         {
             // TODO: use game.StrikePowerGrowthFactor
             return Math.Min(Game.MaxEffectiveSwingTicks, swingTime) * 0.25 / Game.MaxEffectiveSwingTicks + 0.75;
@@ -105,6 +105,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             else if (Math.Abs(turn) > Deg(60))
                 speedUp = 0.05;
             return speedUp;
+        }
+
+        public double RevAngle(double angle)
+        {
+            if (Eq(angle, Math.PI))
+                return 0.0;
+            if (angle > 0)
+                return angle - Math.PI;
+            return Math.PI + angle;
         }
     }
 }

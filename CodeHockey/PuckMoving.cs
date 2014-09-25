@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                      && x.RemainingCooldownTicks == 0
                      && except.Count(y => y.Id == x.Id) == 0
                 ).ToArray();
-            var times = cands.Select(x => GetTicksToPuck(Get(x), GetSpeed(x), x.Angle, x.AngularSpeed, x, pk)).ToArray();
+            var times = cands.Select(x => GoToPuck(x, pk).Third).ToArray();
             int whereMin = 0;
             for(var i = 1; i < times.Count(); i++)
                 if (times[i] < times[whereMin])

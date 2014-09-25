@@ -65,17 +65,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
         }
-        public bool FindPath(Hockeyist self, Point from, Point speed, double angle, double angularSpeed, Point to, double needAngle, Point goalie)
+        public bool FindPath(Hockeyist self, Point to, double needAngle, Point goalie)
         {
             fp_minTime = Inf;
             fp_best_stack.Clear();
             fp_to = to;
             fp_need = needAngle;
             fp_okDist = HoRadius*1.3;
-            fp_per = (int)(from.GetDistanceTo(to)/fp_maxDeep + 2);
-            fp_okAngle = from.GetDistanceTo(to) < 70 ? Deg(5) : Deg(15);
+            fp_per = (int)(self.GetDistanceTo(to.X, to.Y)/fp_maxDeep + 2);
+            fp_okAngle = self.GetDistanceTo(to.X, to.Y) < 70 ? Deg(5) : Deg(15);
             fp_cut_count = 0;
-            var state = new AHo(from, speed, angle, angularSpeed, self);
+            var state = new AHo(self);
             for (fp_sp_dir = -1; fp_sp_dir <= 1; fp_sp_dir += 2)
             {
                 for (fp_turn_dir = 1; fp_turn_dir >= -1; fp_turn_dir -= 2)
