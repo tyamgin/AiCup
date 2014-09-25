@@ -10,6 +10,26 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
+        Point GetDefendPos2()
+        {
+            var y = RinkCenter.Y;
+            const double offset = 0.09;
+            return MyLeft() ? new Point(Game.RinkLeft + RinkWidth * offset, y) : new Point(Game.RinkRight - RinkWidth * offset, y);
+        }
+
+        public void StayOn(Hockeyist self, Point to, double needAngle)
+        {
+            if (to.GetDistanceTo(self) < 150)
+            {
+                if (FindPath(self, to, AngleNormalize(needAngle + self.Angle), Get(OppGoalie)))
+                    return;
+            }
+            move.Turn = self.GetAngleTo(to.X, to.Y);
+            move.SpeedUp = GetSpeedTo(move.Turn);
+        }
+
+
+
         private double defend_maxProbab;
         private APuck[] defend_puckState;
         private int defend_spUps = 1;

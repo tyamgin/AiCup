@@ -142,5 +142,9 @@ namespace Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk
             }
         }
 
+        public Point Clone()
+        {
+            return new Point(this);   
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
@@ -11,16 +12,41 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
     {
         public ArrayList WayPoints;
 
+        public int GetWayPointIndex(Point wayPoint)
+        {
+            for (var i = 0; i < WayPoints.Count; i++)
+                if (wayPoint.Same(WayPoints[i] as Point))
+                    return i;
+            throw new Exception("Unknown waypoint");
+        }
+
+        public int GetWayPointPriority(Point wayPoint)
+        {
+            return GetWayPointIndex(wayPoint)%(WayPoints.Count/2);
+        }
+
+        Point GetNextWayPoint(Point wayPoint)
+        {
+            var size = WayPoints.Count / 2;
+            var i = GetWayPointIndex(wayPoint);
+            if (i == size - 1 || i == 2*size - 1)
+                return null;
+            return WayPoints[i + 1] as Point;
+        }
+
         void FillWayPoints()
         {
             WayPoints = new ArrayList
             {
-                new Point(620, 242),
                 new Point(286, 345),
-                new Point(917, 350),
                 new Point(443, 278),
-                new Point(785, 289)
+                new Point(620, 242),
+                new Point(785, 289),
+                new Point(917, 350),
             };
+            if (MyRight())
+                WayPoints.Reverse();
+
             var len = WayPoints.Count;
             for (var i = 0; i < len; i++)
             {
@@ -40,12 +66,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             double OkDist = 5*HoRadius;
 
-            var bestTime = Inf;
+            var minTime = Inf;
+            var minLength = 0;
             Point sel = null;
-            foreach (Point p in WayPoints)
+            foreach (Point point in WayPoints)
             {
                 var I = new AHo(self);
-                if (p.GetDistanceTo2(I) <= OkDist*OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
+                if (point.GetDistanceTo2(I) <= OkDist*OkDist || MyRight() && I.X < point.X || MyLeft() && I.X > point.X)
                     continue;
 
                 var cands = World.Hockeyists
@@ -57,49 +84,53 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     .Select(x => new AHo(x)).ToArray();           
 
                 int time = 0;
-                bool ok = true;
-                while (p.GetDistanceTo2(I) > OkDist*OkDist && ok)
+                for (var p = point; p != null; p = GetNextWayPoint(p))
                 {
-                    MoveTo(I, p);
-                    foreach (var c in cands)
+                    var ok = true;
+                    while(p.GetDistanceTo2(I) > OkDist*OkDist && ok)
                     {
-                        MoveTo(c, I);
-                        if (CanStrike(c, I.PuckPos()) || I.GetDistanceTo2(c) <= 2*HoRadius*2*HoRadius)
+                        MoveTo(I, p);
+                        foreach (var c in cands)
                         {
-                            ok = false;
-                            break;
+                            MoveTo(c, I);
+                            if (CanStrike(c, I.PuckPos()) || I.GetDistanceTo2(c) <= 2*HoRadius*2*HoRadius)
+                            {
+                                ok = false;
+                                break;
+                            }
                         }
+                        time++;
                     }
-                    time++;
-                }
-                if (ok)
-                {
-                    if (time < bestTime)
+                    if (!ok)
+                        break;
+                    var len = GetWayPointPriority(p) + 1;
+                    if (len > minLength || len == minLength && time < minTime)
                     {
-                        bestTime = time;
-                        sel = new Point(p);
+                        sel = point.Clone();
+                        minTime = time;
+                        minLength = len;
                     }
                 }
             }
             return sel;
         }
 
-        double StrikeProbability(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker, Point goalie)
+        double StrikeProbability(Point puckPos, Point strikerSpeed, double strikePower, double angleStriker, Point goalie)
         {
             double range = Game.StrikeAngleDeviation * 2,
                 dx = Game.StrikeAngleDeviation / 20,
                 result = 0;
 
-            for (double L = -range; L + dx <= range; L += dx)
+            for (var L = -range; L + dx <= range; L += dx)
             {
-                double x = L + dx;
-                if (Strike(puckPos, strikerSpeed, StrikePower, AngleStriker + x, goalie))
+                var x = L + dx;
+                if (Strike(puckPos, strikerSpeed, strikePower, angleStriker + x, goalie))
                     result += dx * Gauss(x, 0, Game.StrikeAngleDeviation);
             }
             return result;
         }
 
-        bool Strike(Point puckPos, Point strikerSpeed, double StrikePower, double AngleStriker, Point goalie)
+        bool Strike(Point puckPos, Point strikerSpeed, double strikePower, double angleStriker, Point goalie)
         {
             if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth / 2)
                 return false;
@@ -108,15 +139,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (Math.Abs(puckPos.X - Opp.NetFront) < 2*HoRadius)
                 return false;
 
-            if (MyRight() && Math.Cos(AngleStriker) > 0)
+            if (MyRight() && Math.Cos(angleStriker) > 0)
                 return false;
-            if (MyLeft() && Math.Cos(AngleStriker) < 0)
+            if (MyLeft() && Math.Cos(angleStriker) < 0)
                 return false;
 
-            var strikerDirection = new Point(AngleStriker);
-            var SpeedStriker = strikerSpeed.Length;
-            var SpeedAngleStriker = strikerSpeed.GetAngle();
-            var puckSpeed = 20.0 * StrikePower + SpeedStriker * Math.Cos(AngleStriker - SpeedAngleStriker);
+            var strikerDirection = new Point(angleStriker);
+            var speedStrikerAbs = strikerSpeed.Length;
+            var speedAngleStriker = strikerSpeed.GetAngle();
+            var puckSpeed = 20.0 * strikePower + speedStrikerAbs * Math.Cos(angleStriker - speedAngleStriker);
             var puckSpeedDirection = strikerDirection * puckSpeed;
             var pk = new APuck(puckPos, puckSpeedDirection, goalie);
             return pk.Move(300, true) == 1;
