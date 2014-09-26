@@ -90,7 +90,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     foreach (var c in cands)
                     {
                         MoveTo(c, I);
-                        if (CanStrike(c, I.PuckPos()) || I.GetDistanceTo2(c) <= 2 * HoRadius * 2 * HoRadius)
+                        if (CanStrike(c, I.PuckPos()) // достанет шайбу
+                            || CanStrike(c, I) // достанет меня
+                            || I.GetDistanceTo2(c) <= 2 * HoRadius * 2 * HoRadius // столкнется со мной
+                            )
                         {
                             ok = false;
                             break;
@@ -148,7 +151,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return pk.Move(300, true) == 1;
         }
 
-        double ProbabStrikeAfter(int wait, int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move)
+        double ProbabStrikeAfter(int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move)
         {
             var power = GetPower(swingTime);
             var I = new AHo(self);
@@ -161,12 +164,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             foreach (var action in move)
             {
-                for (int i = 0; i < action.First; i++)
+                for (var i = 0; i < action.First; i++)
                 {
                     I.Move(action.Second, action.Third);
                     foreach (var opp in opps)
                     {
-                        opp.Move(1, TurnNorm(opp.GetAngleTo(I)));
+                        var hisTurn = TurnNorm(opp.GetAngleTo(I));
+                        opp.Move(GetSpeedTo(hisTurn), hisTurn);
                         if (CanStrike(opp, I) || CanStrike(opp, GetPuckPos(I, I.Angle)))
                             return 0.0;
                     }
@@ -176,7 +180,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var pk = GetPuckPos(I, I.Angle);
             var goalie = Get(OppGoalie);
             GoalieMove(goalie, totalTime, pk);
-            return StrikeProbability(pk, I.Speed, power, I.Angle, goalie);
+            return I.CoolDown == 0
+                ? StrikeProbability(pk, I.Speed, power, I.Angle, goalie)
+                : 0.0;
         }
     }
 }

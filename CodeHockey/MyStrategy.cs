@@ -166,29 +166,28 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     drawInfo.Enqueue(
                         StrikeProbability(Get(puck), GetSpeed(self), GetPower(self.SwingTicks), self.Angle, Get(OppGoalie)) + "");
 
-                    int wait = Inf;
+                    var wait = Inf;
                     double selTurn = 0, selSpeedUp = 0;
-                    bool willSwing = false;
-                    double maxProb = 0.35;
+                    var willSwing = false;
+                    var maxProb = 0.35;
 
                     if (self.State != HockeyistState.Swinging)
                     {
                         // если не замахнулся
-                        for (int ticks = 0; ticks < 50; ticks++)
+                        for (var ticks = 0; ticks < 50; ticks++)
                         {
-                            double p;
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
                             var da = 0.01;
 
-                            int dir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
-                            for (var _turn = 0.0; _turn <= 2*da; _turn += da)
+                            var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
+                            for (var moveTurn = 0.0; moveTurn <= 3 * da; moveTurn += da)
                             {
-                                var turn = dir*_turn;
+                                var turn = moveDir * moveTurn;
 
                                 var end = ticks + game.SwingActionCooldownTicks;
                                 var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
                                 // когда начинаем замахиваться
-                                p = ProbabStrikeAfter(start, end - start, self, new[]
+                                var p = ProbabStrikeAfter(end - start, self, new[]
                                 {
                                     new Tuple<int, double, double>(start, 1, turn),
                                     new Tuple<int, double, double>(end - start, 0, 0)
@@ -203,7 +202,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 }
 
                                 // если не буду
-                                p = ProbabStrikeAfter(ticks, 0, self,
+                                p = ProbabStrikeAfter(0, self,
                                     new[] {new Tuple<int, double, double>(ticks, 1, turn)});
                                 if (p > maxProb)
                                 {
@@ -219,11 +218,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     else
                     {
                         // если уже замахнулся
-                        for (int ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks);
+                        for (var ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks);
                             ticks < 80;
                             ticks++)
                         {
-                            var p = ProbabStrikeAfter(ticks, ticks + self.SwingTicks, self,
+                            var p = ProbabStrikeAfter(ticks + self.SwingTicks, self,
                                 new[] {new Tuple<int, double, double>(ticks, 0, 0)});
                             if (p > maxProb)
                             {
