@@ -16,6 +16,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public Point Goalie;
         public bool IsDefend = false;
 
+        public static int PuckLastTicks;
+
         public APuck(Point pos, Point speed, Point goalie)
             : base(pos, speed, 0)
         {
@@ -38,6 +40,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             for (var tick = 1; tick <= ticks && (!goalCheck || breakCount < 1); tick++)
             {
+                PuckLastTicks = tick;
                 Speed = Speed * APuck.FrictionCoeff;
                 X += Speed.X;
                 Y += Speed.Y;

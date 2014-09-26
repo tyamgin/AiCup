@@ -64,15 +64,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Point FindWayPoint(Hockeyist self)
         {
-            double OkDist = 5*HoRadius;
+            double OkDist = 5 * HoRadius;
 
-            var minTime = Inf;
-            var maxLength = 0;
+            var bestTime = Inf;
             Point sel = null;
-            foreach (Point point in WayPoints)
+            foreach (Point p in WayPoints)
             {
                 var I = new AHo(self);
-                if (point.GetDistanceTo2(I) <= OkDist*OkDist || MyRight() && I.X < point.X || MyLeft() && I.X > point.X)
+                if (p.GetDistanceTo2(I) <= OkDist * OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
                     continue;
 
                 var cands = World.Hockeyists
@@ -81,35 +80,30 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         && !x.IsTeammate
                         && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
                     )
-                    .Select(x => new AHo(x)).ToArray();           
+                    .Select(x => new AHo(x)).ToArray();
 
                 int time = 0;
-                int len = 0;
-                for (var p = point; p != null; p = GetNextWayPoint(p))
+                bool ok = true;
+                while (p.GetDistanceTo2(I) > OkDist * OkDist && ok)
                 {
-                    var ok = true;
-                    while(p.GetDistanceTo2(I) > OkDist*OkDist && ok)
+                    MoveTo(I, p);
+                    foreach (var c in cands)
                     {
-                        MoveTo(I, p);
-                        foreach (var c in cands)
+                        MoveTo(c, I);
+                        if (CanStrike(c, I.PuckPos()) || I.GetDistanceTo2(c) <= 2 * HoRadius * 2 * HoRadius)
                         {
-                            MoveTo(c, I);
-                            if (CanStrike(c, I.PuckPos()) || I.GetDistanceTo2(c) <= 2*HoRadius*2*HoRadius)
-                            {
-                                ok = false;
-                                break;
-                            }
+                            ok = false;
+                            break;
                         }
-                        time++;
                     }
-                    if (!ok)
-                        break;
-                    len++;
-                    if (len > maxLength || len == maxLength && time < minTime)
+                    time++;
+                }
+                if (ok)
+                {
+                    if (time < bestTime)
                     {
-                        sel = point.Clone();
-                        minTime = time;
-                        maxLength = len;
+                        bestTime = time;
+                        sel = new Point(p);
                     }
                 }
             }
