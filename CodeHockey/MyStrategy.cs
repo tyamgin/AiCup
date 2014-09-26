@@ -23,9 +23,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static double PuckRadius;
         public static double HoPuckDist = 55.0;
 
-        public int GetTicksToUp(AHo _ho, Point to, double take = -1)
+        public int GetTicksToUp(AHock hock, Point to, double take = -1)
         {
-            var ho = _ho.Clone();
+            var ho = hock.Clone();
             var result = 0;
             for (; take < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > take*take; result++)
             {
@@ -39,9 +39,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return result;
         }
 
-        public int GetTicksToDown(AHo _ho, Point to, double take = -1)
+        public int GetTicksToDown(AHock hock, Point to, double take = -1)
         {
-            var ho = _ho.Clone();
+            var ho = hock.Clone();
             var result = 0;
             const int limit = 40;
             for (; result < limit && (take < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > take * take); result++)
@@ -57,7 +57,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public int GetTicksTo(Point to, Hockeyist my)
         {
-            var ho = new AHo(my);
+            var ho = new AHock(my);
             var up = GetTicksToUp(ho, to);
             var down = GetTicksToDown(ho, to);
             if (up <= down)
@@ -71,7 +71,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             Point result = null;
             var dir = 1;
             var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
-            var ho = owner == null ? null : new AHo(owner);
+            var ho = owner == null ? null : new AHock(owner);
             if (pk == null)
                 pk = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
             else
@@ -79,7 +79,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             int tLeft = 0, tRight = 300;
             var pks = new APuck[tRight + 1];
-            var hhs = new AHo[tRight + 1];
+            var hhs = new AHock[tRight + 1];
             pks[0] = pk.Clone();
             hhs[0] = ho;
             for (int i = 1; i <= tRight; i++)

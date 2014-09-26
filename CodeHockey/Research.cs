@@ -81,7 +81,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             move.Turn = Game.HockeyistTurnAngleFactor / 2;
             move.SpeedUp = 0.8;
-            var pl = new AHo(self);
+            var pl = new AHock(self);
             pl.Move(0.8, Game.HockeyistTurnAngleFactor / 2, 20);
         }
 

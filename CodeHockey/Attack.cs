@@ -55,11 +55,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        public void MoveTo(AHo ho, Point p)
+        public void MoveTo(AHock hock, Point p)
         {
-            var turn = ho.GetAngleTo(p);
+            var turn = hock.GetAngleTo(p);
             var speedUp = GetSpeedTo(turn);
-            ho.Move(speedUp, TurnNorm(turn));
+            hock.Move(speedUp, TurnNorm(turn));
         }
 
         public Point FindWayPoint(Hockeyist self)
@@ -70,7 +70,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             Point sel = null;
             foreach (Point p in WayPoints)
             {
-                var I = new AHo(self);
+                var I = new AHock(self);
                 if (p.GetDistanceTo2(I) <= OkDist * OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
                     continue;
 
@@ -80,7 +80,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         && !x.IsTeammate
                         && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
                     )
-                    .Select(x => new AHo(x)).ToArray();
+                    .Select(x => new AHock(x)).ToArray();
 
                 int time = 0;
                 bool ok = true;
@@ -154,13 +154,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         double ProbabStrikeAfter(int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move)
         {
             var power = GetPower(swingTime);
-            var I = new AHo(self);
+            var I = new AHock(self);
             var totalTime = 0;
             var opps = World.Hockeyists.Where(
                 x => x.PlayerId == Opp.Id
                      && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
                      && x.Type != HockeyistType.Goalie
-                ).Select(x => new AHo(x)).ToArray();
+                ).Select(x => new AHock(x)).ToArray();
 
             foreach (var action in move)
             {

@@ -8,16 +8,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        Point PuckMove(int ticks, APuck pk, AHo ho)
+        Point PuckMove(int ticks, APuck pk, AHock hock)
         {
-            if (ho == null)
+            if (hock == null)
             {
                 pk.Move(ticks);
                 return new Point(pk);
             }
-            if (Math.Abs(ho.GetAngleTo(ho + ho.Speed)) < Deg(15) && ho.Speed.Length > 2)
-                ho.Move(1, 0, ticks); // TODO
-            return ho.PuckPos();
+            if (Math.Abs(hock.GetAngleTo(hock + hock.Speed)) < Deg(15) && hock.Speed.Length > 2)
+                hock.Move(1, 0, ticks); // TODO
+            return hock.PuckPos();
         }
 
         public static void GoalieMove(Point goalie, int ticks, Point to)

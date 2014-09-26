@@ -40,14 +40,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private ArrayList defend_stack = new ArrayList();
         private ArrayList defend_best_stack = new ArrayList();
 
-        private void defend_Dfs(AHo ho, int deep, double maxSpUp, double maxTurn)
+        private void defend_Dfs(AHock hock, int deep, double maxSpUp, double maxTurn)
         {
             if (deep > defend_maxDeep)
                 return;
             var pk = defend_puckState[deep];
             if (MyRight() && pk.X > Game.RinkRight - HoRadius || MyLeft() && pk.X < Game.RinkLeft + HoRadius)
                 return;
-            if (CanStrike(ho, pk))
+            if (CanStrike(hock, pk))
             {
                 var p = 1.0/pk.Speed.Length;
                 if (p > defend_maxProbab)
@@ -63,7 +63,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 for (var spUp = 0.0; spUp <= maxSpUp; spUp += 1.0 / defend_spUps)
                 {
-                    var ho2 = ho.Clone();
+                    var ho2 = hock.Clone();
                     defend_stack.Add(new Pair<double, double>(spUp*defend_sp_dir, angle*defend_turn_dir));
                     ho2.Move(spUp * defend_sp_dir, angle * defend_turn_dir);
                     defend_Dfs(ho2, deep + 1, spUp, angle);
@@ -90,7 +90,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 for (defend_turn_dir = -1; defend_turn_dir <= 1; defend_turn_dir += 2)
                 {
                     defend_stack.Clear();
-                    defend_Dfs(new AHo(ho), 0, 1.0, Game.HockeyistTurnAngleFactor);       
+                    defend_Dfs(new AHock(ho), 0, 1.0, Game.HockeyistTurnAngleFactor);       
                 }
             }
             if (defend_best_stack.Count == 0)

@@ -33,7 +33,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             new [] {1.0, 0.5, 0.0, -0.5, -1.0}
         };
 
-        private void fp_Dfs(AHo ho, int time, int deep, double maxSpUp, int maxTurn)
+        private void fp_Dfs(AHock hock, int time, int deep, double maxSpUp, int maxTurn)
         {
             if (deep > fp_maxDeep)
                 return;
@@ -45,7 +45,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 return;
             }
 
-            if (ho.GetDistanceTo2(fp_to) < fp_okDist*fp_okDist && Math.Abs(AngleNormalize(fp_need - ho.Angle)) < fp_okAngle)
+            if (hock.GetDistanceTo2(fp_to) < fp_okDist*fp_okDist && Math.Abs(AngleNormalize(fp_need - hock.Angle)) < fp_okAngle)
             {
                 fp_minTime = time;
                 fp_best_stack = fp_stack.Clone() as ArrayList;
@@ -57,7 +57,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var angle = fp_turns[fp_turn_dir + 1][i] * Game.HockeyistTurnAngleFactor;
                 for (var spUp = maxSpUp; spUp >= 0; spUp -= 1.0 / fp_spUps)
                 {
-                    var ho2 = ho.Clone();
+                    var ho2 = hock.Clone();
                     fp_stack.Add(new Tuple<double, double, int>(spUp * fp_sp_dir, angle, fp_per));
                     ho2.Move(spUp * fp_sp_dir, angle, fp_per);
                     fp_Dfs(ho2, time + fp_per, deep + 1, spUp, i);
@@ -75,7 +75,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             fp_per = (int)(self.GetDistanceTo(to.X, to.Y)/fp_maxDeep + 2);
             fp_okAngle = self.GetDistanceTo(to.X, to.Y) < 70 ? Deg(5) : Deg(15);
             fp_cut_count = 0;
-            var state = new AHo(self);
+            var state = new AHock(self);
             for (fp_sp_dir = -1; fp_sp_dir <= 1; fp_sp_dir += 2)
             {
                 for (fp_turn_dir = 1; fp_turn_dir >= -1; fp_turn_dir -= 2)
