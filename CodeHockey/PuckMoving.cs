@@ -63,25 +63,25 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (self.RemainingCooldownTicks != 0)
                 return false;
 
-            const int psss = 4;
+            const int passAnglesCount = 5;
             var bestAngle = 0.0;
             var minTime = Inf;
             var bestPower = 0.0;
-            foreach (var power in new[] { 0.1, 0.3, 0.5, 0.8, 1.0 })
+            foreach (var power in new[] { 0.1, 0.2, 0.3, 0.5, 0.6, 0.8, 1.0 })
             {
-                for (var dir = -1; dir <= 1; dir += 2)
+                for (var passDir = -1; passDir <= 1; passDir += 2)
                 {
-                    for (var _angle = 0.0; _angle <= Game.PassSector/2; _angle += Game.PassSector/psss)
+                    for (var absPassAngle = 0.0; absPassAngle <= Game.PassSector/2; absPassAngle += Game.PassSector/passAnglesCount)
                     {
-                        var angle = _angle*dir;
-                        var pk = GetPassPuck(striker, strikerSpeed, angleStriker, power, angle);
+                        var passAngle = absPassAngle*passDir;
+                        var pk = GetPassPuck(striker, strikerSpeed, angleStriker, power, passAngle);
                         var tm = GetFirstOnPuck(new[] {self}, pk);
                         if (tm == -1)
                             continue;
                         if (tm < minTime)
                         {
                             minTime = tm;
-                            bestAngle = angle;
+                            bestAngle = passAngle;
                             bestPower = power;
                         }
                     }
