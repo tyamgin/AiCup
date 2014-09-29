@@ -40,22 +40,36 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        int GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk)
+        Pair<int, long> GetFirstTo(IEnumerable<Hockeyist> except, Point to)
         {
             var cands = World.Hockeyists.Where(
-                x => x.State == HockeyistState.Active
+                x => (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
                      && x.Type != HockeyistType.Goalie
-                     && x.RemainingCooldownTicks == 0
                      && except.Count(y => y.Id == x.Id) == 0
                 ).ToArray();
-            var times = cands.Select(x => GoToPuck(x, pk).Third).ToArray();
+            var times = cands.Select(x => GetTicksToUp(new AHock(x), to)).ToArray();
+            var whereMin = 0;
+            for (var i = 1; i < times.Count(); i++)
+                if (times[i] < times[whereMin])
+                    whereMin = i;
+
+            return new Pair<int, long>(times[whereMin], cands[whereMin].Id);
+        }
+
+        Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, int timeLimit = -1)
+        {
+            var cands = World.Hockeyists.Where(
+                x => (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
+                     && x.Type != HockeyistType.Goalie
+                     && except.Count(y => y.Id == x.Id) == 0
+                ).ToArray();
+            var times = cands.Select(x => GoToPuck(x, pk, timeLimit).Third).ToArray();
             int whereMin = 0;
             for(var i = 1; i < times.Count(); i++)
                 if (times[i] < times[whereMin])
                     whereMin = i;
-            if (cands[whereMin].PlayerId != My.Id)
-                return -1;
-            return times[whereMin];
+
+            return new Pair<int, long>(times[whereMin], cands[whereMin].Id);
         }
 
         bool TryPass(Point striker, Point strikerSpeed, double angleStriker, Hockeyist self)
@@ -65,9 +79,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             const int passAnglesCount = 5;
             var bestAngle = 0.0;
-            var minTime = Inf;
+            double minDanger = Inf;
             var bestPower = 0.0;
+#if DEBUG
+            foreach (var power in new[] { 0.1, 0.3, 0.5, 0.8, 1.0 })
+#else
             foreach (var power in new[] { 0.1, 0.2, 0.3, 0.5, 0.6, 0.8, 1.0 })
+#endif
             {
                 for (var passDir = -1; passDir <= 1; passDir += 2)
                 {
@@ -75,24 +93,39 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     {
                         var passAngle = absPassAngle*passDir;
                         var pk = GetPassPuck(striker, strikerSpeed, angleStriker, power, passAngle);
-                        var tm = GetFirstOnPuck(new[] {self}, pk);
-                        if (tm == -1)
+                        var on = GetFirstOnPuck(new[] {self}, pk);
+                        if (!Get(on.Second).IsTeammate)
                             continue;
-                        if (tm < minTime)
+                        var danger = GetDanger(on.Second);
+                        if (danger < minDanger)
                         {
-                            minTime = tm;
+                            minDanger = danger;
                             bestAngle = passAngle;
                             bestPower = power;
                         }
                     }
                 }
             }
-            if (minTime == Inf)
+            if (minDanger >= Inf - Eps)
                 return false;
             move.Action = ActionType.Pass;
             move.PassAngle = bestAngle;
             move.PassPower = bestPower;
             return true;
+        }
+
+        double GetDanger(long id)
+        {
+            return GetDanger(World.Hockeyists.FirstOrDefault(x => x.Id == id));
+        }
+
+        double GetDanger(Hockeyist ho)
+        {
+            return -World.Hockeyists.Where(x =>
+                !x.IsTeammate
+                && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
+                && x.Type != HockeyistType.Goalie
+                ).Select(x => GetTicksTo(Get(ho), x)).Min();
         }
 
         public APuck GetPassPuck(Point striker, Point strikerSpeed, double angleStriker, double PassPower, double PassAngle)

@@ -73,10 +73,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                    && hock.KnockDown == 0 && hock.CoolDown == 0;
         }
 
-        public static double GetPower(int swingTime)
+        public static double GetPower(Hockeyist self, int swingTime)
         {
             // TODO: use game.StrikePowerGrowthFactor
-            return Math.Min(Game.MaxEffectiveSwingTicks, swingTime) * 0.25 / Game.MaxEffectiveSwingTicks + 0.75;
+            var res = Math.Min(Game.MaxEffectiveSwingTicks, swingTime) * 0.25 / Game.MaxEffectiveSwingTicks + 0.75;
+            res = res*self.Strength/100;
+            return res;
         }
 
         public static Point GetPuckPos(Point hoPos, double hoAngle)
@@ -89,12 +91,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             a.RemoveAt(a.Count - 1);
         }
 
-        public static double TurnNorm(double turn)
+        public static double TurnNorm(double turn, double agility)
         {
-            if (turn > Game.HockeyistTurnAngleFactor)
-                turn = Game.HockeyistTurnAngleFactor;
-            else if (turn < -Game.HockeyistTurnAngleFactor)
-                turn = -Game.HockeyistTurnAngleFactor;
+            if (turn > TurnRange(agility))
+                turn = TurnRange(agility);
+            else if (turn < -TurnRange(agility))
+                turn = -TurnRange(agility);
             return turn;
         }
 
@@ -115,6 +117,23 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (angle > 0)
                 return angle - Math.PI;
             return Math.PI + angle;
+        }
+
+        public static double TurnRange(double agility)
+        {
+            return Game.HockeyistTurnAngleFactor*agility/100;
+        }
+
+        public static void Swap<T>(ref T lhs, ref T rhs)
+        {
+            T temp = lhs;
+            lhs = rhs;
+            rhs = temp;
+        }
+
+        Hockeyist Get(long id)
+        {
+            return World.Hockeyists.First(x => x.Id == id);
         }
     }
 }

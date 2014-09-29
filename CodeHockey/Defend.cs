@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             for (var angle = 0.0;
                 angle <= maxTurn;
-                angle += Game.HockeyistTurnAngleFactor/defend_angles)
+                angle += TurnRange(hock.BaseParams.Agility) / defend_angles)
             {
                 for (var spUp = 0.0; spUp <= maxSpUp; spUp += 1.0 / defend_spUps)
                 {
@@ -90,7 +90,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 for (defend_turn_dir = -1; defend_turn_dir <= 1; defend_turn_dir += 2)
                 {
                     defend_stack.Clear();
-                    defend_Dfs(new AHock(ho), 0, 1.0, Game.HockeyistTurnAngleFactor);       
+                    defend_Dfs(new AHock(ho), 0, 1.0, TurnRange(ho.Agility));       
                 }
             }
             if (defend_best_stack.Count == 0)

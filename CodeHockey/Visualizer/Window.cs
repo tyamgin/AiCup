@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -16,10 +17,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Visualizer
             InitializeComponent();
         }
 
+        public ArrayList points = new ArrayList();
+
         private void panel_Click(object sender, EventArgs ea)
         {
             var e = ea as MouseEventArgs;
             label1.Text = e.X + " " + e.Y;
+            points.Add(new Point(e.X, e.Y));
         }
     }
 }

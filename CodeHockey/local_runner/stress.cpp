@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 			Config conf;
 			conf.Add("render-to-screen", "false");
 			conf.Add("render-to-screen-sync", "false");
-			conf.Add("team-size", "2");
+			conf.Add("team-size", "3");
 			conf.Add("player-count", "2");
 			conf.Add("p1-type", "Local");
 			conf.Add("p2-type", "Local");
