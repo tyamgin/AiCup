@@ -55,7 +55,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 
                 new Point(286, 345),
                 new Point(443, 278),
-                new Point(620, 242),
+                new Point(620, 270),
                 new Point(785, 289),
                 new Point(917, 350),
             };

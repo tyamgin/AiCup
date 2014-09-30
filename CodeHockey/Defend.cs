@@ -10,11 +10,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        Point GetDefendPos2()
+        Point GetDefendPos2(Hockeyist self, Hockeyist friend)
         {
             var y = RinkCenter.Y;
             const double offset = 0.09;
-            return MyLeft() ? new Point(Game.RinkLeft + RinkWidth * offset, y) : new Point(Game.RinkRight - RinkWidth * offset, y);
+            return new Point(MyLeft() ? Game.RinkLeft + RinkWidth * offset : Game.RinkRight - RinkWidth * offset, y);
+            //var a = new Point(MyLeft() ? Game.RinkLeft + RinkWidth * offset : Game.RinkRight - RinkWidth * offset, y - 1.5 * HoRadius);
+            //var b = new Point(MyLeft() ? Game.RinkLeft + RinkWidth * offset : Game.RinkRight - RinkWidth * offset, y + 1.5 * HoRadius);
+            //return GetTicksTo(a, self) < GetTicksTo(b, self) ? a : b;
         }
 
         public void StayOn(Hockeyist self, Point to, double needAngle)

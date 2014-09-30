@@ -164,7 +164,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             MyStrategy.PuckRadius = puck.Radius;
             var friends =
                 world.Hockeyists.Where(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie).ToArray();
-            var friend1 = friends[0].TeammateIndex < friends[1].TeammateIndex ? friends[0] : friends[1];
+            var friend1 = friends.Count() < 2 || friends[0].TeammateIndex < friends[1].TeammateIndex ? friends[0] : friends[1];
             var friend2 = friends.Count() > 1 ? friends[0].TeammateIndex < friends[1].TeammateIndex ? friends[1] : friends[0] : null;
             FillWayPoints();
 
@@ -190,7 +190,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var wait = Inf;
                     double selTurn = 0, selSpeedUp = 0;
                     var willSwing = false;
-                    var maxProb = 0.25;
+                    var maxProb = 0.15;
 
                     if (self.State != HockeyistState.Swinging)
                     {
@@ -335,11 +335,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         // 1 - дольше всего идет до шайбы
                         if (toPuck.Third > toPuck1.Third) // если я дольше всего, то иду на ворота
                         {
-                            var to = GetDefendPos2();
+                            var to = GetDefendPos2(self, friend1);
                             StayOn(self, to, self.GetAngleTo(puck));
                         }
                             // иначе 1 идет на ворота
-                        else if (friend2 == null || puck.OwnerPlayerId != My.Id) // if (toPuck.Third < toPuck2.Third || Math.Abs(puck.X - My.NetFront) < RinkWidth / 2)
+                        else if (friend2 == null || puck.OwnerPlayerId != My.Id)// && toPuck.Third < toPuck2.Third)// || Math.Abs(puck.X - My.NetFront) < RinkWidth / 2)
                         {
                             var range = TurnRange(self.Agility);
                             var bestTime = Inf;
@@ -388,9 +388,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            Point c1 = new Point(RinkCenter.X, Game.RinkTop + 2 * HoRadius);
-                            Point c2 = new Point(RinkCenter.X, Game.RinkBottom - 2 * HoRadius);
+                            var x = MyRight() ? Math.Max(RinkCenter.X, puck.X - 100) : Math.Min(RinkCenter.X, puck.X + 100);
+                            Point c1 = new Point(x, Game.RinkTop + 2 * HoRadius);
+                            Point c2 = new Point(x, Game.RinkBottom - 2 * HoRadius);
                             Point c = c1.GetDistanceTo(toPuck2.First) > c2.GetDistanceTo(toPuck2.First) ? c1 : c2;
+                            //var c = RinkCenter.Clone();
                             move.Turn = self.GetAngleTo(c.X, c.Y);
                             move.SpeedUp = GetSpeedTo(move.Turn);
                         }
