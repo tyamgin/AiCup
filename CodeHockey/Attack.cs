@@ -58,7 +58,26 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 new Point(620, 300),
                 new Point(785, 325),
                 new Point(917, 375),
+
+                new Point(442, 226),
+                new Point(622, 216),
+                new Point(787, 235),
+
+                new Point(284, 266),
+                new Point(919, 264),
+                new Point(617, 363),
             };
+            if (MyRight())
+            {
+                WayPoints.Add(new Point(883, 463));
+                WayPoints.Add(new Point(691, 454));
+            }
+            else
+            {
+                WayPoints.Add(new Point(545, 454));
+                WayPoints.Add(new Point(328, 457));
+            }
+
             if (MyRight())
                 WayPoints.Reverse();
 
@@ -79,7 +98,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Point _FindWayPoint(Hockeyist self)
         {
-            double OkDist = 4 * HoRadius;
+            double OkDist = 5 * HoRadius;
 
             var bestTime = Inf;
             Point sel = null;

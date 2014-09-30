@@ -294,9 +294,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             needPassQueue.Enqueue(Get(self));
                             if (!TryPass(new AHock(self)))
                             {
-                                var an1 = self.GetAngleTo(friend1);
-                                var an2 = friend2 == null ? Inf : self.GetAngleTo(friend2);
-                                move.Turn = Math.Abs(an1) < Math.Abs(an2) ? an1 : an2;
+                                move.Turn = new AHock(self).GetAngleTo(GetStrikePoint());
                                 move.SpeedUp = GetSpeedTo(move.Turn);
                             }
                         }
