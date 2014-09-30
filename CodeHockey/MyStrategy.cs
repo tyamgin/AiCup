@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Configuration.Assemblies;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms.VisualStyles;
@@ -184,13 +185,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
                 else if (puck.OwnerHockeyistId == self.Id)
                 {
-                    //drawInfo.Enqueue(
-                    //    StrikeProbability(Get(puck), GetSpeed(self), GetPower(self, self.SwingTicks), self.Dexterity, self.Angle, Get(OppGoalie)) + "");
-
                     var wait = Inf;
                     double selTurn = 0, selSpeedUp = 0;
                     var willSwing = false;
                     var maxProb = 0.15;
+                    var selAction = ActionType.Strike;
 
                     if (self.State != HockeyistState.Swinging)
                     {
@@ -218,7 +217,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 {
                                     new Tuple<int, double, double>(start, 1, turn),
                                     new Tuple<int, double, double>(end - start, 0, 0)
-                                });
+                                }, ActionType.Strike);
                                 if (p > maxProb)
                                 {
                                     wait = start;
@@ -226,11 +225,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                     maxProb = p;
                                     selTurn = turn;
                                     selSpeedUp = 1;
+                                    selAction = ActionType.Strike;
                                 }
 
                                 // если не буду
                                 p = ProbabStrikeAfter(0, self,
-                                    new[] {new Tuple<int, double, double>(ticks, 1, turn)});
+                                    new[] { new Tuple<int, double, double>(ticks, 1, turn) }, ActionType.Strike);
                                 if (p > maxProb)
                                 {
                                     wait = ticks;
@@ -238,6 +238,20 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                     maxProb = p;
                                     selTurn = turn;
                                     selSpeedUp = 1;
+                                    selAction = ActionType.Strike;
+                                }
+
+                                // если пасом
+                                p = ProbabStrikeAfter(0, self,
+                                    new[] { new Tuple<int, double, double>(ticks, 1, turn) }, ActionType.Pass);
+                                if (p > maxProb)
+                                {
+                                    wait = ticks;
+                                    willSwing = false;
+                                    maxProb = p;
+                                    selTurn = turn;
+                                    selSpeedUp = 1;
+                                    selAction = ActionType.Pass;
                                 }
                             }
                         }
@@ -250,12 +264,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             ticks++)
                         {
                             var p = ProbabStrikeAfter(ticks + self.SwingTicks, self,
-                                new[] {new Tuple<int, double, double>(ticks, 0, 0)});
+                                new[] { new Tuple<int, double, double>(ticks, 0, 0) }, ActionType.Strike);
                             if (p > maxProb)
                             {
                                 wait = ticks;
                                 willSwing = true;
                                 maxProb = p;
+                                selAction = ActionType.Strike;
                             }
                         }
                     }
@@ -277,12 +292,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         if (wayPoint == null)
                         {
                             needPassQueue.Enqueue(Get(self));
-                            if (!TryPass(Get(self), GetSpeed(self), self.Angle, self))
+                            if (!TryPass(new AHock(self)))
                             {
-                                move.SpeedUp = 0;
                                 var an1 = self.GetAngleTo(friend1);
                                 var an2 = friend2 == null ? Inf : self.GetAngleTo(friend2);
                                 move.Turn = Math.Abs(an1) < Math.Abs(an2) ? an1 : an2;
+                                move.SpeedUp = GetSpeedTo(move.Turn);
                             }
                         }
                         else
@@ -293,7 +308,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                     else if (wait == 0)
                     {
-                        move.Action = ActionType.Strike;
+                        move.Action = selAction;
+                        if (selAction == ActionType.Pass)
+                        {
+                            move.PassPower = 1;
+                            move.PassAngle = PassAngleNorm(new AHock(self).GetAngleTo(GetStrikePoint()));
+                        }
                     }
                     else
                     {
@@ -311,7 +331,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         move.Action = ActionType.Strike;
                     }
                     else if (puck.OwnerPlayerId != My.Id && CanStrike(self, puck)
-                             && Strike(new Point(puck), GetSpeed(self), power, self.Angle, Get(OppGoalie)))
+                             && Strike(new AHock(self), power, Get(OppGoalie), ActionType.Strike, 0.0))
                     {
                         move.Action = ActionType.Strike;
                     }
@@ -388,7 +408,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            var x = MyRight() ? Math.Max(RinkCenter.X, puck.X - 100) : Math.Min(RinkCenter.X, puck.X + 100);
+                            var x = MyRight() ? Math.Max(RinkCenter.X - RinkWidth / 2, puck.X - 100) : Math.Min(RinkCenter.X + RinkWidth / 2, puck.X + 100);
                             Point c1 = new Point(x, Game.RinkTop + 2 * HoRadius);
                             Point c2 = new Point(x, Game.RinkBottom - 2 * HoRadius);
                             Point c = c1.GetDistanceTo(toPuck2.First) > c2.GetDistanceTo(toPuck2.First) ? c1 : c2;

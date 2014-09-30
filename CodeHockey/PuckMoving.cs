@@ -72,9 +72,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new Pair<int, long>(times[whereMin], cands[whereMin].Id);
         }
 
-        bool TryPass(Point striker, Point strikerSpeed, double angleStriker, Hockeyist self)
+        bool TryPass(AHock striker)
         {
-            if (self.RemainingCooldownTicks != 0)
+            if (striker.BaseParams.RemainingCooldownTicks != 0)
                 return false;
 
             const int passAnglesCount = 5;
@@ -92,8 +92,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     for (var absPassAngle = 0.0; absPassAngle <= Game.PassSector/2; absPassAngle += Game.PassSector/passAnglesCount)
                     {
                         var passAngle = absPassAngle*passDir;
-                        var pk = GetPassPuck(striker, strikerSpeed, angleStriker, power, passAngle);
-                        var on = GetFirstOnPuck(new[] {self}, pk);
+                        var pk = GetPassPuck(striker, power, passAngle);
+                        var on = GetFirstOnPuck(new[] {striker.BaseParams}, pk);
                         if (!Get(on.Second).IsTeammate)
                             continue;
                         var danger = GetDanger(on.Second);
@@ -128,12 +128,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 ).Select(x => GetTicksTo(Get(ho), x)).Min();
         }
 
-        public APuck GetPassPuck(Point striker, Point strikerSpeed, double angleStriker, double PassPower, double PassAngle)
+        public APuck GetPassPuck(AHock striker, double PassPower, double PassAngle)
         {
-            var puckSpeedAbs = 15.0*PassPower + strikerSpeed.Length*Math.Cos(angleStriker + PassAngle - strikerSpeed.GetAngle());
-            var puckAngle = AngleNormalize(PassAngle + angleStriker);
+            var puckSpeedAbs = 15.0*PassPower + striker.Speed.Length*Math.Cos(striker.Angle + PassAngle - striker.Speed.GetAngle());
+            var puckAngle = AngleNormalize(PassAngle + striker.Angle);
             var puckSpeed = new Point(puckAngle)*puckSpeedAbs;
-            return new APuck(Get(puck), puckSpeed, Get(OppGoalie)); 
+            return new APuck(striker.PuckPos(), puckSpeed, Get(OppGoalie));
         }
     }
 }
