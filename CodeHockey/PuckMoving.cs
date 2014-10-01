@@ -71,7 +71,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 for (var passDir = -1; passDir <= 1; passDir += 2)
                 {
-                    for (var absPassAngle = 0.0; absPassAngle <= Game.PassSector/2; absPassAngle += Game.PassSector/passAnglesCount)
+                    for (var absPassAngle = 0.0; absPassAngle <= Game.PassSector/2; absPassAngle += Game.PassSector/2/passAnglesCount)
                     {
                         var passAngle = absPassAngle*passDir;
                         var pk = GetPassPuck(striker, power, passAngle);
