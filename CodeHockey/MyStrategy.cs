@@ -175,7 +175,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             else
             {
-
                 move.SpeedUp = Inf;
                 var power = GetPower(self, self.SwingTicks);
 
