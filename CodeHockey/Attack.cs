@@ -276,7 +276,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return pk.Move(300, true) == 1;
         }
 
-        double ProbabStrikeAfter(int swingTime, Hockeyist self, IEnumerable<Tuple<int, double, double>> move, ActionType actionType)
+        double ProbabStrikeAfter(int swingTime, Hockeyist self, IEnumerable<MoveAction> actions, ActionType actionType)
         {
             var power = GetPower(self, swingTime);
             var I = new AHock(self);
@@ -286,11 +286,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 .Select(x => new AHock(x))
                 .ToArray();
 
-            foreach (var action in move)
+            foreach (var action in actions)
             {
-                for (var i = 0; i < action.First; i++)
+                for (var i = 0; i < action.Ticks; i++)
                 {
-                    I.Move(action.Second, action.Third);
+                    I.Move(action.SpeedUp, action.Turn);
                     foreach (var opp in opps)
                     {
                         var hisTurn = TurnNorm(opp.GetAngleTo(I), opp.BaseParams.Agility);
@@ -299,7 +299,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             return 0.0;
                     }
                 }
-                totalTime += action.First;
+                totalTime += action.Ticks;
             }
             var pk = GetPuckPos(I, I.Angle);
             var goalie = Get(OppGoalie);

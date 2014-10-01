@@ -141,5 +141,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return (hock.State == HockeyistState.Active || hock.State == HockeyistState.KnockedDown)
                    && hock.Type != HockeyistType.Goalie;
         }
+
+        public class MoveAction
+        {
+            public double SpeedUp;
+            public double Turn;
+            public int Ticks;
+        }
     }
 }

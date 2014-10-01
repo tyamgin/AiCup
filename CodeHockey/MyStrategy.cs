@@ -214,8 +214,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 // когда начинаем замахиваться
                                 var p = ProbabStrikeAfter(end - start, self, new[]
                                 {
-                                    new Tuple<int, double, double>(start, 1, turn),
-                                    new Tuple<int, double, double>(end - start, 0, 0)
+                                    new MoveAction { Ticks = start, SpeedUp = 1, Turn = turn },
+                                    new MoveAction { Ticks = end - start, SpeedUp = 0, Turn = 0 },
                                 }, ActionType.Strike);
                                 if (p > maxProb)
                                 {
@@ -229,7 +229,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
                                 // если не буду
                                 p = ProbabStrikeAfter(0, self,
-                                    new[] { new Tuple<int, double, double>(ticks, 1, turn) }, ActionType.Strike);
+                                    new[] {new MoveAction {Ticks = ticks, SpeedUp = 1, Turn = turn}}, ActionType.Strike);
                                 if (p > maxProb)
                                 {
                                     wait = ticks;
@@ -242,7 +242,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
                                 // если пасом
                                 p = ProbabStrikeAfter(0, self,
-                                    new[] { new Tuple<int, double, double>(ticks, 1, turn) }, ActionType.Pass);
+                                    new[] {new MoveAction {Ticks = ticks, SpeedUp = 1, Turn = turn}}, ActionType.Pass);
                                 if (p > maxProb)
                                 {
                                     wait = ticks;
@@ -258,12 +258,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     else
                     {
                         // если уже замахнулся
-                        for (var ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks);
-                            ticks < 80;
-                            ticks++)
+                        for (var ticks = Math.Max(0, game.SwingActionCooldownTicks - self.SwingTicks); ticks < 80; ticks++)
                         {
                             var p = ProbabStrikeAfter(ticks + self.SwingTicks, self,
-                                new[] { new Tuple<int, double, double>(ticks, 0, 0) }, ActionType.Strike);
+                                new[] {new MoveAction {Ticks = ticks, SpeedUp = 0, Turn = 0}}, ActionType.Strike);
                             if (p > maxProb)
                             {
                                 wait = ticks;
