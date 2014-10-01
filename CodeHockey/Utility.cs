@@ -131,9 +131,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             rhs = temp;
         }
 
-        Hockeyist Get(long id)
+        public static Hockeyist Get(long id)
         {
             return World.Hockeyists.First(x => x.Id == id);
+        }
+
+        public static bool IsInGame(Hockeyist hock)
+        {
+            return (hock.State == HockeyistState.Active || hock.State == HockeyistState.KnockedDown)
+                   && hock.Type != HockeyistType.Goalie;
         }
     }
 }

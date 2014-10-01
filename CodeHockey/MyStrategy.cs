@@ -196,16 +196,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         for (var ticks = 0; ticks < 50; ticks++)
                         {
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
-                            var da = 0.01;
-
+                            var dTurn = 0.01;
                             var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
+
                             for (var moveTurn = 0.0; moveTurn <= 
-#if DEBUG
+#if DEBUG 
                                 2
 #else
                                 3 
 #endif
-                                * da; moveTurn += da)
+                                * dTurn; moveTurn += dTurn)
                             {
                                 var turn = moveDir * moveTurn;
 
@@ -284,9 +284,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                     else if (wait == Inf)
                     {
-                        // TODO: pass here
-                        //var passTo = AttackPass();
-
                         var wayPoint = FindWayPoint(self);
                         if (wayPoint == null)
                         {

@@ -40,29 +40,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        Pair<int, long> GetFirstTo(IEnumerable<Hockeyist> except, Point to)
-        {
-            var cands = World.Hockeyists.Where(
-                x => (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
-                     && x.Type != HockeyistType.Goalie
-                     && except.Count(y => y.Id == x.Id) == 0
-                ).ToArray();
-            var times = cands.Select(x => GetTicksToUp(new AHock(x), to)).ToArray();
-            var whereMin = 0;
-            for (var i = 1; i < times.Count(); i++)
-                if (times[i] < times[whereMin])
-                    whereMin = i;
-
-            return new Pair<int, long>(times[whereMin], cands[whereMin].Id);
-        }
-
         Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, int timeLimit = -1)
         {
-            var cands = World.Hockeyists.Where(
-                x => (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
-                     && x.Type != HockeyistType.Goalie
-                     && except.Count(y => y.Id == x.Id) == 0
-                ).ToArray();
+            var cands = World.Hockeyists
+                .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
+                .ToArray();
             var times = cands.Select(x => GoToPuck(x, pk, timeLimit).Third).ToArray();
             int whereMin = 0;
             for(var i = 1; i < times.Count(); i++)
@@ -121,11 +103,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         double GetDanger(Hockeyist ho)
         {
-            return -World.Hockeyists.Where(x =>
-                !x.IsTeammate
-                && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
-                && x.Type != HockeyistType.Goalie
-                ).Select(x => GetTicksTo(Get(ho), x)).Min();
+            return -World.Hockeyists
+                .Where(x => !x.IsTeammate && IsInGame(x))
+                .Select(x => GetTicksTo(Get(ho), x)).Min();
         }
 
         public APuck GetPassPuck(AHock striker, double PassPower, double PassAngle)

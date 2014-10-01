@@ -110,11 +110,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     continue;
 
                 var cands = World.Hockeyists
-                    .Where(x =>
-                        x.Type != HockeyistType.Goalie
-                        && !x.IsTeammate
-                        && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
-                    )
+                    .Where(x => !x.IsTeammate && IsInGame(x))
                     .Select(x => new AHock(x)).ToArray();
 
                 int time = 0;
@@ -167,15 +163,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     continue;
 
                 var cands = World.Hockeyists
-                    .Where(x =>
-                        x.Type != HockeyistType.Goalie
-                        && !x.IsTeammate
-                        && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
-                    )
+                    .Where(x => !x.IsTeammate && IsInGame(x))
                     .Select(x => new AHock(x)).ToArray();
 
-                int time = 0;
-                bool ok = true;
+                var time = 0;
+                var ok = true;
                 while (p.GetDistanceTo2(I) > OkDist * OkDist && ok)
                 {
                     MoveTo(I, p);
@@ -230,11 +222,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var pk = actionType == ActionType.Strike
                 ? GetStrikePuck(striker, strikePower, goalie)
                 : GetPassPuck(striker, 1, passAngle);
-            var opps = World.Hockeyists.Where(
-                x => x.PlayerId == Opp.Id
-                     && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
-                     && x.Type != HockeyistType.Goalie
-                ).Select(x => new AHock(x)).ToArray();
+            var opps = World.Hockeyists
+                .Where(x => !x.IsTeammate && IsInGame(x))
+                .Select(x => new AHock(x)).ToArray();
 
             pk.Clone().Move(300, true);
             var time = APuck.PuckLastTicks;
@@ -291,11 +281,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var power = GetPower(self, swingTime);
             var I = new AHock(self);
             var totalTime = 0;
-            var opps = World.Hockeyists.Where(
-                x => !x.IsTeammate
-                     && (x.State == HockeyistState.Active || x.State == HockeyistState.KnockedDown)
-                     && x.Type != HockeyistType.Goalie
-                ).Select(x => new AHock(x)).ToArray();
+            var opps = World.Hockeyists
+                .Where(x => !x.IsTeammate && IsInGame(x))
+                .Select(x => new AHock(x))
+                .ToArray();
 
             foreach (var action in move)
             {
@@ -347,12 +336,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
             return new Point(x, bestY);
-        }
-
-        Point AttackPass(Hockeyist self)
-        {
-            var ho = new AHock(self);
-            return null;
         }
     }
 }
