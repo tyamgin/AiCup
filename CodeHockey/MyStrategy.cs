@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration.Assemblies;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
+
+// TODO: Нет вратаря - улучшить
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -33,7 +35,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 var turn = ho.GetAngleTo(to);
                 var speedUp = GetSpeedTo(turn);
-                ho.Move(speedUp, TurnNorm(turn, hock.BaseParams.Agility));
+                ho.Move(speedUp, TurnNorm(turn, hock.Base.Agility));
 
                 if (result > 500)
                     return result; // TODO: временный костыль, ибо почему-то падает
@@ -65,7 +67,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 var turn = RevAngle(ho.GetAngleTo(to));
                 var speedUp = -GetSpeedTo(turn);
-                ho.Move(speedUp, TurnNorm(turn, hock.BaseParams.Agility));
+                ho.Move(speedUp, TurnNorm(turn, hock.Base.Agility));
             }
             if (result >= limit)
                 return Inf;
@@ -101,7 +103,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var hhs = new AHock[tRight + 1];
             pks[0] = pk.Clone();
             hhs[0] = ho;
-            for (int i = 1; i <= tRight; i++)
+            for (var i = 1; i <= tRight; i++)
             {
                 pks[i] = pks[i - 1].Clone();
                 hhs[i] = ho == null ? null : hhs[i - 1].Clone();
@@ -169,6 +171,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             FillWayPoints();
             // //
 
+            if (Opp.Name == "QuickStartGuy")
+                return;
+
             if (My.IsJustMissedGoal || My.IsJustScoredGoal)
             {
 
@@ -176,8 +181,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             else
             {
                 move.SpeedUp = Inf;
-                var power = GetPower(self, self.SwingTicks);
-
                 if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
                 {
                     move.Action = ActionType.CancelStrike;

@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var turn = hock.GetAngleTo(p);
             var speedUp = GetSpeedTo(turn);
-            hock.Move(speedUp, TurnNorm(turn, hock.BaseParams.Agility));
+            hock.Move(speedUp, TurnNorm(turn, hock.Base.Agility));
         }
 
         public Point FindWayPoint(Hockeyist self)
@@ -121,7 +121,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (striker.CoolDown != 0)
                 return 0.0;
 
-            var deviation = (actionType == ActionType.Strike ? Game.StrikeAngleDeviation : Game.PassAngleDeviation)*100/striker.BaseParams.Dexterity;
+            var deviation = (actionType == ActionType.Strike ? Game.StrikeAngleDeviation : Game.PassAngleDeviation)*100/striker.Base.Dexterity;
             double range = deviation * 2,
                 dx = deviation / 20,
                 result = 0;
@@ -153,11 +153,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     foreach (var opp in opps)
                     {
-                        var hisTurn = TurnNorm(opp.GetAngleTo(pk), opp.BaseParams.Agility);
+                        var hisTurn = TurnNorm(opp.GetAngleTo(pk), opp.Base.Agility);
                         opp.Move(0.0, hisTurn);
                         if (CanStrike(opp, pk))
                         {
-                            var pTake = (75.0 + Math.Max(opp.BaseParams.Dexterity, opp.BaseParams.Agility) -
+                            var pTake = (75.0 + Math.Max(opp.Base.Dexterity, opp.Base.Agility) -
                                          pk.Speed.Length/20*100)/100;
                             return result*(1 - pTake);
                         }
@@ -285,7 +285,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bestProbab = 0.0;
             var bestWait = Inf;
 
-            for (var moveTurn = 0.0; moveTurn <= 2*dTurn; moveTurn += dTurn)
+            for (var moveTurn = 0.0; moveTurn <= 3*dTurn; moveTurn += dTurn)
             {
                 var turn = moveDir*moveTurn;
 
@@ -293,9 +293,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     var hock = _hock.Clone();
                     var pk = _pk.Clone();
-                    var startDist2 = hock.GetDistanceTo2(pk);
                     var ticksWait = 0;
-                    for (; !CanStrike(hock, pk) && ticksWait < 150; ticksWait++)
+                    for (var startDist2 = hock.GetDistanceTo2(pk); !CanStrike(hock, pk) && ticksWait < 150; ticksWait++)
                     {
                         hock.Move(spUp, turn);
                         pk.Move(1);
@@ -305,10 +304,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         startDist2 = dist2;
                     }
                     if (CanStrike(hock, pk) &&
-                        Strike(hock, GetPower(hock.BaseParams, 0), Get(OppGoalie), ActionType.Strike, 0))
+                        Strike(hock, GetPower(hock.Base, 0), Get(OppGoalie), ActionType.Strike, 0))
                     {
                         var p = StrikeProbability(hock,
-                            GetPower(hock.BaseParams, 0), Get(OppGoalie), -1, ActionType.Strike, 0);
+                            GetPower(hock.Base, 0), Get(OppGoalie), -1, ActionType.Strike, 0);
                         if (p > bestProbab)
                         {
                             bestProbab = p;

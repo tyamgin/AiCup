@@ -62,7 +62,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
             for (var angle = 0.0;
                 angle <= maxTurn;
-                angle += TurnRange(hock.BaseParams.Agility) / defend_angles)
+                angle += TurnRange(hock.Base.Agility) / defend_angles)
             {
                 for (var spUp = 0.0; spUp <= maxSpUp; spUp += 1.0 / defend_spUps)
                 {

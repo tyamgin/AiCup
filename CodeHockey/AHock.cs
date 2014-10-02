@@ -13,14 +13,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static readonly double FrictionCoeff = 0.98;
         public static readonly double AngularSpeedCoeff = 0.972981;
 
-        public Hockeyist BaseParams;
+        public Hockeyist Base;
         public double AngularSpeed;
         public int CoolDown;
         public int KnockDown;
 
         public AHock(Hockeyist self) : base(MyStrategy.Get(self), MyStrategy.GetSpeed(self), self.Angle)
         {
-            BaseParams = self;
+            Base = self;
             AngularSpeed = self.AngularSpeed;
             Angle = self.Angle;
             CoolDown = self.RemainingCooldownTicks;
@@ -30,7 +30,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public AHock(Point pos, Point speed, double angle, double angularSpeed, int coolDown, int knockDown, Hockeyist from)
             : base(pos, speed, angle)
         {
-            BaseParams = from;
+            Base = from;
             AngularSpeed = angularSpeed;
             Angle = angle;
             CoolDown = coolDown;
@@ -39,10 +39,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void Move(double speedUp, double turn)
         {
-            if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.TurnRange(BaseParams.Agility) || turn < -MyStrategy.TurnRange(BaseParams.Agility))
+            if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.TurnRange(Base.Agility) || turn < -MyStrategy.TurnRange(Base.Agility))
                 throw new Exception("AHo Move: " + speedUp + " " + turn);
 
-            speedUp = speedUp*BaseParams.Agility/100;
+            speedUp = speedUp*Base.Agility/100;
             if (CoolDown > 0)
                 CoolDown--;
             if (KnockDown > 0)
@@ -72,7 +72,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public new AHock Clone()
         {
-            return new AHock(this, Speed, Angle, AngularSpeed, CoolDown, KnockDown, BaseParams);
+            return new AHock(this, Speed, Angle, AngularSpeed, CoolDown, KnockDown, Base);
         }
 
         public Point PuckPos()

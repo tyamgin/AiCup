@@ -50,7 +50,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             for (var i = 0; i <= maxTurn; i++)
             {
-                var angle = fp_turns[fp_turn_dir + 1][i] * TurnRange(hock.BaseParams.Agility);
+                var angle = fp_turns[fp_turn_dir + 1][i] * TurnRange(hock.Base.Agility);
                 for (var spUp = maxSpUp; spUp >= 0; spUp -= 1.0 / fp_spUps)
                 {
                     var ho2 = hock.Clone();

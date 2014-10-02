@@ -1,16 +1,29 @@
-var interval = 5; // in minutes
+var numberOfUsers = 50;
+var interval = 3; // in minutes
 var username = 'tyamgin';
 
-$('#participant1').attr('value', username);
-$('.form-horizontal').attr('target', '_blank');
-
-var createGame = function() {
-	$('#participant1').attr('value', username);
-	$('#participant2').attr('value', '');
-    $('.complete-with-random-button').click();
-    setTimeout(function() {
-        $('[value="Создать"]').click();
-    }, 5000);
-}
-
-setInterval(createGame, interval * 60 * 1000);
+$.get('http://russianaicup.ru/contest/1/standings', function(page) { 
+	var users = []; 
+	$('<div>' + page + '</div>').find('td a span').slice(0, numberOfUsers).each(function() { 
+		users.push($(this).html()); 
+	});
+	
+	$('.form-horizontal').attr('target', '_blank');
+	
+	var createGame = function(users) {
+		if (users.length > 0) {
+			$('#participant1').attr('value', '');
+			$('#participant2').attr('value', '');
+			$('#participant1').attr('value', username);
+			$('#participant2').attr('value', users[0]);
+			
+			setTimeout(function() {
+				$('[value="Создать"]').click();
+				setTimeout(function() {
+					createGame(users.slice(1)); 
+				}, interval * 60 * 1000);
+			}, 5000);
+		}
+	};
+	createGame(users);
+})

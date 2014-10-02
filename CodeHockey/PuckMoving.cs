@@ -56,7 +56,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         bool TryPass(AHock striker)
         {
-            if (striker.BaseParams.RemainingCooldownTicks != 0)
+            if (striker.Base.RemainingCooldownTicks != 0)
                 return false;
 
             const int passAnglesCount = 5;
@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 #if DEBUG
             foreach (var power in new[] { 0.1, 0.3, 0.5, 0.8, 1.0 })
 #else
-            foreach (var power in new[] { 0.1, 0.2, 0.3, 0.5, 0.6, 0.8, 1.0 })
+            foreach (var power in new[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0 })
 #endif
             {
                 for (var passDir = -1; passDir <= 1; passDir += 2)
@@ -75,7 +75,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     {
                         var passAngle = absPassAngle*passDir;
                         var pk = GetPassPuck(striker, power, passAngle);
-                        var on = GetFirstOnPuck(new[] {striker.BaseParams}, pk, false);
+                        var on = GetFirstOnPuck(new[] {striker.Base}, pk, false);
                         if (!Get(on.Second).IsTeammate)
                             continue;
                         var danger = GetDanger(on.Second);

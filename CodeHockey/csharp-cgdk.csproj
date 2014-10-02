@@ -71,7 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AHo.cs" />
+    <Compile Include="AHock.cs" />
     <Compile Include="APuck.cs" />
     <Compile Include="Attack.cs" />
     <Compile Include="AUnit.cs" />
