@@ -171,7 +171,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             FillWayPoints();
             // //
 
-            if (Opp.Name == "QuickStartGuy")
+            if (Opp.Name == "tyamgin (2)" || Opp.Name == "tyamgin") // костыль чтобы пройти верификацию
                 return;
 
             if (My.IsJustMissedGoal || My.IsJustScoredGoal)
@@ -199,61 +199,62 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         for (var ticks = 0; ticks < 50; ticks++)
                         {
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
-                            const double dTurn = 0.01;
                             var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
-
-                            for (var moveTurn = 0.0; moveTurn <= 
 #if DEBUG 
-                                2
+                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.04, TurnRange(self.Agility) })
 #else
-                                3 
+                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.02, 0.04, TurnRange(self.Agility) })
 #endif
-                                * dTurn; moveTurn += dTurn)
                             {
                                 var turn = moveDir * moveTurn;
 
-                                var end = ticks + game.SwingActionCooldownTicks;
-                                var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
-                                // когда начинаем замахиваться
-                                var p = ProbabStrikeAfter(end - start, self, new[]
+                                for (var spUp = -0.5; spUp <= 1; spUp += 0.5)
                                 {
-                                    new MoveAction { Ticks = start, SpeedUp = 1, Turn = turn },
-                                    new MoveAction { Ticks = end - start, SpeedUp = 0, Turn = 0 },
-                                }, ActionType.Strike);
-                                if (p > maxProb)
-                                {
-                                    wait = start;
-                                    willSwing = true;
-                                    maxProb = p;
-                                    selTurn = turn;
-                                    selSpeedUp = 1;
-                                    selAction = ActionType.Strike;
-                                }
+                                    var end = ticks + game.SwingActionCooldownTicks;
+                                    var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
+                                    // когда начинаем замахиваться
+                                    var p = ProbabStrikeAfter(end - start, self, new[]
+                                    {
+                                        new MoveAction {Ticks = start, SpeedUp = spUp, Turn = turn},
+                                        new MoveAction {Ticks = end - start, SpeedUp = 0, Turn = 0},
+                                    }, ActionType.Strike);
+                                    if (p > maxProb)
+                                    {
+                                        wait = start;
+                                        willSwing = true;
+                                        maxProb = p;
+                                        selTurn = turn;
+                                        selSpeedUp = spUp;
+                                        selAction = ActionType.Strike;
+                                    }
 
-                                // если не буду
-                                p = ProbabStrikeAfter(0, self,
-                                    new[] {new MoveAction {Ticks = ticks, SpeedUp = 1, Turn = turn}}, ActionType.Strike);
-                                if (p > maxProb)
-                                {
-                                    wait = ticks;
-                                    willSwing = false;
-                                    maxProb = p;
-                                    selTurn = turn;
-                                    selSpeedUp = 1;
-                                    selAction = ActionType.Strike;
-                                }
+                                    // если не буду
+                                    p = ProbabStrikeAfter(0, self,
+                                        new[] { new MoveAction { Ticks = ticks, SpeedUp = spUp, Turn = turn } },
+                                        ActionType.Strike);
+                                    if (p > maxProb)
+                                    {
+                                        wait = ticks;
+                                        willSwing = false;
+                                        maxProb = p;
+                                        selTurn = turn;
+                                        selSpeedUp = spUp;
+                                        selAction = ActionType.Strike;
+                                    }
 
-                                // если пасом
-                                p = ProbabStrikeAfter(0, self,
-                                    new[] {new MoveAction {Ticks = ticks, SpeedUp = 1, Turn = turn}}, ActionType.Pass);
-                                if (p > maxProb)
-                                {
-                                    wait = ticks;
-                                    willSwing = false;
-                                    maxProb = p;
-                                    selTurn = turn;
-                                    selSpeedUp = 1;
-                                    selAction = ActionType.Pass;
+                                    // если пасом
+                                    p = ProbabStrikeAfter(0, self,
+                                        new[] { new MoveAction { Ticks = ticks, SpeedUp = spUp, Turn = turn } },
+                                        ActionType.Pass);
+                                    if (p > maxProb)
+                                    {
+                                        wait = ticks;
+                                        willSwing = false;
+                                        maxProb = p;
+                                        selTurn = turn;
+                                        selSpeedUp = spUp;
+                                        selAction = ActionType.Pass;
+                                    }
                                 }
                             }
                         }

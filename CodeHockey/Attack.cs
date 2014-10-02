@@ -126,15 +126,30 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 dx = deviation / 20,
                 result = 0;
 
-            for (var L = -range; L + dx <= range; L += dx)
+            for (var dir = -1; dir <= 1; dir += 2)
             {
-                var x = L + dx;
-                if (actionType == ActionType.Strike)
-                    striker.Angle += x;
-                if (Strike(striker, strikePower, goalie, actionType, passAngle + x))
-                    result += dx * Gauss(x, 0, deviation);
-                if (actionType == ActionType.Strike)
-                    striker.Angle -= x;
+                double last = Inf;
+                for (var _x = 0.0; _x <= range; _x += dx)
+                {
+                    if (Eq(_x, 0) && dir == -1)
+                        continue;
+                    var x = _x*dir;
+                    var y = 0.0;
+
+                    if (actionType == ActionType.Strike)
+                        striker.Angle += x;
+                    if (Strike(striker, strikePower, goalie, actionType, passAngle + x))
+                    {
+                        y = dx*Gauss(x, 0, deviation);
+                        result += y;
+                    }
+                    if (actionType == ActionType.Strike)
+                        striker.Angle -= x;
+
+                    if (y + last < Eps)
+                        break;
+                    last = y;
+                }
             }
 
             // Проверка что шайбу перехватят:
@@ -184,7 +199,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth / 2)
                 return false;
 
-            if (Math.Abs(puckPos.X - Opp.NetFront) < 3 * HoRadius)
+            if (Math.Abs(puckPos.X - Opp.NetFront) < 3.5 * HoRadius)
                 return false;
 
             if (MyRight() && Math.Cos(striker.Angle) > 0)

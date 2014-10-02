@@ -1,5 +1,5 @@
 var numberOfUsers = 50;
-var interval = 3; // in minutes
+var interval = 2.7; // in minutes
 var username = 'tyamgin';
 
 $.get('http://russianaicup.ru/contest/1/standings', function(page) { 
@@ -25,5 +25,5 @@ $.get('http://russianaicup.ru/contest/1/standings', function(page) {
 			}, 5000);
 		}
 	};
-	createGame(users);
+	createGame(users.reverse());
 })
