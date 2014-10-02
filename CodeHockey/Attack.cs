@@ -21,20 +21,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             throw new Exception("Unknown waypoint");
         }
 
-        public int GetWayPointPriority(Point wayPoint)
-        {
-            return GetWayPointIndex(wayPoint)%(WayPoints.Count/2);
-        }
-
-        Point GetNextWayPoint(Point wayPoint)
-        {
-            var size = WayPoints.Count / 2;
-            var i = GetWayPointIndex(wayPoint);
-            if (i == size - 1 || i == 2*size - 1)
-                return null;
-            return WayPoints[i + 1] as Point;
-        }
-
         void FillWayPoints()
         {
             WayPoints = new ArrayList
@@ -80,60 +66,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var turn = hock.GetAngleTo(p);
             var speedUp = GetSpeedTo(turn);
             hock.Move(speedUp, TurnNorm(turn, hock.BaseParams.Agility));
-        }
-
-        public Point _FindWayPoint(Hockeyist self)
-        {
-            double OkDist = 5 * HoRadius;
-
-            var bestTime = Inf;
-            Point sel = null;
-
-            foreach (Point point in WayPoints)
-            {
-                var I = new AHock(self);
-                if (I.GetDistanceTo2(point) <= OkDist*OkDist || MyRight() && I.X < point.X || MyLeft() && I.X > point.X)
-                    continue;
-
-                var cands = World.Hockeyists
-                    .Where(x => !x.IsTeammate && IsInGame(x))
-                    .Select(x => new AHock(x)).ToArray();
-
-                int time = 0;
-                bool ok = true;
-                int fTime = -1;
-                for (var p = point; p != null && ok; p = GetNextWayPoint(p))
-                {
-                    while (p.GetDistanceTo2(I) > OkDist * OkDist && ok)
-                    {
-                        MoveTo(I, p);
-                        foreach (var c in cands)
-                        {
-                            MoveTo(c, I);
-                            if (CanStrike(c, I.PuckPos()) // достанет шайбу
-                                || CanStrike(c, I) // достанет меня
-                                || I.GetDistanceTo2(c) <= 2*HoRadius*2*HoRadius // столкнется со мной
-                                )
-                            {
-                                ok = false;
-                                break;
-                            }
-                        }
-                        time++;
-                    }
-                    if (fTime == -1)
-                        fTime = time;
-                }
-                if (time > 20 || ok)
-                {
-                    if (fTime < bestTime)
-                    {
-                        bestTime = fTime;
-                        sel = new Point(point);
-                    }
-                }
-            }
-            return sel;
         }
 
         public Point FindWayPoint(Hockeyist self)
@@ -214,7 +146,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             pk.Clone().Move(300, true);
             var time = APuck.PuckLastTicks;
-            for (int t = -leftTime; t < time; t++)
+            for (var t = -leftTime; t < time; t++)
             {
                 foreach (var opp in opps)
                 {

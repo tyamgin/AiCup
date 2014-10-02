@@ -84,7 +84,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Tuple<Point, int, int> GoToPuck(Hockeyist my, APuck pk, bool tryDown = true)
         {
-            var timeLimit = 300;
+            const int ticksLimit = 300;
 
             var res = Inf;
             var dir = 1;
@@ -96,7 +96,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 ho = null;
 
             var result = new Point(pk);
-            int tLeft = 0, tRight = timeLimit;
+            int tLeft = 0, tRight = ticksLimit;
             var pks = new APuck[tRight + 1];
             var hhs = new AHock[tRight + 1];
             pks[0] = pk.Clone();
@@ -124,7 +124,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
             const int by = 16;
-            for (var c = 0; c <= 70 && c <= timeLimit; c += c < by ? 1 : by)
+            for (var c = 0; c <= 70 && c <= ticksLimit; c += c < by ? 1 : by)
             {
                 var needTicks = GetTicksTo(PuckMove(0, pks[c], hhs[c]), my, tryDown);
                 if (Math.Abs(needTicks) <= c)
