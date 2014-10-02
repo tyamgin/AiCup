@@ -196,7 +196,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         for (var ticks = 0; ticks < 50; ticks++)
                         {
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
-                            var dTurn = 0.01;
+                            const double dTurn = 0.01;
                             var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
 
                             for (var moveTurn = 0.0; moveTurn <= 
@@ -313,18 +313,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         move.Turn = selTurn;
                     }
                 }
-                else
+                else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutSwing(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
                 {
                     var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
                     var pk = new APuck(Get(puck), GetSpeed(puck), Get(MyGoalie)) {IsDefend = true};
 
                     if (puck.OwnerPlayerId == Opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
                     { // попытаться выбить
-                        move.Action = ActionType.Strike;
-                    }
-                    else if (puck.OwnerPlayerId != My.Id && CanStrike(self, puck)
-                             && Strike(new AHock(self), power, Get(OppGoalie), ActionType.Strike, 0.0))
-                    {
                         move.Action = ActionType.Strike;
                     }
                     else if (puck.OwnerPlayerId != self.PlayerId && CanStrike(self, puck))

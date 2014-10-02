@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Windows.Forms.PropertyGridInternal;
+using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -137,29 +138,33 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
 
             // Проверка что шайбу перехватят:
-            var pk = actionType == ActionType.Strike
-                ? GetStrikePuck(striker, strikePower, goalie)
-                : GetPassPuck(striker, 1, passAngle);
-            var opps = World.Hockeyists
-                .Where(x => !x.IsTeammate && IsInGame(x))
-                .Select(x => new AHock(x)).ToArray();
-
-            pk.Clone().Move(300, true);
-            var time = APuck.PuckLastTicks;
-            for (var t = -leftTime; t < time; t++)
+            if (leftTime != -1)
             {
-                foreach (var opp in opps)
+                var pk = actionType == ActionType.Strike
+                    ? GetStrikePuck(striker, strikePower, goalie)
+                    : GetPassPuck(striker, 1, passAngle);
+                var opps = World.Hockeyists
+                    .Where(x => !x.IsTeammate && IsInGame(x))
+                    .Select(x => new AHock(x)).ToArray();
+
+                pk.Clone().Move(300, true);
+                var time = APuck.PuckLastTicks;
+                for (var t = -leftTime; t < time; t++)
                 {
-                    var hisTurn = TurnNorm(opp.GetAngleTo(pk), opp.BaseParams.Agility);
-                    opp.Move(0.0, hisTurn);
-                    if (CanStrike(opp, pk))
+                    foreach (var opp in opps)
                     {
-                        var pTake = (75.0 + Math.Max(opp.BaseParams.Dexterity, opp.BaseParams.Agility) - pk.Speed.Length / 20 * 100) / 100;
-                        return result * (1 - pTake);
+                        var hisTurn = TurnNorm(opp.GetAngleTo(pk), opp.BaseParams.Agility);
+                        opp.Move(0.0, hisTurn);
+                        if (CanStrike(opp, pk))
+                        {
+                            var pTake = (75.0 + Math.Max(opp.BaseParams.Dexterity, opp.BaseParams.Agility) -
+                                         pk.Speed.Length/20*100)/100;
+                            return result*(1 - pTake);
+                        }
                     }
+                    if (t >= 0)
+                        pk.Move(1);
                 }
-                if (t >= 0)
-                    pk.Move(1);
             }
             return result;
         }
@@ -173,19 +178,26 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new APuck(striker.PuckPos(), puckSpeedDirection, goalie);
         }
 
-        bool Strike(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle)
+        bool StrikePrimitiveValidate(AHock striker)
         {
             var puckPos = striker.PuckPos();
             if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth / 2)
                 return false;
 
-            // TODO: временный костыль
-            if (Math.Abs(puckPos.X - Opp.NetFront) < 3*HoRadius)
+            if (Math.Abs(puckPos.X - Opp.NetFront) < 3 * HoRadius)
                 return false;
 
             if (MyRight() && Math.Cos(striker.Angle) > 0)
                 return false;
             if (MyLeft() && Math.Cos(striker.Angle) < 0)
+                return false;
+
+            return true;
+        }
+
+        bool Strike(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle)
+        {
+            if (!StrikePrimitiveValidate(striker))
                 return false;
 
             var pk = actionType == ActionType.Strike
@@ -258,6 +270,62 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
             return new Point(x, bestY);
+        }
+
+        public bool TryStrikeWithoutSwing(AHock _hock, APuck _pk)
+        {
+            if (!StrikePrimitiveValidate(_hock))
+                return false;
+
+            const double dTurn = 0.01;
+            var moveDir = MyRight() && _hock.Y > RinkCenter.Y || MyLeft() && _hock.Y < RinkCenter.Y ? 1 : -1;
+
+            var bestTurn = 0.0;
+            var bestSpUp = 0.0;
+            var bestProbab = 0.0;
+            var bestWait = Inf;
+
+            for (var moveTurn = 0.0; moveTurn <= 3*dTurn; moveTurn += dTurn)
+            {
+                var turn = moveDir*moveTurn;
+
+                for (var spUp = 0.0; spUp <= 1.0; spUp += 1/3.0)
+                {
+                    var hock = _hock.Clone();
+                    var pk = _pk.Clone();
+                    var startDist2 = hock.GetDistanceTo2(pk);
+                    var ticksWait = 0;
+                    for (; !CanStrike(hock, pk); ticksWait++)
+                    {
+                        hock.Move(spUp, turn);
+                        pk.Move(1);
+                        var dist2 = hock.GetDistanceTo2(pk);
+                        if (dist2 > startDist2)
+                            break;
+                        startDist2 = dist2;
+                    }
+                    if (CanStrike(hock, pk) &&
+                        Strike(hock, GetPower(hock.BaseParams, 0), Get(OppGoalie), ActionType.Strike, 0))
+                    {
+                        var p = StrikeProbability(hock,
+                            GetPower(hock.BaseParams, 0), Get(OppGoalie), -1, ActionType.Strike, 0);
+                        if (p > bestProbab)
+                        {
+                            bestProbab = p;
+                            bestTurn = turn;
+                            bestSpUp = spUp;
+                            bestWait = ticksWait;
+                        }
+                    }
+                }
+            }
+            if (bestWait == Inf)
+                return false;
+            move.Turn = bestTurn;
+            move.SpeedUp = bestSpUp;
+            if (bestWait == 0)
+                move.Action = ActionType.Strike;
+            return true;
         }
     }
 }
