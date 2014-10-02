@@ -40,12 +40,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, int timeLimit = -1)
+        Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, bool tryDown = true)
         {
             var cands = World.Hockeyists
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
-            var times = cands.Select(x => GoToPuck(x, pk, timeLimit).Third).ToArray();
+            var times = cands.Select(x => GoToPuck(x, pk, tryDown).Third).ToArray();
             int whereMin = 0;
             for(var i = 1; i < times.Count(); i++)
                 if (times[i] < times[whereMin])
@@ -75,7 +75,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     {
                         var passAngle = absPassAngle*passDir;
                         var pk = GetPassPuck(striker, power, passAngle);
-                        var on = GetFirstOnPuck(new[] {striker.BaseParams}, pk);
+                        var on = GetFirstOnPuck(new[] {striker.BaseParams}, pk, false);
                         if (!Get(on.Second).IsTeammate)
                             continue;
                         var danger = GetDanger(on.Second);

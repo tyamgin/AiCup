@@ -39,20 +39,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             WayPoints = new ArrayList
             {
-                //new Point(172, 438),
-                //new Point(224, 384),
-                //new Point(281, 339),
-                //new Point(356, 308),
-                //new Point(438, 284),
-                //new Point(527, 255),
-                //new Point(620, 246),
-                //new Point(711, 263),
-                //new Point(790, 291),
-                //new Point(860, 325),
-                //new Point(925, 353),
-                //new Point(1002, 388),
-                //new Point(1050, 446),
-                
                 new Point(286, 375),
                 new Point(443, 325),
                 new Point(620, 300),
@@ -276,6 +262,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return pk.Move(300, true) == 1;
         }
 
+        bool Chase(IEnumerable<AHock> opps, AHock I)
+        {
+            foreach (var opp in opps)
+            {
+                MoveTo(opp, I);
+                if (CanStrike(opp, I) || CanStrike(opp, I.PuckPos()))
+                    return false;
+            }
+            return true;
+        }
+
         double ProbabStrikeAfter(int swingTime, Hockeyist self, IEnumerable<MoveAction> actions, ActionType actionType)
         {
             var power = GetPower(self, swingTime);
@@ -291,20 +288,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 for (var i = 0; i < action.Ticks; i++)
                 {
                     I.Move(action.SpeedUp, action.Turn);
-                    foreach (var opp in opps)
-                    {
-                        var hisTurn = TurnNorm(opp.GetAngleTo(I), opp.BaseParams.Agility);
-                        opp.Move(GetSpeedTo(hisTurn), hisTurn);
-                        if (CanStrike(opp, I) || CanStrike(opp, GetPuckPos(I, I.Angle)))
-                            return 0.0;
-                    }
+                    if (!Chase(opps, I))
+                        return 0.0;
                 }
                 totalTime += action.Ticks;
             }
             var pk = GetPuckPos(I, I.Angle);
             var goalie = Get(OppGoalie);
             GoalieMove(goalie, totalTime, pk);
-            double passAngle = PassAngleNorm(I.GetAngleTo(GetStrikePoint()));
+            var passAngle = PassAngleNorm(I.GetAngleTo(GetStrikePoint()));
             return StrikeProbability(I, power, goalie, totalTime, actionType, passAngle);
         }
 
@@ -323,13 +315,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             const double shift = 10;
             double x = Opp.NetFront,
                 bestDist = 0,
-                bestY = 0,
-                minY = Math.Min(Opp.NetBottom, Opp.NetTop),
-                maxY = Math.Max(Opp.NetBottom, Opp.NetTop);
+                bestY = 0;
             var OppGoalie = Get(MyStrategy.OppGoalie) ?? Point.Zero;
-            for (var y = minY + shift; y <= maxY - shift; y += delta)
+            for (var y = Opp.NetTop + shift; y <= Opp.NetBottom - shift; y += delta)
             {
-                if (OppGoalie.GetDistanceTo(x, y) > bestDist)
+                if (OppGoalie.GetDistanceTo2(x, y) > bestDist * bestDist)
                 {
                     bestDist = OppGoalie.GetDistanceTo(x, y);
                     bestY = y;
