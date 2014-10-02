@@ -285,7 +285,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bestProbab = 0.0;
             var bestWait = Inf;
 
-            for (var moveTurn = 0.0; moveTurn <= 3*dTurn; moveTurn += dTurn)
+            for (var moveTurn = 0.0; moveTurn <= 2*dTurn; moveTurn += dTurn)
             {
                 var turn = moveDir*moveTurn;
 
@@ -295,7 +295,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var pk = _pk.Clone();
                     var startDist2 = hock.GetDistanceTo2(pk);
                     var ticksWait = 0;
-                    for (; !CanStrike(hock, pk); ticksWait++)
+                    for (; !CanStrike(hock, pk) && ticksWait < 150; ticksWait++)
                     {
                         hock.Move(spUp, turn);
                         pk.Move(1);

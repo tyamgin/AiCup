@@ -69,7 +69,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static bool CanStrike(AHock hock, Point to)
         {
             return Math.Abs(hock.GetAngleTo(to)) <= Game.StickSector/2
-                   && hock.GetDistanceTo(to) <= Game.StickLength
+                   && hock.GetDistanceTo2(to) <= Game.StickLength*Game.StickLength
                    && hock.KnockDown == 0 && hock.CoolDown == 0;
         }
 
