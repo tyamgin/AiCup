@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     for (var absPassAngle = 0.0; absPassAngle <= Game.PassSector/2; absPassAngle += Game.PassSector/2/passAnglesCount)
                     {
                         var passAngle = absPassAngle*passDir;
-                        var pk = GetPassPuck(striker, power, passAngle);
+                        var pk = GetPassPuck(striker, power, passAngle, Get(OppGoalie)); // проверять на автогол
                         var on = GetFirstOnPuck(new[] {striker.Base}, pk, false);
                         if (!Get(on.Second).IsTeammate)
                             continue;
@@ -108,12 +108,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 .Select(x => GetTicksTo(Get(ho), x)).Min();
         }
 
-        public APuck GetPassPuck(AHock striker, double PassPower, double PassAngle)
+        public APuck GetPassPuck(AHock striker, double PassPower, double PassAngle, Point goalie)
         {
             var puckSpeedAbs = 15.0*PassPower + striker.Speed.Length*Math.Cos(striker.Angle + PassAngle - striker.Speed.GetAngle());
             var puckAngle = AngleNormalize(PassAngle + striker.Angle);
             var puckSpeed = new Point(puckAngle)*puckSpeedAbs;
-            return new APuck(striker.PuckPos(), puckSpeed, Get(OppGoalie));
+            return new APuck(striker.PuckPos(), puckSpeed, goalie);
         }
     }
 }

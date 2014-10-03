@@ -10,6 +10,7 @@ using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 // TODO: Нет вратаря - улучшить
 // TODO: оптимизация - когда бью, проводить луч, и смотреть что он идет в ворота
 // TODO: если летит на гол - не пытаться ловить
+// TODO: приоритет: http://windata.ru/windows-xp/faq-xp/zapusk-programmy-s-povyshennym-prioritetom/
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {

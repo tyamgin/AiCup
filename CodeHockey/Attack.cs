@@ -39,20 +39,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 new Point(284, 266),
                 new Point(919, 264),
                 new Point(617, 363),
+
+                new Point(618,458)
             };
+
             if (MyRight())
             {
-                WayPoints.Add(new Point(883, 463));
-                WayPoints.Add(new Point(691, 454));
+                WayPoints.Add(new Point(920, 459));
             }
             else
             {
-                WayPoints.Add(new Point(545, 454));
-                WayPoints.Add(new Point(328, 457));
+                WayPoints.Add(new Point(286, 459));
             }
-
-            if (MyRight())
-                WayPoints.Reverse();
 
             var len = WayPoints.Count;
             for (var i = 0; i < len; i++)
@@ -164,7 +162,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 var pk = actionType == ActionType.Strike
                     ? GetStrikePuck(striker, strikePower, goalie)
-                    : GetPassPuck(striker, 1, passAngle);
+                    : GetPassPuck(striker, 1, passAngle, goalie);
                 var opps = World.Hockeyists
                     .Where(x => !x.IsTeammate && IsInGame(x))
                     .Select(x => new AHock(x)).ToArray();
@@ -200,13 +198,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new APuck(striker.PuckPos(), puckSpeedDirection, goalie);
         }
 
-        bool StrikePrimitiveValidate(AHock striker)
+        private bool StrikePrimitiveValidate(AHock striker)
         {
             var puckPos = striker.PuckPos();
-            if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth / 2)
+            if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth/2)
                 return false;
 
-            if (Math.Abs(puckPos.X - Opp.NetFront) < 3.5 * HoRadius)
+            if (Math.Abs(puckPos.X - Opp.NetFront) < 3.5*HoRadius)
                 return false;
 
             if (MyRight() && Math.Cos(striker.Angle) > 0)
@@ -217,15 +215,32 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return true;
         }
 
-        bool Strike(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle)
+        bool PuckPrimitiveValidate(APuck pk)
         {
-            if (!StrikePrimitiveValidate(striker))
+            if (Math.Abs(pk.X - Opp.NetFront) > RinkWidth / 2)
                 return false;
 
+            if (Math.Abs(pk.X - Opp.NetFront) < 3.0 * HoRadius)
+                return false;
+
+            if (MyRight() && pk.Speed.X > 0)
+                return false;
+            if (MyLeft() && pk.Speed.X < 0)
+                return false;
+
+            var dx = Math.Abs(pk.X - Opp.NetFront);
+            var isLeft = MyRight();
+
+            return IsBetween(Game.GoalNetTop, pk.Y - (isLeft ? 1 : -1) * dx * pk.Speed.Y / pk.Speed.X,
+                Game.GoalNetTop + Game.GoalNetHeight); // летит в ворота
+        }
+
+        bool Strike(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle)
+        {
             var pk = actionType == ActionType.Strike
                 ? GetStrikePuck(striker, strikePower, goalie)
-                : GetPassPuck(striker, 1, passAngle);
-            return pk.Move(300, true) == 1;
+                : GetPassPuck(striker, 1, passAngle, goalie);
+            return PuckPrimitiveValidate(pk) && pk.Move(300, true) == 1;
         }
 
         bool Chase(IEnumerable<AHock> opps, AHock I)
@@ -249,19 +264,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 .Select(x => new AHock(x))
                 .ToArray();
 
+            var goalie = Get(OppGoalie);
             foreach (var action in actions)
             {
                 for (var i = 0; i < action.Ticks; i++)
                 {
+                    GoalieMove(goalie, 1, I.PuckPos());
                     I.Move(action.SpeedUp, action.Turn);
                     if (!Chase(opps, I))
                         return 0.0;
                 }
                 totalTime += action.Ticks;
             }
-            var pk = GetPuckPos(I, I.Angle);
-            var goalie = Get(OppGoalie);
-            GoalieMove(goalie, totalTime, pk);
             var passAngle = PassAngleNorm(I.GetAngleTo(GetStrikePoint()));
             return StrikeProbability(I, power, goalie, totalTime, actionType, passAngle);
         }
