@@ -208,7 +208,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             {
                                 var turn = moveDir * moveTurn;
 
-                                for (var spUp = -0.5; spUp <= 1; spUp += 0.5)
+                                for (var spUp = 0.5; spUp <= 1; spUp += 1.0)
                                 {
                                     var end = ticks + game.SwingActionCooldownTicks;
                                     var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
