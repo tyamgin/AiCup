@@ -8,6 +8,8 @@ using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 // TODO: Нет вратаря - улучшить
+// TODO: оптимизация - когда бью, проводить луч, и смотреть что он идет в ворота
+// TODO: если летит на гол - не пытаться ловить
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -207,8 +209,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 #endif
                             {
                                 var turn = moveDir * moveTurn;
-
-                                for (var spUp = 0.5; spUp <= 1; spUp += 0.5) // TODO: мб. смотреть если в cool|knock
+                                foreach(var spUp in (self.RemainingCooldownTicks == 0 ? new[] { 1.0 } : new [] {1.0, 0.5, 0.0, -0.5}))
                                 {
                                     var end = ticks + game.SwingActionCooldownTicks;
                                     var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);

@@ -71,14 +71,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Point FindWayPoint(Hockeyist self)
         {
-            double OkDist = 5 * HoRadius;
+            double OkDist = 5*HoRadius;
 
             var bestTime = Inf;
             Point sel = null;
             foreach (Point p in WayPoints)
             {
                 var I = new AHock(self);
-                if (p.GetDistanceTo2(I) <= OkDist * OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
+                if (p.GetDistanceTo2(I) <= OkDist*OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
                     continue;
 
                 var cands = World.Hockeyists
@@ -87,7 +87,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
                 var time = 0;
                 var ok = true;
-                while (p.GetDistanceTo2(I) > OkDist * OkDist && ok)
+                while (p.GetDistanceTo2(I) > OkDist*OkDist && ok)
                 {
                     MoveTo(I, p);
                     foreach (var c in cands)
@@ -95,7 +95,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         MoveTo(c, I);
                         if (CanStrike(c, I.PuckPos()) // достанет шайбу
                             || CanStrike(c, I) // достанет меня
-                            || I.GetDistanceTo2(c) <= 2 * HoRadius * 2 * HoRadius // столкнется со мной
+                            || I.GetDistanceTo2(c) <= 2*HoRadius*2*HoRadius // столкнется со мной
                             )
                         {
                             ok = false;
@@ -116,41 +116,48 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return sel;
         }
 
+        bool StrikeWithDev(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle, double dev)
+        {
+            var result = false;
+            if (actionType == ActionType.Strike)
+                striker.Angle += dev;
+            if (Strike(striker, strikePower, goalie, actionType, passAngle + dev))
+                result = true;
+            if (actionType == ActionType.Strike)
+                striker.Angle -= dev;
+            return result;
+        }
+
         double StrikeProbability(AHock striker, double strikePower, Point goalie, int leftTime, ActionType actionType, double passAngle)
         {
             if (striker.CoolDown != 0)
                 return 0.0;
+            if (!Strike(striker, strikePower, goalie, actionType, passAngle))
+                return 0.0;
 
+            const int iters = 5;
             var deviation = (actionType == ActionType.Strike ? Game.StrikeAngleDeviation : Game.PassAngleDeviation)*100/striker.Base.Dexterity;
-            double range = deviation * 2,
-                dx = deviation / 20,
-                result = 0;
+            var range = deviation*2;
 
-            for (var dir = -1; dir <= 1; dir += 2)
+            double upL = 0, upR = range;
+            for (var it = 0; it < iters; it++)
             {
-                double last = Inf;
-                for (var _x = 0.0; _x <= range; _x += dx)
-                {
-                    if (Eq(_x, 0) && dir == -1)
-                        continue;
-                    var x = _x*dir;
-                    var y = 0.0;
-
-                    if (actionType == ActionType.Strike)
-                        striker.Angle += x;
-                    if (Strike(striker, strikePower, goalie, actionType, passAngle + x))
-                    {
-                        y = dx*Gauss(x, 0, deviation);
-                        result += y;
-                    }
-                    if (actionType == ActionType.Strike)
-                        striker.Angle -= x;
-
-                    if (y + last < Eps)
-                        break;
-                    last = y;
-                }
+                var c = (upL + upR)/2;
+                if (StrikeWithDev(striker, strikePower, goalie, actionType, passAngle, c))
+                    upL = c;
+                else
+                    upR = c;
             }
+            double downL = -range, downR = 0;
+            for (var it = 0; it < iters; it++)
+            {
+                var c = (downL + downR) / 2;
+                if (StrikeWithDev(striker, strikePower, goalie, actionType, passAngle, c))
+                    downR = c;
+                else
+                    downL = c;
+            }
+            double result = GaussIntegral(downL, upR, deviation);
 
             // Проверка что шайбу перехватят:
             if (leftTime != -1)

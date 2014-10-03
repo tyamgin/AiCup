@@ -59,6 +59,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return Math.Exp(-Math.Pow(x - mu, 2)/2/sigma/sigma)/sigma/Math.Sqrt(2*Math.PI);
         }
 
+        public static double GaussIntegral(double a, double b, double deviation)
+        {
+            const int N = 50; // количество шагов (уже умноженное на 2)
+            double s = 0, h = (b - a)/N;
+            for (var i = 0; i <= N; i++)
+            {
+                var x = a + h*i;
+                s += Gauss(x, 0, deviation)*((i == 0 || i == N) ? 1 : ((i & 1) == 0) ? 2 : 4);
+            }
+            return s*h/3;
+        }
+
         public static bool CanStrike(Hockeyist ho, Unit to)
         {
             return Math.Abs(ho.GetAngleTo(to)) <= Game.StickSector/2
