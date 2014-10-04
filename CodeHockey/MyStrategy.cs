@@ -354,16 +354,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         var have = puck.OwnerPlayerId == My.Id;
                         // 1 - дольше всего идет до шайбы
                         var net = new Point(My.NetFront, RinkCenter.Y);
-                        double ii = net.GetDistanceTo(self) < 300 ? 0.5 : 1.0;
-                        double jj = net.GetDistanceTo(friend1) < 300 ? 0.5 : 1.0;
+                        double ii = net.GetDistanceTo(self) < 300 ? 1.0 : 1.0;
+                        double jj = net.GetDistanceTo(friend1) < 300 ? 1.0 : 1.0;
                         if (have
                             ? (friend2 == null || ii*GetTicksTo(def, self) < jj*GetTicksTo(def, friend1)) // если я ближе, то иду на ворота
                             : toPuck.Third/ii > toPuck1.Third/jj) // если я дольше всего, то иду на ворота
                         {
                             StayOn(self, def, self.GetAngleTo(puck));
                         }
-                            // иначе 1 идет на ворота
-                        else if (friend2 == null || toPuck.Third < toPuck2.Third)
+                            // иначе 1 идет на воротаpuck.OwnerPlayerId != My.Id
+                        else if (friend2 == null || puck.OwnerPlayerId != My.Id /*toPuck.Third < toPuck2.Third*/)
                         {
                             var range = TurnRange(self.Agility);
                             var bestTime = Inf;
