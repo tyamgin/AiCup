@@ -76,12 +76,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         var passAngle = absPassAngle*passDir;
                         var pk = GetPassPuck(striker, power, passAngle, Get(OppGoalie)); // проверять на автогол
                         var on = GetFirstOnPuck(new[] {striker.Base}, pk, false);
+                        pk.Move(300);
+                        if (APuck.PuckLastTicks < on.First)
+                            continue;
                         if (!Get(on.Second).IsTeammate)
                             continue;
-                        var danger = GetDanger(on.Second);
-                        if (danger < minDanger)
+                        var time = on.First;
+                        if (time < minDanger)
                         {
-                            minDanger = danger;
+                            minDanger = time;
                             bestAngle = passAngle;
                             bestPower = power;
                         }

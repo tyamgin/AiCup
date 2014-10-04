@@ -14,14 +14,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
     {
         public ArrayList WayPoints;
 
-        public int GetWayPointIndex(Point wayPoint)
-        {
-            for (var i = 0; i < WayPoints.Count; i++)
-                if (wayPoint.Same(WayPoints[i] as Point))
-                    return i;
-            throw new Exception("Unknown waypoint");
-        }
-
         void FillWayPoints()
         {
             WayPoints = new ArrayList
@@ -51,6 +43,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 WayPoints.Add(new Point(286, 459));
             }
+
+            if (MyRight())
+                WayPoints.Reverse();
 
             var len = WayPoints.Count;
             for (var i = 0; i < len; i++)

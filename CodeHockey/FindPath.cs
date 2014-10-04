@@ -20,7 +20,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private double fp_okAngle;
         private int fp_minTime;
         private int fp_spUps = 1;
-        private int fp_maxDeep = 6;
+        private int fp_maxDeep;
         private int fp_sp_dir;
         private int fp_turn_dir;
         private ArrayList fp_stack = new ArrayList();
@@ -63,6 +63,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         }
         public bool FindPath(Hockeyist self, Point to, double needAngle, Point goalie)
         {
+            fp_maxDeep = 6;
             fp_minTime = Inf;
             fp_best_stack.Clear();
             fp_to = to;
@@ -70,6 +71,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             fp_okDist = HoRadius*1.3;
             fp_per = (int)(self.GetDistanceTo(to.X, to.Y)/fp_maxDeep + 2);
             fp_okAngle = self.GetDistanceTo(to.X, to.Y) < 70 ? Deg(5) : Deg(15);
+
+            if (self.GetDistanceTo(to.X, to.Y) < HoRadius
+                && Math.Abs(AngleNormalize(needAngle - self.Angle)) < Deg(20))
+            {
+                fp_per = 3;
+                fp_maxDeep = 4;
+            }
+
             var state = new AHock(self);
             for (fp_sp_dir = -1; fp_sp_dir <= 1; fp_sp_dir += 2)
             {

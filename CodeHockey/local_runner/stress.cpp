@@ -111,10 +111,10 @@ int main(int argc, char** argv)
 			propFile << conf.ToString();
 			propFile.close();
 
-			string javaStart = "start /B java -cp \".;*;%~dp0/*\" -jar \"" + localRunnerPath + "\\local-runner.jar\" \"" + localRunnerPath + "\\" + propFilename + "\"";
+			string javaStart = "start /high /B java -cp \".;*;%~dp0/*\" -jar \"" + localRunnerPath + "\\local-runner.jar\" \"" + localRunnerPath + "\\" + propFilename + "\"";
 			system(javaStart);
 			Sleep(1000);
-			system("start /B " + first + " 127.0.0.1 " + ToString(port) + " 0000000000000000");
+			system("start /high /B " + first + " 127.0.0.1 " + ToString(port) + " 0000000000000000");
 			system(second + " 127.0.0.1 " + ToString(port + 1) + " 0000000000000000");
 
 			ifstream result(resultFilename);

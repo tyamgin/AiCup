@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        Point GetDefendPos2(Hockeyist self, Hockeyist friend)
+        Point GetDefendPos2()
         {
             var y = RinkCenter.Y;
             const double offset = 0.09;
@@ -24,8 +24,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (FindPath(self, to, AngleNormalize(needAngle + self.Angle), Get(OppGoalie)))
                     return;
             }
-            move.Turn = self.GetAngleTo(to.X, to.Y);
-            move.SpeedUp = GetSpeedTo(move.Turn);
+            if (GetTicksToUp(new AHock(self), to) < GetTicksToDown(new AHock(self), to))
+            {
+                move.Turn = self.GetAngleTo(to.X, to.Y);
+                move.SpeedUp = GetSpeedTo(move.Turn);
+            }
+            else
+            {
+                move.Turn = RevAngle(self.GetAngleTo(to.X, to.Y));
+                move.SpeedUp = -GetSpeedTo(move.Turn);
+            }
         }
 
 
