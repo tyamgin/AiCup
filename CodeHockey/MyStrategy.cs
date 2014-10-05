@@ -412,11 +412,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            var c1 = new Point(RinkCenter.X, Game.RinkTop + 2*HoRadius);
-                            var c2 = new Point(RinkCenter.X, Game.RinkBottom - 2*HoRadius);
+                            var c1 = new Point(RinkCenter.X, Game.RinkTop + 2 * HoRadius);
+                            var c2 = new Point(RinkCenter.X, Game.RinkBottom - 2 * HoRadius);
                             var c = c1.GetDistanceTo(puck) > c2.GetDistanceTo(puck) ? c1 : c2;
                             var s = GetStrikePoint();
-                            StayOn(self, c, self.GetAngleTo(s.X, s.Y));
+                            StayOn(self, c, self.GetAngleTo(s.X, s.Y), false);
                         }
                     }
                 }

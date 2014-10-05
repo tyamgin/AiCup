@@ -17,9 +17,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new Point(MyLeft() ? Game.RinkLeft + RinkWidth * offset : Game.RinkRight - RinkWidth * offset, y);
         }
 
-        public void StayOn(Hockeyist self, Point to, double needAngle)
+        public void StayOn(Hockeyist self, Point to, double needAngle, bool a = true)
         {
-            if (to.GetDistanceTo(self) < 150)
+            if (a && to.GetDistanceTo(self) < 150)
             {
                 if (FindPath(self, to, AngleNormalize(needAngle + self.Angle), Get(OppGoalie)))
                     return;
