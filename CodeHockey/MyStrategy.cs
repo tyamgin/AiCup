@@ -10,6 +10,7 @@ using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 // TODO: Ќет вратар€ - улучшить
 // TODO: если летит на гол - не пытатьс€ ловить
 // TODO: приоритет: http://windata.ru/windows-xp/faq-xp/zapusk-programmy-s-povyshennym-prioritetom/
+// TODO: !!!!!!!!!!!!!!!!!!!!  бить без take со swing
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -86,12 +87,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return -down;
         }
 
-        public Tuple<Point, int, int> GoToPuck(Hockeyist my, APuck pk, bool tryDown = true)
+        public Tuple<Point, int, int> GoToPuck(Hockeyist my, APuck pk, int ticksLimit = 300, bool tryDown = true)
         {
             if (my.Id == puck.OwnerHockeyistId)
                 return new Tuple<Point, int, int>(null, 0, 0);
 
-            const int ticksLimit = 300;
+            if (ticksLimit == -1)
+                ticksLimit = 300;
+
+            const int noBs = 70;
 
             var res = Inf;
             var dir = 1;
@@ -114,7 +118,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 hhs[i] = ho == null ? null : hhs[i - 1].Clone();
                 PuckMove(1, pks[i], hhs[i]);
             }
-            while (tLeft <= tRight)
+            while (ticksLimit > noBs && tLeft <= tRight)
             {
                 var c = (tLeft + tRight)/2;
                 var needTicks = GetTicksTo(PuckMove(0, pks[c], hhs[c]), my, tryDown);
@@ -130,8 +134,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     tLeft = c + 1;
                 }
             }
-            const int by = 16;
-            for (var c = 0; c <= 70 && c <= ticksLimit; c += c < by ? 1 : by)
+            const int by = 9;
+            for (var c = 0; c <= noBs && c <= ticksLimit; c += c < by ? 1 : by)
             {
                 var needTicks = GetTicksTo(PuckMove(0, pks[c], hhs[c]), my, tryDown);
                 if (Math.Abs(needTicks) <= c)
@@ -369,7 +373,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             var bestTime = Inf;
                             double bestTurn = 0.0;
                             var needTime = GetFirstOnPuck(World.Hockeyists.Where(x => x.IsTeammate),
-                                new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))).First;
+                                new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie)), -1).First;
                             var lookAt = new Point(Opp.NetFront, RinkCenter.Y);
                             for (var turn = -range; turn <= range; turn += range / 10)
                             {
