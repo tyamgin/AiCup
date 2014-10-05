@@ -95,7 +95,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (ticksLimit == -1)
                 ticksLimit = 300;
 
-            const int noBs = 70;
+            const int noBs = 100;
 
             var res = Inf;
             var dir = 1;
@@ -134,7 +134,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     tLeft = c + 1;
                 }
             }
-            const int by = 9;
+            const int by = 10;
             for (var c = 0; c <= noBs && c <= ticksLimit; c += c < by ? 1 : by)
             {
                 var needTicks = GetTicksTo(PuckMove(0, pks[c], hhs[c]), my, tryDown);

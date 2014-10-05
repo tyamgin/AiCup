@@ -45,7 +45,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var cands = World.Hockeyists
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
-            var times = cands.Select(x => GoToPuck(x, pk, ticksLimit, tryDown).Third).ToArray();
+            var times = cands.Select(x => 
+                    x.IsTeammate 
+                        ? GoToPuck(x, pk, ticksLimit, tryDown).Third
+                        : GetTicksToUp(new AHock(x), pk))
+                .ToArray();
             int whereMin = 0;
             for(var i = 1; i < times.Count(); i++)
                 if (times[i] < times[whereMin])
