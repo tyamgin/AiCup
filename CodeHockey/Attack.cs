@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             var turn = hock.GetAngleTo(p);
             var speedUp = GetSpeedTo(turn);
-            hock.Move(speedUp, TurnNorm(turn, hock.Base.Agility));
+            hock.Move(speedUp, TurnNorm(turn, hock.AAgility));
         }
 
         public Point FindWayPoint(Hockeyist self)
@@ -129,7 +129,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 return 0.0;
 
             const int iters = 5;
-            var deviation = (actionType == ActionType.Strike ? Game.StrikeAngleDeviation : Game.PassAngleDeviation)*100/striker.Base.Dexterity;
+            var deviation = (actionType == ActionType.Strike ? Game.StrikeAngleDeviation : Game.PassAngleDeviation)*100/striker.ADexterity;
             var range = deviation*2;
 
             double upL = 0, upR = range;
@@ -168,11 +168,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     foreach (var opp in opps)
                     {
-                        var hisTurn = TurnNorm(opp.GetAngleTo(pk), opp.Base.Agility);
+                        var hisTurn = TurnNorm(opp.GetAngleTo(pk), opp.AAgility);
                         opp.Move(0.0, hisTurn);
                         if (CanStrike(opp, pk))
                         {
-                            var pTake = (75.0 + Math.Max(opp.Base.Dexterity, opp.Base.Agility) -
+                            var pTake = (75.0 + Math.Max(opp.ADexterity, opp.AAgility) -
                                          pk.Speed.Length/20*100)/100;
                             return result*(1 - pTake);
                         }
@@ -251,8 +251,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         double ProbabStrikeAfter(int swingTime, Hockeyist self, IEnumerable<MoveAction> actions, ActionType actionType)
         {
-            var power = GetPower(self, swingTime);
             var I = new AHock(self);
+            var power = GetPower(I, swingTime);
             var totalTime = 0;
             var opps = World.Hockeyists
                 .Where(x => !x.IsTeammate && IsInGame(x))
@@ -335,10 +335,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         startDist2 = dist2;
                     }
                     if (CanStrike(hock, pk) &&
-                        Strike(hock, GetPower(hock.Base, 0), Get(OppGoalie), ActionType.Strike, 0))
+                        Strike(hock, GetPower(hock, 0), Get(OppGoalie), ActionType.Strike, 0))
                     {
                         var p = StrikeProbability(hock,
-                            GetPower(hock.Base, 0), Get(OppGoalie), -1, ActionType.Strike, 0);
+                            GetPower(hock, 0), Get(OppGoalie), -1, ActionType.Strike, 0);
                         if (p > bestProbab)
                         {
                             bestProbab = p;

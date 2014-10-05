@@ -9,8 +9,8 @@ using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 // TODO: Нет вратаря - улучшить
 // TODO: если летит на гол - не пытаться ловить
-// TODO: приоритет: http://windata.ru/windows-xp/faq-xp/zapusk-programmy-s-povyshennym-prioritetom/
 // TODO: !!!!!!!!!!!!!!!!!!!!  бить без take со swing
+// TODO: учитывать изменение стамины?
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -19,61 +19,60 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public Puck puck;
         public Move move;
         public static Player Opp, My;
-        public static Hockeyist OppGoalie;
-        public static Hockeyist MyGoalie;
+        public static Hockeyist OppGoalie, MyGoalie;
         public static World World;
         public static Game Game;
         
-        public static double HoRadius;
-        public static double RinkWidth, RinkHeight;
+        public static double HoRadius, RinkWidth, RinkHeight, PuckRadius;
         public static Point RinkCenter;
-        public static double PuckRadius;
         public static double HoPuckDist = 55.0;
 
-        public int GetTicksToUp(AHock hock, Point to, double take = -1)
+        public int GetTicksToUp(AHock ho, Point to, double takePuck = -1, int limit = 500)
         {
-            var ho = hock.Clone();
+            return GetTicksToUpN(ho.Clone(), to, takePuck, limit);
+        }
+
+        public int GetTicksToUpN(AHock ho, Point to, double takePuck = -1, int limit = 500)
+        {
             var result = 0;
-            for (; take < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > take*take; result++)
+            for (; result < limit && (takePuck < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > takePuck*takePuck); result++)
             {
                 var turn = ho.GetAngleTo(to);
                 var speedUp = GetSpeedTo(turn);
-                ho.Move(speedUp, TurnNorm(turn, hock.Base.Agility));
-
-                if (result > 500)
-                    return result; // TODO: временный костыль, ибо почему-то падает
+                ho.Move(speedUp, TurnNorm(turn, ho.AAgility));
             }
             return result;
         }
 
-        public int MoveHockTo(AHock ho, Point to, double agility)
+        public int GetTicksToDown(AHock ho, Point to, double takePuck = -1, int limit = 300)
+        {
+            return GetTicksToDownN(ho.Clone(), to, takePuck, limit);
+        }
+
+        public int GetTicksToDownN(AHock ho, Point to, double takePuck = -1, int limit = 300)
+        {
+            var result = 0;
+            for (; result < limit && (takePuck < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > takePuck * takePuck); result++)
+            {
+                var turn = RevAngle(ho.GetAngleTo(to));
+                var speedUp = -GetSpeedTo(turn);
+                ho.Move(speedUp, TurnNorm(turn, ho.AAgility));
+            }
+            return result >= limit ? Inf : result;
+        }
+
+        public int MoveHockTo(AHock ho, Point to)
         {
             var result = 0;  
             for(; !CanStrike(ho, to); result++)
             {
                 var turn = ho.GetAngleTo(to);
                 var speedUp = GetSpeedTo(turn);
-                ho.Move(speedUp, TurnNorm(turn, agility));
+                ho.Move(speedUp, TurnNorm(turn, ho.AAgility));
 
                 if (result > 500)
                     return result; // TODO: временный костыль, ибо почему-то падает
             }
-            return result;
-        }
-
-        public int GetTicksToDown(AHock hock, Point to, double take = -1)
-        {
-            var ho = hock.Clone();
-            var result = 0;
-            const int limit = 300;
-            for (; result < limit && (take < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > take * take); result++)
-            {
-                var turn = RevAngle(ho.GetAngleTo(to));
-                var speedUp = -GetSpeedTo(turn);
-                ho.Move(speedUp, TurnNorm(turn, hock.Base.Agility));
-            }
-            if (result >= limit)
-                return Inf;
             return result;
         }
 
@@ -98,7 +97,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             const int noBs = 100;
 
             var res = Inf;
-            var dir = 1;
+            var dir = 1; 
             var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
             var ho = owner == null ? null : new AHock(owner);
             if (pk == null)
@@ -157,6 +156,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void Move(Hockeyist self, World world, Game game, Move move)
         {
+            if (self.State == HockeyistState.Resting)
+                return;
+
             ShowWindow();
 
             // // fill globals
@@ -173,8 +175,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             HoRadius = self.Radius;
             RinkCenter = new Point(game.RinkLeft + RinkWidth/2, game.RinkTop + RinkHeight/2);
             PuckRadius = puck.Radius;
-            var friends =
-                world.Hockeyists.Where(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie).ToArray();
+            var friends = world.Hockeyists
+                .Where(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie && x.State != HockeyistState.Resting)
+                .ToArray();
             var friend1 = friends.Count() < 2 || friends[0].TeammateIndex < friends[1].TeammateIndex ? friends[0] : friends[1];
             var friend2 = friends.Count() > 1 ? friends[0].TeammateIndex < friends[1].TeammateIndex ? friends[1] : friends[0] : null;
             FillWayPoints();
@@ -185,10 +188,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             if (My.IsJustMissedGoal || My.IsJustScoredGoal)
             {
-
+                var hock = new AHock(self);
+                var to = GetSubstitutePoint(hock);
+                if (to != null)
+                    DoMove(self, to.First, to.Second);
+                TrySubstitute(hock);
             }
             else
             {
+                var range = TurnRange(new AHock(self).AAgility);
                 move.SpeedUp = Inf;
                 if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
                 {
@@ -210,9 +218,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
                             var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
 #if DEBUG 
-                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.04, TurnRange(self.Agility) })
+                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.04, range })
 #else
-                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.02, 0.04, TurnRange(self.Agility) })
+                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.02, 0.04, range })
 #endif
                             {
                                 var turn = moveDir * moveTurn;
@@ -303,14 +311,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 var pt = Math.Abs(Opp.NetFront - self.X) < RinkWidth/3
                                     ? Get(friend2 == null || (MyLeft() ? friend2.X > friend1.X : friend2.X < friend1.X) ? friend1 : friend2)
                                     : GetStrikePoint();
-                                move.Turn = new AHock(self).GetAngleTo(pt);
-                                move.SpeedUp = GetSpeedTo(move.Turn);
+                                DoMove(self, pt, 1);
                             }
                         }
                         else
                         {
-                            move.Turn = self.GetAngleTo(wayPoint.X, wayPoint.Y);
-                            move.SpeedUp = GetSpeedTo(move.Turn);
+                            DoMove(self, wayPoint, 1);
                         }
                     }
                     else if (wait == 0)
@@ -364,12 +370,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             ? (friend2 == null || ii*GetTicksTo(def, self) < jj*GetTicksTo(def, friend1)) // если я ближе, то иду на ворота
                             : toPuck.Third/ii > toPuck1.Third/jj) // если я дольше всего, то иду на ворота
                         {
-                            StayOn(self, def, self.GetAngleTo(puck));
+                            StayOn(self, def, Get(puck));
                         }
                             // иначе 1 идет на воротаpuck.OwnerPlayerId != My.Id
                         else if (friend2 == null || puck.OwnerPlayerId != My.Id /*toPuck.Third < toPuck2.Third*/)
                         {
-                            var range = TurnRange(self.Agility);
                             var bestTime = Inf;
                             double bestTurn = 0.0;
                             var needTime = GetFirstOnPuck(World.Hockeyists.Where(x => x.IsTeammate),
@@ -396,23 +401,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 }
                             }
                             var i = new AHock(self);
-                            var direct = MoveHockTo(i, toPuck.First, self.Agility);
-                            direct += MoveHockTo(i, lookAt, self.Agility);
+                            var direct = MoveHockTo(i, toPuck.First);
+                            direct += MoveHockTo(i, lookAt);
                             if (bestTime < direct && bestTime < Inf)
                             {
                                 move.Turn = bestTurn;
                                 move.SpeedUp = 0.0;
                             }
-                            else if (toPuck.Second > 0)
-                            {
-                                move.Turn = self.GetAngleTo(toPuck.First.X, toPuck.First.Y);
-                                move.SpeedUp = GetSpeedTo(move.Turn);
-                            }
-                            else
-                            {
-                                move.Turn = RevAngle(self.GetAngleTo(toPuck.First.X, toPuck.First.Y));
-                                move.SpeedUp = -GetSpeedTo(move.Turn);
-                            }
+                            DoMove(self, toPuck.First, toPuck.Second);
                         }
                         else
                         {
@@ -420,7 +416,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             var c2 = new Point(RinkCenter.X, Game.RinkBottom - 2 * HoRadius);
                             var c = c1.GetDistanceTo(puck) > c2.GetDistanceTo(puck) ? c1 : c2;
                             var s = GetStrikePoint();
-                            StayOn(self, c, self.GetAngleTo(s.X, s.Y), false);
+                            StayOn(self, c, s);
                         }
                     }
                 }

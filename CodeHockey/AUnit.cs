@@ -35,5 +35,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             return GetAngleTo(to.X, to.Y);
         }
+
+        public override string ToString()
+        {
+            return base.ToString() + " |> " + Speed;
+        }
     }
 }

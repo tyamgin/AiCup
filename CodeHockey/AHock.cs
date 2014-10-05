@@ -17,6 +17,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public double AngularSpeed;
         public int CoolDown;
         public int KnockDown;
+        public double Stamina; // TODO: учитавать?
 
         public AHock(Hockeyist self) : base(MyStrategy.Get(self), MyStrategy.GetSpeed(self), self.Angle)
         {
@@ -25,9 +26,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             Angle = self.Angle;
             CoolDown = self.RemainingCooldownTicks;
             KnockDown = self.RemainingKnockdownTicks;
+            Stamina = self.Stamina;
         }
 
-        public AHock(Point pos, Point speed, double angle, double angularSpeed, int coolDown, int knockDown, Hockeyist from)
+        public AHock(Point pos, Point speed, double angle, double angularSpeed, int coolDown, int knockDown, double stamina, Hockeyist from)
             : base(pos, speed, angle)
         {
             Base = from;
@@ -35,14 +37,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             Angle = angle;
             CoolDown = coolDown;
             KnockDown = knockDown;
+            Stamina = stamina;
         }
 
         public void Move(double speedUp, double turn)
         {
-            if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.TurnRange(Base.Agility) || turn < -MyStrategy.TurnRange(Base.Agility))
+            if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.TurnRange(AAgility) || turn < -MyStrategy.TurnRange(AAgility))
                 throw new Exception("AHo Move: " + speedUp + " " + turn);
 
-            speedUp = speedUp*Base.Agility/100;
+            speedUp = speedUp*AAgility/100;
             if (CoolDown > 0)
                 CoolDown--;
             if (KnockDown > 0)
@@ -72,7 +75,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public new AHock Clone()
         {
-            return new AHock(this, Speed, Angle, AngularSpeed, CoolDown, KnockDown, Base);
+            return new AHock(this, Speed, Angle, AngularSpeed, CoolDown, KnockDown, Stamina, Base);
         }
 
         public Point PuckPos()
@@ -83,6 +86,36 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public Point TakePos()
         {
             return this + new Point(Angle) * MyStrategy.Game.StickLength;
+        }
+
+        public double Calc(double attr)
+        {
+            return attr * 0.75 + 0.25 * attr * Base.Stamina / 2000;
+        }
+
+        public double AStrength
+        {
+            get { return Calc(Base.Strength); }
+        }
+
+        public double AAgility
+        {
+            get { return Calc(Base.Agility); }
+        }
+
+        public double ADexterity
+        {
+            get { return Calc(Base.Dexterity); }
+        }
+
+        public double AEndurance
+        {
+            get { return Calc(Base.Endurance); }
+        }
+
+        public override string ToString()
+        {
+            return base.ToString() + " <" + Angle + ">";
         }
     }
 }

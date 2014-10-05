@@ -85,11 +85,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                    && hock.KnockDown == 0 && hock.CoolDown == 0;
         }
 
-        public static double GetPower(Hockeyist self, int swingTime)
+        public static double GetPower(AHock self, int swingTime)
         {
-            // TODO: use game.StrikePowerGrowthFactor
             var res = Math.Min(Game.MaxEffectiveSwingTicks, swingTime) * 0.25 / Game.MaxEffectiveSwingTicks + 0.75;
-            res = res*self.Strength/100;
+            res = res*self.AStrength/100;
             return res;
         }
 
@@ -153,6 +152,21 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return (hock.State == HockeyistState.Active || hock.State == HockeyistState.KnockedDown)
                    && hock.Type != HockeyistType.Goalie;
         }
+
+        void DoMove(Hockeyist self, Point to, int direction)
+        {
+            if (direction > 0)
+            {
+                move.Turn = self.GetAngleTo(to.X, to.Y);
+                move.SpeedUp = GetSpeedTo(move.Turn);
+            }
+            else
+            {
+                move.Turn = RevAngle(self.GetAngleTo(to.X, to.Y));
+                move.SpeedUp = -GetSpeedTo(move.Turn);
+            }
+        }
+
 
         public class MoveAction
         {

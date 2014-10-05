@@ -79,10 +79,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         // Проверка движение хоккеиста
         void Research3(Hockeyist self)
         {
-            move.Turn = TurnRange(self.Agility) / 2;
+            var range = TurnRange(new AHock(self).AAgility);
+            move.Turn = range / 2;
             move.SpeedUp = 0.8;
             var pl = new AHock(self);
-            pl.Move(0.8, TurnRange(self.Agility) / 2, 20);
+            pl.Move(0.8, range / 2, 20);
         }
 
         private APuck __puck;
