@@ -200,8 +200,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     if (!TryStrikeWithoutTakeIfSwinging(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
                         move.Action = ActionType.CancelStrike;
-                    else
-                        Console.WriteLine("---");
+                    //else
+                    //    Console.WriteLine("---");
                 }
                 else if (puck.OwnerHockeyistId == self.Id)
                 {
