@@ -207,7 +207,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var willSwing = false;
                     var maxProb = 0.15;
                     var selAction = ActionType.Strike;
-                    TimerStart();
+                    //TimerStart();
                     if (self.State != HockeyistState.Swinging)
                     {
                         // если не замахнулся
@@ -290,7 +290,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             }
                         }
                     }
-                    Console.WriteLine("- " + TimerStop());
+                    //Console.WriteLine("- " + TimerStop());
                     drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
                     if (!willSwing && self.State == HockeyistState.Swinging)
                     {
