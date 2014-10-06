@@ -42,7 +42,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void Move(double speedUp, double turn)
         {
-            if (speedUp < -1 || speedUp > 1 || turn > MyStrategy.TurnRange(AAgility) || turn < -MyStrategy.TurnRange(AAgility))
+            if (speedUp < -1 || speedUp > 1 || turn - MyStrategy.Eps > MyStrategy.TurnRange(AAgility) || turn + MyStrategy.Eps < -MyStrategy.TurnRange(AAgility))
                 throw new Exception("AHo Move: " + speedUp + " " + turn);
 
             speedUp = speedUp*AAgility/100;

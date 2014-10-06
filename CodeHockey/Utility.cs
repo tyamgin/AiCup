@@ -10,8 +10,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        private const double Eps = 1e-9;
-        private const int Inf = 0x3f3f3f3f;
+        public static double Eps = 1e-9;
+        public const int Inf = 0x3f3f3f3f;
 
         public double Deg(double deg)
         {
