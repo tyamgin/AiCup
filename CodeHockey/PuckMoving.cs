@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -59,12 +60,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
             var times = cands.Select(x => 
-                    //x.IsTeammate 
-                    //    ? GoToPuck(x, pk, ticksLimit, tryDown).Third
-                    //    : GetTicksToUp(new AHock(x), pk))
-                    GetTicksToPuckDirect(new AHock(x), pk, 150))
+                    x.IsTeammate 
+                        ? GoToPuck(x, pk, ticksLimit, tryDown).Third
+                        : GetTicksToPuckDirect(new AHock(x), pk, 150))
                 .ToArray();
-            int whereMin = 0;
+            var whereMin = 0;
             for(var i = 1; i < times.Count(); i++)
                 if (times[i] < times[whereMin])
                     whereMin = i;
@@ -77,7 +77,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (striker.Base.RemainingCooldownTicks != 0)
                 return false;
 
-            const int passAnglesCount = 5;
+            TimerStart();
+
+            const int passAnglesCount = 7;
             var bestAngle = 0.0;
             double minDanger = Inf;
             var bestPower = 0.0;
@@ -109,6 +111,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                 }
             }
+
+            Log(TimerStop());
+
             if (minDanger >= Inf - Eps)
                 return false;
             move.Action = ActionType.Pass;

@@ -9,8 +9,8 @@ using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 // TODO: Нет вратаря - улучшить
 // TODO: если летит на гол - не пытаться ловить
-// TODO: !!!!!!!!!!!!!!!!!!!!  бить без take со swing
 // TODO: учитывать изменение стамины?
+// TODO: себе на ход тоже учитывать
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -198,7 +198,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 move.SpeedUp = Inf;
                 if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
                 {
-                    move.Action = ActionType.CancelStrike;
+                    if (!TryStrikeWithoutTakeIfSwinging(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
+                        move.Action = ActionType.CancelStrike;
+                    else
+                        Console.WriteLine("---");
                 }
                 else if (puck.OwnerHockeyistId == self.Id)
                 {
@@ -334,7 +337,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         move.Turn = selTurn;
                     }
                 }
-                else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutSwing(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
+                else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutTake(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
                 {
                     var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
                     var pk = new APuck(Get(puck), GetSpeed(puck), Get(MyGoalie)) {IsDefend = true};

@@ -178,7 +178,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         private bool StrikePrimitiveValidate(AHock striker)
         {
             var puckPos = striker.PuckPos();
-            if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth/2)
+            if (Math.Abs(puckPos.X - Opp.NetFront) > RinkWidth/3*2)
                 return false;
 
             if (Math.Abs(puckPos.X - Opp.NetFront) < 3.5*HoRadius)
@@ -194,7 +194,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         bool PuckPrimitiveValidate(APuck pk)
         {
-            if (Math.Abs(pk.X - Opp.NetFront) > RinkWidth / 2)
+            if (Math.Abs(pk.X - Opp.NetFront) > RinkWidth/3*2)
                 return false;
 
             if (Math.Abs(pk.X - Opp.NetFront) < 3.0 * HoRadius)
@@ -289,30 +289,84 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new Point(x, bestY);
         }
 
-        public bool TryStrikeWithoutSwing(AHock _hock, APuck _pk)
+        public bool TryStrikeWithoutTakeIfSwinging(AHock _hock, APuck _pk)
+        {
+            var hock = _hock.Clone();
+            var pk = _pk.Clone();
+            var bestProbab = 0.0;
+            var swTime = Inf;
+
+            for (var sw = 0; sw <= Game.MaxEffectiveSwingTicks; sw++)
+            {
+                if (CanStrike(hock, pk))
+                {
+                    var pr = StrikeProbability(hock, GetPower(hock, sw + hock.Base.SwingTicks), Get(OppGoalie), -1, ActionType.Strike, 0);
+                    if (pr - 0.01 > bestProbab)
+                    {
+                        bestProbab = pr;
+                        swTime = sw;
+                    }
+                }
+                hock.Move(0, 0);
+                pk.Move(1);
+            }
+
+            if (swTime == Inf)
+                return false;
+            if (swTime == 0)
+                move.Action = ActionType.Strike;
+            return true;
+        }
+
+        public bool TryStrikeWithoutTake(AHock _hock, APuck _pk)
         {
             if (!StrikePrimitiveValidate(_hock))
                 return false;
 
-            const double dTurn = 0.01;
+            //TimerStart();
+
             var moveDir = MyRight() && _hock.Y > RinkCenter.Y || MyLeft() && _hock.Y < RinkCenter.Y ? 1 : -1;
 
             var bestTurn = 0.0;
             var bestSpUp = 0.0;
             var bestProbab = 0.0;
             var bestWait = Inf;
-
-            for (var moveTurn = 0.0; moveTurn <= 3*dTurn; moveTurn += dTurn)
+            var swTime = 0;
+            var range = TurnRange(_hock.AAgility);
+            const int turns = 9;
+            var goalie = Get(OppGoalie);
+            
+            for (var moveTurn = 0.0; moveTurn <= range; moveTurn += range / turns)
             {
                 var turn = moveDir*moveTurn;
 
-                for (var spUp = 0.0; spUp <= 1.0; spUp += 1/3.0)
+                for (var spUp = 0.0; spUp <= 1.0; spUp += 1/8.0)
                 {
                     var hock = _hock.Clone();
                     var pk = _pk.Clone();
                     var ticksWait = 0;
                     for (var startDist2 = hock.GetDistanceTo2(pk); !CanStrike(hock, pk) && ticksWait < 150; ticksWait++)
                     {
+                        var I = hock.Clone();
+                        var p = pk.Clone();
+                        for (var sw = 0; sw <= Game.MaxEffectiveSwingTicks; sw++)
+                        {
+                            if (sw >= Game.SwingActionCooldownTicks && CanStrike(I, p))
+                            {
+                                var pr = StrikeProbability(I, GetPower(I, sw), goalie, -1, ActionType.Strike, 0);
+                                if (pr - 0.01 > bestProbab)
+                                {
+                                    bestProbab = pr;
+                                    bestTurn = turn;
+                                    bestSpUp = spUp;
+                                    bestWait = ticksWait;
+                                    swTime = sw;
+                                }
+                            }
+                            I.Move(0, 0);
+                            p.Move(1);
+                        }
+
                         hock.Move(spUp, turn);
                         pk.Move(1);
                         var dist2 = hock.GetDistanceTo2(pk);
@@ -320,27 +374,29 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             break;
                         startDist2 = dist2;
                     }
-                    if (CanStrike(hock, pk) &&
-                        Strike(hock, GetPower(hock, 0), Get(OppGoalie), ActionType.Strike, 0))
+                    if (CanStrike(hock, pk))
                     {
-                        var p = StrikeProbability(hock,
-                            GetPower(hock, 0), Get(OppGoalie), -1, ActionType.Strike, 0);
-                        if (p > bestProbab)
+                        var p = StrikeProbability(hock, GetPower(hock, 0), goalie, -1, ActionType.Strike, 0);
+                        if (p - 0.01 > bestProbab)
                         {
                             bestProbab = p;
                             bestTurn = turn;
                             bestSpUp = spUp;
                             bestWait = ticksWait;
+                            swTime = 0;
                         }
                     }
                 }
             }
+            //Log(TimerStop());
+
             if (bestWait == Inf)
                 return false;
             move.Turn = bestTurn;
             move.SpeedUp = bestSpUp;
+
             if (bestWait == 0)
-                move.Action = ActionType.Strike;
+                move.Action = swTime == 0 ? ActionType.Strike : ActionType.Swing;
             return true;
         }
     }

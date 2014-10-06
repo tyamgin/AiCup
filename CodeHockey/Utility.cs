@@ -180,17 +180,30 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         void TimerStart()
         {
+#if DEBUG
             var timer = new Stopwatch();
             timer.Start();
             timers.Add(timer);
+#endif
         }
 
         long TimerStop()
         {
+#if DEBUG
             var res = timers[timers.Count - 1] as Stopwatch;
             res.Stop();
             Pop(timers);
             return res.ElapsedMilliseconds;
+#else
+            return 0;
+#endif
+        }
+
+        void Log(object msg)
+        {
+#if DEBUG
+            Console.WriteLine(msg);
+#endif
         }
     }
 }
