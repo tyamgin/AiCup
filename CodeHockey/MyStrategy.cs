@@ -217,11 +217,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         {
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
                             var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
-#if DEBUG 
-                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.04, range })
-#else
-                            foreach (var moveTurn in new[] { 0.0, 0.01, 0.02, 0.04, range })
-#endif
+
+                            const int turns = 4;
+                            for(var moveTurn = 0.0; moveTurn - Eps <= range; moveTurn += range / turns)
                             {
                                 var turn = moveDir * moveTurn;
                                 foreach(var spUp in (self.RemainingCooldownTicks == 0 ? new[] { 1.0 } : new [] {1.0, 0.5, 0.0, -0.5}))
