@@ -37,9 +37,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var result = 0;
             for (; result < limit && (takePuck < 0 ? !CanStrike(ho, to) : ho.GetDistanceTo2(to) > takePuck*takePuck); result++)
             {
-                var turn = ho.GetAngleTo(to);
-                var speedUp = GetSpeedTo(turn);
-                ho.Move(speedUp, TurnNorm(turn, ho.AAgility));
+                ho.MoveTo(to);
             }
             return result;
         }
@@ -66,9 +64,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var result = 0;  
             for(; !CanStrike(ho, to); result++)
             {
-                var turn = ho.GetAngleTo(to);
-                var speedUp = GetSpeedTo(turn);
-                ho.Move(speedUp, TurnNorm(turn, ho.AAgility));
+                ho.MoveTo(to);
 
                 if (result > 500)
                     return result; // TODO: временный костыль, ибо почему-то падает
@@ -186,6 +182,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (Opp.Name == "tyamgin (2)" || Opp.Name == "tyamgin") // костыль чтобы пройти верификацию
                 return;
 
+            //TimerStart();
+
             if (My.IsJustMissedGoal || My.IsJustScoredGoal)
             {
                 var hock = new AHock(self);
@@ -209,7 +207,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var willSwing = false;
                     var maxProb = 0.15;
                     var selAction = ActionType.Strike;
-
+                    TimerStart();
                     if (self.State != HockeyistState.Swinging)
                     {
                         // если не замахнулся
@@ -222,7 +220,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             for(var moveTurn = 0.0; moveTurn - Eps <= range; moveTurn += range / turns)
                             {
                                 var turn = moveDir * moveTurn;
-                                foreach(var spUp in (self.RemainingCooldownTicks == 0 ? new[] { 1.0 } : new [] {1.0, 0.5, 0.0, -0.5}))
+                                var spUps = self.RemainingCooldownTicks == 0 || Math.Abs(self.X - My.NetFront) < RinkWidth / 2
+                                    ? new[] {1.0}
+                                    : new[] {1.0, 0.5, 0.0, -0.5};
+                                foreach(var spUp in spUps)
                                 {
                                     var end = ticks + game.SwingActionCooldownTicks;
                                     var start = Math.Max(0, end - game.MaxEffectiveSwingTicks);
@@ -289,6 +290,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             }
                         }
                     }
+                    Console.WriteLine("- " + TimerStop());
                     drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
                     if (!willSwing && self.State == HockeyistState.Swinging)
                     {
@@ -421,6 +423,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (Eq(move.SpeedUp, Inf))
                     move.SpeedUp = 1;
             }
+
+            //Console.WriteLine(self.TeammateIndex + " " + TimerStop());
 #if DEBUG
             draw();
             Thread.Sleep(8);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
@@ -13,7 +14,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static double Eps = 1e-9;
         public const int Inf = 0x3f3f3f3f;
 
-        public double Deg(double deg)
+        public static double Deg(double deg)
         {
             return Math.PI / 180 * deg;
         }
@@ -111,7 +112,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return turn;
         }
 
-        double GetSpeedTo(double turn)
+        public static double GetSpeedTo(double turn)
         {
             var speedUp = 1.0;
             if (Math.Abs(turn) > Deg(40))
@@ -173,6 +174,23 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             public double SpeedUp;
             public double Turn;
             public int Ticks;
+        }
+
+        ArrayList timers = new ArrayList();
+
+        void TimerStart()
+        {
+            var timer = new Stopwatch();
+            timer.Start();
+            timers.Add(timer);
+        }
+
+        long TimerStop()
+        {
+            var res = timers[timers.Count - 1] as Stopwatch;
+            res.Stop();
+            Pop(timers);
+            return res.ElapsedMilliseconds;
         }
     }
 }

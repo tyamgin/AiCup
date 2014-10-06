@@ -19,6 +19,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Visualizer
 
         public ArrayList points = new ArrayList();
 
+        private string getString(ArrayList points)
+        {
+            string res = "";
+            foreach (Point p in points)
+                res += "new Point" + p + ",";
+            return res;
+        }
+
         private void panel_Click(object sender, EventArgs ea)
         {
             var e = ea as MouseEventArgs;

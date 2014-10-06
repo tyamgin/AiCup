@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms.PropertyGridInternal;
 using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
@@ -18,34 +19,14 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             WayPoints = new ArrayList
             {
-                new Point(286, 375),
-                new Point(443, 325),
-                new Point(620, 300),
-                new Point(785, 325),
-                new Point(917, 375),
-
-                new Point(442, 226),
-                new Point(622, 216),
-                new Point(787, 235),
-
-                new Point(284, 266),
-                new Point(919, 264),
-                new Point(617, 363),
-
-                new Point(618,458)
+                new Point(284, 280),
+                new Point(284, 388),
+                new Point(444, 255),
+                new Point(444, 359),
+                new Point(624, 228),
+                new Point(624, 348),
             };
-
-            if (MyRight())
-            {
-                WayPoints.Add(new Point(920, 459));
-            }
-            else
-            {
-                WayPoints.Add(new Point(286, 459));
-            }
-
-            if (MyRight())
-                WayPoints.Reverse();
+            
 
             var len = WayPoints.Count;
             for (var i = 0; i < len; i++)
@@ -53,25 +34,25 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var a = WayPoints[i] as Point;
                 WayPoints.Add(new Point(a.X, Game.RinkBottom - (a.Y - Game.RinkTop)));
             }
-        }
-
-        public void MoveTo(AHock hock, Point p)
-        {
-            var turn = hock.GetAngleTo(p);
-            var speedUp = GetSpeedTo(turn);
-            hock.Move(speedUp, TurnNorm(turn, hock.AAgility));
+            len = WayPoints.Count;
+            for (var i = 0; i < len; i++)
+            {
+                var a = WayPoints[i] as Point;
+                WayPoints.Add(new Point(Game.RinkRight - (a.X - Game.RinkLeft), a.Y));
+            }
         }
 
         public Point FindWayPoint(Hockeyist self)
         {
-            double OkDist = 5*HoRadius;
+            var okDist = 6*HoRadius;
 
             var bestTime = Inf;
             Point sel = null;
-            foreach (Point p in WayPoints)
+            //TimerStart();
+            foreach (Point p in WayPoints.ToArray().OrderBy(x => ((Point) x).GetDistanceTo(self)).Take(6))
             {
                 var I = new AHock(self);
-                if (p.GetDistanceTo2(I) <= OkDist*OkDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
+                if (p.GetDistanceTo2(I) <= okDist*okDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
                     continue;
 
                 var cands = World.Hockeyists
@@ -80,12 +61,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
                 var time = 0;
                 var ok = true;
-                while (p.GetDistanceTo2(I) > OkDist*OkDist && ok)
+                while (p.GetDistanceTo2(I) > okDist*okDist && ok)
                 {
-                    MoveTo(I, p);
+                    I.MoveTo(p);
                     foreach (var c in cands)
                     {
-                        MoveTo(c, I);
+                        c.MoveTo(I);
                         if (CanStrike(c, I.PuckPos()) // достанет шайбу
                             || CanStrike(c, I) // достанет меня
                             || I.GetDistanceTo2(c) <= 2*HoRadius*2*HoRadius // столкнется со мной
@@ -106,6 +87,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                 }
             }
+            //Console.WriteLine("FindWayPoint " + TimerStop());
             return sel;
         }
 
@@ -242,7 +224,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             foreach (var opp in opps)
             {
-                MoveTo(opp, I);
+                opp.MoveTo(I);
                 if (CanStrike(opp, I) || CanStrike(opp, I.PuckPos()))
                     return false;
             }
@@ -252,6 +234,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         double ProbabStrikeAfter(int swingTime, Hockeyist self, IEnumerable<MoveAction> actions, ActionType actionType)
         {
             var I = new AHock(self);
+
+            if (Math.Abs(My.NetFront - I.X) < RinkWidth / 3)
+                return 0.0;
+
             var power = GetPower(I, swingTime);
             var totalTime = 0;
             var opps = World.Hockeyists

@@ -40,15 +40,29 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
+        int GetTicksToPuckDirect(AHock _hock, APuck _puck, int limit)
+        {
+            var hock = _hock.Clone();
+            var pk = _puck.Clone();
+            int result;
+            for (result = 0; result < limit && !CanStrike(hock, pk); result++)
+            {
+                hock.MoveTo(pk);
+                pk.Move(1);
+            }
+            return result;
+        }
+
         Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, int ticksLimit = 70, bool tryDown = true)
         {
             var cands = World.Hockeyists
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
             var times = cands.Select(x => 
-                    x.IsTeammate 
-                        ? GoToPuck(x, pk, ticksLimit, tryDown).Third
-                        : GetTicksToUp(new AHock(x), pk))
+                    //x.IsTeammate 
+                    //    ? GoToPuck(x, pk, ticksLimit, tryDown).Third
+                    //    : GetTicksToUp(new AHock(x), pk))
+                    GetTicksToPuckDirect(new AHock(x), pk, 150))
                 .ToArray();
             int whereMin = 0;
             for(var i = 1; i < times.Count(); i++)
@@ -79,7 +93,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     {
                         var passAngle = absPassAngle*passDir;
                         var pk = GetPassPuck(striker, power, passAngle, Get(OppGoalie)); // проверять на автогол
-                        var on = GetFirstOnPuck(new[] {striker.Base}, pk, 70, false);
+                        var on = GetFirstOnPuck(new[] {striker.Base}, pk, 100, false);
                         pk.Move(300);
                         if (APuck.PuckLastTicks < on.First)
                             continue;
@@ -101,18 +115,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             move.PassAngle = bestAngle;
             move.PassPower = bestPower;
             return true;
-        }
-
-        double GetDanger(long id)
-        {
-            return GetDanger(World.Hockeyists.FirstOrDefault(x => x.Id == id));
-        }
-
-        double GetDanger(Hockeyist ho)
-        {
-            return -World.Hockeyists
-                .Where(x => !x.IsTeammate && IsInGame(x))
-                .Select(x => GetTicksTo(Get(ho), x)).Min();
         }
 
         public APuck GetPassPuck(AHock striker, double PassPower, double PassAngle, Point goalie)

@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             for (var dir = -1; dir <= 1; dir += 2)
             {
                 var hock = new AHock(self);
-                for (var ticksDirect = 0; ticksDirect < 60; ticksDirect++)
+                for (var ticksDirect = 0; ticksDirect < 100; ticksDirect++)
                 {
                     var curTime = ticksDirect;
                     var ho = hock.Clone();
