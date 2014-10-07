@@ -200,6 +200,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         bool PuckPrimitiveValidate(APuck pk)
         {
+            if (pk.Goalie == null)
+                return true;
+
             if (Math.Abs(pk.X - Opp.NetFront) > RinkWidth/3*2)
                 return false;
 

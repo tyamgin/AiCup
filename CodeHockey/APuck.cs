@@ -44,7 +44,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var opp = IsDefend ? MyStrategy.My : MyStrategy.Opp;
             var isLeft = opp.NetFront > opp.NetBack;
 
-            for (var tick = 1; tick <= ticks && (!goalCheck || breakCount < 1); tick++)
+            for (var tick = 1; tick <= ticks && (!goalCheck || breakCount < 1 || Goalie == null); tick++)
             {
                 PuckLastTicks = tick;
                 Speed = Speed * APuck.FrictionCoeff;
@@ -91,7 +91,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 
                 if (Math.Abs((!isLeft ? (opp.NetFront - MyStrategy.PuckRadius) : (opp.NetFront + MyStrategy.PuckRadius)) - X) < 0.01 // (это стена ворот)
                     && MyStrategy.IsBetween(MyStrategy.Game.GoalNetTop + MyStrategy.PuckRadius, Y - (isLeft ? 1 : -1) * dx * psy / psx, MyStrategy.Game.GoalNetTop + MyStrategy.Game.GoalNetHeight - MyStrategy.PuckRadius) // (в воротах)
-                    && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1)) // (не от борта)
+                    && (mayGoal == -1 || (mayGoal == tick && breakCount <= 1) || Goalie == null) // (не от борта)
                     )
                     return 1; // Goal !!
 
@@ -106,7 +106,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return GetDistanceTo2(Goalie) < Sqr(MyStrategy.HoRadius + MyStrategy.PuckRadius - /* костыль -> */2);
         }
 
-        double Sqr(double x)
+        static double Sqr(double x)
         {
             return x*x;
         }
