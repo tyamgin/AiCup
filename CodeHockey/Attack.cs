@@ -20,11 +20,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             WayPoints = new ArrayList
             {
                 new Point(284, 280),
-                new Point(284, 388),
+                new Point(284, 368),
                 new Point(444, 255),
-                new Point(444, 359),
+                new Point(444, 339),
                 new Point(624, 228),
-                new Point(624, 348),
+                new Point(624, 328),
             };
             
 
@@ -44,7 +44,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Point FindWayPoint(Hockeyist self)
         {
-            var okDist = 6*HoRadius;
+            var okDist = 5*HoRadius;
 
             var bestTime = Inf;
             Point sel = null;

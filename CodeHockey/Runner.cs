@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
                     CreateNoWindow = true
                 }
             };
-            oldStrategy.Start();
+            //oldStrategy.Start();
 #endif
 
             if (args.Length == 3) {

@@ -11,6 +11,8 @@ using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 // TODO: если летит на гол - не пытаться ловить
 // TODO: учитывать изменение стамины?
 // TODO: себе на ход тоже учитывать
+// TODO: в случае некуда бежать - бежать не к центру, а в строну большего скопления - вес вайпойнта
+// TODO: настроить вайпойнты
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
