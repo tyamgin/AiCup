@@ -23,7 +23,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk {
                 }
             };
             //oldStrategy.Start();
-#endif
+#endif 
 
             if (args.Length == 3) {
                 new Runner(args).run();
