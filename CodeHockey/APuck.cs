@@ -22,7 +22,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             : base(pos, speed, 0)
         {
             if (goalie != null)
-                Goalie = new Point(goalie);
+                Goalie = goalie.Clone();
+        }
+
+        public APuck(Puck puck, Hockeyist goalie)
+            : base(MyStrategy.Get(puck), MyStrategy.GetSpeed(puck), 0)
+        {
+            Goalie = MyStrategy.Get(goalie);
         }
 
         // TODO: не в том порядке обрабатывается отскок

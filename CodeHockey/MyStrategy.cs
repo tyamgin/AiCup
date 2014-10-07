@@ -8,11 +8,8 @@ using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 // TODO: Нет вратаря - улучшить
-// TODO: если летит на гол - не пытаться ловить
 // TODO: учитывать изменение стамины?
 // TODO: себе на ход тоже учитывать
-// TODO: в случае некуда бежать - бежать не к центру, а в строну большего скопления - вес вайпойнта
-// TODO: настроить вайпойнты
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -342,7 +339,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutTake(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
                 {
                     var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
-                    var pk = new APuck(Get(puck), GetSpeed(puck), Get(MyGoalie)) {IsDefend = true};
+                    var pk = new APuck(puck, MyGoalie) {IsDefend = true};
 
                     if (puck.OwnerPlayerId == Opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
                     { // попытаться выбить
@@ -350,10 +347,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                     else if (puck.OwnerPlayerId != self.PlayerId && CanStrike(self, puck))
                     {
-                        if (pk.Move(200, goalCheck: true) == 1) // если вратарь не отобьёт
-                            move.Action = ActionType.Strike;
-                        else
-                            move.Action = ActionType.TakePuck;
+                        // проверяем что не летит в чужие ворота
+                        var cpk = new APuck(puck, OppGoalie);
+                        if (cpk.Move(200, true) == 0)
+                        {
+                            if (pk.Move(200, goalCheck: true) == 1) // если вратарь не отобьёт
+                                move.Action = ActionType.Strike;
+                            else
+                                move.Action = ActionType.TakePuck;
+                        }
                     }
                     else
                     {
