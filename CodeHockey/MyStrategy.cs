@@ -96,7 +96,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
             var ho = owner == null ? null : new AHock(owner);
             if (pk == null)
-                pk = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
+                pk = new APuck(puck, OppGoalie);
             else
                 ho = null;
 
@@ -197,7 +197,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 move.SpeedUp = Inf;
                 if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
                 {
-                    if (!TryStrikeWithoutTakeIfSwinging(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
+                    if (!TryStrikeWithoutTakeIfSwinging(new AHock(self), new APuck(puck, OppGoalie)))
                         move.Action = ActionType.CancelStrike;
                     //else
                     //    Console.WriteLine("---");
@@ -336,7 +336,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         move.Turn = selTurn;
                     }
                 }
-                else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutTake(new AHock(self), new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie))))
+                else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutTake(new AHock(self), new APuck(puck, OppGoalie)))
                 {
                     var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
                     var pk = new APuck(puck, MyGoalie) {IsDefend = true};
@@ -375,7 +375,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         double jj = net.GetDistanceTo(friend1) < 300 ? 1.0 : 1.0;
 
                         var myFirst = GetFirstOnPuck(new[] {self},
-                            new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie)),
+                            new APuck(puck, OppGoalie),
                             true, 100, false).Second == (friend2 == null ? -1 : friend2.Id);
 
                         if (have
@@ -395,12 +395,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             var bestTime = Inf;
                             double bestTurn = 0.0;
                             var needTime = GetFirstOnPuck(World.Hockeyists.Where(x => x.IsTeammate),
-                                new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie)), true, -1).First;
+                                new APuck(puck, OppGoalie), true, -1).First;
                             var lookAt = new Point(Opp.NetFront, RinkCenter.Y);
                             for (var turn = -range; turn <= range; turn += range / 10)
                             {
                                 var I = new AHock(self);
-                                var P = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
+                                var P = new APuck(puck, OppGoalie);
                                 for (var t = 0; t < needTime - 10 && t < 70; t++)
                                 {
                                     if (CanStrike(I, P))

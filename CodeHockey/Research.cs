@@ -40,7 +40,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             if (TK(90))
             {
-                __puck = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
+                __puck = new APuck(puck, OppGoalie);
                 __puck.Move(30);
             }
 
@@ -93,7 +93,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             if (TK(190))
             {
-                __puck = new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie));
+                __puck = new APuck(puck, OppGoalie);
                 __puck.Move(10);
             }
             if (TK(190 + 10))
