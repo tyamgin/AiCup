@@ -371,6 +371,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         var net = new Point(My.NetFront, RinkCenter.Y);
                         double ii = net.GetDistanceTo(self) < 300 ? 1.0 : 1.0;
                         double jj = net.GetDistanceTo(friend1) < 300 ? 1.0 : 1.0;
+
+                        var myFirst = GetFirstOnPuck(new[] {self},
+                            new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie)),
+                            true, 100, false).Second == (friend2 == null ? -1 : friend2.Id);
+
                         if (have
                             ? (friend2 == null || ii*GetTicksTo(def, self) < jj*GetTicksTo(def, friend1)) // если я ближе, то иду на ворота
                             : toPuck.Third/ii > toPuck1.Third/jj) // если я дольше всего, то иду на ворота
@@ -378,12 +383,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             StayOn(self, def, Get(puck));
                         }
                             // иначе 1 идет на воротаpuck.OwnerPlayerId != My.Id
-                        else if (friend2 == null || puck.OwnerPlayerId != My.Id /*toPuck.Third < toPuck2.Third*/)
+                        else if (friend2 == null 
+                            || (puck.OwnerPlayerId != My.Id && (
+                               toPuck.Third < toPuck2.Third  
+                               //|| Math.Abs(Opp.NetFront - puck.X) < RinkWidth / 2 // шайба не у нас и на чужой половине
+                               || !myFirst
+                            )))
                         {
                             var bestTime = Inf;
                             double bestTurn = 0.0;
                             var needTime = GetFirstOnPuck(World.Hockeyists.Where(x => x.IsTeammate),
-                                new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie)), -1).First;
+                                new APuck(Get(puck), GetSpeed(puck), Get(OppGoalie)), true, -1).First;
                             var lookAt = new Point(Opp.NetFront, RinkCenter.Y);
                             for (var turn = -range; turn <= range; turn += range / 10)
                             {

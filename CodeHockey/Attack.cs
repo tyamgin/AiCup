@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -49,7 +50,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bestTime = Inf;
             Point sel = null;
             //TimerStart();
-            foreach (Point p in WayPoints.ToArray().OrderBy(x => ((Point) x).GetDistanceTo(self)).Take(6))
+            var bot = World.Hockeyists.Count(x => !x.IsTeammate && IsInGame(x) && x.Y > RinkCenter.Y);
+            var top = World.Hockeyists.Count(x => !x.IsTeammate && IsInGame(x) && x.Y <= RinkCenter.Y);
+                
+            foreach (Point p in WayPoints.ToArray().OrderBy(x => ((Point) x).GetDistanceTo(self)).Take(10))
             {
                 var I = new AHock(self);
                 if (p.GetDistanceTo2(I) <= okDist*okDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
@@ -80,10 +84,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
                 if (ok)
                 {
+                    if (p.Y > RinkCenter.Y && bot > top || p.Y <= RinkCenter.Y && top > bot)
+                        time *= 3;
                     if (time < bestTime)
                     {
                         bestTime = time;
-                        sel = new Point(p);
+                        sel = p.Clone();
                     }
                 }
             }

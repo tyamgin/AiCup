@@ -54,13 +54,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return result;
         }
 
-        Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, int ticksLimit = 70, bool tryDown = true)
+        Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, bool hard, int ticksLimit = 70, bool tryDown = true)
         {
             var cands = World.Hockeyists
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
             var times = cands.Select(x => 
-                    x.IsTeammate 
+                    x.IsTeammate || hard
                         ? GoToPuck(x, pk, ticksLimit, tryDown).Third
                         : GetTicksToPuckDirect(new AHock(x), pk, 150))
                 .ToArray();
@@ -95,7 +95,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     {
                         var passAngle = absPassAngle*passDir;
                         var pk = GetPassPuck(striker, power, passAngle, Get(OppGoalie)); // проверять на автогол
-                        var on = GetFirstOnPuck(new[] {striker.Base}, pk, 100, false);
+                        var on = GetFirstOnPuck(new[] {striker.Base}, pk, false, 100, false);
                         pk.Move(300);
                         if (APuck.PuckLastTicks < on.First)
                             continue;
