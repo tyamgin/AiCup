@@ -13,9 +13,7 @@ $.get('http://russianaicup.ru/contest/1/standings', function(page) {
 	var createGame = function(users) {
 		if (users.length > 0) {
 			$('#participant1').attr('value', '');
-			$('#participant2').attr('value', '');
-			$('#participant1').attr('value', username);
-			$('#participant2').attr('value', users[0]);
+			$('#participant1').attr('value', users[0]);
 			
 			setTimeout(function() {
 				$('[value="Создать"]').click();
