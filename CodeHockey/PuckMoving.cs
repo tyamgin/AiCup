@@ -56,9 +56,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, bool hard, int ticksLimit = 70, bool tryDown = true)
         {
-#if DEBUG
-            hard = false;
-#endif
             var cands = World.Hockeyists
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
@@ -86,11 +83,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bestAngle = 0.0;
             double minDanger = Inf;
             var bestPower = 0.0;
-#if DEBUG
-            foreach (var power in new[] { 0.1, 0.3, 0.5, 0.8, 1.0 })
-#else
+
             foreach (var power in new[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0 })
-#endif
             {
                 for (var passDir = -1; passDir <= 1; passDir += 2)
                 {

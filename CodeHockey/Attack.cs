@@ -342,13 +342,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bestWait = Inf;
             var swTime = 0;
             var range = TurnRange(_hock.AAgility);
-#if DEBUG
-            const int turns = 3;
-            const int spUps = 2;
-#else
+
             const int turns = 9;
             const int spUps = 8;
-#endif
+
             var goalie = Get(OppGoalie);
             
             for (var moveTurn = 0.0; moveTurn <= range; moveTurn += range / turns)

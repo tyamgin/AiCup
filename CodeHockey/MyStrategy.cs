@@ -220,11 +220,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     {
                         var spUps = self.RemainingCooldownTicks == 0 || Math.Abs(self.X - My.NetFront) < RinkWidth / 2
                                     ? new[] { 1.0 }
-#if DEBUG
-                                    : new[] { 1.0 };
-#else
                                     : new[] { 1.0, 0.5, 0.0, -0.5 };
-#endif
 
                         // если не замахнулся
                         for (var ticks = 0; ticks < 50; ticks++)
@@ -232,11 +228,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
                             var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
 
-#if DEBUG
-                            const int turns = 2;
-#else
                             const int turns = 4;
-#endif
                             for (var moveTurn = 0.0; moveTurn - Eps <= range; moveTurn += range / turns)
                             {
                                 var turn = moveDir * moveTurn;
