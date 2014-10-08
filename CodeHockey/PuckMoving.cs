@@ -56,6 +56,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, bool hard, int ticksLimit = 70, bool tryDown = true)
         {
+#if DEBUG
+            hard = false;
+#endif
             var cands = World.Hockeyists
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
@@ -112,7 +115,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
 
-            Log("pass " + TimerStop());
+            Log("TryPass " + TimerStop());
 
             if (minDanger >= Inf - Eps)
                 return false;

@@ -12,7 +12,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        public bool FindPath(Hockeyist self, Point to, Point lookAt, Point goalie)
+        public bool FindPath(Hockeyist self, Point to, Point lookAt)
         {
             var okDist = HoRadius * 1.5;
 
@@ -26,18 +26,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     var curTime = ticksDirect;
                     var ho = hock.Clone();
-                    while (Math.Abs(ho.GetAngleTo(lookAt)) > Deg(8))
+                    while (null != lookAt && Math.Abs(ho.GetAngleTo(lookAt)) > Deg(8))
                     {
                         ho.Move(0, TurnNorm(ho.GetAngleTo(lookAt), ho.AAgility));
                         curTime++;
                     }
-                    if (curTime < minTime && ho.GetDistanceTo(to) < okDist)
+                    if (curTime < minTime && ho.GetDistanceTo(to) < okDist && (null != lookAt || ho.Speed.Length < Game.MaxSpeedToAllowSubstitute))
                     {
                         minTime = curTime;
                         if (ticksDirect == 0)
                         {
                             selSpUp = 0.0;
-                            selTurn = TurnNorm(ho.GetAngleTo(lookAt), hock.AAgility);
+                            selTurn = lookAt == null ? 0.0 : TurnNorm(ho.GetAngleTo(lookAt), hock.AAgility);
                         }
                         else if (dir > 0)
                         {
@@ -99,7 +99,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     .Select(x => x.Stamina)
                     .Max();
                 var to = World.Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina));
-                if (to == null || maxStamina*1.00 < hock.Stamina)
+                if (to == null || maxStamina*0.8 < hock.Stamina)
                     return false;
                 return true;
             }
@@ -116,7 +116,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var minTicks = Inf;
             for (var x = Game.RinkLeft; x <= Game.RinkRight; x += RinkWidth/100)
             {
-                if (MyLeft() && x > RinkCenter.X || MyRight() && x < RinkCenter.X)
+                if (MyLeft() && x > RinkCenter.X - 100 || MyRight() && x < RinkCenter.X + 100)
                     continue;
 
                 var to = new Point(x, Game.RinkTop);

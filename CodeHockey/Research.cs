@@ -28,7 +28,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     var sp = (Point) iSpeed[prevTick];
                     var m = (sp.Length - GetSpeed(puck).Length)/t;
-                    Console.WriteLine(m / sp.Length);
+                    Log(m / sp.Length);
                 }
                 iPoint[World.Tick] = nPoint;
                 iSpeed[World.Tick] = GetSpeed(puck);
@@ -62,12 +62,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             IsBetween(Game.RinkBottom - 2*PuckRadius, puck.Y, Inf))
                         {
                             var ut = (sp * APuck.FrictionCoeff).Y / puck.SpeedY;
-                            Console.WriteLine("          " + ut.ToString().Replace(',', '.'));
+                            Log("          " + ut.ToString().Replace(',', '.'));
                         }
                         else
                         {
                             var ut = (sp * APuck.FrictionCoeff).X / puck.SpeedX;
-                            Console.WriteLine(ut.ToString().Replace(',', '.'));
+                            Log(ut.ToString().Replace(',', '.'));
                         }
                     }
                 }

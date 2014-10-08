@@ -185,27 +185,27 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (Opp.Name == "tyamgin (2)" || Opp.Name == "tyamgin") // костыль чтобы пройти верификацию
                 return;
 
-            //TimerStart();
+            if (World.Tick % 1000 == 0)
+                Console.WriteLine(World.Tick);
+
+            TimerStart();
 
             var hock = new AHock(self);
-            if (SubstSignal && !NeedTrySubstitute(hock))
-                SubstSignal = false;
+            var needSubst = NeedTrySubstitute(hock);
 
             if (My.IsJustMissedGoal || My.IsJustScoredGoal)
             {
                 SubstSignal = false;
-                var to = GetSubstitutePoint(hock);
-                if (to != null)
-                    DoMove(self, to.First, to.Second);
+                StayOn(self, GetSubstitutePoint(hock).First, null);
                 TrySubstitute(hock);
             }
             else
             {
-                var range = TurnRange(new AHock(self).AAgility);
+                var range = TurnRange(hock.AAgility);
                 move.SpeedUp = Inf;
                 if (self.State == HockeyistState.Swinging && self.Id != puck.OwnerHockeyistId)
                 {
-                    if (!TryStrikeWithoutTakeIfSwinging(new AHock(self), new APuck(puck, OppGoalie)))
+                    if (!TryStrikeWithoutTakeIfSwinging(hock, new APuck(puck, OppGoalie)))
                         move.Action = ActionType.CancelStrike;
                 }
                 else if (puck.OwnerHockeyistId == self.Id)
@@ -215,12 +215,16 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var willSwing = false;
                     var maxProb = 0.15;
                     var selAction = ActionType.Strike;
-                    //TimerStart();
+                    TimerStart();
                     if (self.State != HockeyistState.Swinging)
                     {
                         var spUps = self.RemainingCooldownTicks == 0 || Math.Abs(self.X - My.NetFront) < RinkWidth / 2
                                     ? new[] { 1.0 }
+#if DEBUG
+                                    : new[] { 1.0 };
+#else
                                     : new[] { 1.0, 0.5, 0.0, -0.5 };
+#endif
 
                         // если не замахнулся
                         for (var ticks = 0; ticks < 50; ticks++)
@@ -228,8 +232,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             // если буду замахиваться (ТО В КОНЦЕ!!!), то нужно подождать минимум game.SwingActionCooldownTicks
                             var moveDir = MyRight() && self.Y > RinkCenter.Y || MyLeft() && self.Y < RinkCenter.Y ? 1 : -1;
 
+#if DEBUG
+                            const int turns = 2;
+#else
                             const int turns = 4;
-                            for(var moveTurn = 0.0; moveTurn - Eps <= range; moveTurn += range / turns)
+#endif
+                            for (var moveTurn = 0.0; moveTurn - Eps <= range; moveTurn += range / turns)
                             {
                                 var turn = moveDir * moveTurn;
                                 foreach(var spUp in spUps)
@@ -299,7 +307,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             }
                         }
                     }
-                    //Console.WriteLine("- " + TimerStop());
+                    Log("STRIKE   " + TimerStop());
                     if (wait < Inf)
                     {
                         SubstSignal = true;
@@ -319,7 +327,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         if (wayPoint == null)
                         {
                             needPassQueue.Enqueue(Get(self));
-                            if (!TryPass(new AHock(self)))
+                            if (!TryPass(hock))
                             {
                                 var pt = Math.Abs(Opp.NetFront - self.X) < RinkWidth/3
                                     ? Get(friend2 == null || (MyLeft() ? friend2.X > friend1.X : friend2.X < friend1.X) ? friend1 : friend2)
@@ -338,7 +346,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         if (selAction == ActionType.Pass)
                         {
                             move.PassPower = 1;
-                            move.PassAngle = PassAngleNorm(new AHock(self).GetAngleTo(GetStrikePoint()));
+                            move.PassAngle = PassAngleNorm(hock.GetAngleTo(GetStrikePoint()));
                         }
                     }
                     else
@@ -347,7 +355,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         move.Turn = selTurn;
                     }
                 }
-                else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutTake(new AHock(self), new APuck(puck, OppGoalie)))
+                else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutTake(hock, new APuck(puck, OppGoalie)))
                 {
                     var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
                     var pk = new APuck(puck, MyGoalie) {IsDefend = true};
@@ -370,6 +378,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                     else
                     {
+                        //if (self.TeammateIndex == 0)
+                        //    TimerStart();
+
                         var toPuck = GoToPuck(self, null);
                         var toPuck1 = GoToPuck(friend1, null);
                         var toPuck2 = friend2 == null ? null : GoToPuck(friend2, null);
@@ -393,12 +404,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             ? (friend2 == null || ii*GetTicksTo(def, self) < jj*GetTicksTo(def, friend1)) // если я ближе, то иду на ворота
                             : toPuck.Third/ii > toPuck1.Third/jj) // если я дольше всего, то иду на ворота
                         {
-                            if (SubstSignal)
+                            if (needSubst && (SubstSignal || puck.OwnerPlayerId != Opp.Id && self.Y <= Game.RinkTop + 0.666 * RinkHeight || self.Y <= Game.SubstitutionAreaHeight + Game.RinkTop))
                             {
                                 if (TrySubstitute(hock))
                                     SubstSignal = false;
                                 else
-                                    StayOn(self, def, GetSubstitutePoint(hock).First);
+                                    StayOn(self, GetSubstitutePoint(hock).First, null);
                             }
                             else
                             {
@@ -420,7 +431,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             var lookAt = new Point(Opp.NetFront, RinkCenter.Y);
                             for (var turn = -range; turn <= range; turn += range / 10)
                             {
-                                var I = new AHock(self);
+                                var I = hock.Clone();
                                 var P = new APuck(puck, OppGoalie);
                                 for (var t = 0; t < needTime - 10 && t < 70; t++)
                                 {
@@ -438,7 +449,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                     P.Move(1);
                                 }
                             }
-                            var i = new AHock(self);
+                            var i = hock.Clone();
                             var direct = MoveHockTo(i, toPuck.First);
                             direct += MoveHockTo(i, lookAt);
                             if (bestTime < direct && bestTime < Inf)
@@ -450,12 +461,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            if (SubstSignal)
+                            if (needSubst && (SubstSignal || puck.OwnerPlayerId != Opp.Id && self.Y <= RinkCenter.Y || self.Y <= Game.SubstitutionAreaHeight + Game.RinkTop))
                             {
                                 if (TrySubstitute(hock))
                                     SubstSignal = false;
                                 else
-                                    StayOn(self, def, GetSubstitutePoint(hock).First);
+                                    StayOn(self, GetSubstitutePoint(hock).First, null);
                             }
                             else
                             {
@@ -466,13 +477,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 StayOn(self, c, s);
                             }
                         }
+                        //if (self.TeammateIndex == 0)
+                        //    Log(")) " + TimerStop());
                     }
                 }
                 if (Eq(move.SpeedUp, Inf))
                     move.SpeedUp = 1;
             }
 
-            //Console.WriteLine(self.TeammateIndex + " " + TimerStop());
+            Log(self.TeammateIndex + " >>>>>>>>>>>> " + TimerStop());
 #if DEBUG
             draw();
             Thread.Sleep(8);
