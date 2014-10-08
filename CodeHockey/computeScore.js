@@ -1,5 +1,5 @@
 var username = 'tyamgin';
-var games = 50;
+var games = 30;
 var pages = 3;
 
 var gamesCnt = 0;

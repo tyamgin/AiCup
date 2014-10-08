@@ -112,7 +112,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
             }
 
-            Log(TimerStop());
+            Log("pass " + TimerStop());
 
             if (minDanger >= Inf - Eps)
                 return false;

@@ -332,7 +332,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (!StrikePrimitiveValidate(_hock))
                 return false;
 
-            //TimerStart();
+            TimerStart();
 
             var moveDir = MyRight() && _hock.Y > RinkCenter.Y || MyLeft() && _hock.Y < RinkCenter.Y ? 1 : -1;
 
@@ -342,14 +342,20 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bestWait = Inf;
             var swTime = 0;
             var range = TurnRange(_hock.AAgility);
+#if DEBUG
+            const int turns = 4;
+            const int spUps = 4;
+#else
             const int turns = 9;
+            const int spUps = 8;
+#endif
             var goalie = Get(OppGoalie);
             
             for (var moveTurn = 0.0; moveTurn <= range; moveTurn += range / turns)
             {
                 var turn = moveDir*moveTurn;
 
-                for (var spUp = 0.0; spUp <= 1.0; spUp += 1/8.0)
+                for (var spUp = 0.0; spUp <= 1.0; spUp += 1.0/spUps)
                 {
                     var hock = _hock.Clone();
                     var pk = _pk.Clone();
@@ -397,7 +403,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                 }
             }
-            //Log(TimerStop());
+            Log(TimerStop());
 
             if (bestWait == Inf)
                 return false;

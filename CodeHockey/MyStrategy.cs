@@ -151,6 +151,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new Tuple<Point, int, int>(result, dir, res);
         }
 
+        private static bool SubstSignal;
+
         public void Move(Hockeyist self, World world, Game game, Move move)
         {
             if (self.State == HockeyistState.Resting)
@@ -185,9 +187,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             //TimerStart();
 
+            var hock = new AHock(self);
+            if (SubstSignal && !NeedTrySubstitute(hock))
+                SubstSignal = false;
+
             if (My.IsJustMissedGoal || My.IsJustScoredGoal)
             {
-                var hock = new AHock(self);
+                SubstSignal = false;
                 var to = GetSubstitutePoint(hock);
                 if (to != null)
                     DoMove(self, to.First, to.Second);
@@ -201,8 +207,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 {
                     if (!TryStrikeWithoutTakeIfSwinging(new AHock(self), new APuck(puck, OppGoalie)))
                         move.Action = ActionType.CancelStrike;
-                    //else
-                    //    Console.WriteLine("---");
                 }
                 else if (puck.OwnerHockeyistId == self.Id)
                 {
@@ -214,6 +218,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     //TimerStart();
                     if (self.State != HockeyistState.Swinging)
                     {
+                        var spUps = self.RemainingCooldownTicks == 0 || Math.Abs(self.X - My.NetFront) < RinkWidth / 2
+                                    ? new[] { 1.0 }
+                                    : new[] { 1.0, 0.5, 0.0, -0.5 };
+
                         // если не замахнулся
                         for (var ticks = 0; ticks < 50; ticks++)
                         {
@@ -224,9 +232,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             for(var moveTurn = 0.0; moveTurn - Eps <= range; moveTurn += range / turns)
                             {
                                 var turn = moveDir * moveTurn;
-                                var spUps = self.RemainingCooldownTicks == 0 || Math.Abs(self.X - My.NetFront) < RinkWidth / 2
-                                    ? new[] {1.0}
-                                    : new[] {1.0, 0.5, 0.0, -0.5};
                                 foreach(var spUp in spUps)
                                 {
                                     var end = ticks + game.SwingActionCooldownTicks;
@@ -295,6 +300,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                     }
                     //Console.WriteLine("- " + TimerStop());
+                    if (wait < Inf)
+                    {
+                        SubstSignal = true;
+                    }
                     drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
                     if (!willSwing && self.State == HockeyistState.Swinging)
                     {
@@ -384,7 +393,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                             ? (friend2 == null || ii*GetTicksTo(def, self) < jj*GetTicksTo(def, friend1)) // если я ближе, то иду на ворота
                             : toPuck.Third/ii > toPuck1.Third/jj) // если я дольше всего, то иду на ворота
                         {
-                            StayOn(self, def, Get(puck));
+                            if (SubstSignal)
+                            {
+                                if (TrySubstitute(hock))
+                                    SubstSignal = false;
+                                else
+                                    StayOn(self, def, GetSubstitutePoint(hock).First);
+                            }
+                            else
+                            {
+                                StayOn(self, def, Get(puck));
+                            }
                         }
                             // иначе 1 идет на воротаpuck.OwnerPlayerId != My.Id
                         else if (friend2 == null 
@@ -431,11 +450,21 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            var c1 = new Point(RinkCenter.X, Game.RinkTop + 2 * HoRadius);
-                            var c2 = new Point(RinkCenter.X, Game.RinkBottom - 2 * HoRadius);
-                            var c = c1.GetDistanceTo(puck) > c2.GetDistanceTo(puck) ? c1 : c2;
-                            var s = GetStrikePoint();
-                            StayOn(self, c, s);
+                            if (SubstSignal)
+                            {
+                                if (TrySubstitute(hock))
+                                    SubstSignal = false;
+                                else
+                                    StayOn(self, def, GetSubstitutePoint(hock).First);
+                            }
+                            else
+                            {
+                                var c1 = new Point(RinkCenter.X, Game.RinkTop + 2*HoRadius);
+                                var c2 = new Point(RinkCenter.X, Game.RinkBottom - 2*HoRadius);
+                                var c = c1.GetDistanceTo(puck) > c2.GetDistanceTo(puck) ? c1 : c2;
+                                var s = GetStrikePoint();
+                                StayOn(self, c, s);
+                            }
                         }
                     }
                 }

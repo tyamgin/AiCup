@@ -90,12 +90,31 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
+        bool NeedTrySubstitute(AHock hock)
+        {
+            try
+            {
+                var maxStamina = World.Hockeyists
+                    .Where(x => x.State == HockeyistState.Resting && x.IsTeammate)
+                    .Select(x => x.Stamina)
+                    .Max();
+                var to = World.Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina));
+                if (to == null || maxStamina*1.00 < hock.Stamina)
+                    return false;
+                return true;
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+        }
+
         Pair<Point, int> GetSubstitutePoint(AHock hock)
         {
             Point bestPoint = null;
             var selDir = 0;
             var minTicks = Inf;
-            for (var x = Game.RinkLeft; x <= Game.RinkRight; x += RinkWidth/10)
+            for (var x = Game.RinkLeft; x <= Game.RinkRight; x += RinkWidth/100)
             {
                 if (MyLeft() && x > RinkCenter.X || MyRight() && x < RinkCenter.X)
                     continue;

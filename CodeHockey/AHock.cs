@@ -90,7 +90,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public double Calc(double attr)
         {
-            return attr * 0.75 + 0.25 * attr * Base.Stamina / 2000;
+            return attr * 0.75 + 0.25 * attr * Base.Stamina / MyStrategy.Game.HockeyistMaxStamina;
         }
 
         public double AStrength

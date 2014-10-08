@@ -1,8 +1,8 @@
-var numberOfUsers = 50;
+var numberOfUsers = 30;
 var interval = 2.6; // in minutes
 var username = 'tyamgin';
 
-$.get('http://russianaicup.ru/contest/1/standings', function(page) { 
+$.get('http://russianaicup.ru/contest/3/standings', function(page) { 
 	var users = []; 
 	$('<div>' + page + '</div>').find('td a span').slice(0, numberOfUsers).each(function() { 
 		users.push($(this).html()); 
@@ -12,8 +12,8 @@ $.get('http://russianaicup.ru/contest/1/standings', function(page) {
 	
 	var createGame = function(users) {
 		if (users.length > 0) {
-			$('#participant1').attr('value', '');
-			$('#participant1').attr('value', users[0]);
+			$('#participant2').attr('value', '');
+			$('#participant2').attr('value', users[0]);
 			
 			setTimeout(function() {
 				$('[value="Создать"]').click();
