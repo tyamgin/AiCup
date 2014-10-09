@@ -7,7 +7,8 @@ using System.Threading;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
-// TODO: !!!!!!!!!!!!!!!!!!!!!!!!! Ќа другой стороне играет хуже!!!!!!!!!!!!!!!!!!
+// TODO: часто мажет
+// TODO: когда иду к краю учитывать направлени€ сокомандника
 
 // TODO: Ќет вратар€ - улучшить
 // TODO: учитывать изменение стамины?

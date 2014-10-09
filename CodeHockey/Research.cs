@@ -100,5 +100,18 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {     
             }
         }
+
+        bool ResearchPass(AHock hock)
+        {
+            if (puck.OwnerHockeyistId == hock.Base.Id && hock.CoolDown == 0)
+            {
+                var t = GetPassPuck(hock, 1, 0, null);
+                move.Action = ActionType.Pass;
+                move.PassPower = 1;
+                move.PassAngle = 0;
+                return true;
+            }
+            return false;
+        }
     }
 }

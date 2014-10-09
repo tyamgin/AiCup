@@ -121,7 +121,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public APuck GetPassPuck(AHock striker, double PassPower, double PassAngle, Point goalie)
         {
-            var puckSpeedAbs = 15.0*PassPower + striker.Speed.Length*Math.Cos(striker.Angle + PassAngle - striker.Speed.GetAngle());
+            var puckSpeedAbs = striker.AStrength / 100 * Game.PassPowerFactor * Game.StruckPuckInitialSpeedFactor * PassPower + striker.Speed.Length * Math.Cos(striker.Angle + PassAngle - striker.Speed.GetAngle());
             var puckAngle = AngleNormalize(PassAngle + striker.Angle);
             var puckSpeed = new Point(puckAngle)*puckSpeedAbs;
             return new APuck(striker.PuckPos(), puckSpeed, goalie);
