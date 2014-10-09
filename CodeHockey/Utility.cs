@@ -122,7 +122,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return speedUp;
         }
 
-        public double RevAngle(double angle)
+        public static double RevAngle(double angle)
         {
             if (Eq(angle, Math.PI))
                 return 0.0;

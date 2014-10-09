@@ -118,11 +118,20 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return base.ToString() + " <" + Angle + ">";
         }
 
-        public void MoveTo(Point to)
+        public void MoveTo(Point to, int direction = 1)
         {
-            var turn = GetAngleTo(to);
-            var spUp = MyStrategy.GetSpeedTo(turn);
-            Move(spUp, MyStrategy.TurnNorm(turn, AAgility));
+            if (direction > 0)
+            {
+                var turn = GetAngleTo(to);
+                var spUp = MyStrategy.GetSpeedTo(turn);
+                Move(spUp, MyStrategy.TurnNorm(turn, AAgility));
+            }
+            else
+            {
+                var turn = MyStrategy.RevAngle(GetAngleTo(to.X, to.Y));
+                var spUp = -MyStrategy.GetSpeedTo(turn);
+                Move(spUp, MyStrategy.TurnNorm(turn, AAgility));
+            }
         }
     }
 }
