@@ -1,8 +1,9 @@
 var numberOfUsers = 30;
 var interval = 2.6; // in minutes
 var username = 'tyamgin';
+var contestId = '1';
 
-$.get('http://russianaicup.ru/contest/3/standings', function(page) { 
+$.get('http://russianaicup.ru/contest/' + contestId + '/standings', function(page) { 
 	var users = []; 
 	$('<div>' + page + '</div>').find('td a span').slice(0, numberOfUsers).each(function() { 
 		users.push($(this).html()); 

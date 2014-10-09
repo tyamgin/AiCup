@@ -50,8 +50,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             var bestTime = Inf;
             Point sel = null;
             //TimerStart();
-            var bot = World.Hockeyists.Count(x => !x.IsTeammate && IsInGame(x) && x.Y > RinkCenter.Y);
-            var top = World.Hockeyists.Count(x => !x.IsTeammate && IsInGame(x) && x.Y <= RinkCenter.Y);
+            var bot = Hockeyists.Count(x => !x.IsTeammate && IsInGame(x) && x.Y > RinkCenter.Y);
+            var top = Hockeyists.Count(x => !x.IsTeammate && IsInGame(x) && x.Y <= RinkCenter.Y);
                 
             foreach (Point p in WayPoints.ToArray().OrderBy(x => ((Point) x).GetDistanceTo(self)).Take(10))
             {
@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (p.GetDistanceTo2(I) <= okDist*okDist || MyRight() && I.X < p.X || MyLeft() && I.X > p.X)
                     continue;
 
-                var cands = World.Hockeyists
+                var cands = Hockeyists
                     .Where(x => !x.IsTeammate && IsInGame(x))
                     .Select(x => new AHock(x)).ToArray();
 
@@ -146,7 +146,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 var pk = actionType == ActionType.Strike
                     ? GetStrikePuck(striker, strikePower, goalie)
                     : GetPassPuck(striker, 1, passAngle, goalie);
-                var opps = World.Hockeyists
+                var opps = Hockeyists
                     .Where(x => !x.IsTeammate && IsInGame(x))
                     .Select(x => new AHock(x)).ToArray();
 
@@ -249,7 +249,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             var power = GetPower(I, swingTime);
             var totalTime = 0;
-            var opps = World.Hockeyists
+            var opps = Hockeyists
                 .Where(x => !x.IsTeammate && IsInGame(x))
                 .Select(x => new AHock(x))
                 .ToArray();

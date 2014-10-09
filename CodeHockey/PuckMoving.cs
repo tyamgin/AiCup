@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -56,7 +55,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         Pair<int, long> GetFirstOnPuck(IEnumerable<Hockeyist> except, APuck pk, bool hard, int ticksLimit = 70, bool tryDown = true)
         {
-            var cands = World.Hockeyists
+            var cands = Hockeyists
                 .Where(x => IsInGame(x) && except.Count(y => y.Id == x.Id) == 0)
                 .ToArray();
             var times = cands.Select(x => 

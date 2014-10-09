@@ -115,56 +115,40 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return minTime < Inf;
         }
 
-        bool IsInSubstArea(Point hock)
-        {
-            return hock.Y < Game.RinkTop + Game.SubstitutionAreaHeight
-                   && (MyLeft() && hock.X < RinkCenter.X || MyRight() && hock.X > RinkCenter.X);
-        }
-
         bool TrySubstitute(AHock hock)
         {
-            if (hock.Speed.Length > Game.MaxSpeedToAllowSubstitute 
+            if (!IsFinal()
+                || hock.Speed.Length > Game.MaxSpeedToAllowSubstitute 
                 || !IsInSubstArea(hock)
                 || hock.Base.RemainingCooldownTicks > 0
                 || hock.Base.RemainingKnockdownTicks > 0
                 )
                 return false;
-            try
-            {
-                var maxStamina = World.Hockeyists
-                    .Where(x => x.State == HockeyistState.Resting && x.IsTeammate)
-                    .Select(x => x.Stamina)
-                    .Max();
-                var to = World.Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina));
-                if (to == null || maxStamina < hock.Stamina)
-                    return false;
-                move.Action = ActionType.Substitute;
-                move.TeammateIndex = to.TeammateIndex;
-                return true;
-            }
-            catch (InvalidOperationException)
-            {
+            
+            var maxStamina = Hockeyists
+                .Where(x => x.State == HockeyistState.Resting && x.IsTeammate)
+                .Select(x => x.Stamina)
+                .Max();
+            var to = Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina));
+            if (to == null || maxStamina < hock.Stamina)
                 return false;
-            }
+            move.Action = ActionType.Substitute;
+            move.TeammateIndex = to.TeammateIndex;
+            return true;
         }
 
         bool NeedTrySubstitute(AHock hock)
         {
-            try
-            {
-                var maxStamina = World.Hockeyists
-                    .Where(x => x.State == HockeyistState.Resting && x.IsTeammate)
-                    .Select(x => x.Stamina)
-                    .Max();
-                var to = World.Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina));
-                if (to == null || maxStamina*0.8 < hock.Stamina)
-                    return false;
-                return true;
-            }
-            catch (InvalidOperationException)
-            {
+            if (!IsFinal())
                 return false;
-            }
+            var maxStamina = Hockeyists
+                .Where(x => x.State == HockeyistState.Resting && x.IsTeammate)
+                .Select(x => x.Stamina)
+                .Max();
+            var to = Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina));
+            if (to == null || maxStamina*0.8 < hock.Stamina)
+                return false;
+            return true;
         }
 
         Pair<Point, int> GetSubstitutePoint(AHock hock)

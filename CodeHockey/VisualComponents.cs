@@ -82,7 +82,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             g = Graphics.FromImage(drawArea);
 
             // Хоккеисты
-            foreach (var ho in World.Hockeyists)
+            foreach (var ho in Hockeyists)
             {
                 var brush = ho.IsTeammate ? Brushes.Blue : Brushes.Red;
                 if (ho.Type != HockeyistType.Goalie)

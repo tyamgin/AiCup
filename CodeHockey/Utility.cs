@@ -145,7 +145,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public static Hockeyist Get(long id)
         {
-            return World.Hockeyists.First(x => x.Id == id);
+            return Hockeyists.First(x => x.Id == id);
         }
 
         public static bool IsInGame(Hockeyist hock)
@@ -168,6 +168,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
+        bool IsFinal()
+        {
+            return Hockeyists.Length >= 2*6;
+        }
+        bool IsInSubstArea(Point hock)
+        {
+            return hock.Y < Game.RinkTop + Game.SubstitutionAreaHeight
+                   && (MyLeft() && hock.X < RinkCenter.X || MyRight() && hock.X > RinkCenter.X);
+        }
 
         public class MoveAction
         {

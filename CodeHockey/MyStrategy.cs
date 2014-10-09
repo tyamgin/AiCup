@@ -9,6 +9,7 @@ using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 // TODO: часто мажет
 // TODO: когда иду к краю учитывать направления сокомандника
+// TODO: при переборе strike moveDir перебирать также другого знака
 
 // TODO: Нет вратаря - улучшить
 // TODO: учитывать изменение стамины?
@@ -28,6 +29,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static double HoRadius, RinkWidth, RinkHeight, PuckRadius;
         public static Point RinkCenter;
         public static double HoPuckDist = 55.0;
+        public static Hockeyist[] Hockeyists;
 
         public int GetTicksToUp(AHock ho, Point to, double takePuck = -1, int limit = 500)
         {
@@ -69,7 +71,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 ho.MoveTo(to);
 
                 if (result > 500)
-                    return result; // TODO: временный костыль, ибо почему-то падает
+                    return result;
             }
             return result;
         }
@@ -96,7 +98,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             var res = Inf;
             var dir = 1; 
-            var owner = World.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
+            var owner = Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
             var ho = owner == null ? null : new AHock(owner);
             if (pk == null)
                 pk = new APuck(puck, OppGoalie);
@@ -162,6 +164,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             ShowWindow();
 
             // // fill globals
+            Hockeyists = world.Hockeyists;
             this.puck = world.Puck;
             this.move = move;
             World = world;
@@ -170,12 +173,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             My = world.GetMyPlayer();
             RinkWidth = game.RinkRight - game.RinkLeft;
             RinkHeight = game.RinkBottom - game.RinkTop;
-            OppGoalie = world.Hockeyists.FirstOrDefault(x => !x.IsTeammate && x.Type == HockeyistType.Goalie);
-            MyGoalie = world.Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Type == HockeyistType.Goalie);
+            OppGoalie = Hockeyists.FirstOrDefault(x => !x.IsTeammate && x.Type == HockeyistType.Goalie);
+            MyGoalie = Hockeyists.FirstOrDefault(x => x.IsTeammate && x.Type == HockeyistType.Goalie);
             HoRadius = self.Radius;
             RinkCenter = new Point(game.RinkLeft + RinkWidth/2, game.RinkTop + RinkHeight/2);
             PuckRadius = puck.Radius;
-            var friends = world.Hockeyists
+            var friends = Hockeyists
                 .Where(x => x.IsTeammate && x.Id != self.Id && x.Type != HockeyistType.Goalie && x.State != HockeyistState.Resting)
                 .ToArray();
             var friend1 = friends.Count() < 2 || friends[0].TeammateIndex < friends[1].TeammateIndex ? friends[0] : friends[1];
@@ -350,7 +353,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 }
                 else if (puck.OwnerPlayerId != -1 || !TryStrikeWithoutTake(hock, new APuck(puck, OppGoalie)))
                 {
-                    var owner = world.Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
+                    var owner = Hockeyists.FirstOrDefault(x => x.Id == puck.OwnerHockeyistId);
                     var pk = new APuck(puck, MyGoalie) {IsDefend = true};
 
                     if (puck.OwnerPlayerId == Opp.Id && (CanStrike(self, owner) || CanStrike(self, puck)))
@@ -419,7 +422,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         {
                             var bestTime = Inf;
                             double bestTurn = 0.0;
-                            var needTime = GetFirstOnPuck(World.Hockeyists.Where(x => x.IsTeammate),
+                            var needTime = GetFirstOnPuck(Hockeyists.Where(x => x.IsTeammate),
                                 new APuck(puck, OppGoalie), true, -1).First;
                             var lookAt = new Point(Opp.NetFront, RinkCenter.Y);
                             for (var turn = -range; turn <= range; turn += range / 10)
