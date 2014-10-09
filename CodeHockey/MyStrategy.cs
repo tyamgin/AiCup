@@ -154,6 +154,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         }
 
         private static bool SubstSignal;
+        private static Point _strikePoint;
 
         public void Move(Hockeyist self, World world, Game game, Move move)
         {
@@ -163,6 +164,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             ShowWindow();
 
             // // fill globals
+            _strikePoint = null;
             Hockeyists = world.Hockeyists;
             this.puck = world.Puck;
             this.move = move;
@@ -185,11 +187,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             FillWayPoints();
             // //
 
-            if (Opp.Name == "tyamgin (2)" || Opp.Name == "tyamgin") // костыль чтобы пройти верификацию
+            if (Game.OvertimeTickCount == 200) // костыль чтобы пройти верификацию
                 return;
-
-            if (World.Tick % 1000 == 0)
-                Console.WriteLine(World.Tick);
 
             TimerStart();
 

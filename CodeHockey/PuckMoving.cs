@@ -71,6 +71,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return new Pair<int, long>(times[whereMin], cands[whereMin].Id);
         }
 
+        bool IsWaitingSwing(AHock hock)
+        {
+            var str = GetStrikePoint();
+            if (Math.Abs(hock.GetAngleTo(str)) > Deg(60))
+                return false;
+            return Math.Abs(My.NetFront - hock.X) > RinkWidth / 3 
+                && (hock.Y < Game.GoalNetTop || hock.Y > Game.GoalNetTop + Game.GoalNetHeight);
+        }
+
         bool TryPass(AHock striker)
         {
             if (striker.Base.RemainingCooldownTicks != 0)
@@ -79,9 +88,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             TimerStart();
 
             const int passAnglesCount = 7;
-            var bestAngle = 0.0;
-            double minDanger = Inf;
-            var bestPower = 0.0;
+            double minTime = Inf,
+                bestAngle = 0.0,
+                bestPower = 0.0;
 
             foreach (var power in new[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0 })
             {
@@ -90,17 +99,20 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     for (var absPassAngle = 0.0; absPassAngle <= Game.PassSector/2; absPassAngle += Game.PassSector/2/passAnglesCount)
                     {
                         var passAngle = absPassAngle*passDir;
-                        var pk = GetPassPuck(striker, power, passAngle, Get(OppGoalie)); // проверять на автогол
-                        var on = GetFirstOnPuck(new[] {striker.Base}, pk, false, 100, false);
+                        var pk = GetPassPuck(striker, power, passAngle, Get(OppGoalie)); // TODO: проверять на автогол
+                        var on = GetFirstOnPuck(new[] {striker.Base}, pk, IsFinal(), 100, false);
                         pk.Move(300);
                         if (APuck.PuckLastTicks < on.First)
                             continue;
-                        if (!Get(on.Second).IsTeammate)
+                        var toHock = new AHock(Get(on.Second));
+                        if (!toHock.Base.IsTeammate)
                             continue;
                         var time = on.First;
-                        if (time < minDanger)
+                        if (IsWaitingSwing(toHock))
+                            time /= 5;
+                        if (time < minTime)
                         {
-                            minDanger = time;
+                            minTime = time;
                             bestAngle = passAngle;
                             bestPower = power;
                         }
@@ -110,7 +122,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             Log("TryPass " + TimerStop());
 
-            if (minDanger >= Inf - Eps)
+            if (minTime >= Inf - Eps)
                 return false;
             move.Action = ActionType.Pass;
             move.PassAngle = bestAngle;

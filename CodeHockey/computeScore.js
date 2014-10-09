@@ -1,6 +1,8 @@
+// 70: 116 / 180  right
+
 var username = 'tyamgin';
-var games = 30;
-var pages = 3;
+var games = 60;
+var pages = 4;
 
 var gamesCnt = 0;
 var mySum = 0

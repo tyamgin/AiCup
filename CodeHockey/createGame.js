@@ -1,4 +1,4 @@
-var numberOfUsers = 30;
+var numberOfUsers = 60;
 var interval = 2.6; // in minutes
 var username = 'tyamgin';
 var contestId = '1';
@@ -25,4 +25,5 @@ $.get('http://russianaicup.ru/contest/' + contestId + '/standings', function(pag
 		}
 	};
 	createGame(users.reverse());
+	console.log(users);
 })

@@ -281,21 +281,25 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public Point GetStrikePoint()
         {
-            const double delta = 1;
-            const double shift = 10;
-            double x = Opp.NetFront,
-                bestDist = 0,
-                bestY = 0;
-            var OppGoalie = Get(MyStrategy.OppGoalie) ?? Point.Zero;
-            for (var y = Opp.NetTop + shift; y <= Opp.NetBottom - shift; y += delta)
+            if (_strikePoint == null)
             {
-                if (OppGoalie.GetDistanceTo2(x, y) > bestDist * bestDist)
+                const double delta = 1;
+                const double shift = 10;
+                double x = Opp.NetFront,
+                    bestDist = 0,
+                    bestY = 0;
+                var OppGoalie = Get(MyStrategy.OppGoalie) ?? Point.Zero;
+                for (var y = Opp.NetTop + shift; y <= Opp.NetBottom - shift; y += delta)
                 {
-                    bestDist = OppGoalie.GetDistanceTo(x, y);
-                    bestY = y;
+                    if (OppGoalie.GetDistanceTo2(x, y) > bestDist*bestDist)
+                    {
+                        bestDist = OppGoalie.GetDistanceTo(x, y);
+                        bestY = y;
+                    }
                 }
+                _strikePoint = new Point(x, bestY);
             }
-            return new Point(x, bestY);
+            return _strikePoint.Clone();
         }
 
         public bool TryStrikeWithoutTakeIfSwinging(AHock _hock, APuck _pk)
