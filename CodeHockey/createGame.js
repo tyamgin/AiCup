@@ -1,4 +1,4 @@
-var numberOfUsers = 30;
+var numberOfUsers = 29;
 var interval = 2.6; // in minutes
 var username = 'tyamgin';
 var contestId = '1';
