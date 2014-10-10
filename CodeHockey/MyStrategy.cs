@@ -191,10 +191,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (Game.OvertimeTickCount == 200) // костыль чтобы пройти верификацию
                 return;
 
-            // 19339617039102a7a10829300670d716fd716b8f
-            //if (World.Tick < 2730)
-            //    return;
-
             //TimerStart();
 
             var hock = new AHock(self);
