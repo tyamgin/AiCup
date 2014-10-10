@@ -166,7 +166,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             // // fill globals
             _strikePoint = null;
             Hockeyists = world.Hockeyists;
-            MyRest = Hockeyists.Where(x => x.IsTeammate && x.State == HockeyistState.Resting);
+            MyRest = Hockeyists.Where(x => x.IsTeammate && x.State == HockeyistState.Resting).ToArray();
             this.puck = world.Puck;
             this.move = move;
             World = world;
@@ -190,10 +190,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             if (Game.OvertimeTickCount == 200) // костыль чтобы пройти верификацию
                 return;
-
-            // 19339617039102a7a10829300670d716fd716b8f
-            //if (World.Tick < 2730)
-            //    return;
 
             //TimerStart();
 
@@ -220,7 +216,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     var wait = Inf;
                     double selTurn = 0, selSpeedUp = 0;
                     var willSwing = false;
-                    var maxProb = 0.15;
+                    var maxProb = 0.05;
                     var selAction = ActionType.Strike;
                     TimerStart();
                     if (self.State != HockeyistState.Swinging)
@@ -314,11 +310,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                     }
                     Log("STRIKE   " + TimerStop());
+                    drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
+                    if (maxProb < 0.15)
+                        wait = Inf;
                     if (wait < Inf)
                     {
                         SubstSignal = true;
                     }
-                    drawInfo.Enqueue((wait == Inf ? 0 : maxProb) + "");
                     if (!willSwing && self.State == HockeyistState.Swinging)
                     {
                         move.Action = ActionType.CancelStrike;
@@ -329,21 +327,29 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                     else if (wait == Inf)
                     {
-                        var wayPoint = FindWayPoint(self);
-                        if (wayPoint == null)
+                        if (maxProb > 0.05 + Eps)
                         {
-                            needPassQueue.Enqueue(Get(self));
-                            if (!TryPass(hock))
-                            {
-                                var pt = Math.Abs(Opp.NetFront - self.X) < RinkWidth/3
-                                    ? Get(friend2 == null || (MyLeft() ? friend2.X > friend1.X : friend2.X < friend1.X) ? friend1 : friend2)
-                                    : GetStrikePoint();
-                                DoMove(self, pt, 1);
-                            }
+                            move.SpeedUp = selSpeedUp;
+                            move.Turn = selTurn;
                         }
-                        else
+                        else 
                         {
-                            DoMove(self, wayPoint, 1);
+                            var wayPoint = FindWayPoint(self);
+                            if (wayPoint == null)
+                            {
+                                needPassQueue.Enqueue(Get(self));
+                                if (!TryPass(hock))
+                                {
+                                    var pt = Math.Abs(Opp.NetFront - self.X) < RinkWidth/3
+                                        ? Get(friend2 == null || (MyLeft() ? friend2.X > friend1.X : friend2.X < friend1.X) ? friend1 : friend2)
+                                        : GetStrikePoint();
+                                    DoMove(self, pt, 1);
+                                }
+                            }
+                            else
+                            {
+                                DoMove(self, wayPoint, 1);
+                            }
                         }
                     }
                     else if (wait == 0)
