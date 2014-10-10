@@ -28,7 +28,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public static double HoRadius, RinkWidth, RinkHeight, PuckRadius;
         public static Point RinkCenter;
         public static double HoPuckDist = 55.0;
-        public static Hockeyist[] Hockeyists;
+        public static Hockeyist[] Hockeyists, MyRest;
 
         public int GetTicksToUp(AHock ho, Point to, double takePuck = -1, int limit = 500)
         {
@@ -166,6 +166,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             // // fill globals
             _strikePoint = null;
             Hockeyists = world.Hockeyists;
+            MyRest = Hockeyists.Where(x => x.IsTeammate && x.State == HockeyistState.Resting);
             this.puck = world.Puck;
             this.move = move;
             World = world;

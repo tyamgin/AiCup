@@ -125,11 +125,15 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 )
                 return false;
             
-            var maxStamina = Hockeyists
-                .Where(x => x.State == HockeyistState.Resting && x.IsTeammate)
+            var maxStamina = MyRest
                 .Select(x => x.Stamina)
                 .Max();
-            var to = Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina));
+            var maxStrength = MyRest
+                .Where(x => Eq(maxStamina, x.Stamina))
+                .Select(x => x.Strength)
+                .Max();
+
+            var to = Hockeyists.FirstOrDefault(x => Eq(x.Stamina, maxStamina) && Eq(x.Strength, maxStrength));
             if (to == null || maxStamina < hock.Stamina)
                 return false;
             move.Action = ActionType.Substitute;
