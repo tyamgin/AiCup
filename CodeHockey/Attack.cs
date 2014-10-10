@@ -313,7 +313,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 if (CanStrike(hock, pk))
                 {
-                    var pr = StrikeProbability(hock, GetPower(hock, sw + hock.Base.SwingTicks), pk.Goalie.Clone(), -1, ActionType.Strike, 0, pk);
+                    var pr = StrikeProbability(hock, GetPower(hock, sw + hock.Base.SwingTicks), pk.Goalie, -1, ActionType.Strike, 0, pk);
                     if (pr - 0.01 > bestProbab)
                     {
                         bestProbab = pr;
@@ -371,7 +371,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 {
                                     if (sw >= Game.SwingActionCooldownTicks && CanStrike(I, p))
                                     {
-                                        var pr = StrikeProbability(I, GetPower(I, sw), p.Goalie.Clone(), -1, ActionType.Strike, 0, p);
+                                        var pr = StrikeProbability(I, GetPower(I, sw), p.Goalie, -1, ActionType.Strike, 0, p);
                                         if (pr > bestProbab)
                                         {
                                             bestProbab = pr;
@@ -394,7 +394,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         if (CanStrike(hock, pk))
                         {
-                            var p = StrikeProbability(hock, GetPower(hock, 0), pk.Goalie.Clone(), -1, ActionType.Strike, 0, pk);
+                            var p = StrikeProbability(hock, GetPower(hock, 0), pk.Goalie, -1, ActionType.Strike, 0, pk);
                             if (p > bestProbab)
                             {
                                 bestProbab = p;
