@@ -190,7 +190,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (Game.OvertimeTickCount == 200) // костыль чтобы пройти верификацию
                 return;
 
-            TimerStart();
+            // 19339617039102a7a10829300670d716fd716b8f
+            //if (World.Tick < 2730)
+            //    return;
+
+            //TimerStart();
 
             var hock = new AHock(self);
             var needSubst = NeedTrySubstitute(hock);
@@ -379,9 +383,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        //if (self.TeammateIndex == 0)
-                        //    TimerStart();
-
                         var toPuck = GoToPuck(self, null);
                         var toPuck1 = GoToPuck(friend1, null);
                         var toPuck2 = friend2 == null ? null : GoToPuck(friend2, null);
@@ -478,15 +479,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 StayOn(self, c, s);
                             }
                         }
-                        //if (self.TeammateIndex == 0)
-                        //    Log(")) " + TimerStop());
                     }
                 }
                 if (Eq(move.SpeedUp, Inf))
                     move.SpeedUp = 1;
             }
 
-            Log(self.TeammateIndex + " >>>>>>>>>>>> " + TimerStop());
+            //Log(self.TeammateIndex + " >>>>>>>>>>>> " + TimerStop());
 #if DEBUG
             draw();
             Thread.Sleep(8);

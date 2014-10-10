@@ -19,10 +19,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void StayOn(Hockeyist self, Point to, Point lookAt)
         {
-            TimerStart();
+            //TimerStart();
             if (!FindPath(self, to, lookAt))
                 DoMove(self, to, GetTicksToUp(new AHock(self), to) < GetTicksToDown(new AHock(self), to) ? 1 : -1);
-            Log("StayOn " + TimerStop());
+            //Log("StayOn " + TimerStop());
         }
     }
 }

@@ -97,23 +97,23 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return sel;
         }
 
-        bool StrikeWithDev(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle, double dev)
+        bool StrikeWithDev(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle, double dev, Point puckPos)
         {
             var result = false;
             if (actionType == ActionType.Strike)
                 striker.Angle += dev;
-            if (Strike(striker, strikePower, goalie, actionType, passAngle + dev))
+            if (Strike(striker, strikePower, goalie, actionType, passAngle + dev, puckPos))
                 result = true;
             if (actionType == ActionType.Strike)
                 striker.Angle -= dev;
             return result;
         }
 
-        double StrikeProbability(AHock striker, double strikePower, Point goalie, int leftTime, ActionType actionType, double passAngle)
+        double StrikeProbability(AHock striker, double strikePower, Point goalie, int leftTime, ActionType actionType, double passAngle, Point puckPos)
         {
             if (striker.CoolDown != 0)
                 return 0.0;
-            if (!Strike(striker, strikePower, goalie, actionType, passAngle))
+            if (!Strike(striker, strikePower, goalie, actionType, passAngle, puckPos))
                 return 0.0;
 
             const int iters = 5;
@@ -124,7 +124,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             for (var it = 0; it < iters; it++)
             {
                 var c = (upL + upR)/2;
-                if (StrikeWithDev(striker, strikePower, goalie, actionType, passAngle, c))
+                if (StrikeWithDev(striker, strikePower, goalie, actionType, passAngle, c, puckPos))
                     upL = c;
                 else
                     upR = c;
@@ -133,7 +133,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             for (var it = 0; it < iters; it++)
             {
                 var c = (downL + downR) / 2;
-                if (StrikeWithDev(striker, strikePower, goalie, actionType, passAngle, c))
+                if (StrikeWithDev(striker, strikePower, goalie, actionType, passAngle, c, puckPos))
                     downR = c;
                 else
                     downL = c;
@@ -144,7 +144,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (leftTime != -1)
             {
                 var pk = actionType == ActionType.Strike
-                    ? GetStrikePuck(striker, strikePower, goalie)
+                    ? GetStrikePuck(striker, strikePower, goalie, puckPos)
                     : GetPassPuck(striker, 1, passAngle, goalie);
                 var opps = Hockeyists
                     .Where(x => !x.IsTeammate && IsInGame(x))
@@ -172,13 +172,13 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             return result;
         }
 
-        APuck GetStrikePuck(AHock striker, double strikePower, Point goalie)
+        APuck GetStrikePuck(AHock striker, double strikePower, Point goalie, Point puckPos)
         {
             var strikerDirection = new Point(striker.Angle);
             var speedAngleStriker = striker.Speed.GetAngle();
             var puckSpeed = 20.0 * strikePower + striker.Speed.Length * Math.Cos(striker.Angle - speedAngleStriker);
             var puckSpeedDirection = strikerDirection * puckSpeed;
-            return new APuck(striker.PuckPos(), puckSpeedDirection, goalie);
+            return new APuck(puckPos ?? striker.PuckPos(), puckSpeedDirection, goalie);
         }
 
         private bool StrikePrimitiveValidate(AHock striker)
@@ -221,10 +221,10 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 Game.GoalNetTop + Game.GoalNetHeight); // летит в ворота
         }
 
-        bool Strike(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle)
+        bool Strike(AHock striker, double strikePower, Point goalie, ActionType actionType, double passAngle, Point puckPos)
         {
             var pk = actionType == ActionType.Strike
-                ? GetStrikePuck(striker, strikePower, goalie)
+                ? GetStrikePuck(striker, strikePower, goalie, puckPos)
                 : GetPassPuck(striker, 1, passAngle, goalie);
             return PuckPrimitiveValidate(pk) && pk.Move(300, true) == 1;
         }
@@ -267,7 +267,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 totalTime += action.Ticks;
             }
             var passAngle = PassAngleNorm(I.GetAngleTo(GetStrikePoint()));
-            return StrikeProbability(I, power, goalie, totalTime, actionType, passAngle);
+            return StrikeProbability(I, power, goalie, totalTime, actionType, passAngle, null);
         }
 
         public static double PassAngleNorm(double angle)
@@ -313,7 +313,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             {
                 if (CanStrike(hock, pk))
                 {
-                    var pr = StrikeProbability(hock, GetPower(hock, sw + hock.Base.SwingTicks), Get(OppGoalie), -1, ActionType.Strike, 0);
+                    var pr = StrikeProbability(hock, GetPower(hock, sw + hock.Base.SwingTicks), pk.Goalie.Clone(), -1, ActionType.Strike, 0, pk);
                     if (pr - 0.01 > bestProbab)
                     {
                         bestProbab = pr;
@@ -350,11 +350,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             const int turns = 9;
             const int spUps = 8;
 
-            var goalie = Get(OppGoalie);
-
             for (var moveDir = -1; moveDir <= 1; moveDir += 2)
             {
-                for (var moveTurn = 0.0; moveTurn <= range; moveTurn += range/turns)
+                for (var moveTurn = 0.0; moveTurn <= range + Eps; moveTurn += range/turns)
                 {
                     var turn = moveDir*moveTurn;
 
@@ -365,7 +363,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         var ticksWait = 0;
                         for (var startDist2 = hock.GetDistanceTo2(pk); !CanStrike(hock, pk) && ticksWait < 150; ticksWait++)
                         {
-                            if (moveDir == moveDirBase)
+                            if (moveDir == moveDirBase || IsFinal() && moveTurn < range / 2)
                             {
                                 var I = hock.Clone();
                                 var p = pk.Clone();
@@ -373,7 +371,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                                 {
                                     if (sw >= Game.SwingActionCooldownTicks && CanStrike(I, p))
                                     {
-                                        var pr = StrikeProbability(I, GetPower(I, sw), goalie, -1, ActionType.Strike, 0);
+                                        var pr = StrikeProbability(I, GetPower(I, sw), p.Goalie.Clone(), -1, ActionType.Strike, 0, p);
                                         if (pr > bestProbab)
                                         {
                                             bestProbab = pr;
@@ -396,7 +394,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                         }
                         if (CanStrike(hock, pk))
                         {
-                            var p = StrikeProbability(hock, GetPower(hock, 0), goalie, -1, ActionType.Strike, 0);
+                            var p = StrikeProbability(hock, GetPower(hock, 0), pk.Goalie.Clone(), -1, ActionType.Strike, 0, pk);
                             if (p > bestProbab)
                             {
                                 bestProbab = p;
@@ -409,7 +407,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     }
                 }
             }
-            Log("SW " + TimerStop());
+            Log("SWING " + TimerStop());
 
             if (bestWait == Inf)
                 return false;
