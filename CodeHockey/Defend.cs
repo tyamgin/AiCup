@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Windows.Forms;
-using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
+﻿using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
@@ -19,10 +14,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public void StayOn(Hockeyist self, Point to, Point lookAt)
         {
-            //TimerStart();
             if (!FindPath(self, to, lookAt))
                 DoMove(self, to, GetTicksToUp(new AHock(self), to) < GetTicksToDown(new AHock(self), to) ? 1 : -1);
-            //Log("StayOn " + TimerStop());
         }
     }
 }

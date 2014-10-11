@@ -1,18 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Configuration.Assemblies;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
-
-// TODO: часто мажет
-// TODO: когда иду к краю учитывать направления сокомандника
-
-// TODO: Нет вратаря - улучшить
-// TODO: учитывать изменение стамины?
-// TODO: себе на ход тоже учитывать
 
 namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk 
 {
@@ -487,11 +477,12 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             draw();
             Thread.Sleep(8);
 #endif
-            drawPathQueue.Clear();
-            drawGoalQueue.Clear();
-            drawGoal2Queue.Clear();
             drawInfo.Clear();
             needPassQueue.Clear();
         }
     }
 }
+
+// TODO: ? когда иду к краю учитывать направления сокомандника
+// TODO: ? Нет вратаря - улучшить
+// TODO: ? себе на ход тоже учитывать

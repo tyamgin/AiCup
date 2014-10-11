@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Windows.Forms.PropertyGridInternal;
-using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -27,7 +22,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 new Point(624, 228),
                 new Point(624, 328),
             };
-            
 
             var len = WayPoints.Count;
             for (var i = 0; i < len; i++)

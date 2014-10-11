@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk;
 
@@ -62,6 +60,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         public static double GaussIntegral(double a, double b, double deviation)
         {
+            // Simpson method
             const int N = 50; // количество шагов (уже умноженное на 2)
             double s = 0, h = (b - a)/N;
             for (var i = 0; i <= N; i++)
@@ -168,10 +167,11 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
-        bool IsFinal()
+        public static bool IsFinal()
         {
             return Hockeyists.Length >= 2*6;
         }
+
         bool IsInSubstArea(Point hock)
         {
             return hock.Y < Game.RinkTop + Game.SubstitutionAreaHeight
@@ -185,7 +185,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             public int Ticks;
         }
 
-        ArrayList timers = new ArrayList();
+        readonly ArrayList timers = new ArrayList();
 
         void TimerStart()
         {

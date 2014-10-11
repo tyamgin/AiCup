@@ -1,11 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Cryptography;
-using System.Security.Policy;
-using System.Threading;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 using Point = Com.CodeGame.CodeTroopers2013.DevKit.CSharpCgdk.Point;
 
@@ -21,7 +15,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             if (puck.OwnerPlayerId == -1)
             {
-                Point nPoint = new Point(puck);
+                var nPoint = Get(puck);
                 var t = 1;
                 var prevTick = World.Tick - t;
                 if (iPoint.ContainsKey(prevTick))
@@ -46,7 +40,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
             if (puck.OwnerPlayerId == -1)
             {
-                Point nPoint = Get(puck);
+                var nPoint = Get(puck);
                 var t = 1;
                 var prevTick = World.Tick - t;
                 if (iPoint.ContainsKey(prevTick))
@@ -101,6 +95,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             }
         }
 
+        // определение силы паса
         bool ResearchPass(AHock hock)
         {
             if (puck.OwnerHockeyistId == hock.Base.Id && hock.CoolDown == 0)

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Model;
 #if DEBUG
 using Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk.Visualizer;
@@ -15,9 +12,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        private static Queue<Point> drawPathQueue = new Queue<Point>();
-        private static Queue<Point> drawGoalQueue = new Queue<Point>();
-        private static Queue<Point> drawGoal2Queue = new Queue<Point>();
         private static Queue<string> drawInfo = new Queue<string>();
         private static Queue<Point> needPassQueue = new Queue<Point>(); 
 
@@ -154,21 +148,6 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 DrawLine(Brushes.Black, x1, y2, x2, y2);
             }
 
-            while (drawPathQueue.Count != 0)
-            {
-                var p = drawPathQueue.Dequeue();
-                DrawCircle(Brushes.BlueViolet, p.X, p.Y, 3);
-            }
-            while (drawGoalQueue.Count != 0)
-            {
-                var p = drawGoalQueue.Dequeue();
-                DrawCircle(Brushes.DarkGreen, p.X, p.Y, 3);
-            }
-            while (drawGoal2Queue.Count != 0)
-            {
-                var p = drawGoal2Queue.Dequeue();
-                DrawCircle(Brushes.BlueViolet, p.X, p.Y, 5);
-            }
             while (needPassQueue.Count != 0)
             {
                 var p = needPassQueue.Dequeue();
