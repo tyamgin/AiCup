@@ -18,16 +18,35 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
 
         void FillWayPoints()
         {
-            WayPoints = new ArrayList
+            if (Opp.Name == "Mr.Smile")
             {
-                new Point(284, 280),
-                new Point(284, 368),
-                new Point(444, 255),
-                new Point(444, 339),
-                new Point(624, 228),
-                new Point(624, 328),
-            };
-            
+                WayPoints = new ArrayList
+                {
+                    new Point(285, 270),
+                    new Point(285, 313),
+                    new Point(285, 361),
+
+                    new Point(446, 250),
+                    new Point(446, 283),
+                    new Point(446, 356),
+
+                    new Point(579, 231),
+                    new Point(579, 271),
+                    new Point(579, 347),
+                };
+            }
+            else
+            {
+                WayPoints = new ArrayList
+                {
+                    new Point(284, 280),
+                    new Point(284, 368),
+                    new Point(444, 255),
+                    new Point(444, 339),
+                    new Point(624, 228),
+                    new Point(624, 328),
+                };
+            }
 
             var len = WayPoints.Count;
             for (var i = 0; i < len; i++)
