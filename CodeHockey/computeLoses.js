@@ -8,6 +8,10 @@ var computeLoses = function(page) {
 	if (page > pages) {
 		console.log(lose);
 		console.log(win);
+		var a = 0, b = 0;
+		for(var i in lose) if (lose.hasOwnProperty(i)) a += lose[i];
+		for(var i in  win) if ( win.hasOwnProperty(i)) b +=  win[i];
+		console.log(a + ' / ' + b);
 		return;
 	}
 
@@ -40,3 +44,4 @@ var computeLoses = function(page) {
 };
 
 computeLoses(1);
+

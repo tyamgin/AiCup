@@ -181,7 +181,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
             if (Game.OvertimeTickCount == 200) // костыль чтобы пройти верификацию
                 return;
 
-            //TimerStart();
+            TimerStart();
 
             var hock = new AHock(self);
             var needSubst = NeedTrySubstitute(hock);
@@ -472,7 +472,9 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                     move.SpeedUp = 1;
             }
 
-            //Log(self.TeammateIndex + " >>>>>>>>>>>> " + TimerStop());
+            Log(self.TeammateIndex + " >>>>>>>>>>>> " + TimerStop());
+            if (move.Action != ActionType.None)
+                Log(move.Action);
 #if DEBUG
             draw();
             Thread.Sleep(8);

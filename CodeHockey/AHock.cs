@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         public double AngularSpeed;
         public int CoolDown;
         public int KnockDown;
-        public double Stamina; // TODO: учитавать?
+        public double Stamina; // TODO: учитавать изменение?
 
         public AHock(Hockeyist self) : base(MyStrategy.Get(self), MyStrategy.GetSpeed(self), self.Angle)
         {

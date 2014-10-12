@@ -15,12 +15,17 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
         {
             WayPoints = new ArrayList
             {
-                new Point(284, 280),
-                new Point(284, 368),
-                new Point(444, 255),
-                new Point(444, 339),
-                new Point(624, 228),
-                new Point(624, 328),
+                new Point(285, 270),
+                new Point(285, 313),
+                new Point(285, 361),
+
+                new Point(446, 250),
+                new Point(446, 283),
+                new Point(446, 356),
+
+                new Point(579, 231),
+                new Point(579, 271),
+                new Point(579, 347),
             };
 
             var len = WayPoints.Count;
@@ -308,7 +313,7 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 if (CanStrike(hock, pk))
                 {
                     var pr = StrikeProbability(hock, GetPower(hock, sw + hock.Base.SwingTicks), pk.Goalie, -1, ActionType.Strike, 0, pk);
-                    if (pr - 0.01 > bestProbab)
+                    if (pr > bestProbab)
                     {
                         bestProbab = pr;
                         swTime = sw;
@@ -412,5 +417,8 @@ namespace Com.CodeGame.CodeHockey2014.DevKit.CSharpCgdk
                 move.Action = swTime == 0 ? ActionType.Strike : ActionType.Swing;
             return true;
         }
+
+        public static AHock _hhh;
+        public static APuck _ppp;
     }
 }
