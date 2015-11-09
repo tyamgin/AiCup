@@ -1,1 +1,1 @@
-start javaw -jar "local-runner.jar" local-runner-sync.properties
+start javaw -jar "D:\Projects\AiCup\CodeRacing\local-runner\local-runner.jar" "D:\Projects\AiCup\CodeRacing\local-runner\local-runner-sync.properties"

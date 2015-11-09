@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Threading;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
@@ -6,6 +8,22 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
         private readonly string token;
 
         public static void Main(string[] args) {
+
+#if DEBUG
+            Process.Start("D:\\Projects\\AiCup\\CodeRacing\\local-runner\\local-runner-sync.bat");
+            Thread.Sleep(2000);
+            //var oldStrategy = new Process
+            //{
+            //    StartInfo =
+            //    {
+            //        FileName = "D:\\Projects\\AiCup\\CodeHockey\\local_runner\\stress1\\57.exe",
+            //        Arguments = "127.0.0.1 31002 0000000000000000",
+            //        CreateNoWindow = true
+            //    }
+            //};
+            //oldStrategy.Start();
+#endif 
+
             if (args.Length == 3) {
                 new Runner(args).run();
             } else {
