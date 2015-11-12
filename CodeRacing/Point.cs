@@ -50,6 +50,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return new Point(a.X - b.X, a.Y - b.Y);
         }
 
+        public Point()
+        {
+            X = 0;
+            Y = 0;
+        }
+
         public Point(double x, double y)
         {
             X = x;
@@ -125,7 +131,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return X.CompareTo(other.X);
         }
 
-        public void Set(int x, int y)
+        public void Set(double x, double y)
         {
             X = x;
             Y = y;

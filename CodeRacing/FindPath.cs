@@ -91,7 +91,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.RightTopCorner;
         }
 
-        private bool _intersectTail(Point p)
+        private bool _intersectTail(Point p, double additionalMargin = 0.0)
         {
             var cell = GetCell(p.X, p.Y);
             var tileType = tiles[cell.I, cell.J];
@@ -99,23 +99,32 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return true;
 
             var c = GetCenter(cell);
-            var margin = game.TrackTileSize/2 - game.TrackTileMargin - self.Height/2;
+            var margin = game.TrackTileSize/2 - game.TrackTileMargin - additionalMargin;//-self.Height / 2;
             var LX = c.X - margin;
             var RX = c.X + margin;
             var LY = c.Y - margin;
             var RY = c.Y + margin;
             
+            // внутри квадрата
             if (LX <= p.X && p.X <= RX && LY <= p.Y && p.Y <= RY)
                 return false;
 
+            // в углу
+            for(var k = 0; k < 4; k++)
+                if (TileCorner[cell.I, cell.J, k].GetDistanceTo2(p) < game.TrackTileMargin*game.TrackTileMargin)
+                    return true;
+
+            // TODO: обработать T-образные
+
+            // по бокам
             if (p.X < LX)
-                return p.Y < LY || p.Y > RY || !_tileFreeLeft(tileType);
+                return !_tileFreeLeft(tileType);
             if (p.X > RX)
-                return p.Y < LY || p.Y > RY || !_tileFreeRight(tileType);
+                return !_tileFreeRight(tileType);
             if (p.Y < LY)
-                return p.X < LX || p.X > RX || !_tileFreeTop(tileType);
+                return !_tileFreeTop(tileType);
             if (p.Y > RY)
-                return p.X < LX || p.X > RX || !_tileFreeBottom(tileType);
+                return !_tileFreeBottom(tileType);
 
             throw new Exception("something wrong");
         }
@@ -129,7 +138,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for (var i = 0; i <= c; i++)
             {
                 var p = from + dir*(delta*i);
-                if (_intersectTail(p))
+                if (_intersectTail(p, self.Height / 2))
                     return false;
             }
             return true;
@@ -197,128 +206,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     L = m;
             }
             return b + dir*L;
-        }
-    }
-
-    public class Pair<TFirst, TSecond> : IComparable<Pair<TFirst, TSecond>>
-        where TFirst : IComparable<TFirst>
-        where TSecond : IComparable<TSecond>
-    {
-        public TFirst First;
-        public TSecond Second;
-
-        public int CompareTo(Pair<TFirst, TSecond> other)
-        {
-            if (First.CompareTo(other.First) == 0)
-                return Second.CompareTo(other.Second);
-            return First.CompareTo(other.First);
-        }
-
-        public Pair(TFirst first, TSecond second)
-        {
-            this.First = first;
-            this.Second = second;
-        }
-
-        public override string ToString()
-        {
-            return "(" + First + "; " + Second + ")";
-        }
-    }
-
-    public class Tuple<TFirst, TSecond, TThird> : Pair<TFirst, TSecond>
-        where TFirst : IComparable<TFirst>
-        where TSecond : IComparable<TSecond>
-        where TThird : IComparable<TThird>
-    {
-        public TThird Third;
-
-        public Tuple(TFirst first, TSecond second, TThird third)
-            : base(first, second)
-        {
-            this.Third = third;
-        }
-
-        public int CompareTo(Tuple<TFirst, TSecond, TThird> other)
-        {
-            if (First.CompareTo(other.First) != 0)
-                return First.CompareTo(other.First);
-            if (Second.CompareTo(other.Second) != 0)
-                return Second.CompareTo(other.Second);
-            return Third.CompareTo(other.Third);
-        }
-
-        public override string ToString()
-        {
-            return "(" + First + "; " + Second + "; " + Third + ")";
-        }
-    }
-
-    public class PriorityQueue<T>
-    {
-        private readonly List<T> _data = new List<T>();
-        private readonly IComparer<T> _comparer;
-
-        public PriorityQueue()
-        {
-            _comparer = Comparer<T>.Default;
-        }
-
-        public PriorityQueue(IComparer<T> comparer)
-        {
-            if (comparer == null)
-            {
-                _comparer = Comparer<T>.Default;
-                return;
-            }
-            _comparer = comparer;
-        }
-
-        public int Count
-        {
-            get { return _data.Count; }
-        }
-
-        public bool Empty()
-        {
-            return Count == 0;
-        }
-
-        public T Top()
-        {
-            return _data[0];
-        }
-
-        public void Push(T item)
-        {
-            _data.Add(item);
-            var curPlace = Count;
-            while (curPlace > 1 && _comparer.Compare(item, _data[curPlace / 2 - 1]) > 0)
-            {
-                _data[curPlace - 1] = _data[curPlace / 2 - 1];
-                _data[curPlace / 2 - 1] = item;
-                curPlace /= 2;
-            }
-        }
-
-        public void Pop()
-        {
-            _data[0] = _data[Count - 1];
-            _data.RemoveAt(Count - 1);
-            var curPlace = 1;
-            while (true)
-            {
-                var max = curPlace;
-                if (Count >= curPlace * 2 && _comparer.Compare(_data[max - 1], _data[2 * curPlace - 1]) < 0)
-                    max = 2 * curPlace;
-                if (Count >= curPlace * 2 + 1 && _comparer.Compare(_data[max - 1], _data[2 * curPlace]) < 0)
-                    max = 2 * curPlace + 1;
-                if (max == curPlace) break;
-                var item = _data[max - 1];
-                _data[max - 1] = _data[curPlace - 1];
-                _data[curPlace - 1] = item;
-                curPlace = max;
-            }
         }
     }
 }

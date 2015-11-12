@@ -72,13 +72,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ACar.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="Debug.cs" />
+    <Compile Include="AUnit.cs" />
+    <Compile Include="Collections.cs" />
+    <Compile Include="Debug\Debug.cs" />
     <Compile Include="FindPath.cs" />
-    <Compile Include="MapForm.cs">
+    <Compile Include="Debug\MapForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MapForm.Designer.cs">
+    <Compile Include="Debug\MapForm.Designer.cs">
       <DependentUpon>MapForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\Bonus.cs" />
@@ -130,7 +131,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="MapForm.resx">
+    <EmbeddedResource Include="Debug\MapForm.resx">
       <DependentUpon>MapForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

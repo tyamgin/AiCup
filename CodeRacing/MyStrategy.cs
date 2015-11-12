@@ -20,6 +20,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Cell[] waypoints;
         public int waypointIterator = 1;
         public static double MapWidth, MapHeight;
+        public static Point[,,] TileCorner;
 
         void Initialize()
         {
@@ -44,6 +45,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 waypointIterator = (waypointIterator + 1)%waypoints.Length;
             }
+
+            if (TileCorner == null)
+            {
+                TileCorner = new Point[world.Height, world.Width, 4];
+                for (var i = 0; i < world.Height; i++)
+                    for (var j = 0; j < world.Height; j++)
+                        for (var di = 0; di < 2; di++)
+                            for (var dj = 0; dj < 2; dj++)
+                                TileCorner[i, j, di*2 + dj]
+                                    = new Point((j + dj)*game.TrackTileSize, (i + di)*game.TrackTileSize);
+            }
         }
 
         public Cell GetNextWayPoint(int delta = 1)
@@ -66,11 +78,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private bool ModelMove(ACar car, double x, double y, bool z)
         {
             car.Move(x, y, z);
-            return car.GetRect().All(p => !_intersectTail(p));
+            return car.GetRect().All(p => !_intersectTail(p, 3.0));
         }
 
         private void _move()
         {
+
+
             var t = GetSegments();
 
             var pts = GetSegments();
@@ -94,7 +108,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 double selTurn = -1;
                 int bestTime = Infinity;
 
-                double needDist = Math.Max(10.0, to2.GetDistanceTo(to) - game.TrackTileSize*0.6);
+                double needDist = Math.Max(10.0, to2.GetDistanceTo(to) - 1.5*game.TrackTileSize);
 
                 var modelA = new ACar(self);
 
@@ -113,7 +127,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 return;
                             var model = new ACar(cCar);
                             int tt = time3;
-                            for (; tt < bestTime && to2.GetDistanceTo2(model.Position) > needDist * needDist; tt++)
+                            for (; tt < bestTime && to2.GetDistanceTo2(model) > needDist * needDist; tt++)
                             {
                                 if (!ModelMove(model, 1, TurnRound(model.GetAngleTo(to2)), false))
                                     return;

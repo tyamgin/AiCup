@@ -8,10 +8,9 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
-    public class ACar
+    public class ACar : AUnit
     {
         public Car Original;
-        public Point Position;
         public Point Speed;
         public double Angle;
         public double EnginePower;
@@ -28,9 +27,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public ACar(Car original, Point position = null)
         {
             if (position != null)
-                Position = new Point(position);
+                Set(position.X, position.Y);
             else
-                Position = new Point(original);
+                Set(original.X, original.Y);
                 
             Speed = new Point(original.SpeedX, original.SpeedY);
             Angle = original.Angle;
@@ -55,8 +54,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public ACar(ACar car)
         {
+            X = car.X;
+            Y = car.Y;
             Original = car.Original;
-            Position = car.Position.Clone();
             Speed = car.Speed.Clone();
             Angle = car.Angle;
             EnginePower = car.EnginePower;
@@ -124,7 +124,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 for (var i = 0; i < UpdateIterations; i++)
                 {
-                    Position += Speed * UpdateFactor;
+                    X += Speed.X*UpdateFactor;
+                    Y += Speed.Y*UpdateFactor;
                     if (!isBreak)
                         Speed += accelerationDelta;
                     Speed *= _frictionMultiplier;
@@ -146,14 +147,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var angle = Math.Atan2(dir.Y, dir.X);
             var angles = new[] { Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle };
             for(var i = 0; i < 4; i++)
-                result[i] = Position + Point.ByAngle(angles[i]) * dir.Length;
+                result[i] = this + Point.ByAngle(angles[i]) * dir.Length;
 
             return result;
         }
 
         public double GetAngleTo(double x, double y)
         {
-            var absoluteAngleTo = Math.Atan2(y - Position.Y, x - Position.X);
+            var absoluteAngleTo = Math.Atan2(y - Y, x - X);
             var relativeAngleTo = absoluteAngleTo - Angle;
 
             while (relativeAngleTo > Math.PI)
