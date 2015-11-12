@@ -99,7 +99,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return true;
 
             var c = GetCenter(cell);
-            var margin = game.TrackTileSize/2 - game.TrackTileMargin - self.Height/2 - 10;
+            var margin = game.TrackTileSize/2 - game.TrackTileMargin - self.Height/2;
             var LX = c.X - margin;
             var RX = c.X + margin;
             var LY = c.Y - margin;
@@ -141,7 +141,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var myCell = GetCell(self.X, self.Y);
             res.Add(new Point(self));
 
-            for (int e = 1; e <= 2; e++)
+            for (int e = 1; res.Count < 5; e++)
             {
                 var nextWp = GetNextWayPoint(e);
                 for (var cur = myCell; !cur.Same(nextWp);)
@@ -158,10 +158,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 myCell = nextWp;
             }
 
-            for (var i = 2; i < res.Count; i++)
-            {
-                res[i - 1] = _closify(res[i - 2] as Point, res[i - 1] as Point, res[i] as Point);
-            }
+            //for (var i = 2; i < res.Count; i++)
+            //{
+            //    res[i - 1] = _closify(res[i - 2] as Point, res[i - 1] as Point, res[i] as Point);
+            //}
             return res;
         }
 

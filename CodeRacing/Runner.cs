@@ -9,7 +9,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
 
         public static void Main(string[] args) {
 
-#if DEBUG
             Process.Start("D:\\Projects\\AiCup\\CodeRacing\\local-runner\\local-runner-sync.bat");
             Thread.Sleep(2000);
             //var oldStrategy = new Process
@@ -22,7 +21,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
             //    }
             //};
             //oldStrategy.Start();
-#endif 
 
             if (args.Length == 3) {
                 new Runner(args).run();

@@ -20,7 +20,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private const double UpdateIterations = 10;
         private const double UpdateFactor = 1.0 / UpdateIterations;
-        // TODO: движение назад
         private static double _frictionMultiplier;
         private static double _rotationFrictionMultiplier;
         private static double _carAccelerationUp;
@@ -52,6 +51,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 _carAccelerationUp = MyStrategy.game.JeepEngineForwardPower/original.Mass;
                 _carAccelerationDown = MyStrategy.game.JeepEngineRearPower/original.Mass;
             }
+        }
+
+        public ACar(ACar car)
+        {
+            Original = car.Original;
+            Position = car.Position.Clone();
+            Speed = car.Speed.Clone();
+            Angle = car.Angle;
+            EnginePower = car.EnginePower;
+            WheelTurn = car.WheelTurn;
+            AngularSpeed = car.AngularSpeed;
         }
 
         static double _limit(double speed, double frictionDelta)
@@ -139,6 +149,34 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 result[i] = Position + Point.ByAngle(angles[i]) * dir.Length;
 
             return result;
+        }
+
+        public double GetAngleTo(double x, double y)
+        {
+            var absoluteAngleTo = Math.Atan2(y - Position.Y, x - Position.X);
+            var relativeAngleTo = absoluteAngleTo - Angle;
+
+            while (relativeAngleTo > Math.PI)
+            {
+                relativeAngleTo -= 2.0D * Math.PI;
+            }
+
+            while (relativeAngleTo < -Math.PI)
+            {
+                relativeAngleTo += 2.0D * Math.PI;
+            }
+
+            return relativeAngleTo;
+        }
+
+        public double GetAngleTo(Unit unit)
+        {
+            return GetAngleTo(unit.X, unit.Y);
+        }
+
+        public double GetAngleTo(Point unit)
+        {
+            return GetAngleTo(unit.X, unit.Y);
         }
     }
 }
