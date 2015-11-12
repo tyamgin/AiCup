@@ -86,9 +86,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     double x = j*game.TrackTileSize,
                         y = i*game.TrackTileSize;
 
-                    if (waypoints.Any(cell => cell.Same(i, j)))
+                    if (waypoints.Any(cell => cell.Equals(i, j)))
                     {
-                        var brush = GetNextWayPoint().Same(i, j)
+                        var brush = GetNextWayPoint().Equals(i, j)
                             ? Brushes.Chartreuse
                             : Brushes.FloralWhite;
                         FillRect(brush, x, y, game.TrackTileSize, game.TrackTileSize);

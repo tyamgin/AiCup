@@ -9,19 +9,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static double Eps = 1e-9;
         public double X, Y;
 
-        //public static double GetAngleBetween(Point a, Point b, Point c)
-        //{
-        //    var ac = a.GetDistanceTo(c);
-        //    var ab = a.GetDistanceTo(b);
-        //    var bc = b.GetDistanceTo(c);
-        //    var arg = -(ac*ac - ab*ab - bc*bc)/2/ab/bc;
-        //    if (arg < -1)
-        //        arg = -1;
-        //    if (arg > 1)
-        //        arg = 1;
-        //    return MyStrategy.AngleNormalize(Math.Acos(arg));
-        //}
-
         public double Length
         {
             get { return Math.Sqrt(X*X + Y*Y); }
@@ -40,6 +27,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return a.X * b.X + a.Y * b.Y;
         }
 
+        /*
+         * Повернутый на 90* вектор
+         */
         public static Point operator ~(Point a)
         {
             return new Point(a.Y, -a.X);
@@ -108,19 +98,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return GetDistanceTo2(point.X, point.Y);
         }
 
-        public bool Same(double otherX, double otherY)
+        public bool Equals(double otherX, double otherY)
         {
             return Math.Abs(X - otherX) < Eps && Math.Abs(Y - otherY) < Eps;
         }
 
-        public bool Same(Point other)
+        public bool Equals(Point other)
         {
-            return Same(other.X, other.Y);
+            return Equals(other.X, other.Y);
         }
 
-        public bool Same(Unit other)
+        public bool Equals(Unit other)
         {
-            return Same(other.X, other.Y);
+            return Equals(other.X, other.Y);
         }
 
         public override string ToString()
@@ -193,14 +183,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             J = j;
         }
 
-        public bool Same(int otherI, int otherJ)
+        public bool Equals(int otherI, int otherJ)
         {
             return I == otherI && J == otherJ;
         }
 
-        public bool Same(Cell other)
+        public bool Equals(Cell other)
         {
-            return Same(other.I, other.J);
+            return Equals(other.I, other.J);
         }
 
         public override string ToString()

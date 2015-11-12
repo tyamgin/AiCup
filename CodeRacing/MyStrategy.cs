@@ -63,17 +63,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public int Infinity = 0x3f3f3f3f;
 
-        public ACar _car;
-
-        public void Move(double power, double turn, bool isBreak)
-        {
-            move.EnginePower = power;
-            move.WheelTurn = turn;
-            move.IsBrake = isBreak;
-            if (_car != null)
-                _car.Move(power, turn, isBreak);
-        }
-
         private bool ModelMove(ACar car, double x, double y, bool z)
         {
             car.Move(x, y, z);
@@ -109,16 +98,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 var modelA = new ACar(self);
 
-                CarMoveFunc(modelA, 150, 4, 1.0, 0, false, 0, (aCar, time1) =>
+                CarMoveFunc(modelA, 100, 5, 1.0, 0, false, 0, (aCar, time1) =>
                 {
                     if (time1 >= bestTime)
                         return;
                     var turn = TurnRound(aCar.GetAngleTo(to2));
-                    CarMoveFunc(aCar, 10, 2, 0.5, turn, false, time1, (bCar, time2) =>
+                    CarMoveFunc(aCar, 15, 3, 0.5, turn, false, time1, (bCar, time2) =>
                     {
                         if (time2 >= bestTime)
                             return;
-                        CarMoveFunc(bCar, 33, 3, 0.0, turn, true, time2, (cCar, time3) =>
+                        CarMoveFunc(bCar, 42, 3, 0.0, turn, true, time2, (cCar, time3) =>
                         {
                             if (time3 >= bestTime)
                                 return;

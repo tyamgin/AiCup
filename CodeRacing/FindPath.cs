@@ -144,7 +144,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for (int e = 1; res.Count < 5; e++)
             {
                 var nextWp = GetNextWayPoint(e);
-                for (var cur = myCell; !cur.Same(nextWp);)
+                for (var cur = myCell; !cur.Equals(nextWp);)
                 {
                     var cCell = _bfs(cur, nextWp);
                     var nxt = GetCenter(cCell);
