@@ -89,16 +89,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             double turn = 0;
 
-            if (world.Tick == 300)
+            if (_car == null)
             {
                 _car = new ACar(self);
-                turn = 1;
             }
             if (_car != null)
-                _car.Original = self;
-
-            if (world.Tick >= 300)
             {
+                _car.Original = self;
+            }
+
+            if (world.Tick >= 200)
+            {
+                turn = 1;
                 world = world;
             }
             Move(0.5, turn);

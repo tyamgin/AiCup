@@ -73,7 +73,7 @@
   <ItemGroup>
     <Compile Include="ACar.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="Drawing.cs" />
+    <Compile Include="Debug.cs" />
     <Compile Include="FindPath.cs" />
     <Compile Include="MapForm.cs">
       <SubType>Form</SubType>

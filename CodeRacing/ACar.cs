@@ -18,6 +18,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public double WheelTurn;
         public double AngularSpeed;
 
+        private const double UpdateIterations = 10;
+        private const double UpdateFactor = 1.0 / UpdateIterations;
+        private const double CarAcceleration = 0.25; // = Power / Mass
+        private static double _frictionMultiplier;
+        private static double _rotationFrictionMultiplier;
+
         public ACar(Car original, Point position = null)
         {
             if (position != null)
@@ -31,6 +37,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             WheelTurn = original.WheelTurn;
             AngularSpeed = original.AngularSpeed;
             Original = original;
+
+            _frictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarMovementAirFrictionFactor, UpdateFactor);
+            _rotationFrictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarRotationFrictionFactor, UpdateFactor);
+        }
+
+        static double _limit(double speed, double frictionDelta)
+        {
+            if (speed >= 0)
+            {
+                speed -= frictionDelta;
+                if (speed < 0)
+                    speed = 0;
+            }
+            else
+            {
+                speed += frictionDelta;
+                if (speed > 0)
+                    speed = 0;
+            }
+            return speed;
         }
 
         public void Move(double enginePower, double wheelTurn)
@@ -55,30 +81,30 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (MyStrategy.world.Tick >= MyStrategy.game.InitialFreezeDurationTicks)
             {
-                if (EnginePower >= 0)
+                // http://russianaicup.ru/forum/index.php?topic=394.msg3888#msg3888
+
+                var dir = Point.ByAngle(Angle);
+
+                var baseAngSpd = AngularSpeed; // WTF???
+                AngularSpeed -= baseAngSpd;
+                baseAngSpd = MyStrategy.game.CarAngularSpeedFactor * WheelTurn * (Speed * dir);
+                AngularSpeed += baseAngSpd;
+
+                var accelerationDelta = dir * (CarAcceleration * EnginePower * UpdateFactor);
+
+                for (var i = 0; i < UpdateIterations; i++)
                 {
-                    Speed = Speed + Point.ByAngle(Angle)*EnginePower*0.25;
-                    Speed = Speed - Speed*MyStrategy.game.CarMovementAirFrictionFactor;
+                    Position += Speed * UpdateFactor;
+                    Speed += accelerationDelta; 
+                    Speed *= _frictionMultiplier;
+                    Speed = dir * _limit(Speed * dir, UpdateFactor * MyStrategy.game.CarLengthwiseMovementFrictionFactor)
+                        + (~dir) * _limit(Speed * ~dir, UpdateFactor * MyStrategy.game.CarCrosswiseMovementFrictionFactor);
+
+                    Angle += AngularSpeed*UpdateFactor;
+                    dir = Point.ByAngle(Angle);
+                    AngularSpeed = baseAngSpd + (AngularSpeed - baseAngSpd) * _rotationFrictionMultiplier;
                 }
-                else
-                {
-                    throw new NotImplementedException();
-                }
-
-                // прямо пропорционально текущему относительному углу поворота колёс кодемобиля
-                // (car.wheelTurn), коэффцициенту game.carAngularSpeedFactor, а также скалярному
-                // произведению вектора скорости кодемобиля и единичного вектора, направление которого
-                // совпадает с направлением кодемобиля.
-
-                var additionalAngularSpeed = WheelTurn*MyStrategy.game.CarAngularSpeedFactor*
-                                             (Speed*Point.ByAngle(Angle));
-                AngularSpeed += additionalAngularSpeed;
-                Angle += AngularSpeed;
-
-                Speed += Point.One * AngularSpeed;
             }
-
-            Position += Speed;
         }
 
         public Point[] GetRect()
