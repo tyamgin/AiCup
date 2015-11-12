@@ -6,7 +6,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class Point : IComparable<Point>
     {
-        private static double eps = 1e-9;
+        public static double Eps = 1e-9;
         public double X, Y;
 
         //public static double GetAngleBetween(Point a, Point b, Point c)
@@ -30,6 +30,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Point Normalized()
         {
             return new Point(X / Length, Y / Length);
+        }
+
+        /*
+         * Скалярное произведение a и b
+         */
+        public static double operator *(Point a, Point b)
+        {
+            return a.X * b.X + a.Y * b.Y;
         }
 
         public static Point operator *(Point a, double b)
@@ -65,12 +73,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Y = point.Y;
         }
 
-        public Point(double angle)
-        {
-            X = Math.Cos(angle);
-            Y = Math.Sin(angle);
-        }
-
         public double GetAngle()
         {
             return Math.Atan2(Y, X);
@@ -103,7 +105,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public bool Same(double otherX, double otherY)
         {
-            return Math.Abs(X - otherX) < eps && Math.Abs(Y - otherY) < eps;
+            return Math.Abs(X - otherX) < Eps && Math.Abs(Y - otherY) < Eps;
         }
 
         public bool Same(Point other)
@@ -123,7 +125,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public int CompareTo(Point other)
         {
-            if (Math.Abs(X - other.X) < eps)
+            if (Math.Abs(X - other.X) < Eps)
                 return Y.CompareTo(other.Y);
             return X.CompareTo(other.X);
         }
@@ -137,6 +139,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static Point Zero
         {
             get { return new Point(0, 0); }
+        }
+
+        public static Point One
+        {
+            get { return new Point(1, 1).Normalized(); }
         }
 
         public Point Clone()
@@ -160,9 +167,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static int Sign(double x)
         {
-            if (Math.Abs(x) < eps)
+            if (Math.Abs(x) < Eps)
                 return 0;
             return x < 0 ? -1 : 1;
+        }
+
+        public static Point ByAngle(double angle)
+        {
+            return new Point(Math.Cos(angle), Math.Sin(angle));
         }
     }
 

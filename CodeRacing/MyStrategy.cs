@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.SqlTypes;
 using System.Linq;
+using System.Threading;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
     public partial class MyStrategy : IStrategy
     {
-        public World world;
-        public Game game;
+        public static World world;
+        public static Game game;
         public Move move;
         public Car self;
         public TileType[,] tiles;
@@ -57,14 +58,56 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public int Infinity = 0x3f3f3f3f;
 
+        public ACar _car;
+
+        public void Move(double power, double turn)
+        {
+            move.EnginePower = power;
+            move.WheelTurn = turn;
+            if (_car != null)
+                _car.Move(power, turn);
+        }
 
         public void Move(Car self, World world, Game game, Move move)
         {
-            this.world = world;
-            this.game = game;
+            MyStrategy.world = world;
+            MyStrategy.game = game;
             this.move = move;
             this.self = self;
             Initialize();
+#if DEBUG
+            while (Pause)
+            {
+                // pass
+            }
+            if (Debug)
+            {
+                Debug = false;
+            }
+            DrawMap();
+#endif
+
+            double turn = 0;
+
+            if (world.Tick == 300)
+            {
+                _car = new ACar(self);
+                turn = 1;
+            }
+            if (_car != null)
+                _car.Original = self;
+
+            if (world.Tick >= 300)
+            {
+                world = world;
+            }
+            Move(0.5, turn);
+
+#if DEBUG
+            draw();
+            Thread.Sleep(8);
+#endif
+            return;
 
             var t = GetSegments();
 
@@ -95,6 +138,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     move.IsUseNitro = true;
                 }
             }
+            
         }
 
         public double GetSpeed(Unit u)
