@@ -60,12 +60,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public ACar _car;
 
-        public void Move(double power, double turn)
+        public void Move(double power, double turn, bool isBreak)
         {
             move.EnginePower = power;
             move.WheelTurn = turn;
+            move.IsBrake = isBreak;
             if (_car != null)
-                _car.Move(power, turn);
+                _car.Move(power, turn, isBreak);
         }
 
         public void Move(Car self, World world, Game game, Move move)
@@ -88,6 +89,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
 
             double turn = 0;
+            bool isBreak = false;
 
             if (_car == null)
             {
@@ -100,10 +102,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (world.Tick >= 200)
             {
-                turn = 1;
-                world = world;
+                isBreak = isBreak;
             }
-            Move(0.5, turn);
+            Move(-0.5, turn, isBreak);
 
 #if DEBUG
             draw();

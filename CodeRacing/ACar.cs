@@ -20,9 +20,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private const double UpdateIterations = 10;
         private const double UpdateFactor = 1.0 / UpdateIterations;
-        private const double CarAcceleration = 0.25; // = Power / Mass
+        // TODO: движение назад
         private static double _frictionMultiplier;
         private static double _rotationFrictionMultiplier;
+        private static double _carAccelerationUp;
+        private static double _carAccelerationDown;
 
         public ACar(Car original, Point position = null)
         {
@@ -40,6 +42,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             _frictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarMovementAirFrictionFactor, UpdateFactor);
             _rotationFrictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarRotationFrictionFactor, UpdateFactor);
+            if (original.Type == CarType.Buggy)
+            {
+                _carAccelerationUp = MyStrategy.game.BuggyEngineForwardPower/original.Mass;
+                _carAccelerationDown = MyStrategy.game.BuggyEngineRearPower/original.Mass;
+            }
+            else
+            {
+                _carAccelerationUp = MyStrategy.game.JeepEngineForwardPower/original.Mass;
+                _carAccelerationDown = MyStrategy.game.JeepEngineRearPower/original.Mass;
+            }
         }
 
         static double _limit(double speed, double frictionDelta)
@@ -59,7 +71,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return speed;
         }
 
-        public void Move(double enginePower, double wheelTurn)
+        public void Move(double enginePower, double wheelTurn, bool isBreak)
         {
             if (enginePower > 1 + Point.Eps || enginePower < -1 - Point.Eps)
                 throw new Exception("invalid enginePower " + enginePower);
@@ -90,14 +102,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 baseAngSpd = MyStrategy.game.CarAngularSpeedFactor * WheelTurn * (Speed * dir);
                 AngularSpeed += baseAngSpd;
 
-                var accelerationDelta = dir * (CarAcceleration * EnginePower * UpdateFactor);
+                var carAcceleration = EnginePower >= 0
+                    ? _carAccelerationUp
+                    : _carAccelerationDown;
+
+                var accelerationDelta = dir * (carAcceleration * EnginePower * UpdateFactor);
+
+                var lengthwiseMovementFrictionFactor = isBreak
+                    ? MyStrategy.game.CarCrosswiseMovementFrictionFactor
+                    : MyStrategy.game.CarLengthwiseMovementFrictionFactor;
 
                 for (var i = 0; i < UpdateIterations; i++)
                 {
                     Position += Speed * UpdateFactor;
-                    Speed += accelerationDelta; 
+                    if (!isBreak)
+                        Speed += accelerationDelta;
                     Speed *= _frictionMultiplier;
-                    Speed = dir * _limit(Speed * dir, UpdateFactor * MyStrategy.game.CarLengthwiseMovementFrictionFactor)
+                    Speed = dir * _limit(Speed * dir, UpdateFactor * lengthwiseMovementFrictionFactor)
                         + (~dir) * _limit(Speed * ~dir, UpdateFactor * MyStrategy.game.CarCrosswiseMovementFrictionFactor);
 
                     Angle += AngularSpeed*UpdateFactor;
