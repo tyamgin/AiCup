@@ -7,7 +7,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class Point : IComparable<Point>
     {
-        public static double Eps = 1e-9;
+        //public static double Eps = 1e-9;
         public double X, Y;
 
         public double Length
@@ -107,7 +107,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public bool Equals(double otherX, double otherY)
         {
-            return Math.Abs(X - otherX) < Eps && Math.Abs(Y - otherY) < Eps;
+            return Math.Abs(X - otherX) < MyStrategy.Eps && Math.Abs(Y - otherY) < MyStrategy.Eps;
         }
 
         public bool Equals(Point other)
@@ -127,7 +127,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public int CompareTo(Point other)
         {
-            if (Math.Abs(X - other.X) < Eps)
+            if (Math.Abs(X - other.X) < MyStrategy.Eps)
                 return Y.CompareTo(other.Y);
             return X.CompareTo(other.X);
         }
@@ -169,7 +169,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static int Sign(double x)
         {
-            if (Math.Abs(x) < Eps)
+            if (Math.Abs(x) < MyStrategy.Eps)
                 return 0;
             return x < 0 ? -1 : 1;
         }
@@ -211,6 +211,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public override string ToString()
         {
             return "(" + I + ", " + J + ")";
+        }
+    }
+
+    public class Circle : Point
+    {
+        public double Radius;
+
+        public Circle(double x, double y, double r) : base(x, y)
+        {
+            Radius = r;
         }
     }
 }

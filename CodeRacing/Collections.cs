@@ -5,29 +5,44 @@ using System.Text;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
+    //public class BitSet
+    //{
+    //    public readonly int Size;
+    //    private uint[] _bytes;
+    //    public BitSet(int size)
+    //    {
+    //        Size = size;
+    //        _bytes = new uint[(size + 31) / 32];
+    //    }
+
+    //    public bool this[int idx]
+    //    {
+    //        get { return 1 == (1 & (_bytes[idx >> 5] >> (idx & 0x20))); }
+    //        set
+    //        {
+    //            if (value != (1 == (1 & (_bytes[idx >> 5] >> (idx & 0x20)))))
+    //                _bytes[idx >> 5] ^= 1u << (idx & 0x20);
+    //        }
+    //    }
+
+    //}
+
     public class BitSet
     {
         public readonly int Size;
-        private uint[] _bytes;
+        private bool[] _bytes;
         public BitSet(int size)
         {
             Size = size;
-            _bytes = new uint[(size + 31) / 32];
+            _bytes = new bool[size];
         }
 
         public bool this[int idx]
         {
-            get
-            {
-                return 1 == (_bytes[idx>>5] >> (idx&0x20)); 
-            }
-            set
-            {
-                if (value != (1 == (_bytes[idx >> 5] >> (idx & 0x20))))
-                    _bytes[idx >> 5] ^= 1u << (idx & 0x20);
-            }
+            get { return _bytes[idx]; }
+            set { _bytes[idx] = value; }
         }
-        
+
     }
 
     public class Pair<TFirst, TSecond> : IComparable<Pair<TFirst, TSecond>>

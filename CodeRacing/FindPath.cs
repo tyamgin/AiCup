@@ -170,8 +170,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (_intersectTailCacheSafe == null)
             {
                 // TODO: if UNKNOWN?
-                var w = (int) (MapWidth + Point.Eps);
-                var h = (int) (MapHeight + Point.Eps);
+                var w = (int) (MapWidth + Eps);
+                var h = (int) (MapHeight + Eps);
                 _intersectTailCacheSafe = new BitSet[w];
                 _intersectTailCacheSafeIsComputed = new BitSet[w];
                 for (var k = 0; k < w; k++)
@@ -183,7 +183,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (p.X < 0 || p.X >= MapWidth || p.Y < 0 || p.Y >= MapHeight)
                 return true;
 
-            if (Math.Abs(SafeMargin - additionalMargin) > Point.Eps)
+            if (Math.Abs(SafeMargin - additionalMargin) > Eps)
                 return _intersectTailNoCache(p, additionalMargin);
 
             var i = (int) p.X;
@@ -211,15 +211,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return true;
         }
 
-        public Points GetSegments()
+        public Points GetWaySegments(Car car)
         {
             var res = new Points();
-            var myCell = GetCell(self.X, self.Y);
-            res.Add(new Point(self));
+            var myCell = GetCell(car.X, car.Y);
+            res.Add(new Point(car));
 
             for (var e = 1; res.Count < 5; e++)
             {
-                var nextWp = GetNextWayPoint(e);
+                var nextWp = GetNextWayPoint(car, e);
                 for (var cur = myCell; !cur.Equals(nextWp);)
                 {
                     var cCell = _bfs(cur, nextWp);
@@ -234,11 +234,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 myCell = nextWp;
             }
 
-            //for (var i = 2; i < res.Count; i++)
-            //{
-            //    res[i - 1] = _closify(res[i - 2], res[i - 1], res[i]);
-            //}
             return res;
+        }
+
+        public Points Closify(Points pts)
+        {
+            for (var i = 2; i < pts.Count; i++)
+            {
+                pts[i - 1] = _closify(pts[i - 2], pts[i - 1], pts[i]);
+            }
+            return pts;
         }
 
         private Point _closify(Point a, Point b, Point c)

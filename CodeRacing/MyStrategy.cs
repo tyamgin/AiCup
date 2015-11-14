@@ -22,9 +22,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Car self;
         public TileType[,] tiles;
         public Cell[] waypoints;
-        public int waypointIterator = 1;
         public static double MapWidth, MapHeight;
         public static Point[,,] TileCorner;
+        public Car[] Opponents;
 
         public const double SafeMargin = 3.0;
 
@@ -46,10 +46,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for(var i = 0; i < waypoints.Length; i++)
                 this.waypoints[i] = new Cell(wp[i][1], wp[i][0]);
 
-            if (waypoints[waypointIterator].I != self.NextWaypointY ||
-                waypoints[waypointIterator].J != self.NextWaypointX)
+            if (_waypointIterator == null)
             {
-                waypointIterator = (waypointIterator + 1)%waypoints.Length;
+                _waypointIterator = new Dictionary<long, int>();
+                foreach (var car in world.Cars)
+                    _waypointIterator[car.Id] = 0;
+            }
+            foreach (var car in world.Cars)
+            {
+                if (waypoints[_waypointIterator[car.Id]].I != car.NextWaypointY ||
+                    waypoints[_waypointIterator[car.Id]].J != car.NextWaypointX)
+                {
+                    _waypointIterator[car.Id] = (_waypointIterator[car.Id] + 1)%waypoints.Length;
+                }
             }
 
             if (TileCorner == null)
@@ -63,31 +72,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     = new Point((j + dj)*game.TrackTileSize, (i + di)*game.TrackTileSize);
 
             }
+
+            Opponents = world.Cars.Where(car => !car.IsTeammate).ToArray();
         }
 
-        public Cell GetNextWayPoint(int delta = 1)
-        {
-            return waypoints[(waypointIterator + delta - 1)%waypoints.Length];
-        }
-
-        public Cell GetCell(double x, double y)
-        {
-            return new Cell((int)(y / game.TrackTileSize), (int)(x / game.TrackTileSize));
-        }
-
-        public Point GetCenter(Cell cell)
-        {
-            return new Point((cell.J + 0.5)*game.TrackTileSize, (cell.I + 0.5)*game.TrackTileSize);
-        }
-
-        public int Infinity = 0x3f3f3f3f;
         private long _bruteSumTime1;
         private long _bruteSumTime2;
         private long _bruteSumTime3;
 
         private bool ModelMove(ACar car, AMove m, bool simpleMode = false)
         {
-            car.Move(m.EnginePower, m.WheelTurn, m.IsBrake, simpleMode);
+            var turn = m.WheelTurn is Point ? TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
+            car.Move(m.EnginePower, turn, m.IsBrake, simpleMode);
             return car.GetRect().All(p => !_intersectTail(p));
         }
 
@@ -95,20 +91,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private void _move()
         {
-            var t = GetSegments();
+            var t = GetWaySegments(self);
 #if DEBUG
             _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, t));
 #endif
 
-            var pts = GetSegments();
+            var pts = GetWaySegments(self);
             var to = pts[1];
             var to2 = pts[2];
-            
+
+            if (CheckUseOil())
+                move.IsSpillOil = true;
+
             if (world.Tick < game.InitialFreezeDurationTicks)
             {
                 move.EnginePower = 1;
             }
-            else if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.5)
+            else if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7)
             {
                 move.EnginePower = 1;
                 move.WheelTurn = self.GetAngleTo(to.X, to.Y);
@@ -167,7 +166,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         throw new Exception("something wrong");
 
                     BestMovesStack.Normalize();
-                    BestMovesStack[0].Apply(move, new ACar(self), to2);
+                    BestMovesStack[0].Apply(move, new ACar(self));
 
 #if DEBUG
                     var drawPts = new Points();
@@ -177,10 +176,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         var m = BestMovesStack[0];
 
                         drawPts.Add(new Point(drawModel));
-                        if (m.NondetermWheelTurn)
-                        {
-                            m.WheelTurn = TurnRound(drawModel.GetAngleTo(to2));
-                        }
                         ModelMove(drawModel, m);
                         m.Times--;
                         BestMovesStack.Normalize();
@@ -190,6 +185,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
                 else
                 {
+//                    pts = Closify(pts);
+//                    to = pts[1];
+
+//#if DEBUG
+//                    _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Gold, pts));
+//#endif
+
                     move.EnginePower = 0.2;
                     move.WheelTurn = self.GetAngleTo(to.X, to.Y);
                 }
@@ -234,14 +236,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         {
                             EnginePower = 1,
                             IsBrake = false,
+                            WheelTurn = turnTo.Clone(),
                             Times = 0
                         };
 
                         var totalTime = time3;
                         for (; totalTime < BestTime && turnTo.GetDistanceTo2(model) > needDist * needDist; totalTime++)
                         {
-                            m.WheelTurn = TurnRound(model.GetAngleTo(turnTo));
-                            if (!ModelMove(model, m, simpleMode: true))
+                            if (!ModelMove(model, m, simpleMode: false))
                                 return;
                             m.Times++;
                         }
@@ -250,12 +252,71 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         {
                             BestTime = totalTime;
                             BestMovesStack = MovesStack.Clone();
-                            m.NondetermWheelTurn = true;
                             BestMovesStack.Add(m);
                         }
                     });
                 });
             });
+        }
+
+        private static double _approxRad = 500;//??
+
+        private void _applyMove(Points pts, ACar car)
+        {
+            if (pts.Count == 0)
+            {
+                Log("need more points!");
+                return;
+            }
+            var p = pts[0];
+            if (car.GetDistanceTo2(p) < _approxRad*_approxRad)
+            {
+                pts.RemoveAt(0);
+                _applyMove(pts, car);
+                return;
+            }
+            var turn = car.GetAngleTo(p);
+            var power = 1.0;
+            if (Math.Abs(turn) > 0.5)
+                power = 0.5;
+            if (Math.Abs(turn) > 1)
+                power = 0.3;
+
+            ModelMove(car, new AMove { EnginePower = power, IsBrake = false, WheelTurn = TurnRound(turn) }, simpleMode: true);
+        }
+
+        private const int OpponentsTicksPrediction = 50;
+
+        public bool CheckUseOil()
+        {
+            if (self.RemainingOilCooldownTicks != 0)
+                return false;
+
+            var slick = GetOilSlick(new ACar(self));
+            var result = false;
+
+            var cars = Opponents.Select(car => new ACar(car)).ToArray();
+            var ways = Opponents.Select(GetWaySegments).ToArray();
+#if DEBUG
+            var segs = Opponents.Select(x => new Points()).ToArray();
+#endif
+            var rad = slick.Radius*0.7;
+            for (var t = 0; t < OpponentsTicksPrediction; t++)
+            {
+                for (var i = 0; i < cars.Length; i++)
+                {
+                    _applyMove(ways[i], cars[i]);
+#if DEBUG
+                    segs[i].Add(new Point(cars[i]));
+                    result |= slick.GetDistanceTo2(cars[i]) < rad*rad;
+#endif
+                }
+            }
+#if DEBUG
+            foreach(var seg in segs)
+                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
+#endif
+            return result;
         }
 
         private void CarMoveFunc(ACar _model, int from, int to, int step, AMove m, int time, CarCallback callback)
@@ -308,50 +369,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             draw();
             Thread.Sleep(8);
             Log(_bruteSumTime1 + " " + _bruteSumTime2 + " " + _bruteSumTime3);
-#endif
-        }
-
-        public double GetSpeed(Unit u)
-        {
-            return Math.Sqrt(u.SpeedX*u.SpeedX + u.SpeedY*u.SpeedY);
-        }
-
-        public static double TurnRound(double x)
-        {
-            if (x < -1)
-                return -1;
-            if (x > 1)
-                return 1;
-            return x;
-        }
-
-        readonly List<Stopwatch> timers = new List<Stopwatch>();
-
-        void TimerStart()
-        {
-#if DEBUG
-            var timer = new Stopwatch();
-            timer.Start();
-            timers.Add(timer);
-#endif
-        }
-
-        long TimerStop()
-        {
-#if DEBUG
-            var res = timers[timers.Count - 1];
-            res.Stop();
-            timers.RemoveAt(timers.Count - 1);
-            return res.ElapsedMilliseconds;
-#else
-            return 0;
-#endif
-        }
-
-        void Log(object msg)
-        {
-#if DEBUG
-            Console.WriteLine(msg);
 #endif
         }
     }

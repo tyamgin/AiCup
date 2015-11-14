@@ -11,13 +11,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public double EnginePower;
         public bool IsBrake;
-        public double WheelTurn;
+        public object WheelTurn; // Point or double
         public bool IsThrowProjectile;
         public bool IsUseNitro;
         public bool IsSpillOil;
 
         public int Times;
-        public bool NondetermWheelTurn;
 
         public AMove Clone()
         {
@@ -30,15 +29,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 IsUseNitro = IsUseNitro,
                 IsSpillOil = IsSpillOil,
                 Times = Times,
-                NondetermWheelTurn = NondetermWheelTurn,
             };
         }
 
-        public void Apply(Move move, ACar self, Point target)
+        public void Apply(Move move, ACar self)
         {
             move.EnginePower = EnginePower;
             move.IsBrake = IsBrake;
-            move.WheelTurn = NondetermWheelTurn ? MyStrategy.TurnRound(self.GetAngleTo(target)) : WheelTurn;
+            move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(self.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
             move.IsThrowProjectile = IsThrowProjectile;
             move.IsUseNitro = IsUseNitro;
             move.IsSpillOil = IsSpillOil;
