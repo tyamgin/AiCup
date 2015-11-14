@@ -216,7 +216,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var modelA = new ACar(self);
             MovesStack = new Moves();
 
-            CarMoveFunc(modelA, timingInfo[0][0], timingInfo[0][1], timingInfo[0][2], new AMove { EnginePower = startPower, WheelTurn = 0, IsBrake = false }, 0, (aCar, time1) =>
+            CarMoveFunc(modelA, timingInfo[0][0], timingInfo[0][1], timingInfo[0][2], new AMove { EnginePower = startPower, WheelTurn = 0, IsBrake = false}, 0, (aCar, time1) =>
             {
                 if (time1 >= BestTime)
                     return;
