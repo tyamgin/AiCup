@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
@@ -16,6 +17,28 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private Cell _bfs(Cell start, Cell end)
         {
             return _bfs(start.I, start.J, end.I, end.J);
+        }
+
+        private bool _canPass(int i1, int j1, int i2, int j2)
+        {
+            if (i2 < 0 || i2 >= world.Height || j2 < 0 || j2 >= world.Width)
+                return false;
+
+            if (i1 == i2)
+            {
+                if (j2 == j1 + 1) // go right
+                    return _tileFreeRight(tiles[i1, j1]) && _tileFreeLeft(tiles[i2, j2]);
+                if (j2 == j1 - 1)  // go left
+                    return _tileFreeLeft(tiles[i1, j1]) && _tileFreeRight(tiles[i2, j2]);
+            }
+            else if (j1 == j2)
+            {
+                if (i2 == i1 + 1) // go bottom
+                    return _tileFreeBottom(tiles[i1, j1]) && _tileFreeTop(tiles[i2, j2]);
+                if (i2 == i1 - 1) // go top
+                    return _tileFreeTop(tiles[i1, j1]) && _tileFreeBottom(tiles[i2, j2]);
+            }
+            throw new Exception("something wrong");
         }
 
         private Cell _bfs(int startI, int startJ, int endI, int endJ)
@@ -36,7 +59,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var ni = _dx[k] + i;
                     var nj = _dy[k] + j;
-                    if (ni >= 0 && nj >= 0 && ni < world.Height && nj < world.Width && tiles[ni, nj] != TileType.Empty && d[ni, nj] == Infinity)
+                    if (_canPass(i, j, ni, nj) && d[ni, nj] == Infinity)
                     {
                         d[ni, nj] = d[i, j] + 1;
                         q.Enqueue(ni);
@@ -64,7 +87,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return type == TileType.Crossroads ||
                    type == TileType.Horizontal ||
                    type == TileType.RightBottomCorner ||
-                   type == TileType.RightTopCorner;
+                   type == TileType.RightTopCorner ||
+                   type == TileType.LeftHeadedT ||
+                   type == TileType.TopHeadedT ||
+                   type == TileType.BottomHeadedT;
         }
 
         private bool _tileFreeRight(TileType type)
@@ -72,7 +98,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return type == TileType.Crossroads ||
                    type == TileType.Horizontal ||
                    type == TileType.LeftBottomCorner ||
-                   type == TileType.LeftTopCorner;
+                   type == TileType.LeftTopCorner ||
+                   type == TileType.RightHeadedT ||
+                   type == TileType.TopHeadedT ||
+                   type == TileType.BottomHeadedT;
         }
 
         private bool _tileFreeTop(TileType type)
@@ -80,7 +109,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return type == TileType.Crossroads ||
                    type == TileType.Vertical ||
                    type == TileType.LeftBottomCorner ||
-                   type == TileType.RightBottomCorner;
+                   type == TileType.RightBottomCorner ||
+                   type == TileType.LeftHeadedT ||
+                   type == TileType.TopHeadedT ||
+                   type == TileType.RightHeadedT;
         }
 
         private bool _tileFreeBottom(TileType type)
@@ -88,10 +120,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return type == TileType.Crossroads ||
                    type == TileType.Vertical ||
                    type == TileType.LeftTopCorner ||
-                   type == TileType.RightTopCorner;
+                   type == TileType.RightTopCorner ||
+                   type == TileType.LeftHeadedT ||
+                   type == TileType.BottomHeadedT ||
+                   type == TileType.RightHeadedT;
         }
 
-        private bool _intersectTail(Point p, double additionalMargin = 0.0)
+        private BitSet[] _intersectTailCacheSafe;
+        private BitSet[] _intersectTailCacheSafeIsComputed;
+
+        private bool _intersectTailNoCache(Point p, double additionalMargin)
         {
             var cell = GetCell(p.X, p.Y);
             var tileType = tiles[cell.I, cell.J];
@@ -99,7 +137,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return true;
 
             var c = GetCenter(cell);
-            var margin = game.TrackTileSize/2 - game.TrackTileMargin - additionalMargin;//-self.Height / 2;
+            var margin = game.TrackTileSize/2 - game.TrackTileMargin - additionalMargin;
             var LX = c.X - margin;
             var RX = c.X + margin;
             var LY = c.Y - margin;
@@ -114,8 +152,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (TileCorner[cell.I, cell.J, k].GetDistanceTo2(p) < game.TrackTileMargin*game.TrackTileMargin)
                     return true;
 
-            // TODO: обработать T-образные
-
             // по бокам
             if (p.X < LX)
                 return !_tileFreeLeft(tileType);
@@ -129,6 +165,37 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong");
         }
 
+        private bool _intersectTail(Point p, double additionalMargin = SafeMargin)
+        {
+            if (_intersectTailCacheSafe == null)
+            {
+                // TODO: if UNKNOWN?
+                var w = (int) (MapWidth + Point.Eps);
+                var h = (int) (MapHeight + Point.Eps);
+                _intersectTailCacheSafe = new BitSet[w];
+                _intersectTailCacheSafeIsComputed = new BitSet[w];
+                for (var k = 0; k < w; k++)
+                {
+                    _intersectTailCacheSafe[k] = new BitSet(h);
+                    _intersectTailCacheSafeIsComputed[k] = new BitSet(h);
+                }
+            }
+            if (p.X < 0 || p.X >= MapWidth || p.Y < 0 || p.Y >= MapHeight)
+                return true;
+
+            if (Math.Abs(SafeMargin - additionalMargin) > Point.Eps)
+                return _intersectTailNoCache(p, additionalMargin);
+
+            var i = (int) p.X;
+            var j = (int) p.Y;
+            if (!_intersectTailCacheSafeIsComputed[i][j])
+            {
+                _intersectTailCacheSafe[i][j] = _intersectTailNoCache(p, SafeMargin);
+                _intersectTailCacheSafeIsComputed[i][j] = true;
+            }
+            return _intersectTailCacheSafe[i][j];
+        }
+
         private bool _visible(Point from, Point to)
         {
             var delta = 10.0;
@@ -138,28 +205,28 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for (var i = 0; i <= c; i++)
             {
                 var p = from + dir*(delta*i);
-                if (_intersectTail(p, self.Height / 2))
+                if (_intersectTail(p, self.Height / 2 + 10))
                     return false;
             }
             return true;
         }
 
-        public ArrayList GetSegments()
+        public Points GetSegments()
         {
-            var res = new ArrayList();
+            var res = new Points();
             var myCell = GetCell(self.X, self.Y);
             res.Add(new Point(self));
 
-            for (int e = 1; res.Count < 5; e++)
+            for (var e = 1; res.Count < 5; e++)
             {
                 var nextWp = GetNextWayPoint(e);
                 for (var cur = myCell; !cur.Equals(nextWp);)
                 {
                     var cCell = _bfs(cur, nextWp);
                     var nxt = GetCenter(cCell);
-                    while (res.Count > 1 && _visible(res[res.Count - 2] as Point, nxt))
+                    while (res.Count > 1 && _visible(res[res.Count - 2], nxt))
                     {
-                        res.RemoveAt(res.Count - 1);
+                        res.Pop();
                     }
                     res.Add(nxt);
                     cur = cCell;
@@ -169,7 +236,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             //for (var i = 2; i < res.Count; i++)
             //{
-            //    res[i - 1] = _closify(res[i - 2] as Point, res[i - 1] as Point, res[i] as Point);
+            //    res[i - 1] = _closify(res[i - 2], res[i - 1], res[i]);
             //}
             return res;
         }
@@ -196,9 +263,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var dir = (corner - b).Normalized();
             
             double L = 0, R = b.GetDistanceTo(corner);
-            for (int it = 0; it < 10; it++)
+            for (var it = 0; it < 10; it++)
             {
-                double m = (L + R)/2;
+                var m = (L + R)/2;
                 var f = b + dir*m;
                 if (!_visible(a, f) || !_visible(f, c))
                     R = m;

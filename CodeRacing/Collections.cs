@@ -5,7 +5,32 @@ using System.Text;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
-public class Pair<TFirst, TSecond> : IComparable<Pair<TFirst, TSecond>>
+    public class BitSet
+    {
+        public readonly int Size;
+        private uint[] _bytes;
+        public BitSet(int size)
+        {
+            Size = size;
+            _bytes = new uint[(size + 31) / 32];
+        }
+
+        public bool this[int idx]
+        {
+            get
+            {
+                return 1 == (_bytes[idx>>5] >> (idx&0x20)); 
+            }
+            set
+            {
+                if (value != (1 == (_bytes[idx >> 5] >> (idx & 0x20))))
+                    _bytes[idx >> 5] ^= 1u << (idx & 0x20);
+            }
+        }
+        
+    }
+
+    public class Pair<TFirst, TSecond> : IComparable<Pair<TFirst, TSecond>>
         where TFirst : IComparable<TFirst>
         where TSecond : IComparable<TSecond>
     {

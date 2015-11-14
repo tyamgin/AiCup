@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
@@ -176,6 +177,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static Point ByAngle(double angle)
         {
             return new Point(Math.Cos(angle), Math.Sin(angle));
+        }
+    }
+
+    public class Points : List<Point>
+    {
+        public void Pop()
+        {
+            RemoveAt(Count - 1);
         }
     }
 
