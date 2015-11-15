@@ -11,6 +11,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
         RightHeadedT,
         TopHeadedT,
         BottomHeadedT,
-        Crossroads
+        Crossroads,
+        Unknown
     }
 }

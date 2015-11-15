@@ -39,7 +39,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
 
         public void WriteProtocolVersionMessage() {
             WriteEnum((sbyte?) MessageType.ProtocolVersion);
-            WriteInt(1);
+            WriteInt(2);
             writer.Flush();
         }
 
@@ -138,7 +138,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
                     ReadLong(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(),
                     ReadDouble(), ReadDouble(), ReadDouble(), ReadLong(), ReadInt(), ReadBoolean(),
                     (CarType) ReadEnum(), ReadInt(), ReadInt(), ReadInt(), ReadInt(), ReadInt(), ReadInt(), ReadInt(),
-                    ReadInt(), ReadDouble(), ReadDouble(), ReadDouble(), ReadInt(), ReadInt(), ReadBoolean()
+                    ReadInt(), ReadDouble(), ReadDouble(), ReadDouble(), ReadInt(), ReadInt(), ReadInt(), ReadBoolean()
             );
         }
 
@@ -175,6 +175,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
             WriteDouble(car.Durability);
             WriteDouble(car.EnginePower);
             WriteDouble(car.WheelTurn);
+            WriteInt(car.NextWaypointIndex);
             WriteInt(car.NextWaypointX);
             WriteInt(car.NextWaypointY);
             WriteBoolean(car.IsFinishedTrack);
@@ -604,6 +605,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
             }
         }
 
+        private TileType[][] ReadTilesXY() {
+            TileType[][] newTilesXY = ReadEnums2D<TileType>();
+
+            if (newTilesXY != null && newTilesXY.Length > 0) {
+                tilesXY = newTilesXY;
+            }
+
+            return tilesXY;
+        }
+
         private World ReadWorld() {
             if (!ReadBoolean()) {
                 return null;
@@ -613,7 +624,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
                     ReadInt(), ReadInt(), ReadInt(), ReadInt(), ReadInt(), ReadPlayers(), ReadCars(), ReadProjectiles(),
                     ReadBonuses(), ReadOilSlicks(),
                     mapName == null ? mapName = ReadString() : mapName,
-                    tilesXY == null ? tilesXY = ReadEnums2D<TileType>() : tilesXY,
+                    ReadTilesXY(),
                     waypoints == null ? waypoints = ReadInts2D() : waypoints,
                     (Direction) (startingDirection.HasValue ? startingDirection : startingDirection = (Direction?) ReadEnum())
             );

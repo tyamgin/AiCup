@@ -17,6 +17,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
         private readonly double durability;
         private readonly double enginePower;
         private readonly double wheelTurn;
+        private readonly int nextWaypointIndex;
         private readonly int nextWaypointX;
         private readonly int nextWaypointY;
         private readonly bool isFinishedTrack;
@@ -26,7 +27,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
                 CarType type, int projectileCount, int nitroChargeCount, int oilCanisterCount,
                 int remainingProjectileCooldownTicks, int remainingNitroCooldownTicks, int remainingOilCooldownTicks,
                 int remainingNitroTicks, int remainingOiledTicks, double durability, double enginePower,
-                double wheelTurn, int nextWaypointX, int nextWaypointY, bool isFinishedTrack)
+                double wheelTurn, int nextWaypointIndex, int nextWaypointX, int nextWaypointY, bool isFinishedTrack)
                 : base(id, mass, x, y, speedX, speedY, angle, angularSpeed, width, height) {
             this.playerId = playerId;
             this.teammateIndex = teammateIndex;
@@ -43,6 +44,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
             this.durability = durability;
             this.enginePower = enginePower;
             this.wheelTurn = wheelTurn;
+            this.nextWaypointIndex = nextWaypointIndex;
             this.nextWaypointX = nextWaypointX;
             this.nextWaypointY = nextWaypointY;
             this.isFinishedTrack = isFinishedTrack;
@@ -106,6 +108,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
 
         public double WheelTurn {
             get { return wheelTurn; }
+        }
+
+        public int NextWaypointIndex {
+            get { return nextWaypointIndex; }
         }
 
         public int NextWaypointX {
