@@ -148,9 +148,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return false;
 
             // в углу
-            for(var k = 0; k < 4; k++)
-                if (TileCorner[cell.I, cell.J, k].GetDistanceTo2(p) < game.TrackTileMargin*game.TrackTileMargin)
+            for (var k = 0; k < 4; k++)
+            {
+                if (TileCorner[cell.I, cell.J, k].GetDistanceTo2(p) <
+                    (game.TrackTileMargin + additionalMargin)*(game.TrackTileMargin + additionalMargin))
+                {
                     return true;
+                }
+            }
 
             // по бокам
             if (p.X < LX)
@@ -216,6 +221,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var res = new Points();
             var myCell = GetCell(car.X, car.Y);
             res.Add(new Point(car));
+            //res.Add(GetCenter(myCell));
 
             for (var e = 1; res.Count < 5; e++)
             {

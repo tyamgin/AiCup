@@ -130,10 +130,43 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
             var to = pts[1];
 
-            if (CheckUseOil())
-                move.IsSpillOil = true;
             if (CheckUseProjectile())
                 move.IsThrowProjectile = true;
+
+            if (world.Tick > game.InitialFreezeDurationTicks)
+            {
+                PositionsHistory.Add(new Point(self));
+            }
+
+            if (CheckUseOil())
+                move.IsSpillOil = true;
+
+            const int ln = 50;
+            if (BackModeRemainTicks == 0 && PositionsHistory.Count > ln)
+            {
+                if (
+                    PositionsHistory[PositionsHistory.Count - 1].GetDistanceTo(
+                        PositionsHistory[PositionsHistory.Count - ln]) < 20)
+                {
+                    var md = new ACar(self);
+                    var cn = 0;
+                    while (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }))
+                        cn++;
+                    if (cn < 30)
+                    {
+                        BackModeRemainTicks = 50;
+                        BackModeTurn = self.GetAngleTo(to.X, to.Y) < 0 ? 1 : -1;
+                    }
+                }
+            }
+
+            if (BackModeRemainTicks > 0)
+            {
+                BackModeRemainTicks--;
+                move.EnginePower = -1;
+                move.WheelTurn = BackModeTurn;
+                return;
+            }
 
             if (world.Tick < game.InitialFreezeDurationTicks)
             {
@@ -223,9 +256,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 //#if DEBUG
 //                    _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Gold, pts));
 //#endif
-
                     move.EnginePower = 0.2;
                     move.WheelTurn = self.GetAngleTo(to.X, to.Y);
+                    var tmp = new ACar(self);
+                    var aa = tmp + tmp.Speed;
+                    if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
+                    {
+                        move.EnginePower = 1;
+                        move.WheelTurn *= -1;
+                    }
                 }
             }
         }
@@ -317,6 +356,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
         }
+        
+        public Points PositionsHistory = new Points();
+        public int BackModeRemainTicks;
+        public double BackModeTurn;
 
         public void Move(Car self, World world, Game game, Move move)
         {
