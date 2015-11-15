@@ -90,7 +90,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.RightTopCorner ||
                    type == TileType.LeftHeadedT ||
                    type == TileType.TopHeadedT ||
-                   type == TileType.BottomHeadedT;
+                   type == TileType.BottomHeadedT ||
+                   type == TileType.Unknown; // TODO
         }
 
         private bool _tileFreeRight(TileType type)
@@ -101,7 +102,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.LeftTopCorner ||
                    type == TileType.RightHeadedT ||
                    type == TileType.TopHeadedT ||
-                   type == TileType.BottomHeadedT;
+                   type == TileType.BottomHeadedT ||
+                   type == TileType.Unknown; // TODO
         }
 
         private bool _tileFreeTop(TileType type)
@@ -112,7 +114,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.RightBottomCorner ||
                    type == TileType.LeftHeadedT ||
                    type == TileType.TopHeadedT ||
-                   type == TileType.RightHeadedT;
+                   type == TileType.RightHeadedT ||
+                   type == TileType.Unknown; // TODO
         }
 
         private bool _tileFreeBottom(TileType type)
@@ -123,7 +126,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.RightTopCorner ||
                    type == TileType.LeftHeadedT ||
                    type == TileType.BottomHeadedT ||
-                   type == TileType.RightHeadedT;
+                   type == TileType.RightHeadedT ||
+                   type == TileType.Unknown; // TODO
         }
 
         private BitSet[] _intersectTailCacheSafe;
