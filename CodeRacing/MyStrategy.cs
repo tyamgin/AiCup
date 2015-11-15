@@ -27,6 +27,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static Point[,,] TileCorner;
 
         public const double SafeMargin = 3.0;
+        public const long TimerLogLimit = 2;
 
         void Initialize()
         {
@@ -109,12 +110,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var seg in segs)
                 _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
 #endif
-            Log("PrepareOpponentsPath: " + TimerStop() + "ms");
+            TimeEndLog("PrepareOpponentsPath");
         }
-
-        private long _bruteSumTime1;
-        private long _bruteSumTime2;
-        private long _bruteSumTime3;
 
         private bool ModelMove(ACar car, AMove m, bool simpleMode = false)
         {
@@ -125,8 +122,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private List<Moves> _cache = new List<Moves>();
 
-        private AProjectile[] _prs;
-
         private void _move()
         {
             var pts = GetWaySegments(self);
@@ -134,7 +129,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, GetWaySegments(self)));
 #endif
             var to = pts[1];
-            var to2 = pts[2];
 
             if (CheckUseOil())
                 move.IsSpillOil = true;
@@ -183,7 +177,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 TimerStart();
                 BruteFunc(pts, timings, 1);
-                _bruteSumTime2 = TimerStop();
+                TimeEndLog("brute");
 
                 //TimerStart();
                 //BruteFunc(pts, new[]
@@ -326,6 +320,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public void Move(Car self, World world, Game game, Move move)
         {
+            TimerStart();
             MyStrategy.world = world;
             MyStrategy.game = game;
             this.move = move;
@@ -345,9 +340,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
             _move();
 #if DEBUG
+            TimeEndLog("All");
             draw();
             Thread.Sleep(8);
-            Log(_bruteSumTime1 + " " + _bruteSumTime2 + " " + _bruteSumTime3);
 #endif
         }
     }

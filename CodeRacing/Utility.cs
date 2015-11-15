@@ -100,6 +100,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
         }
 
+        public void TimeEndLog(string caption, long limit = TimerLogLimit)
+        {
+#if DEBUG
+            var time = TimerStop();
+            if (time > limit)
+                Log(world.Tick + "> " + caption + ":" + time);
+#endif
+        }
+
         public void Log(object msg)
         {
 #if DEBUG
