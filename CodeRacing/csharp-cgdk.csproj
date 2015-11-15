@@ -102,6 +102,7 @@
     <Compile Include="Model\World.cs" />
     <Compile Include="IStrategy.cs" />
     <Compile Include="MyStrategy.cs" />
+    <Compile Include="OilProjectileStrategy.cs" />
     <Compile Include="Point.cs">
       <SubType>Code</SubType>
     </Compile>
