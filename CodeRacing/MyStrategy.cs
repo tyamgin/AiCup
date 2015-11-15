@@ -7,6 +7,7 @@ using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Windows.Forms;
@@ -78,7 +79,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public Car[] Opponents;
         public ACar[][] OpponentsCars;
-        public const int OpponentsTicksPrediction = 50;
+        public const int OpponentsTicksPrediction = 100;
 
         public void PrepareOpponentsPath()
         {
@@ -122,21 +123,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return car.GetRect().All(p => !_intersectTail(p));
         }
 
-        private List<Moves> _cache = new List<Moves>(); 
+        private List<Moves> _cache = new List<Moves>();
+
+        private AProjectile[] _prs;
 
         private void _move()
         {
-            var t = GetWaySegments(self);
-#if DEBUG
-            _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, t));
-#endif
-
             var pts = GetWaySegments(self);
+#if DEBUG
+            _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, GetWaySegments(self)));
+#endif
             var to = pts[1];
             var to2 = pts[2];
 
             if (CheckUseOil())
                 move.IsSpillOil = true;
+            if (CheckUseProjectile())
+                move.IsThrowProjectile = true;
 
             if (world.Tick < game.InitialFreezeDurationTicks)
             {

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 
@@ -9,6 +11,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         private void _simulateOpponentMove(Points pts, ACar car)
         {
+            if (car.OutOfMap)
+                return;
+
             if (pts.Count == 0)
             {
                 Log("need more points!");
@@ -28,7 +33,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (Math.Abs(turn) > 1)
                 power = 0.3;
 
-            ModelMove(car, new AMove { EnginePower = power, IsBrake = false, WheelTurn = TurnRound(turn) }, simpleMode: true);
+            if (!ModelMove(car,
+                new AMove {EnginePower = power, IsBrake = false, WheelTurn = TurnRound(turn)},
+                simpleMode: true))
+            {
+                car.OutOfMap = true;
+            }
         }
 
         public bool CheckUseOil()
@@ -45,13 +55,53 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 for (var i = 0; i < Opponents.Length; i++)
                 {
                     if (slick.GetDistanceTo2(OpponentsCars[t][i]) < rad * rad
-                        && Math.Abs(OpponentsCars[t][i].WheelTurn) > 0.2)
+                        && (self.OilCanisterCount > 1 || Math.Abs(OpponentsCars[t][i].WheelTurn) > 0.2))
                     {
                         result = true;
                     }
                 }
             }
             return result;
+        }
+
+        public bool CheckUseProjectile()
+        {
+            if (world.Tick < game.InitialFreezeDurationTicks)
+                return false;
+            if (self.ProjectileCount == 0)
+                return false;
+            if (self.RemainingProjectileCooldownTicks > 0)
+                return false;
+
+            var projectiles = GetProjectiles(new ACar(self));
+#if DEBUG
+            var projPoints = projectiles.Select(x => new Points()).ToArray();
+#endif
+            var shot = new bool[projectiles.Length];
+            for (var t = 1; t < OpponentsTicksPrediction; t++)
+            {
+                for(var prId = 0; prId < projectiles.Length; prId++)
+                {
+                    var pr = projectiles[prId];
+                    pr.Move();
+#if DEBUG
+                    projPoints[prId].Add(new Point(pr));
+#endif
+                    foreach (var opp in OpponentsCars[t])
+                    {
+                        if (opp.GetRect().ContainPoint(pr))
+                        {
+                            shot[prId] = true;
+                        }
+                    }
+                }
+            }
+#if DEBUG
+            foreach(var projP in projPoints)
+                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Blue, projP));
+#endif
+            var shotCount = shot.Count(val => val);
+            return shotCount >= 2 || shotCount == 1 && self.ProjectileCount > 1;
         }
     }
 }

@@ -12,9 +12,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public double EnginePower;
         public bool IsBrake;
         public object WheelTurn; // Point or double
-        public bool IsThrowProjectile;
         public bool IsUseNitro;
-        public bool IsSpillOil;
 
         public int Times;
 
@@ -25,9 +23,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 EnginePower = EnginePower,
                 IsBrake = IsBrake,
                 WheelTurn = WheelTurn,
-                IsThrowProjectile = IsThrowProjectile,
                 IsUseNitro = IsUseNitro,
-                IsSpillOil = IsSpillOil,
                 Times = Times,
             };
         }
@@ -37,9 +33,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             move.EnginePower = EnginePower;
             move.IsBrake = IsBrake;
             move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(self.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
-            move.IsThrowProjectile = IsThrowProjectile;
             move.IsUseNitro = IsUseNitro;
-            move.IsSpillOil = IsSpillOil;
         }
     }
 

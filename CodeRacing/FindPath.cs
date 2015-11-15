@@ -255,7 +255,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 for (var j = 0; j < 2; j++)
                 {
                     var p = new Point(game.TrackTileSize*(cell.J + j), game.TrackTileSize*(cell.I + i));
-                    if (p.InTriangle(a, b, c))
+                    if (new Points { a, b, c }.ContainPoint(p))
                     {
                         corner = p;
                         break;

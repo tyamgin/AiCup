@@ -16,6 +16,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public double EnginePower;
         public double WheelTurn;
         public double AngularSpeed;
+        public bool OutOfMap;
 
         private double _carAccelerationUp;
         private double _carAccelerationDown;
@@ -31,6 +32,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             WheelTurn = original.WheelTurn;
             AngularSpeed = original.AngularSpeed;
             Original = original;
+            OutOfMap = false;
 
             if (original.Type == CarType.Buggy)
             {
@@ -54,6 +56,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             EnginePower = car.EnginePower;
             WheelTurn = car.WheelTurn;
             AngularSpeed = car.AngularSpeed;
+            OutOfMap = car.OutOfMap;
 
             _carAccelerationUp = car._carAccelerationUp;
             _carAccelerationDown = car._carAccelerationDown;
@@ -153,15 +156,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
         }
 
-        public Point[] GetRect()
+        public Points GetRect()
         {
-            var result = new Point[4];
+            var result = new Points();
 
             var dir = new Point(Original.Width/2, Original.Height/2);
             var angle = Math.Atan2(dir.Y, dir.X);
             var angles = new[] { Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle };
             for(var i = 0; i < 4; i++)
-                result[i] = this + Point.ByAngle(angles[i]) * dir.Length;
+                result.Add(this + ByAngle(angles[i]) * dir.Length);
 
             return result;
         }

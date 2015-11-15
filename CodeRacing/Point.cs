@@ -153,15 +153,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return new Point(this);
         }
 
-        public bool InTriangle(Point a, Point b, Point c)
-        {
-            var sign1 = Sign(VectorProduct(a, b, this));
-            var sign2 = Sign(VectorProduct(b, c, this));
-            var sign3 = Sign(VectorProduct(c, a, this));
-            return sign1 <= 0 && sign2 <= 0 && sign3 <= 0 ||
-                   sign1 >= 0 && sign2 >= 0 && sign3 >= 0;
-        }
-
         public static double VectorProduct(Point a, Point b, Point c)
         {
             return (c.X - b.X)*(b.Y - a.Y) - (c.Y - b.Y)*(b.X - a.X);
@@ -185,6 +176,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public void Pop()
         {
             RemoveAt(Count - 1);
+        }
+
+        public bool ContainPoint(Point p)
+        {
+            bool allLess = true, allGreater = true;
+            for (var i = 0; i < Count; i++)
+            {
+                var vec = Point.Sign(Point.VectorProduct(this[i], this[(i + 1) % Count], p));
+                allLess &= vec <= 0;
+                allGreater &= vec >= 0;
+            }
+            return allLess || allGreater;
         }
     }
 
@@ -211,16 +214,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public override string ToString()
         {
             return "(" + I + ", " + J + ")";
-        }
-    }
-
-    public class Circle : Point
-    {
-        public double Radius;
-
-        public Circle(double x, double y, double r) : base(x, y)
-        {
-            Radius = r;
         }
     }
 }
