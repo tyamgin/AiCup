@@ -24,7 +24,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Cell[] waypoints;
         public static double MapWidth, MapHeight;
         public static Point[,,] TileCorner;
-        public Car[] Opponents;
 
         public const double SafeMargin = 3.0;
 
@@ -74,6 +73,42 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             Opponents = world.Cars.Where(car => !car.IsTeammate).ToArray();
+            PrepareOpponentsPath();
+        }
+
+        public Car[] Opponents;
+        public ACar[][] OpponentsCars;
+        public const int OpponentsTicksPrediction = 50;
+
+        public void PrepareOpponentsPath()
+        {
+            if (world.Tick < game.InitialFreezeDurationTicks)
+                return;
+
+            TimerStart();
+            OpponentsCars = new ACar[OpponentsTicksPrediction][];
+            OpponentsCars[0] = Opponents.Select(car => new ACar(car)).ToArray();
+            var ways = Opponents.Select(GetWaySegments).ToArray();
+#if DEBUG
+            var segs = Opponents.Select(x => new Points()).ToArray();
+#endif
+            for (var t = 1; t < OpponentsTicksPrediction; t++)
+            {
+                OpponentsCars[t] = new ACar[Opponents.Length];
+                for (var i = 0; i < Opponents.Length; i++)
+                {
+                    OpponentsCars[t][i] = OpponentsCars[t - 1][i].Clone();
+                    _applyMove(ways[i], OpponentsCars[t][i]);
+#if DEBUG
+                    segs[i].Add(new Point(OpponentsCars[t][i]));
+#endif
+                }
+            }
+#if DEBUG
+            foreach (var seg in segs)
+                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
+#endif
+            Log("PrepareOpponentsPath: " + TimerStop() + "ms");
         }
 
         private long _bruteSumTime1;
@@ -218,7 +253,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var modelA = new ACar(self);
             MovesStack = new Moves();
 
-            CarMoveFunc(modelA, timingInfo[0][0], timingInfo[0][1], timingInfo[0][2], new AMove { EnginePower = startPower, WheelTurn = 0, IsBrake = false}, 0, (aCar, time1) =>
+            CarMoveFunc(modelA, timingInfo[0][0], timingInfo[0][1], timingInfo[0][2], new AMove { EnginePower = startPower, WheelTurn = turnCenter, IsBrake = false}, 0, (aCar, time1) =>
             {
                 if (time1 >= BestTime)
                     return;
@@ -285,37 +320,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             ModelMove(car, new AMove { EnginePower = power, IsBrake = false, WheelTurn = TurnRound(turn) }, simpleMode: true);
         }
 
-        private const int OpponentsTicksPrediction = 50;
-
         public bool CheckUseOil()
         {
-            if (self.RemainingOilCooldownTicks != 0)
+            if (self.RemainingOilCooldownTicks != 0 || world.Tick < game.InitialFreezeDurationTicks)
                 return false;
 
             var slick = GetOilSlick(new ACar(self));
+            var rad = slick.Radius*0.8;
             var result = false;
 
-            var cars = Opponents.Select(car => new ACar(car)).ToArray();
-            var ways = Opponents.Select(GetWaySegments).ToArray();
-#if DEBUG
-            var segs = Opponents.Select(x => new Points()).ToArray();
-#endif
-            var rad = slick.Radius*0.7;
             for (var t = 0; t < OpponentsTicksPrediction; t++)
             {
-                for (var i = 0; i < cars.Length; i++)
+                for (var i = 0; i < Opponents.Length; i++)
                 {
-                    _applyMove(ways[i], cars[i]);
-#if DEBUG
-                    segs[i].Add(new Point(cars[i]));
-                    result |= slick.GetDistanceTo2(cars[i]) < rad*rad;
-#endif
+                    if (slick.GetDistanceTo2(OpponentsCars[t][i]) < rad*rad
+                        && Math.Abs(OpponentsCars[t][i].WheelTurn) > 0.2)
+                    {
+                        result = true;
+                    }
                 }
             }
-#if DEBUG
-            foreach(var seg in segs)
-                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
-#endif
             return result;
         }
 

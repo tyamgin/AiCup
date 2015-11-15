@@ -59,6 +59,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _carAccelerationDown = car._carAccelerationDown;
         }
 
+        public new ACar Clone()
+        {
+            return new ACar(this);
+        }
+
         static double _limit(double speed, double frictionDelta)
         {
             if (speed >= 0)
