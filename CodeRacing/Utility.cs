@@ -25,7 +25,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (car.Original.Type == CarType.Jeep)
             {
-                throw new NotImplementedException();
+                return new[] { new AProjectile
+                {
+                    Radius = game.TireRadius,
+                    Type = ProjectileType.Tire,
+                    X = car.X,
+                    Y = car.Y,
+                    Speed = Point.ByAngle(car.Angle) * game.TireInitialSpeed
+                }};
             }
 
             return new[] {0.0, -game.SideWasherAngle, game.SideWasherAngle}.Select(angle => new AProjectile
