@@ -54,12 +54,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return waypoints[(_waypointIterator[car.Id] + delta - 1) % waypoints.Length];
         }
 
-        public Cell GetCell(double x, double y)
+        public static Cell GetCell(double x, double y)
         {
             return new Cell((int)(y / game.TrackTileSize), (int)(x / game.TrackTileSize));
         }
 
-        public Point GetCenter(Cell cell)
+        public static Point GetCenter(Cell cell)
         {
             return new Point((cell.J + 0.5) * game.TrackTileSize, (cell.I + 0.5) * game.TrackTileSize);
         }

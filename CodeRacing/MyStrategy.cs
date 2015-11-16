@@ -7,13 +7,15 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
+    // TODO: откатывается назад после восстановления
+
     public partial class MyStrategy : IStrategy
     {
         public static World world;
         public static Game game;
         public Move move;
         public Car self;
-        public TileType[,] tiles;
+        public static TileType[,] tiles;
         public Cell[] waypoints;
         public static double MapWidth, MapHeight;
         public static Point[,,] TileCorner;
@@ -27,7 +29,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             MapHeight = game.TrackTileSize*world.Height;
 
             // intialize tiles
-            this.tiles = new TileType[world.Height, world.Width];
+            tiles = new TileType[world.Height, world.Width];
             var t = world.TilesXY;
             for(var i = 0; i < world.Height; i++)
                 for (var j = 0; j < world.Width; j++)
@@ -35,9 +37,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             // intialize waypoints
             var wp = world.Waypoints;
-            this.waypoints = new Cell[wp.Length];
+            waypoints = new Cell[wp.Length];
             for(var i = 0; i < waypoints.Length; i++)
-                this.waypoints[i] = new Cell(wp[i][1], wp[i][0]);
+                waypoints[i] = new Cell(wp[i][1], wp[i][0]);
 
             if (_waypointIterator == null)
             {
@@ -100,36 +102,55 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 #if DEBUG
             foreach (var seg in segs)
-                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
+                SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
 #endif
             TimeEndLog("PrepareOpponentsPath");
         }
 
-        private bool ModelMove(ACar car, AMove m, bool simpleMode = false)
+        public static bool ModelMove(ACar car, AMove m, bool simpleMode = false)
         {
             var turn = m.WheelTurn is Point ? TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             car.Move(m.EnginePower, turn, m.IsBrake, simpleMode);
             return car.GetRect().All(p => !_intersectTail(p));
         }
 
-        private List<Moves> _cache = new List<Moves>();
-        private int _lastBruteSuccess;
+#if DEBUG
+        void DrawWay(Moves stack, Brush brush)
+        {
+            stack = stack.Clone();
+            var drawPts = new Points();
+            var drawModel = new ACar(self);
+            while (stack.Count > 0)
+            {
+                var m = stack[0];
+
+                drawPts.Add(new Point(drawModel));
+                ModelMove(drawModel, m);
+                m.Times--;
+                stack.Normalize();
+            }
+            SegmentsDrawQueue.Add(new Tuple<Brush, Points>(brush, drawPts));
+        }
+#endif
+
+        private PathBruteForce brute;
 
         private void _move()
         {
             var pts = GetWaySegments(self);
-#if DEBUG
-            _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, GetWaySegments(self)));
-#endif
+//#if DEBUG
+//            _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, GetWaySegments(self)));
+//#endif
             var to = pts[1];
 
             if (CheckUseProjectile())
                 move.IsThrowProjectile = true;
 
             if (world.Tick > game.InitialFreezeDurationTicks)
-            {
                 PositionsHistory.Add(new Point(self));
-            }
+
+            //if (CheckUseNitro(to))
+            //    move.IsUseNitro = true;
 
             if (CheckUseOil())
                 move.IsSpillOil = true;
@@ -164,85 +185,66 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (world.Tick < game.InitialFreezeDurationTicks)
             {
                 move.EnginePower = 1;
+                return;
             }
-            else if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7)
+
+            if (brute == null)
+            {
+                brute = new PathBruteForce(new []
+                {
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 50,
+                        Step = 4,
+                        Move = new AMove { EnginePower = 1, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToCenter}, IsBrake = false}
+                    },
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 20,
+                        Step = 4,
+                        Move = new AMove { EnginePower = 0.5, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = false }
+                    },
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 34,
+                        Step = 2,
+                        Move = new AMove { EnginePower = 0, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = true }
+                    }
+                }, 8);
+            }
+
+            if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7)
             {
                 move.EnginePower = 1;
                 move.WheelTurn = self.GetAngleTo(to.X, to.Y);
             }
             else
             {
-                BestTime = Infinity;
-                BestMovesStack = new Moves();
-
-                //TimerStart();
-                //BruteFunc(pts, new[]
-                //{
-                //    new[] {0, 0, 1},
-                //    new[] {0, 30, 2},
-                //    new[] {0, 40, 1}
-                //}, 1);
-                //_bruteSumTime1 = TimerStop();
-
-                var timings = new[]
-                {
-                    new[] {0, 50, 4},
-                    new[] {0, 20, 4},
-                    new[] {0, 34, 2}
-                };
-
-                if (_cache.Count > 0 && _cache[0] != null)
-                {
-                    for (var k = 0; k < 3; k++)
-                    {
-                        timings[k][0] = Math.Max(0, _cache[0][k].Times - 2);
-                        timings[k][1] = _cache[0][k].Times + 2;
-                        timings[k][2] = 1;
-                    }
-                }
-
                 TimerStart();
-                if (_lastBruteSuccess == world.Tick - 1 || (world.Tick - (_lastBruteSuccess + 1)) % 8 == 0)
-                    BruteFunc(pts, timings, 1);
+                var bestMovesStack = brute.Do(new ACar(self), pts);
                 TimeEndLog("brute");
 
-                //TimerStart();
-                //BruteFunc(pts, new[]
-                //{
-                //    new[] {0, 40, 4},
-                //    new[] {0, 6, 3},
-                //    new[] {0, 21, 3}
-                //}, 0.4);
-                //_bruteSumTime3 = TimerStop();
-
-                _cache.Clear();
-
-                if (BestTime < Infinity)
+                if (bestMovesStack != null)
                 {
-                    _lastBruteSuccess = world.Tick;
-                    _cache.Add(BestMovesStack.Clone());
-
-                    if (BestMovesStack.ComputeTime() != BestTime)
-                        throw new Exception("something wrong");
-
-                    BestMovesStack.Normalize();
-                    BestMovesStack[0].Apply(move, new ACar(self));
-
+                    bestMovesStack[0].Apply(move, new ACar(self));
 #if DEBUG
-                    var drawPts = new Points();
-                    var drawModel = new ACar(self);
-                    while (BestMovesStack.Count > 0)
-                    {
-                        var m = BestMovesStack[0];
-
-                        drawPts.Add(new Point(drawModel));
-                        ModelMove(drawModel, m);
-                        m.Times--;
-                        BestMovesStack.Normalize();
-                    }
-                    _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.BlueViolet, drawPts));
+                    DrawWay(bestMovesStack, Brushes.BlueViolet);
 #endif
                 }
+//                else if (BestPointTime < Infinity && BestPointIdx > 20)
+//                {
+//                    _bruteUnsuccess = true;
+//                    if (BestMovesStack.ComputeTime() != BestPointTime)
+//                        throw new Exception("ComputeTime != BestPointTime");
+//                    BestMovesStack.Normalize();
+//                    BestMovesStack[0].Apply(move, new ACar(self));
+//#if DEBUG
+//                    DrawWay(Brushes.Red);
+//#endif
+//                }
                 else
                 {
                     move.EnginePower = 0.2;
@@ -258,93 +260,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
         }
 
-        delegate void CarCallback(ACar car, int time);
-
-        public Moves MovesStack, BestMovesStack;
-        public int BestTime;
-
-        private void BruteFunc(Points pts, int[][] timingInfo, double startPower)
-        {
-            var turnCenter = pts[1];
-            var turnTo = pts[2];
-
-            var needDist = turnTo.GetDistanceTo(turnCenter) - 1.5 * game.TrackTileSize;
-            if (needDist < 10)
-            {
-                turnTo = pts[3];
-                needDist = turnTo.GetDistanceTo(turnCenter) - 1.5 * game.TrackTileSize;
-            }
-
-            var modelA = new ACar(self);
-            MovesStack = new Moves();
-
-            CarMoveFunc(modelA, timingInfo[0][0], timingInfo[0][1], timingInfo[0][2], new AMove { EnginePower = startPower, WheelTurn = turnCenter, IsBrake = false}, 0, (aCar, time1) =>
-            {
-                if (time1 >= BestTime)
-                    return;
-
-                var turn = TurnRound(aCar.GetAngleTo(turnTo));
-                CarMoveFunc(aCar, timingInfo[1][0], timingInfo[1][1], timingInfo[1][2], new AMove { EnginePower = 0.5, WheelTurn = turn, IsBrake = false }, time1, (bCar, time2) =>
-                {
-                    if (time2 >= BestTime)
-                        return;
-
-                    CarMoveFunc(bCar, timingInfo[2][0], timingInfo[2][1], timingInfo[2][2], new AMove { EnginePower = 0, WheelTurn = turn, IsBrake = true }, time2, (cCar, time3) =>
-                    {
-                        var model = new ACar(cCar);
-                        var m = new AMove
-                        {
-                            EnginePower = 1,
-                            IsBrake = false,
-                            WheelTurn = turnTo.Clone(),
-                            Times = 0
-                        };
-
-                        var totalTime = time3;
-                        for (; totalTime < BestTime && turnTo.GetDistanceTo2(model) > needDist * needDist; totalTime++)
-                        {
-                            if (!ModelMove(model, m, simpleMode: false))
-                                return;
-                            m.Times++;
-                        }
-
-                        if (totalTime < BestTime)
-                        {
-                            BestTime = totalTime;
-                            BestMovesStack = MovesStack.Clone();
-                            BestMovesStack.Add(m);
-                        }
-                    });
-                });
-            });
-        }
-
-       
-        private void CarMoveFunc(ACar _model, int from, int to, int step, AMove m, int time, CarCallback callback)
-        {
-            m.Times = 0;
-
-            var model = new ACar(_model);
-            for (var i = 0; i < from; i++)
-            {
-                if (!ModelMove(model, m))
-                    return;
-                m.Times++;
-            }
-
-            for (var t = from; t <= to; t += step)
-            {
-                MovesStack.Add(m);
-                callback(new ACar(model), time + t);
-                MovesStack.Pop();
-                for (var r = 0; r < step; r++)
-                {
-                    if (!ModelMove(model, m))
-                        return;
-                    m.Times++;
-                }
-            }
-        }
         
         public Points PositionsHistory = new Points();
         public int BackModeRemainTicks;

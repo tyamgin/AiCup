@@ -31,7 +31,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             move.EnginePower = EnginePower;
             move.IsBrake = IsBrake;
             move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(self.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
-            move.IsUseNitro = IsUseNitro;
+            if (IsUseNitro)
+                move.IsUseNitro = IsUseNitro;
         }
     }
 

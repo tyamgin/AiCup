@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Xml.Serialization;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -112,6 +113,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 //#endif
             var shotCount = shot.Count(val => val);
             return shotCount >= 2 || shotCount == 1 && self.ProjectileCount > 1;
+        }
+
+        bool CheckUseNitro(Point to)
+        {
+            if (world.Tick < game.InitialFreezeDurationTicks)
+                return false;
+            if (self.NitroChargeCount == 0)
+                return false;
+            if (self.RemainingNitroCooldownTicks > 0)
+                return false;
+
+            return Math.Abs(self.GetAngleTo(to.X, to.Y)) < Math.PI/6 &&
+                   to.GetDistanceTo(self) > game.TrackTileSize*6;
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong");
         }
 
-        private bool _tileFreeLeft(TileType type)
+        private static bool _tileFreeLeft(TileType type)
         {
             return type == TileType.Crossroads ||
                    type == TileType.Horizontal ||
@@ -89,7 +89,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.Unknown; // TODO
         }
 
-        private bool _tileFreeRight(TileType type)
+        private static bool _tileFreeRight(TileType type)
         {
             return type == TileType.Crossroads ||
                    type == TileType.Horizontal ||
@@ -101,7 +101,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.Unknown; // TODO
         }
 
-        private bool _tileFreeTop(TileType type)
+        private static bool _tileFreeTop(TileType type)
         {
             return type == TileType.Crossroads ||
                    type == TileType.Vertical ||
@@ -113,7 +113,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.Unknown; // TODO
         }
 
-        private bool _tileFreeBottom(TileType type)
+        private static bool _tileFreeBottom(TileType type)
         {
             return type == TileType.Crossroads ||
                    type == TileType.Vertical ||
@@ -125,10 +125,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.Unknown; // TODO
         }
 
-        private BitSet[] _intersectTailCacheSafe;
-        private BitSet[] _intersectTailCacheSafeIsComputed;
+        private static BitSet[] _intersectTailCacheSafe;
+        private static BitSet[] _intersectTailCacheSafeIsComputed;
 
-        private bool _intersectTailNoCache(Point p, double additionalMargin)
+        private static bool _intersectTailNoCache(Point p, double additionalMargin)
         {
             var cell = GetCell(p.X, p.Y);
             var tileType = tiles[cell.I, cell.J];
@@ -169,7 +169,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong");
         }
 
-        private bool _intersectTail(Point p, double additionalMargin = SafeMargin)
+        private static bool _intersectTail(Point p, double additionalMargin = SafeMargin)
         {
             if (_intersectTailCacheSafe == null)
             {
@@ -220,7 +220,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var res = new Points();
             var myCell = GetCell(car.X, car.Y);
             res.Add(new Point(car));
-            //res.Add(GetCenter(myCell));
 
             for (var e = 1; res.Count < 5; e++)
             {
@@ -238,7 +237,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
                 myCell = nextWp;
             }
-
             return res;
         }
 
