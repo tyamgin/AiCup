@@ -113,6 +113,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
 
         private List<Moves> _cache = new List<Moves>();
+        private int _lastBruteSuccess;
 
         private void _move()
         {
@@ -144,7 +145,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     var cn = 0;
                     while (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }))
                         cn++;
-                    if (cn < 30)
+                    if (cn < 30 || IsSomeoneAhead(new ACar(self)))
                     {
                         BackModeRemainTicks = 50;
                         BackModeTurn = self.GetAngleTo(to.X, to.Y) < 0 ? 1 : -1;
@@ -201,7 +202,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
 
                 TimerStart();
-                BruteFunc(pts, timings, 1);
+                if (_lastBruteSuccess == world.Tick - 1 || (world.Tick - (_lastBruteSuccess + 1)) % 8 == 0)
+                    BruteFunc(pts, timings, 1);
                 TimeEndLog("brute");
 
                 //TimerStart();
@@ -217,6 +219,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 if (BestTime < Infinity)
                 {
+                    _lastBruteSuccess = world.Tick;
                     _cache.Add(BestMovesStack.Clone());
 
                     if (BestMovesStack.ComputeTime() != BestTime)
@@ -242,12 +245,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
                 else
                 {
-//                    pts = Closify(pts);
-//                    to = pts[1];
-
-//#if DEBUG
-//                    _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Gold, pts));
-//#endif
                     move.EnginePower = 0.2;
                     move.WheelTurn = self.GetAngleTo(to.X, to.Y);
                     var tmp = new ACar(self);
@@ -377,7 +374,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #if DEBUG
             TimeEndLog("All");
             draw();
-            Thread.Sleep(8);
+            Thread.Sleep(12);
 #endif
         }
     }

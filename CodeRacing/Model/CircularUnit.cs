@@ -1,5 +1,3 @@
-using System;
-
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
     public abstract class CircularUnit : Unit {
         private readonly double radius;

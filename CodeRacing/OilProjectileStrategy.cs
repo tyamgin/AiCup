@@ -1,11 +1,24 @@
 ﻿using System;
-using System.Drawing;
 using System.Linq;
+using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
+        public bool IsSomeoneAhead(ACar car)
+        {
+            var carRect = car.GetRect();
+            var p1 = carRect[0] + Point.ByAngle(car.Angle)*20;
+            var p2 = carRect[3] + Point.ByAngle(car.Angle)*20;
+            var p3 = car + Point.ByAngle(car.Angle) * (car.Original.Width / 2 + 20);
+            return world.Cars.Select(x => new ACar(x).GetRect()).Any(
+                rect => rect.ContainPoint(p1) ||
+                        rect.ContainPoint(p2) ||
+                        rect.ContainPoint(p3)
+                );
+        }
+
         private void _simulateOpponentMove(Points pts, ACar car)
         {
             if (car.OutOfMap)
@@ -71,9 +84,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return false;
 
             var projectiles = GetProjectiles(new ACar(self));
-#if DEBUG
-            var projPoints = projectiles.Select(x => new Points()).ToArray();
-#endif
+//#if DEBUG
+//            var projPoints = projectiles.Select(x => new Points()).ToArray();
+//#endif
             var shot = new bool[projectiles.Length];
             for (var t = 1; t < OpponentsTicksPrediction; t++)
             {
@@ -81,9 +94,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var pr = projectiles[prId];
                     pr.Move();
-#if DEBUG
-                    projPoints[prId].Add(new Point(pr));
-#endif
+//#if DEBUG
+//                    projPoints[prId].Add(new Point(pr));
+//#endif
                     foreach (var opp in OpponentsCars[t])
                     {
                         if (opp.GetRect().ContainPoint(pr))
@@ -93,10 +106,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }
                 }
             }
-#if DEBUG
-            foreach(var projP in projPoints)
-                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Blue, projP));
-#endif
+//#if DEBUG
+//            foreach(var projP in projPoints)
+//                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Blue, projP));
+//#endif
             var shotCount = shot.Count(val => val);
             return shotCount >= 2 || shotCount == 1 && self.ProjectileCount > 1;
         }

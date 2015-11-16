@@ -154,7 +154,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Points GetRect()
         {
             var result = new Points();
-
+            // 3  o---o  0
+            //    o ^ o
+            //    o   o
+            // 2  o---o  1
             var dir = new Point(Original.Width/2, Original.Height/2);
             var angle = Math.Atan2(dir.Y, dir.X);
             var angles = new[] { Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle };
