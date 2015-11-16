@@ -6,7 +6,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class Point : IComparable<Point>
     {
-        //public static double Eps = 1e-9;
         public double X, Y;
 
         public double Length
