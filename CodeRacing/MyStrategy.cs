@@ -117,6 +117,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #if DEBUG
         void DrawWay(Moves stack, Brush brush)
         {
+            if (stack == null)
+                return;
             stack = stack.Clone();
             var drawPts = new Points();
             var drawModel = new ACar(self);
@@ -133,7 +135,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
 #endif
 
-        private PathBruteForce brute;
+        private PathBruteForce brute, brute2, brute3;
 
         private void _move()
         {
@@ -195,7 +197,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     new PathPattern
                     {
                         From = 0,
-                        To = 50,
+                        To = 40,
                         Step = 4,
                         Move = new AMove { EnginePower = 1, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToCenter}, IsBrake = false}
                     },
@@ -213,7 +215,50 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         Step = 2,
                         Move = new AMove { EnginePower = 0, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = true }
                     }
-                }, 8);
+                }, 8, id:0);
+                
+                brute2 = new PathBruteForce(new[]
+                {
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 25,
+                        Step = 1,
+                        Move = new AMove { EnginePower = 0.2, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = false }
+                    },
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 34,
+                        Step = 2,
+                        Move = new AMove { EnginePower = 0, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = true }
+                    }
+                }, 8, id:1);
+
+                brute3 = new PathBruteForce(new[]
+                {
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 20,
+                        Step = 4,
+                        Move = new AMove { EnginePower = 0.5, WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromCenter}, IsBrake = false}
+                    },
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 24,
+                        Step = 2,
+                        Move = new AMove { EnginePower = 1, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = false }
+                    },
+                    new PathPattern
+                    {
+                        From = 0,
+                        To = 32,
+                        Step = 4,
+                        Move = new AMove { EnginePower = 0, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = true }
+                    }
+                }, 8, id:2);
             }
 
             if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7)
@@ -224,14 +269,31 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             else
             {
                 TimerStart();
-                var bestMovesStack = brute.Do(new ACar(self), pts);
+                var brutes = new[] { brute, brute2, brute3 };
+                var bestMoveStacks = new Moves[brutes.Length];
+                for(var i = 0; i < brutes.Length; i++)
+                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
                 TimeEndLog("brute");
 
-                if (bestMovesStack != null)
+                var sel = -1;
+                for (var i = 0; i < brutes.Length; i++)
                 {
-                    bestMovesStack[0].Apply(move, new ACar(self));
+                    if (bestMoveStacks[i] == null)
+                        continue;
+                    if (sel == -1 || bestMoveStacks[i].ComputeTime() < bestMoveStacks[sel].ComputeTime())
+                        sel = i;
+                }
+
+                if (sel != -1)
+                {
+                    bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
-                    DrawWay(bestMovesStack, Brushes.BlueViolet);
+                    if (bestMoveStacks.Length > 0)
+                        DrawWay(bestMoveStacks[0], Brushes.BlueViolet);
+                    if (bestMoveStacks.Length > 1)
+                        DrawWay(bestMoveStacks[1], Brushes.Red);
+                    if (bestMoveStacks.Length > 2)
+                        DrawWay(bestMoveStacks[2], Brushes.DeepPink);
 #endif
                 }
 //                else if (BestPointTime < Infinity && BestPointIdx > 20)
@@ -265,6 +327,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int BackModeRemainTicks;
         public double BackModeTurn;
 
+        private ACar _tmp;
+
         public void Move(Car self, World world, Game game, Move move)
         {
             TimerStart();
@@ -285,6 +349,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             DrawMap();
 #endif
+            if (world.Tick >= 738)
+            {
+                _tmp = new ACar(self);
+                _tmp.Move(1.0, -0.580192616161978, false, false);
+                move.EnginePower = 1.0;
+                move.WheelTurn = -0.580192616161978;
+                return;
+            }
             _move();
 #if DEBUG
             TimeEndLog("All");

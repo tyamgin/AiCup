@@ -19,18 +19,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     public enum TurnPatterns
     {
         ToNext,
-        ToCenter
+        ToCenter,
+        FromCenter
     }
 
     public class TurnPattern
     {
         public TurnPatterns Pattern;
+        //public double Coeff = 1;
     }
 
     public class PathBruteForce
     {
         public readonly PathPattern[] Patterns;
         public ACar Self;
+        public int Id;
 
         private PathPattern[] _patterns;
         private Moves _movesStack, _bestMovesStack;
@@ -49,10 +52,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private double _needDist;
         private int _interval;
 
-        public PathBruteForce(PathPattern[] patterns, int interval)
+        public PathBruteForce(PathPattern[] patterns, int interval, int id)
         {
             Patterns = patterns;
             _interval = interval;
+            Id = id;
         }
 
         private void _doRecursive(ACar model, int idx, int totalTime)
@@ -126,16 +130,39 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 });
         }
 
+        // Если это поменялось - сбрасывать кэш
+        private Point _prevTurnCenter = Point.Zero, _prevTurnTo = Point.Zero;
+        private Moves _lastSuccessStack;
+
         public Moves Do(ACar car, Points pts)
         {
+            // Проверка что данный путь был выбран
+            if (_lastSuccessStack != null)
+            {
+                if (!MyStrategy.ModelMove(Self, _lastSuccessStack[0]))
+                    _lastSuccessStack = null;
+                else if (!_compareCars(Self, car))
+                    _lastSuccessStack = null;
+            }
+
             Self = car.Clone();
+
             if (_lastCall == _lastSuccess)
                 _lastSuccess = _lastCall;
+
+            for (var t = 0; t < MyStrategy.world.Tick - _lastCall && _lastSuccessStack != null && _lastSuccessStack.Count > 0; t++)
+            {
+                _lastSuccessStack[0].Times--;
+                _lastSuccessStack.Normalize();
+            }
+            if (_lastSuccessStack != null && _lastSuccessStack.Count == 0)
+                _lastSuccessStack = null;
+
             _lastCall = MyStrategy.world.Tick;
 
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
             if (_lastSuccess != MyStrategy.world.Tick - 1 && (MyStrategy.world.Tick - (_lastSuccess + 1))%_interval != 0)
-                return null;
+                return _lastSuccessStack;
 
             _turnCenter = pts[1];
             _turnTo = pts[2];
@@ -146,13 +173,24 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 //            bruteWayPoints.AddRange(_bruteWayPoints);
 //            MyStrategy.SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, bruteWayPoints));
 //#endif
+            double sumDist = Self.GetDistanceTo(pts[1]) + pts[1].GetDistanceTo(pts[2]);
             _needDist = _turnTo.GetDistanceTo(_turnCenter) - 1.5 * MyStrategy.game.TrackTileSize;
 
-            for (var r = 0; r < 2 && _needDist < 10; r++)
+            for (var r = 0; r < 2 && _needDist < 10 || sumDist < 3.5*MyStrategy.game.TrackTileSize; r++)
             {
+                sumDist += pts[3 + r].GetDistanceTo(pts[2 + r]);
                 _turnTo = pts[3 + r];
                 _needDist = _turnTo.GetDistanceTo(_turnCenter) - 1.5 * MyStrategy.game.TrackTileSize;
             }
+#if DEBUG
+            MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircle>(Brushes.OrangeRed, new ACircle { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
+#endif
+
+            if (!_prevTurnCenter.Equals(_turnCenter) || !_prevTurnTo.Equals(_turnTo))
+                _cache = null;
+
+            _prevTurnCenter = _turnCenter.Clone();
+            _prevTurnTo = _turnTo.Clone();
 
             _patterns = Patterns.Select(pt => new PathPattern
             {
@@ -166,7 +204,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (p.Move.WheelTurn is TurnPattern)
                 {
                     var turnPattern = p.Move.WheelTurn as TurnPattern;
-                    p.Move.WheelTurn = turnPattern.Pattern == TurnPatterns.ToCenter ? _turnCenter : _turnTo;
+                    if (turnPattern.Pattern == TurnPatterns.ToCenter)
+                        p.Move.WheelTurn = _turnCenter;
+                    else if (turnPattern.Pattern == TurnPatterns.ToNext)
+                        p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? -1 : 1;
+                    else if (turnPattern.Pattern == TurnPatterns.FromCenter)
+                        p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
                 }
             }
 
@@ -190,7 +233,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _doRecursive(Self, 0, 0);
             _cache = null;
             if (_bestTime == MyStrategy.Infinity)
-                return null;
+                return _lastSuccessStack;
 
             if (_bestMovesStack.ComputeTime() != _bestTime)
                 throw new Exception("ComputeTime != BestTime");
@@ -198,6 +241,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _lastSuccess = MyStrategy.world.Tick;
             _cache = _bestMovesStack.Clone();
             _bestMovesStack.Normalize();
+            _lastSuccessStack = _bestMovesStack.Clone();
             return _bestMovesStack;
         }
 
@@ -228,7 +272,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
         }
 
-
+        /*
+         * Сравнивает 2 машины чтобы понять был-ли выбран данный алгоритм
+         */
+        private bool _compareCars(ACar a, ACar b)
+        {
+            return a.Equals(b) &&
+                   a.Speed.Equals(b.Speed) &&
+                   Math.Abs(a.Angle - b.Angle) < MyStrategy.Eps &&
+                   Math.Abs(a.WheelTurn - b.WheelTurn) < MyStrategy.Eps &&
+                   Math.Abs(a.EnginePower - b.EnginePower) < MyStrategy.Eps;
+        }
         public Points ExtendWaySegments(Points pts)
         {
             var res = new Points();

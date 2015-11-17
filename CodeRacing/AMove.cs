@@ -16,14 +16,20 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public AMove Clone()
         {
-            return new AMove
+            var ret = new AMove
             {
                 EnginePower = EnginePower,
                 IsBrake = IsBrake,
-                WheelTurn = WheelTurn,
                 IsUseNitro = IsUseNitro,
                 Times = Times,
             };
+            if (WheelTurn is Point)
+                ret.WheelTurn = (WheelTurn as Point).Clone();
+            else if (WheelTurn is TurnPattern)
+                ret.WheelTurn = WheelTurn;
+            else
+                ret.WheelTurn = Convert.ToDouble(WheelTurn);
+            return ret;
         }
 
         public void Apply(Move move, ACar self)
