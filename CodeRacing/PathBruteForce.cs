@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Dynamic;
 using System.Linq;
 using System.Text;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
@@ -83,6 +84,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }
                     m.Times++;
                 }
+                if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
+                    return;
 
                 if (end && totalTime < _bestTime)
                 {
@@ -134,16 +137,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private Point _prevTurnCenter = Point.Zero, _prevTurnTo = Point.Zero;
         private Moves _lastSuccessStack;
 
+        private int _selectThisTick;
+
+        public void SelectThis()
+        {
+            _selectThisTick = MyStrategy.world.Tick;
+        }
+
         public Moves Do(ACar car, Points pts)
         {
             // Проверка что данный путь был выбран
-            if (_lastSuccessStack != null)
-            {
-                if (!MyStrategy.ModelMove(Self, _lastSuccessStack[0]))
-                    _lastSuccessStack = null;
-                else if (!_compareCars(Self, car))
-                    _lastSuccessStack = null;
-            }
+            if (_selectThisTick + 1 != MyStrategy.world.Tick)
+                _lastSuccessStack = null;
 
             Self = car.Clone();
 
@@ -272,17 +277,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
         }
 
-        /*
-         * Сравнивает 2 машины чтобы понять был-ли выбран данный алгоритм
-         */
-        private bool _compareCars(ACar a, ACar b)
-        {
-            return a.Equals(b) &&
-                   a.Speed.Equals(b.Speed) &&
-                   Math.Abs(a.Angle - b.Angle) < MyStrategy.Eps &&
-                   Math.Abs(a.WheelTurn - b.WheelTurn) < MyStrategy.Eps &&
-                   Math.Abs(a.EnginePower - b.EnginePower) < MyStrategy.Eps;
-        }
+
         public Points ExtendWaySegments(Points pts)
         {
             var res = new Points();

@@ -200,7 +200,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return _intersectTailCacheSafe[i][j];
         }
 
-        private bool _visible(Point from, Point to)
+        public static bool CheckVisibility(Car car, Point from, Point to)
         {
             var delta = 10.0;
             var c = (int)(from.GetDistanceTo(to) / delta + 2);
@@ -209,7 +209,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for (var i = 0; i <= c; i++)
             {
                 var p = from + dir*(delta*i);
-                if (_intersectTail(p, self.Height / 2 + 10))
+                if (_intersectTail(p, car.Height / 2 + 10))
                     return false;
             }
             return true;
@@ -228,7 +228,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var cCell = _bfs(cur, nextWp);
                     var nxt = GetCenter(cCell);
-                    while (res.Count > 1 && _visible(res[res.Count - 2], nxt))
+                    while (res.Count > 1 && CheckVisibility(car, res[res.Count - 2], nxt))
                     {
                         res.Pop();
                     }
@@ -240,47 +240,47 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return res;
         }
 
-        public Points Closify(Points pts)
-        {
-            for (var i = 2; i < pts.Count; i++)
-            {
-                pts[i - 1] = _closify(pts[i - 2], pts[i - 1], pts[i]);
-            }
-            return pts;
-        }
+        //public Points Closify(Points pts)
+        //{
+        //    for (var i = 2; i < pts.Count; i++)
+        //    {
+        //        pts[i - 1] = _closify(pts[i - 2], pts[i - 1], pts[i]);
+        //    }
+        //    return pts;
+        //}
 
-        private Point _closify(Point a, Point b, Point c)
-        {
-            Point corner = null;
-            var cell = GetCell(b.X, b.Y);
-            for (var i = 0; i < 2; i++)
-            {
-                for (var j = 0; j < 2; j++)
-                {
-                    var p = new Point(game.TrackTileSize*(cell.J + j), game.TrackTileSize*(cell.I + i));
-                    if (new Points { a, b, c }.ContainPoint(p))
-                    {
-                        corner = p;
-                        break;
-                    }
-                }
-            }
-            if (corner == null)
-                return b;
+        //private Point _closify(Point a, Point b, Point c)
+        //{
+        //    Point corner = null;
+        //    var cell = GetCell(b.X, b.Y);
+        //    for (var i = 0; i < 2; i++)
+        //    {
+        //        for (var j = 0; j < 2; j++)
+        //        {
+        //            var p = new Point(game.TrackTileSize*(cell.J + j), game.TrackTileSize*(cell.I + i));
+        //            if (new Points { a, b, c }.ContainPoint(p))
+        //            {
+        //                corner = p;
+        //                break;
+        //            }
+        //        }
+        //    }
+        //    if (corner == null)
+        //        return b;
 
-            var dir = (corner - b).Normalized();
+        //    var dir = (corner - b).Normalized();
             
-            double L = 0, R = b.GetDistanceTo(corner);
-            for (var it = 0; it < 10; it++)
-            {
-                var m = (L + R)/2;
-                var f = b + dir*m;
-                if (!_visible(a, f) || !_visible(f, c))
-                    R = m;
-                else
-                    L = m;
-            }
-            return b + dir*L;
-        }
+        //    double L = 0, R = b.GetDistanceTo(corner);
+        //    for (var it = 0; it < 10; it++)
+        //    {
+        //        var m = (L + R)/2;
+        //        var f = b + dir*m;
+        //        if (!CheckVisibility(a, f) || !CheckVisibility(f, c))
+        //            R = m;
+        //        else
+        //            L = m;
+        //    }
+        //    return b + dir*L;
+        //}
     }
 }

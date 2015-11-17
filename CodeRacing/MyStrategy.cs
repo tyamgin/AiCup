@@ -20,8 +20,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static double MapWidth, MapHeight;
         public static Point[,,] TileCorner;
 
-        public const double SafeMargin = 3.0;
-        public const long TimerLogLimit = 2;
+        public const double SafeMargin = 10.0;
+        public const long TimerLogLimit = 3;
 
         void Initialize()
         {
@@ -261,7 +261,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }, 8, id:2);
             }
 
-            if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7)
+            if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7 && Math.Abs(self.GetAngleTo(to.X, to.Y)) < Math.PI / 6)
             {
                 move.EnginePower = 1;
                 move.WheelTurn = self.GetAngleTo(to.X, to.Y);
@@ -286,6 +286,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 if (sel != -1)
                 {
+                    brutes[sel].SelectThis();
                     bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
                     if (bestMoveStacks.Length > 0)
@@ -349,15 +350,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             DrawMap();
 #endif
-            if (world.Tick >= 738)
-            {
-                _tmp = new ACar(self);
-                _tmp.Move(1.0, -0.580192616161978, false, false);
-                move.EnginePower = 1.0;
-                move.WheelTurn = -0.580192616161978;
-                return;
-            }
-            _move();
+            if (!self.IsFinishedTrack)
+                _move();
 #if DEBUG
             TimeEndLog("All");
             draw();
