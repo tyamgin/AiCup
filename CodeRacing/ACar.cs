@@ -3,11 +3,10 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
-    public class ACar : AUnit
+    public class ACar : ARectUnit
     {
         public Car Original;
         public Point Speed;
-        public double Angle;
         public double EnginePower;
         public double WheelTurn;
         public double AngularSpeed;
@@ -28,6 +27,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             AngularSpeed = original.AngularSpeed;
             Original = original;
             OutOfMap = false;
+
+            Width = original.Width;
+            Height = original.Height;
 
             if (original.Type == CarType.Buggy)
             {
@@ -52,6 +54,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             WheelTurn = car.WheelTurn;
             AngularSpeed = car.AngularSpeed;
             OutOfMap = car.OutOfMap;
+
+            Width = car.Width;
+            Height = car.Height;
 
             _carAccelerationUp = car._carAccelerationUp;
             _carAccelerationDown = car._carAccelerationDown;
@@ -148,50 +153,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
 
             }
-        }
-
-        public Points GetRect()
-        {
-            var result = new Points();
-            // 3  o---o  0
-            //    o ^ o
-            //    o   o
-            // 2  o---o  1
-            var dir = new Point(Original.Width/2, Original.Height/2);
-            var angle = Math.Atan2(dir.Y, dir.X);
-            var angles = new[] { Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle };
-            for(var i = 0; i < 4; i++)
-                result.Add(this + ByAngle(angles[i]) * dir.Length);
-
-            return result;
-        }
-
-        public double GetAngleTo(double x, double y)
-        {
-            var absoluteAngleTo = Math.Atan2(y - Y, x - X);
-            var relativeAngleTo = absoluteAngleTo - Angle;
-
-            while (relativeAngleTo > Math.PI)
-            {
-                relativeAngleTo -= 2.0D * Math.PI;
-            }
-
-            while (relativeAngleTo < -Math.PI)
-            {
-                relativeAngleTo += 2.0D * Math.PI;
-            }
-
-            return relativeAngleTo;
-        }
-
-        public double GetAngleTo(Unit unit)
-        {
-            return GetAngleTo(unit.X, unit.Y);
-        }
-
-        public double GetAngleTo(Point unit)
-        {
-            return GetAngleTo(unit.X, unit.Y);
         }
     }
 }

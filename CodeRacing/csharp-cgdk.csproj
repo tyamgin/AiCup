@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ABonus.cs" />
     <Compile Include="ACar.cs" />
     <Compile Include="AMove.cs" />
     <Compile Include="AProjectile.cs" />

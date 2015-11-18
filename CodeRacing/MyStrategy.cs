@@ -239,12 +239,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }
                 }, 8, id:2);
             }
-
+// TODO: удалить когда бонусы
+//////
             if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7 && Math.Abs(self.GetAngleTo(to.X, to.Y)) < Math.PI / 6)
             {
                 move.EnginePower = 1;
                 move.WheelTurn = self.GetAngleTo(to.X, to.Y);
             }
+//////
             else
             {
                 TimerStart();
@@ -318,11 +320,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
             if (!self.IsFinishedTrack)
                 _move();
+            else if (_finishTime == Infinity)
+                _finishTime = world.Tick;
+            if (_finishTime < Infinity)
+                Log(_finishTime);
 #if DEBUG
             TimeEndLog("All");
             draw();
             Thread.Sleep(12);
 #endif
         }
+
+        private int _finishTime = Infinity;
     }
 }
