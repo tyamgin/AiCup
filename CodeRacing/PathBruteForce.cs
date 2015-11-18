@@ -133,8 +133,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 });
         }
 
-        // Если это поменялось - сбрасывать кэш
-        private Point _prevTurnCenter = Point.Zero, _prevTurnTo = Point.Zero;
         private Moves _lastSuccessStack;
 
         private int _selectThisTick;
@@ -170,32 +168,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return _lastSuccessStack;
 
             _turnCenter = pts[1];
-            _turnTo = pts[2];
 
-            _bruteWayPoints = ExtendWaySegments(pts).GetRange(0, Math.Min(100, pts.Count)).ToArray();
-//#if DEBUG
-//            var bruteWayPoints = new Points();
-//            bruteWayPoints.AddRange(_bruteWayPoints);
-//            MyStrategy.SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, bruteWayPoints));
-//#endif
-            double sumDist = Self.GetDistanceTo(pts[1]) + pts[1].GetDistanceTo(pts[2]);
-            _needDist = _turnTo.GetDistanceTo(_turnCenter) - 1.5 * MyStrategy.game.TrackTileSize;
-
-            for (var r = 0; r < 2 && _needDist < 10 || sumDist < 3.5*MyStrategy.game.TrackTileSize; r++)
-            {
-                sumDist += pts[3 + r].GetDistanceTo(pts[2 + r]);
-                _turnTo = pts[3 + r];
-                _needDist = _turnTo.GetDistanceTo(_turnCenter) - 1.5 * MyStrategy.game.TrackTileSize;
-            }
+            var extended = ExtendWaySegments(pts);
+            _bruteWayPoints = extended.GetRange(0, Math.Min(70, extended.Count)).ToArray();
+#if DEBUG
+            var bruteWayPoints = new Points();
+            bruteWayPoints.AddRange(_bruteWayPoints);
+            MyStrategy.SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, bruteWayPoints));
+#endif
+            _needDist = MyStrategy.game.TrackTileSize/2;
+            _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
 #if DEBUG
             MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircle>(Brushes.OrangeRed, new ACircle { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
 #endif
-
-            if (!_prevTurnCenter.Equals(_turnCenter) || !_prevTurnTo.Equals(_turnTo))
-                _cache = null;
-
-            _prevTurnCenter = _turnCenter.Clone();
-            _prevTurnTo = _turnTo.Clone();
 
             _patterns = Patterns.Select(pt => new PathPattern
             {

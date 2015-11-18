@@ -91,16 +91,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (wheelTurn > 1 + MyStrategy.Eps || wheelTurn < -1 - MyStrategy.Eps)
                 throw new Exception("invalid wheelTurn " + wheelTurn);
 
-            if (enginePower > EnginePower)
-                EnginePower = Math.Min(EnginePower + MyStrategy.game.CarEnginePowerChangePerTick, enginePower);
-            else
-                EnginePower = Math.Max(EnginePower - MyStrategy.game.CarEnginePowerChangePerTick, enginePower);
+            EnginePower = enginePower > EnginePower 
+                ? Math.Min(EnginePower + MyStrategy.game.CarEnginePowerChangePerTick, enginePower) 
+                : Math.Max(EnginePower - MyStrategy.game.CarEnginePowerChangePerTick, enginePower);
 
 
-            if (wheelTurn > WheelTurn)
-                WheelTurn = Math.Min(WheelTurn + MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn);
-            else
-                WheelTurn = Math.Max(WheelTurn - MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn);
+            WheelTurn = wheelTurn > WheelTurn 
+                ? Math.Min(WheelTurn + MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn) 
+                : Math.Max(WheelTurn - MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn);
                 
 
             if (MyStrategy.world.Tick >= MyStrategy.game.InitialFreezeDurationTicks)
@@ -148,6 +146,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     dir = Point.ByAngle(Angle);
                     AngularSpeed = baseAngSpd + (AngularSpeed - baseAngSpd) * rotationFrictionMultiplier;
                 }
+
             }
         }
 

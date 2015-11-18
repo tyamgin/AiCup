@@ -33,7 +33,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (i2 == i1 - 1) // go top
                     return _tileFreeTop(tiles[i1, j1]) && _tileFreeBottom(tiles[i2, j2]);
             }
-            throw new Exception("something wrong");
+            throw new Exception("something wrong in _canPass");
         }
 
         private Cell _bfs(int startI, int startJ, int endI, int endJ)
@@ -69,12 +69,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 var ni = _dx[k] + startI;
                 var nj = _dy[k] + startJ;
-                if (ni >= 0 && nj >= 0 && ni < world.Height && nj < world.Width && d[ni, nj] == dist - 1)
+                if (_canPass(startI, startJ, ni, nj) && d[ni, nj] == dist - 1)
                 {
                     return new Cell(ni, nj);
                 }
             }
-            throw new Exception("something wrong");
+            throw new Exception("something wrong in bfs");
         }
 
         private static bool _tileFreeLeft(TileType type)
@@ -137,13 +137,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             var c = GetCenter(cell);
             var margin = game.TrackTileSize/2 - game.TrackTileMargin - additionalMargin;
-            var LX = c.X - margin;
-            var RX = c.X + margin;
-            var LY = c.Y - margin;
-            var RY = c.Y + margin;
+            var lx = c.X - margin;
+            var rx = c.X + margin;
+            var ly = c.Y - margin;
+            var ry = c.Y + margin;
             
             // внутри квадрата
-            if (LX <= p.X && p.X <= RX && LY <= p.Y && p.Y <= RY)
+            if (lx <= p.X && p.X <= rx && ly <= p.Y && p.Y <= ry)
                 return false;
 
             // в углу
@@ -157,13 +157,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // по бокам
-            if (p.X < LX)
+            if (p.X < lx)
                 return !_tileFreeLeft(tileType);
-            if (p.X > RX)
+            if (p.X > rx)
                 return !_tileFreeRight(tileType);
-            if (p.Y < LY)
+            if (p.Y < ly)
                 return !_tileFreeTop(tileType);
-            if (p.Y > RY)
+            if (p.Y > ry)
                 return !_tileFreeBottom(tileType);
 
             throw new Exception("something wrong");

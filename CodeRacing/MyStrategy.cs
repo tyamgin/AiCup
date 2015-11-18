@@ -54,6 +54,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     _waypointIterator[car.Id] = (_waypointIterator[car.Id] + 1)%waypoints.Length;
                 }
+                DurabilityObserver.Watch(car);
             }
 
             if (TileCorner == null)
@@ -113,27 +114,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             car.Move(m.EnginePower, turn, m.IsBrake, simpleMode);
             return car.GetRect().All(p => !_intersectTail(p));
         }
-
-#if DEBUG
-        void DrawWay(Moves stack, Brush brush)
-        {
-            if (stack == null)
-                return;
-            stack = stack.Clone();
-            var drawPts = new Points();
-            var drawModel = new ACar(self);
-            while (stack.Count > 0)
-            {
-                var m = stack[0];
-
-                drawPts.Add(new Point(drawModel));
-                ModelMove(drawModel, m);
-                m.Times--;
-                stack.Normalize();
-            }
-            SegmentsDrawQueue.Add(new Tuple<Brush, Points>(brush, drawPts));
-        }
-#endif
 
         private PathBruteForce brute, brute2, brute3;
 

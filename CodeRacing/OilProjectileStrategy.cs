@@ -85,34 +85,32 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return false;
 
             var projectiles = GetProjectiles(new ACar(self));
-//#if DEBUG
-//            var projPoints = projectiles.Select(x => new Points()).ToArray();
-//#endif
+
             var shot = new bool[projectiles.Length];
             for (var t = 1; t < OpponentsTicksPrediction; t++)
             {
                 for(var prId = 0; prId < projectiles.Length; prId++)
                 {
                     var pr = projectiles[prId];
+                    if (!pr.Exists)
+                        continue;
+
                     pr.Move();
-//#if DEBUG
-//                    projPoints[prId].Add(new Point(pr));
-//#endif
+
                     foreach (var opp in OpponentsCars[t])
                     {
                         if (opp.GetRect().ContainPoint(pr))
                         {
-                            shot[prId] = true;
+                            // если он не мертв
+                            if (DurabilityObserver.ReactivationTime(opp.Original) + 2 < world.Tick + t)
+                                shot[prId] = true;
+                            pr.Exists = false;
                         }
                     }
                 }
             }
-//#if DEBUG
-//            foreach(var projP in projPoints)
-//                _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Blue, projP));
-//#endif
             var shotCount = shot.Count(val => val);
-            return shotCount >= 2 || shotCount == 1 && self.ProjectileCount > 1;
+            return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 1;
         }
 
         bool CheckUseNitro(Point to)

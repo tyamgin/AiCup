@@ -6,6 +6,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public ProjectileType Type;
         public Point Speed;
+        public bool Exists = true;
 
         public void Move()
         {

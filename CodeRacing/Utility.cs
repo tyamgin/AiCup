@@ -59,6 +59,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return new Cell((int)(y / game.TrackTileSize), (int)(x / game.TrackTileSize));
         }
 
+        public static Cell GetCell(Point p)
+        {
+            return GetCell(p.X, p.Y);
+        }
+
         public static Point GetCenter(Cell cell)
         {
             return new Point((cell.J + 0.5) * game.TrackTileSize, (cell.I + 0.5) * game.TrackTileSize);
