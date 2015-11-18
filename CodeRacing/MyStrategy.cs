@@ -7,11 +7,10 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
-    // TODO: откатывается назад после восстановления
+    // TODO: откатывается назад после восстановления - [вроде уже не актуально]
 
     public partial class MyStrategy : IStrategy
-    {
-        public static World world;
+    {public static World world;
         public static Game game;
         public Move move;
         public Car self;
@@ -277,17 +276,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         DrawWay(bestMoveStacks[2], Brushes.DeepPink);
 #endif
                 }
-//                else if (BestPointTime < Infinity && BestPointIdx > 20)
-//                {
-//                    _bruteUnsuccess = true;
-//                    if (BestMovesStack.ComputeTime() != BestPointTime)
-//                        throw new Exception("ComputeTime != BestPointTime");
-//                    BestMovesStack.Normalize();
-//                    BestMovesStack[0].Apply(move, new ACar(self));
-//#if DEBUG
-//                    DrawWay(Brushes.Red);
-//#endif
-//                }
                 else
                 {
                     move.EnginePower = 0.2;
@@ -307,8 +295,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Points PositionsHistory = new Points();
         public int BackModeRemainTicks;
         public double BackModeTurn;
-
-        private ACar _tmp;
 
         public void Move(Car self, World world, Game game, Move move)
         {

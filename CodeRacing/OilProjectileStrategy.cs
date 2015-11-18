@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Xml.Serialization;
-using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
