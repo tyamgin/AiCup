@@ -107,7 +107,7 @@
     <Compile Include="MyStrategy.cs" />
     <Compile Include="OilProjectileStrategy.cs" />
     <Compile Include="PathBruteForce.cs" />
-    <Compile Include="Point.cs">
+    <Compile Include="Geometry.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />

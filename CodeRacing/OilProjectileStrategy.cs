@@ -12,9 +12,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var p2 = carRect[3] + Point.ByAngle(car.Angle)*20;
             var p3 = car + Point.ByAngle(car.Angle) * (car.Original.Width / 2 + 20);
             return world.Cars.Select(x => new ACar(x).GetRect()).Any(
-                rect => rect.ContainPoint(p1) ||
-                        rect.ContainPoint(p2) ||
-                        rect.ContainPoint(p3)
+                rect => Geom.ContainPoint(rect, p1) ||
+                        Geom.ContainPoint(rect, p2) ||
+                        Geom.ContainPoint(rect, p3)
                 );
         }
 
@@ -97,11 +97,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     foreach (var opp in OpponentsCars[t])
                     {
-                        if (opp.GetRect().ContainPoint(pr))
+                        if (Geom.ContainPoint(opp.GetRect(), pr))
                         {
-                            // если он не мертв
                             if (DurabilityObserver.ReactivationTime(opp.Original) + 2 < world.Tick + t)
+                            {
+                                // если он не мертв
                                 shot[prId] = true;
+                            }
                             pr.Exists = false;
                         }
                     }

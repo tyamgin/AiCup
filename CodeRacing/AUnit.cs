@@ -40,9 +40,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public double Width, Height;
 
-        public Points GetRect()
+        public Point[] GetRect()
         {
-            var result = new Points();
             // 3  o---o  0
             //    o ^ o
             //    o   o
@@ -50,8 +49,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var dir = new Point(Width / 2, Height / 2);
             var angle = Math.Atan2(dir.Y, dir.X);
             var angles = new[] { Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle };
+            var result = new Point[4];
             for (var i = 0; i < 4; i++)
-                result.Add(this + ByAngle(angles[i]) * dir.Length);
+                result[i] = this + ByAngle(angles[i]) * dir.Length;
 
             return result;
         }
