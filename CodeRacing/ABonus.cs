@@ -22,6 +22,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Id = bonus.Id;
         }
 
+        /// <summary>
+        /// Важность бонуса для машины.
+        /// Число от 0 до 1
+        /// </summary>
+        /// <param name="self"></param>
+        /// <returns></returns>
         public double GetImportance(Car self)
         {
             double result;

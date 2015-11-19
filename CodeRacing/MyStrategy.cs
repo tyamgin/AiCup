@@ -7,7 +7,8 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
-    // TODO: откатывается назад после восстановления - [вроде уже не актуально]
+    // TODO: штрафовать лужи
+    // TODO: обработать столкновения с бонусами и убрать костыль
 
     public partial class MyStrategy : IStrategy
     {
@@ -21,7 +22,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static Point[,,] TileCorner;
 
         public const double SafeMargin = 10.0;
-        public const long TimerLogLimit = 3;
+        public const long TimerLogLimit = 5;
 
         public static double CarDiagonalHalfLength;
         public static double BonusDiagonalHalfLength;
@@ -121,14 +122,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return car.GetRect().All(p => !IntersectTail(p));
         }
 
-        private PathBruteForce brute, brute2, brute3;
+        private PathBruteForce[] brutes;
 
         private void _move()
         {
             var pts = GetWaySegments(self);
-//#if DEBUG
-//            _segmentsQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, GetWaySegments(self)));
-//#endif
             var to = pts[1];
 
             if (CheckUseProjectile())
@@ -176,80 +174,130 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
             }
 
-            if (brute == null)
+            if (brutes == null)
             {
-                brute = new PathBruteForce(new []
+                brutes = new[]
                 {
-                    new PathPattern
+                    new PathBruteForce(new[]
                     {
-                        From = 0,
-                        To = 40,
-                        Step = 4,
-                        Move = new AMove { EnginePower = 1, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToCenter}, IsBrake = false}
-                    },
-                    new PathPattern
-                    {
-                        From = 0,
-                        To = 20,
-                        Step = 4,
-                        Move = new AMove { EnginePower = 0.5, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = false }
-                    },
-                    new PathPattern
-                    {
-                        From = 0,
-                        To = 34,
-                        Step = 2,
-                        Move = new AMove { EnginePower = 0, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = true }
-                    }
-                }, 8, id:0);
-                
-                brute2 = new PathBruteForce(new[]
-                {
-                    new PathPattern
-                    {
-                        From = 0,
-                        To = 25,
-                        Step = 1,
-                        Move = new AMove { EnginePower = 0.2, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = false }
-                    },
-                    new PathPattern
-                    {
-                        From = 0,
-                        To = 34,
-                        Step = 2,
-                        Move = new AMove { EnginePower = 0, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = true }
-                    }
-                }, 8, id:1);
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 40,
+                            Step = 4,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 1,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToCenter},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 20,
+                            Step = 4,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0.5,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 34,
+                            Step = 2,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = true
+                                }
+                        }
+                    }, 8, id: 0),
 
-                brute3 = new PathBruteForce(new[]
-                {
-                    new PathPattern
+                    new PathBruteForce(new[]
                     {
-                        From = 0,
-                        To = 20,
-                        Step = 4,
-                        Move = new AMove { EnginePower = 0.5, WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromCenter}, IsBrake = false}
-                    },
-                    new PathPattern
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 25,
+                            Step = 1,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0.2,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 34,
+                            Step = 2,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = true
+                                }
+                        }
+                    }, 8, id: 1),
+
+                    new PathBruteForce(new[]
                     {
-                        From = 0,
-                        To = 24,
-                        Step = 2,
-                        Move = new AMove { EnginePower = 1, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = false }
-                    },
-                    new PathPattern
-                    {
-                        From = 0,
-                        To = 32,
-                        Step = 4,
-                        Move = new AMove { EnginePower = 0, WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext}, IsBrake = true }
-                    }
-                }, 8, id:2);
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 20,
+                            Step = 4,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0.5,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromCenter},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 24,
+                            Step = 2,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 1,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 32,
+                            Step = 4,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = true
+                                }
+                        }
+                    }, 8, id: 2)
+                };
             }
             else
             {
                 TimerStart();
-                var brutes = new[] { brute, brute2, brute3 };
                 var bestMoveStacks = new Moves[brutes.Length];
                 for(var i = 0; i < brutes.Length; i++)
                     bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
@@ -286,6 +334,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
                 else
                 {
+                    // TODO: придумать нормальный альтернативный алгоритм
                     move.EnginePower = 0.2;
                     move.WheelTurn = self.GetAngleTo(to.X, to.Y);
                     var tmp = new ACar(self);

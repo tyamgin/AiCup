@@ -7,15 +7,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        private int[] _dx = { 0, 0, -1, 1 };
-        private int[] _dy = { -1, 1, 0, 0 };
+        private static int[] _dx = { 0, 0, -1, 1 };
+        private static int[] _dy = { -1, 1, 0, 0 };
 
-        private Cell _bfs(Cell start, Cell end, Cell[] forbidden)
+        private static Cell _bfs(Cell start, Cell end, Cell[] forbidden)
         {
             return _bfs(start.I, start.J, end.I, end.J, forbidden);
         }
 
-        private bool _canPass(int i1, int j1, int i2, int j2)
+        private static bool _canPass(int i1, int j1, int i2, int j2)
         {
             if (i2 < 0 || i2 >= world.Height || j2 < 0 || j2 >= world.Width)
                 return false;
@@ -37,16 +37,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong in _canPass");
         }
 
-        private Cell _bfs(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
+        private static int[,] _distMap;
+
+        public static int BfsDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
         {
-            var d = new int[world.Height, world.Width];
+            _bfs(startI, startJ, endI, endJ, forbidden);
+            return _distMap[startI, startJ];
+        }
+
+        private static Cell _bfs(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
+        {
+            if (_distMap == null)
+                _distMap = new int[world.Height, world.Width];
+
             var q = new Queue<int>();
             q.Enqueue(endI);
             q.Enqueue(endJ);
             for (var i = 0; i < world.Height; i++)
                 for (var j = 0; j < world.Width; j++)
-                    d[i, j] = Infinity;
-            d[endI, endJ] = 0;
+                    _distMap[i, j] = Infinity;
+            _distMap[endI, endJ] = 0;
             while (q.Count > 0)
             {
                 var i = q.Dequeue();
@@ -55,22 +65,22 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var ni = _dx[k] + i;
                     var nj = _dy[k] + j;
-                    if (_canPass(i, j, ni, nj) && d[ni, nj] == Infinity && !forbidden.Any(x => x.Equals(ni, nj)))
+                    if (_canPass(i, j, ni, nj) && _distMap[ni, nj] == Infinity && !forbidden.Any(x => x.Equals(ni, nj)))
                     {
-                        d[ni, nj] = d[i, j] + 1;
+                        _distMap[ni, nj] = _distMap[i, j] + 1;
                         q.Enqueue(ni);
                         q.Enqueue(nj);
                     }
                 }
             }
-            var dist = d[startI, startJ];
+            var dist = _distMap[startI, startJ];
             if (dist == Infinity)
                 throw new Exception("path not found");
             for (var k = 0; k < 4; k++)
             {
                 var ni = _dx[k] + startI;
                 var nj = _dy[k] + startJ;
-                if (_canPass(startI, startJ, ni, nj) && d[ni, nj] == dist - 1)
+                if (_canPass(startI, startJ, ni, nj) && _distMap[ni, nj] == dist - 1)
                 {
                     return new Cell(ni, nj);
                 }
@@ -204,12 +214,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static bool CheckVisibility(Car car, Point from, Point to)
         {
             var delta = 10.0;
-            var c = (int)(@from.GetDistanceTo(to) / delta + 2);
-            delta = @from.GetDistanceTo(to)/c;
-            var dir = (to - @from).Normalized();
+            var c = (int)(from.GetDistanceTo(to) / delta + 2);
+            delta = from.GetDistanceTo(to)/c;
+            var dir = (to - from).Normalized();
             for (var i = 0; i <= c; i++)
             {
-                var p = @from + dir*(delta*i);
+                var p = from + dir*(delta*i);
                 if (IntersectTail(p, car.Height / 2 + 10))
                     return false;
             }
@@ -246,48 +256,5 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             return result;
         }
-
-        //public Points Closify(Points pts)
-        //{
-        //    for (var i = 2; i < pts.Count; i++)
-        //    {
-        //        pts[i - 1] = _closify(pts[i - 2], pts[i - 1], pts[i]);
-        //    }
-        //    return pts;
-        //}
-
-        //private Point _closify(Point a, Point b, Point c)
-        //{
-        //    Point corner = null;
-        //    var cell = GetCell(b.X, b.Y);
-        //    for (var i = 0; i < 2; i++)
-        //    {
-        //        for (var j = 0; j < 2; j++)
-        //        {
-        //            var p = new Point(game.TrackTileSize*(cell.J + j), game.TrackTileSize*(cell.I + i));
-        //            if (new Points { a, b, c }.ContainPoint(p))
-        //            {
-        //                corner = p;
-        //                break;
-        //            }
-        //        }
-        //    }
-        //    if (corner == null)
-        //        return b;
-
-        //    var dir = (corner - b).Normalized();
-            
-        //    double L = 0, R = b.GetDistanceTo(corner);
-        //    for (var it = 0; it < 10; it++)
-        //    {
-        //        var m = (L + R)/2;
-        //        var f = b + dir*m;
-        //        if (!CheckVisibility(a, f) || !CheckVisibility(f, c))
-        //            R = m;
-        //        else
-        //            L = m;
-        //    }
-        //    return b + dir*L;
-        //}
     }
 }

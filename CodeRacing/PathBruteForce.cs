@@ -38,8 +38,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private Moves _movesStack, _bestMovesStack;
         private int _bestTime;
         private double _bestImportance;
-        //private int _bestPointIdx;
-        //private int _bestPointTime;
         private Point[] _bruteWayPoints;
 
         private delegate void CarCallback(ACar car, int time, double importance);
@@ -56,7 +54,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
         {
-            return time1 - importance1 * PathBruteForce.BonusImportanceCoeff < time2 - importance2 * PathBruteForce.BonusImportanceCoeff;
+            return time1 - importance1 * BonusImportanceCoeff < time2 - importance2 * BonusImportanceCoeff;
         }
 
         public PathBruteForce(PathPattern[] patterns, int interval, int id)
@@ -100,27 +98,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     _bestMovesStack = _movesStack.Clone();
                     _bestMovesStack.Add(m);
                 }
-                //if (_bestTime == MyStrategy.Infinity)
-                //{
-                //    var sel = 0;
-                //    double minDist = MyStrategy.Infinity;
-                //    for (var i = 1; i < _bruteWayPoints.Length; i++)
-                //    {
-                //        if (_bruteWayPoints[i].GetDistanceTo2(model) <= minDist)
-                //        {
-                //            minDist = _bruteWayPoints[i].GetDistanceTo2(model);
-                //            sel = i;
-                //        }
-                //    }
-                //    if (sel > _bestPointIdx || sel == _bestPointIdx && totalTime < _bestPointTime)
-                //    {
-                //        _bestPointIdx = sel;
-                //        _bestPointTime = totalTime;
-                //        _bestMovesStack = _movesStack.Clone();
-                //        _bestMovesStack.Add(m);
-                //    }
-                //}
-
                 return;
             }
 
@@ -134,9 +111,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     Times = 0
                 }, totalTime, totalImportance, (aCar, totalTimeAfter, totalImportanceAfter) =>
                 {
-                    //TODO
-                    //if (totalTime >= _bestTime)
-                    //    return;
+                    // TODO: как-то отсечь мб?
                     _doRecursive(aCar.Clone(), idx + 1, totalTimeAfter, totalImportanceAfter);
                 });
         }
@@ -215,12 +190,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bestMovesStack = new Moves();
             _bestTime = MyStrategy.Infinity;
             _bestImportance = 0;
-            //_bestPointTime = MyStrategy.Infinity;
-            //_bestPointIdx = 0;
 
             _bonusCandidates = MyStrategy.world.Bonuses
                 .Where(b => Self.GetDistanceTo(b) < MyStrategy.game.TrackTileSize*5)
                 .Select(b => new ABonus(b))
+                .Where(b =>
+                {
+                    var selfCell = MyStrategy.GetCell(Self);
+                    var bCell = MyStrategy.GetCell(b);
+                    if (selfCell.Equals(bCell))
+                        return true;
+                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[]{});
+                    return dist <= 5;
+                })
                 .ToArray();
 
             if (_cache != null)
