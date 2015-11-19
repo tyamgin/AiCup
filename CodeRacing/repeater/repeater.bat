@@ -1,1 +1,1 @@
-"C:\Program Files\Java\jre1.8.0_65\bin\java.exe" -cp ".;*;%~dp0/*" -jar repeater.jar %1
+java -cp ".;*;%~dp0/*" -jar repeater.jar %1

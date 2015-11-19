@@ -209,11 +209,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 for (var k = 0; k < _patterns.Length; k++)
                 {
-                    //_patterns[k].From = Math.Max(0, _cache[k].Times - 8);
-                    //_patterns[k].To = _cache[k].Times + 8;
-                    //_patterns[k].Step = 2;
-                    _patterns[k].From = Math.Max(0, _cache[k].Times - 4);
-                    _patterns[k].To = _cache[k].Times + 4;
+                    var range = k == 0 ? 8 : 4;
+                    _patterns[k].From = Math.Max(0, _cache[k].Times - range);
+                    _patterns[k].To = _cache[k].Times + range;
                     _patterns[k].Step = 2;
                 }
             }

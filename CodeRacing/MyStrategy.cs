@@ -115,11 +115,25 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             TimeEndLog("PrepareOpponentsPath");
         }
 
-        public static bool ModelMove(ACar car, AMove m, bool simpleMode = false)
+        public static bool ModelMove(ACar car, AMove m, bool simpleMode = false, bool exactlyBorders = false)
         {
+            var prevStateX = car.X;
+            var prevStateY = car.Y;
+            var prevStateAngle = car.Angle;
+
             var turn = m.WheelTurn is Point ? TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             car.Move(m.EnginePower, turn, m.IsBrake, simpleMode);
-            return car.GetRect().All(p => !IntersectTail(p));
+            var ok = car.GetRect().All(p => !IntersectTail(p, exactlyBorders ? 0 : SafeMargin));
+            if (!ok)
+            {
+                // HACK
+                car.X = prevStateX;
+                car.Y = prevStateY;
+                car.Angle = prevStateAngle;
+                car.Speed = Point.Zero;
+                car.AngularSpeed = 0;
+            }
+            return ok;
         }
 
         private PathBruteForce[] brutes;
@@ -150,9 +164,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var md = new ACar(self);
                     var cn = 0;
-                    while (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }))
-                        cn++;
-                    if (cn < 30 || IsSomeoneAhead(new ACar(self)))
+                    for(var i = 0; i < 80; i++)
+                        if (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }, simpleMode:false, exactlyBorders:true))
+                            cn++;
+                    if (cn < 25 || IsSomeoneAhead(new ACar(self)))
                     {
                         BackModeRemainTicks = 50;
                         BackModeTurn = self.GetAngleTo(to.X, to.Y) < 0 ? 1 : -1;
