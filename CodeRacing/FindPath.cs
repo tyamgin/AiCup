@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -9,9 +10,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private int[] _dx = { 0, 0, -1, 1 };
         private int[] _dy = { -1, 1, 0, 0 };
 
-        private Cell _bfs(Cell start, Cell end)
+        private Cell _bfs(Cell start, Cell end, Cell[] forbidden)
         {
-            return _bfs(start.I, start.J, end.I, end.J);
+            return _bfs(start.I, start.J, end.I, end.J, forbidden);
         }
 
         private bool _canPass(int i1, int j1, int i2, int j2)
@@ -36,7 +37,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong in _canPass");
         }
 
-        private Cell _bfs(int startI, int startJ, int endI, int endJ)
+        private Cell _bfs(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
         {
             var d = new int[world.Height, world.Width];
             var q = new Queue<int>();
@@ -54,7 +55,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var ni = _dx[k] + i;
                     var nj = _dy[k] + j;
-                    if (_canPass(i, j, ni, nj) && d[ni, nj] == Infinity)
+                    if (_canPass(i, j, ni, nj) && d[ni, nj] == Infinity && !forbidden.Any(x => x.Equals(ni, nj)))
                     {
                         d[ni, nj] = d[i, j] + 1;
                         q.Enqueue(ni);
@@ -217,27 +218,33 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public Points GetWaySegments(Car car)
         {
-            var res = new Points();
+            var result = new Points();
+            var isWayPoint = new List<bool>();
             var myCell = GetCell(car.X, car.Y);
-            res.Add(new Point(car));
+            result.Add(new Point(car));
+            isWayPoint.Add(false);
+            Cell prevCell = null;
 
-            for (var e = 1; res.Count < 5; e++)
+            for (var e = 1; result.Count < 5; e++)
             {
                 var nextWp = GetNextWayPoint(car, e);
                 for (var cur = myCell; !cur.Equals(nextWp);)
                 {
-                    var cCell = _bfs(cur, nextWp);
+                    var cCell = _bfs(cur, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
                     var nxt = GetCenter(cCell);
-                    while (res.Count > 1 && CheckVisibility(car, res[res.Count - 2], nxt))
+                    while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nxt))
                     {
-                        res.Pop();
+                        result.Pop();
+                        isWayPoint.RemoveAt(isWayPoint.Count - 1);
                     }
-                    res.Add(nxt);
+                    result.Add(nxt);
+                    isWayPoint.Add(cCell.Equals(nextWp));
+                    prevCell = cur;
                     cur = cCell;
                 }
                 myCell = nextWp;
             }
-            return res;
+            return result;
         }
 
         //public Points Closify(Points pts)
