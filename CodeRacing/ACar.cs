@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -87,8 +88,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public void Move(double enginePower, double wheelTurn, bool isBreak, bool simpleMode)
         {
             double updateIterations = simpleMode ? 2 : 10; // TODO: make it int
-            var frictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarMovementAirFrictionFactor, 1.0 / updateIterations);
-            var rotationFrictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarRotationFrictionFactor, 1.0 / updateIterations);
+            var frictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarMovementAirFrictionFactor, 1.0/updateIterations);
+            var rotationFrictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarRotationFrictionFactor,
+                1.0/updateIterations);
 
             if (enginePower > 1 + MyStrategy.Eps || enginePower < -1 - MyStrategy.Eps)
                 throw new Exception("invalid enginePower " + enginePower);
@@ -96,15 +98,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (wheelTurn > 1 + MyStrategy.Eps || wheelTurn < -1 - MyStrategy.Eps)
                 throw new Exception("invalid wheelTurn " + wheelTurn);
 
-            EnginePower = enginePower > EnginePower 
-                ? Math.Min(EnginePower + MyStrategy.game.CarEnginePowerChangePerTick, enginePower) 
+            EnginePower = enginePower > EnginePower
+                ? Math.Min(EnginePower + MyStrategy.game.CarEnginePowerChangePerTick, enginePower)
                 : Math.Max(EnginePower - MyStrategy.game.CarEnginePowerChangePerTick, enginePower);
 
 
-            WheelTurn = wheelTurn > WheelTurn 
-                ? Math.Min(WheelTurn + MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn) 
+            WheelTurn = wheelTurn > WheelTurn
+                ? Math.Min(WheelTurn + MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn)
                 : Math.Max(WheelTurn - MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn);
-                
+
 
             if (MyStrategy.world.Tick >= MyStrategy.game.InitialFreezeDurationTicks)
             {
@@ -114,25 +116,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 var baseAngSpd = AngularSpeed; // WTF???
                 AngularSpeed -= baseAngSpd;
-                baseAngSpd = MyStrategy.game.CarAngularSpeedFactor * WheelTurn * (Speed * dir);
+                baseAngSpd = MyStrategy.game.CarAngularSpeedFactor*WheelTurn*(Speed*dir);
                 AngularSpeed += baseAngSpd;
 
                 var carAcceleration = EnginePower >= 0
                     ? _carAccelerationUp
                     : _carAccelerationDown;
 
-                var accelerationDelta = dir * (carAcceleration * EnginePower / updateIterations);
+                var accelerationDelta = dir*(carAcceleration*EnginePower/updateIterations);
 
                 var lengthwiseMovementFrictionFactor = isBreak
                     ? MyStrategy.game.CarCrosswiseMovementFrictionFactor
                     : MyStrategy.game.CarLengthwiseMovementFrictionFactor;
                 lengthwiseMovementFrictionFactor /= updateIterations;
-                var crosswiseMovementFrictionFactor = MyStrategy.game.CarCrosswiseMovementFrictionFactor / updateIterations;
+                var crosswiseMovementFrictionFactor = MyStrategy.game.CarCrosswiseMovementFrictionFactor/
+                                                      updateIterations;
 
                 for (var i = 0; i < updateIterations; i++)
                 {
-                    X += Speed.X / updateIterations;
-                    Y += Speed.Y / updateIterations;
+                    X += Speed.X/updateIterations;
+                    Y += Speed.Y/updateIterations;
                     if (!isBreak)
                     {
                         Speed.X += accelerationDelta.X;
@@ -147,12 +150,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     Speed.X = dir.X*t1 + dir.Y*t2;
                     Speed.Y = dir.Y*t1 - dir.X*t2;
 
-                    Angle += AngularSpeed / updateIterations;
+                    Angle += AngularSpeed/updateIterations;
                     dir = Point.ByAngle(Angle);
-                    AngularSpeed = baseAngSpd + (AngularSpeed - baseAngSpd) * rotationFrictionMultiplier;
+                    AngularSpeed = baseAngSpd + (AngularSpeed - baseAngSpd)*rotationFrictionMultiplier;
                 }
 
             }
+        }
+
+        public bool TakeBonus(ABonus bonus)
+        {
+            if (GetDistanceTo2(bonus) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.BonusDiagonalHalfLength))
+                return false;
+            return Geom.PolygonsIntersect(GetRect(), bonus.GetRect());
         }
     }
 }

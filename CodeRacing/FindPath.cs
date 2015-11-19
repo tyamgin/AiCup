@@ -170,7 +170,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong");
         }
 
-        private static bool _intersectTail(Point p, double additionalMargin = SafeMargin)
+        public static bool IntersectTail(Point p, double additionalMargin = SafeMargin)
         {
             if (_intersectTailCacheSafe == null)
             {
@@ -204,13 +204,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static bool CheckVisibility(Car car, Point from, Point to)
         {
             var delta = 10.0;
-            var c = (int)(from.GetDistanceTo(to) / delta + 2);
-            delta = from.GetDistanceTo(to)/c;
-            var dir = (to - from).Normalized();
+            var c = (int)(@from.GetDistanceTo(to) / delta + 2);
+            delta = @from.GetDistanceTo(to)/c;
+            var dir = (to - @from).Normalized();
             for (var i = 0; i <= c; i++)
             {
-                var p = from + dir*(delta*i);
-                if (_intersectTail(p, car.Height / 2 + 10))
+                var p = @from + dir*(delta*i);
+                if (IntersectTail(p, car.Height / 2 + 10))
                     return false;
             }
             return true;

@@ -58,7 +58,32 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public int ComputeTime()
         {
-            return this.Select(m => m.Times).Sum();
+            return this.Sum(x => x.Times);
+        }
+
+        public double ComputeImportance(ACar model)
+        {
+            model = model.Clone();
+            var totalImportance = 0.0;
+            foreach (var move in this)
+            {
+                for(var t = 0; t < move.Times; t++)
+                    _modelMove(model, move, ref totalImportance);
+            }
+            return ComputeTime() - PathBruteForce.BonusImportanceCoeff*totalImportance;
+        }
+
+        private bool _modelMove(ACar car, AMove m, ref double totalImportance)
+        {
+            var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
+            var prevCar = car.Clone();
+            car.Move(m.EnginePower, turn, m.IsBrake, false);
+            
+            totalImportance += MyStrategy.world.Bonuses
+                .Select(bonus => new ABonus(bonus))
+                .Where(bonus => car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
+                .Sum(bonus => bonus.GetImportance(car.Original));
+            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
         }
 
         public void Pop()

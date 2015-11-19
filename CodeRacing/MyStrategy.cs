@@ -10,7 +10,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     // TODO: откатывается назад после восстановления - [вроде уже не актуально]
 
     public partial class MyStrategy : IStrategy
-    {public static World world;
+    {
+        public static World world;
         public static Game game;
         public Move move;
         public Car self;
@@ -22,11 +23,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double SafeMargin = 10.0;
         public const long TimerLogLimit = 3;
 
+        public static double CarDiagonalHalfLength;
+        public static double BonusDiagonalHalfLength;
+
         void Initialize()
         {
-            MapWidth = game.TrackTileSize*world.Width;
-            MapHeight = game.TrackTileSize*world.Height;
-
             // intialize tiles
             tiles = new TileType[world.Height, world.Width];
             var t = world.TilesXY;
@@ -66,6 +67,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 TileCorner[i, j, di*2 + dj]
                                     = new Point((j + dj)*game.TrackTileSize, (i + di)*game.TrackTileSize);
 
+
+                MapWidth = game.TrackTileSize*world.Width;
+                MapHeight = game.TrackTileSize*world.Height;
+
+                CarDiagonalHalfLength = Geom.Gypot(game.CarWidth, game.CarHeight)/2;
+                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize, game.BonusSize)/2-6;//HACK
             }
 
             Opponents = world.Cars.Where(car => !car.IsTeammate).ToArray();
@@ -111,7 +118,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             var turn = m.WheelTurn is Point ? TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             car.Move(m.EnginePower, turn, m.IsBrake, simpleMode);
-            return car.GetRect().All(p => !_intersectTail(p));
+            return car.GetRect().All(p => !IntersectTail(p));
         }
 
         private PathBruteForce brute, brute2, brute3;
@@ -239,14 +246,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }
                 }, 8, id:2);
             }
-// TODO: удалить когда бонусы
-//////
-            if (self.GetDistanceTo(to.X, to.Y) > game.TrackTileSize * 2.7 && Math.Abs(self.GetAngleTo(to.X, to.Y)) < Math.PI / 6)
-            {
-                move.EnginePower = 1;
-                move.WheelTurn = self.GetAngleTo(to.X, to.Y);
-            }
-//////
             else
             {
                 TimerStart();
@@ -257,12 +256,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 TimeEndLog("brute");
 
                 var sel = -1;
+                double bestTime = Infinity;
                 for (var i = 0; i < brutes.Length; i++)
                 {
                     if (bestMoveStacks[i] == null)
                         continue;
-                    if (sel == -1 || bestMoveStacks[i].ComputeTime() < bestMoveStacks[sel].ComputeTime())
+                    var time = bestMoveStacks[i].ComputeImportance(new ACar(self));
+                    if (sel == -1 ||
+                        brutes[i].LastSuccess > brutes[sel].LastSuccess ||
+                        brutes[i].LastSuccess == brutes[sel].LastSuccess && time < bestTime)
+                    {
                         sel = i;
+                        bestTime = time;
+                    }
                 }
 
                 if (sel != -1)
@@ -293,7 +299,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
         }
 
-        
         public Points PositionsHistory = new Points();
         public int BackModeRemainTicks;
         public double BackModeTurn;

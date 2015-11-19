@@ -28,6 +28,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
     public class PathBruteForce
     {
+        public const double BonusImportanceCoeff = 20;
+
         public readonly PathPattern[] Patterns;
         public ACar Self;
         public int Id;
@@ -35,19 +37,27 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private PathPattern[] _patterns;
         private Moves _movesStack, _bestMovesStack;
         private int _bestTime;
-        private int _bestPointIdx;
-        private int _bestPointTime;
+        private double _bestImportance;
+        //private int _bestPointIdx;
+        //private int _bestPointTime;
         private Point[] _bruteWayPoints;
 
-        private delegate void CarCallback(ACar car, int time);
+        private delegate void CarCallback(ACar car, int time, double importance);
 
         private Moves _cache;
-        private int _lastSuccess; // Когда последний раз брут что-то находил
+        public int LastSuccess; // Когда последний раз брут что-то находил
         private int _lastCall; // Когда последний раз вызывали. Если не вызывали - значит был success
 
         private Point _turnCenter, _turnTo;
         private double _needDist;
         private int _interval;
+
+        private ABonus[] _bonusCandidates;
+
+        private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
+        {
+            return time1 - importance1 * PathBruteForce.BonusImportanceCoeff < time2 - importance2 * PathBruteForce.BonusImportanceCoeff;
+        }
 
         public PathBruteForce(PathPattern[] patterns, int interval, int id)
         {
@@ -56,7 +66,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Id = id;
         }
 
-        private void _doRecursive(ACar model, int idx, int totalTime)
+        private void _doRecursive(ACar model, int idx, int totalTime, double totalImportance)
         {
             model = model.Clone();
 
@@ -71,9 +81,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 };
 
                 var end = true;
-                for (; totalTime < _bestTime && _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
+                for (; /*totalTime < _bestTime &&*/ _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
                 {
-                    if (!MyStrategy.ModelMove(model, m))
+                    if (!_modelMove(model, m, ref totalImportance))
                     {
                         end = false;
                         break;
@@ -83,32 +93,33 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
                     return;
 
-                if (end && totalTime < _bestTime)
+                if (end && _isBetterTime(totalTime, totalImportance, _bestTime, _bestImportance))
                 {
                     _bestTime = totalTime;
+                    _bestImportance = totalImportance;
                     _bestMovesStack = _movesStack.Clone();
                     _bestMovesStack.Add(m);
                 }
-                if (_bestTime == MyStrategy.Infinity)
-                {
-                    var sel = 0;
-                    double minDist = MyStrategy.Infinity;
-                    for (var i = 1; i < _bruteWayPoints.Length; i++)
-                    {
-                        if (_bruteWayPoints[i].GetDistanceTo2(model) <= minDist)
-                        {
-                            minDist = _bruteWayPoints[i].GetDistanceTo2(model);
-                            sel = i;
-                        }
-                    }
-                    if (sel > _bestPointIdx || sel == _bestPointIdx && totalTime < _bestPointTime)
-                    {
-                        _bestPointIdx = sel;
-                        _bestPointTime = totalTime;
-                        _bestMovesStack = _movesStack.Clone();
-                        _bestMovesStack.Add(m);
-                    }
-                }
+                //if (_bestTime == MyStrategy.Infinity)
+                //{
+                //    var sel = 0;
+                //    double minDist = MyStrategy.Infinity;
+                //    for (var i = 1; i < _bruteWayPoints.Length; i++)
+                //    {
+                //        if (_bruteWayPoints[i].GetDistanceTo2(model) <= minDist)
+                //        {
+                //            minDist = _bruteWayPoints[i].GetDistanceTo2(model);
+                //            sel = i;
+                //        }
+                //    }
+                //    if (sel > _bestPointIdx || sel == _bestPointIdx && totalTime < _bestPointTime)
+                //    {
+                //        _bestPointIdx = sel;
+                //        _bestPointTime = totalTime;
+                //        _bestMovesStack = _movesStack.Clone();
+                //        _bestMovesStack.Add(m);
+                //    }
+                //}
 
                 return;
             }
@@ -121,11 +132,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     IsBrake = pattern.Move.IsBrake,
                     WheelTurn = pattern.Move.WheelTurn,
                     Times = 0
-                }, totalTime, (aCar, totalTimeAfter) =>
+                }, totalTime, totalImportance, (aCar, totalTimeAfter, totalImportanceAfter) =>
                 {
-                    if (totalTime >= _bestTime)
-                        return;
-                    _doRecursive(aCar.Clone(), idx + 1, totalTimeAfter);
+                    //TODO
+                    //if (totalTime >= _bestTime)
+                    //    return;
+                    _doRecursive(aCar.Clone(), idx + 1, totalTimeAfter, totalImportanceAfter);
                 });
         }
 
@@ -146,8 +158,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             Self = car.Clone();
 
-            if (_lastCall == _lastSuccess)
-                _lastSuccess = _lastCall;
+            if (_lastCall == LastSuccess)
+                LastSuccess = _lastCall;
 
             for (var t = 0; t < MyStrategy.world.Tick - _lastCall && _lastSuccessStack != null && _lastSuccessStack.Count > 0; t++)
             {
@@ -160,7 +172,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _lastCall = MyStrategy.world.Tick;
 
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
-            if (_lastSuccess != MyStrategy.world.Tick - 1 && (MyStrategy.world.Tick - (_lastSuccess + 1))%_interval != 0)
+            if (LastSuccess != MyStrategy.world.Tick - 1 && (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
                 return _lastSuccessStack;
 
             _turnCenter = pts[1];
@@ -202,21 +214,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _movesStack = new Moves();
             _bestMovesStack = new Moves();
             _bestTime = MyStrategy.Infinity;
-            _bestPointTime = MyStrategy.Infinity;
-            _bestPointIdx = 0;
+            _bestImportance = 0;
+            //_bestPointTime = MyStrategy.Infinity;
+            //_bestPointIdx = 0;
 
+            _bonusCandidates = MyStrategy.world.Bonuses
+                .Where(b => Self.GetDistanceTo(b) < MyStrategy.game.TrackTileSize*5)
+                .Select(b => new ABonus(b))
+                .ToArray();
 
             if (_cache != null)
             {
                 for (var k = 0; k < _patterns.Length; k++)
                 {
-                    _patterns[k].From = Math.Max(0, _cache[k].Times - 2);
-                    _patterns[k].To = _cache[k].Times + 2;
-                    _patterns[k].Step = 1;
+                    _patterns[k].From = Math.Max(0, _cache[k].Times - 8);
+                    _patterns[k].To = _cache[k].Times + 8;
+                    _patterns[k].Step = 2;
                 }
             }
 
-            _doRecursive(Self, 0, 0);
+            _doRecursive(Self, 0, 0, 0);
             _cache = null;
             if (_bestTime == MyStrategy.Infinity)
                 return _lastSuccessStack;
@@ -224,7 +241,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (_bestMovesStack.ComputeTime() != _bestTime)
                 throw new Exception("ComputeTime != BestTime");
 
-            _lastSuccess = MyStrategy.world.Tick;
+            LastSuccess = MyStrategy.world.Tick;
             _cache = _bestMovesStack.Clone();
             _bestMovesStack.Normalize();
             _lastSuccessStack = _bestMovesStack.Clone();
@@ -232,14 +249,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
 
 
-        private void _carMoveFunc(ACar model, int from, int to, int step, AMove m, int time, CarCallback callback)
+        private void _carMoveFunc(ACar model, int from, int to, int step, AMove m, int time, double importance, CarCallback callback)
         {
             model = model.Clone();
             m.Times = 0;
 
             for (var i = 0; i < from; i++)
             {
-                if (!MyStrategy.ModelMove(model, m))
+                if (!_modelMove(model, m, ref importance))
                     return;
                 m.Times++;
             }
@@ -247,17 +264,30 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for (var t = from; t <= to; t += step)
             {
                 _movesStack.Add(m);
-                callback(model, time + t);
+                callback(model, time + t, importance);
                 _movesStack.Pop();
                 for (var r = 0; r < step; r++)
                 {
-                    if (!MyStrategy.ModelMove(model, m))
+                    if (!_modelMove(model, m, ref importance))
                         return;
                     m.Times++;
                 }
             }
         }
 
+
+        private bool _modelMove(ACar car, AMove m, ref double totalImportance)
+        {
+            var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
+            var prevCar = car.Clone();
+            car.Move(m.EnginePower, turn, m.IsBrake, false);
+            foreach (var bonus in _bonusCandidates)
+            {
+                if (car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
+                    totalImportance += bonus.GetImportance(car.Original);
+            }
+            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
+        }
 
         public Points ExtendWaySegments(Points pts)
         {

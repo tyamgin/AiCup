@@ -298,5 +298,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             return false;
         }
+
+        public static double Gypot(double x, double y)
+        {
+            return Math.Sqrt(x*x + y*y);
+        }
+
+        public static double Sqr(double x)
+        {
+            return x*x;
+        }
     }
 }
