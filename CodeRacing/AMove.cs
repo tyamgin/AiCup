@@ -77,7 +77,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             var prevCar = car.Clone();
-            car.Move(m.EnginePower, turn, m.IsBrake, false);
+            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
             
             totalImportance += MyStrategy.world.Bonuses
                 .Select(bonus => new ABonus(bonus))

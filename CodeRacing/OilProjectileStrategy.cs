@@ -112,18 +112,5 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var shotCount = shot.Count(val => val);
             return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 1;
         }
-
-        bool CheckUseNitro(Point to)
-        {
-            if (world.Tick < game.InitialFreezeDurationTicks)
-                return false;
-            if (self.NitroChargeCount == 0)
-                return false;
-            if (self.RemainingNitroCooldownTicks > 0)
-                return false;
-
-            return Math.Abs(self.GetAngleTo(to.X, to.Y)) < Math.PI/6 &&
-                   to.GetDistanceTo(self) > game.TrackTileSize*6;
-        }
     }
 }

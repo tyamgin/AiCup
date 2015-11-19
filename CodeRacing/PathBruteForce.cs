@@ -49,6 +49,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private Point _turnCenter, _turnTo;
         private double _needDist;
         private int _interval;
+        public bool UseNitroInLastStage;
 
         private ABonus[] _bonusCandidates;
 
@@ -57,11 +58,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return time1 - importance1 * BonusImportanceCoeff < time2 - importance2 * BonusImportanceCoeff;
         }
 
-        public PathBruteForce(PathPattern[] patterns, int interval, int id)
+        public PathBruteForce(PathPattern[] patterns, int interval, bool useNitroInLastStage, int id)
         {
             Patterns = patterns;
             _interval = interval;
             Id = id;
+            UseNitroInLastStage = useNitroInLastStage;
         }
 
         private void _doRecursive(ACar model, int idx, int totalTime, double totalImportance)
@@ -75,6 +77,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     EnginePower = 1,
                     IsBrake = false,
                     WheelTurn = _turnTo.Clone(),
+                    IsUseNitro = UseNitroInLastStage,
                     Times = 0
                 };
 
@@ -263,7 +266,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             var prevCar = car.Clone();
-            car.Move(m.EnginePower, turn, m.IsBrake, false);
+            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
             foreach (var bonus in _bonusCandidates)
             {
                 if (car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))

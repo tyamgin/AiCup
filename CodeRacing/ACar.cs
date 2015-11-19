@@ -12,6 +12,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public double WheelTurn;
         public double AngularSpeed;
         public bool OutOfMap;
+        public int RemainingNitroTicks;
+        public int RemainingNitroCooldownTicks;
 
         private double _carAccelerationUp;
         private double _carAccelerationDown;
@@ -28,6 +30,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             AngularSpeed = original.AngularSpeed;
             Original = original;
             OutOfMap = false;
+            RemainingNitroTicks = original.RemainingNitroTicks;
+            RemainingNitroCooldownTicks = original.RemainingNitroCooldownTicks;
 
             Width = original.Width;
             Height = original.Height;
@@ -55,6 +59,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             WheelTurn = car.WheelTurn;
             AngularSpeed = car.AngularSpeed;
             OutOfMap = car.OutOfMap;
+            RemainingNitroTicks = car.RemainingNitroTicks;
+            RemainingNitroCooldownTicks = car.RemainingNitroCooldownTicks;
 
             Width = car.Width;
             Height = car.Height;
@@ -85,8 +91,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return speed;
         }
 
-        public void Move(double enginePower, double wheelTurn, bool isBreak, bool simpleMode)
+        public void Move(double enginePower, double wheelTurn, bool isBreak, bool useNitro, bool simpleMode)
         {
+            useNitro = useNitro && Original.NitroChargeCount > 0;
+            if (useNitro && RemainingNitroTicks == 0 && RemainingNitroCooldownTicks == 0)
+            {
+                RemainingNitroTicks = MyStrategy.game.NitroDurationTicks;
+                RemainingNitroCooldownTicks = MyStrategy.game.UseNitroCooldownTicks;
+            }
+
             double updateIterations = simpleMode ? 2 : 10; // TODO: make it int
             var frictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarMovementAirFrictionFactor, 1.0/updateIterations);
             var rotationFrictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarRotationFrictionFactor,
@@ -98,9 +111,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (wheelTurn > 1 + MyStrategy.Eps || wheelTurn < -1 - MyStrategy.Eps)
                 throw new Exception("invalid wheelTurn " + wheelTurn);
 
-            EnginePower = enginePower > EnginePower
-                ? Math.Min(EnginePower + MyStrategy.game.CarEnginePowerChangePerTick, enginePower)
-                : Math.Max(EnginePower - MyStrategy.game.CarEnginePowerChangePerTick, enginePower);
+            if (RemainingNitroTicks > 0)
+                EnginePower = 2.0;
+            else
+            {
+                EnginePower = enginePower > EnginePower
+                    ? Math.Min(EnginePower + MyStrategy.game.CarEnginePowerChangePerTick, enginePower)
+                    : Math.Max(EnginePower - MyStrategy.game.CarEnginePowerChangePerTick, enginePower);
+            }
 
 
             WheelTurn = wheelTurn > WheelTurn
@@ -155,6 +173,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     AngularSpeed = baseAngSpd + (AngularSpeed - baseAngSpd)*rotationFrictionMultiplier;
                 }
 
+                if (RemainingNitroCooldownTicks > 0)
+                    RemainingNitroCooldownTicks--;
+                if (RemainingNitroTicks > 0)
+                    RemainingNitroTicks--;
             }
         }
 

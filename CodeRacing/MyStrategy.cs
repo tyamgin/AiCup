@@ -122,7 +122,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var prevStateAngle = car.Angle;
 
             var turn = m.WheelTurn is Point ? TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
-            car.Move(m.EnginePower, turn, m.IsBrake, simpleMode);
+            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, simpleMode);
             var ok = car.GetRect().All(p => !IntersectTail(p, exactlyBorders ? 0 : SafeMargin));
             if (!ok)
             {
@@ -148,9 +148,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (world.Tick > game.InitialFreezeDurationTicks)
                 PositionsHistory.Add(new Point(self));
-
-            //if (CheckUseNitro(to))
-            //    move.IsUseNitro = true;
 
             if (CheckUseOil())
                 move.IsSpillOil = true;
@@ -234,7 +231,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, id: 0),
+                    }, 8, useNitroInLastStage:false, id: 0),
 
                     new PathBruteForce(new[]
                     {
@@ -264,7 +261,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, id: 1),
+                    }, 8, useNitroInLastStage:false, id: 1),
 
                     new PathBruteForce(new[]
                     {
@@ -307,15 +304,62 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, id: 2)
+                    }, 8, useNitroInLastStage:false, id: 2),
+
+                    // with nitro
+                    new PathBruteForce(new[]
+                    {
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 20,
+                            Step = 4,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 1,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToCenter},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 20,
+                            Step = 4,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0.5,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 34,
+                            Step = 3,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = true
+                                }
+                        }
+                    }, 8, useNitroInLastStage:true, id: 0),
                 };
             }
             else
             {
                 TimerStart();
                 var bestMoveStacks = new Moves[brutes.Length];
-                for(var i = 0; i < brutes.Length; i++)
-                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
+                for (var i = 0; i < brutes.Length; i++)
+                {
+                    if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
+                        bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
+                }
                 TimeEndLog("brute");
 
                 var sel = -1;
@@ -345,6 +389,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         DrawWay(bestMoveStacks[1], Brushes.Red);
                     if (bestMoveStacks.Length > 2)
                         DrawWay(bestMoveStacks[2], Brushes.DeepPink);
+                    if (bestMoveStacks.Length > 3)
+                        DrawWay(bestMoveStacks[3], Brushes.Black);
 #endif
                 }
                 else
