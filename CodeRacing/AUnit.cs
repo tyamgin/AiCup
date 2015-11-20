@@ -32,7 +32,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
     }
 
-    public class ARectUnit : AUnit
+    public class ARectangularUnit : AUnit
     {
         public double Width, Height;
 
@@ -53,8 +53,31 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
     }
 
-    public class ACircle : AUnit
+    public class ACircularUnit : AUnit
     {
         public double Radius;
+    }
+
+    public class AOilSlick : ACircularUnit
+    {
+        public int RemainingLifetime;
+
+        public AOilSlick(OilSlick slick)
+        {
+            X = slick.X;
+            Y = slick.Y;
+            Radius = slick.Radius;
+            RemainingLifetime = slick.RemainingLifetime;
+        }
+
+        public AOilSlick(ACar car)
+        {        
+            var dist = MyStrategy.game.OilSlickInitialRange + car.Original.Width/2 + MyStrategy.game.OilSlickRadius;
+            var slick = car - Point.ByAngle(car.Angle)*dist;
+            X = slick.X;
+            Y = slick.Y;
+            Radius = MyStrategy.game.OilSlickRadius;
+            RemainingLifetime = MyStrategy.game.OilSlickLifetime;
+        }
     }
 }

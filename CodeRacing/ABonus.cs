@@ -5,7 +5,7 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
-    public class ABonus : ARectUnit
+    public class ABonus : ARectangularUnit
     {
         public static Dictionary<long, Point[]> _computedRect = new Dictionary<long, Point[]>();
  

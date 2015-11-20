@@ -165,7 +165,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _needDist = MyStrategy.game.TrackTileSize/2;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
 #if DEBUG
-            MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircle>(Brushes.OrangeRed, new ACircle { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
+            MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
 #endif
 
             _patterns = Patterns.Select(pt => new PathPattern

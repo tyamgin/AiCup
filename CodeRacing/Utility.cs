@@ -11,13 +11,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const int Infinity = 0x3f3f3f3f;
         public const double Eps = 1e-9;
 
-        public ACircle GetOilSlick(ACar car)
-        {
-            var dist = game.OilSlickInitialRange + car.Original.Width/2 + game.OilSlickRadius;
-            var slick = car - Point.ByAngle(car.Angle)*dist;
-            return new ACircle{ X = slick.X, Y = slick.Y, Radius = game.OilSlickRadius};
-        }
-
         public AProjectile[] GetProjectiles(ACar car)
         {
             if (car.Original.Type == CarType.Jeep)

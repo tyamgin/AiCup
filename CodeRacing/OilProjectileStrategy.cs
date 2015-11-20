@@ -55,7 +55,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (self.RemainingOilCooldownTicks != 0 || world.Tick < game.InitialFreezeDurationTicks)
                 return false;
 
-            var slick = GetOilSlick(new ACar(self));
+            var slick = new AOilSlick(new ACar(self));
             var rad = slick.Radius * 0.8;
             var result = false;
 
