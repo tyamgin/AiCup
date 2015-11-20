@@ -70,7 +70,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 for(var t = 0; t < move.Times; t++)
                     _modelMove(model, move, ref totalImportance);
             }
-            return ComputeTime() - PathBruteForce.BonusImportanceCoeff*totalImportance;
+            return ComputeTime() - totalImportance;
         }
 
         private bool _modelMove(ACar car, AMove m, ref double totalImportance)
@@ -82,7 +82,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             totalImportance += MyStrategy.world.Bonuses
                 .Select(bonus => new ABonus(bonus))
                 .Where(bonus => car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
-                .Sum(bonus => bonus.GetImportance(car.Original));
+                .Sum(bonus => bonus.GetImportance(car.Original)) * PathBruteForce.BonusImportanceCoeff;
+            totalImportance -= MyStrategy.world.OilSlicks
+                .Select(slick => new AOilSlick(slick))
+                .Where(slick => slick.Intersect(car) && !slick.Intersect(prevCar))
+                .Sum(slick => slick.GetDanger())*PathBruteForce.OilSlickDangerCoeff;
+
             return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
         }
 

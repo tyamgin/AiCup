@@ -29,6 +29,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     public class PathBruteForce
     {
         public const double BonusImportanceCoeff = 20;
+        public const double OilSlickDangerCoeff = 30;
 
         public readonly PathPattern[] Patterns;
         public ACar Self;
@@ -48,14 +49,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private Point _turnCenter, _turnTo;
         private double _needDist;
-        private int _interval;
+        private readonly int _interval;
         public bool UseNitroInLastStage;
 
         private ABonus[] _bonusCandidates;
+        private AOilSlick[] _slickCandidates;
 
         private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
         {
-            return time1 - importance1 * BonusImportanceCoeff < time2 - importance2 * BonusImportanceCoeff;
+            return time1 - importance1 < time2 - importance2;
         }
 
         public PathBruteForce(PathPattern[] patterns, int interval, bool useNitroInLastStage, int id)
@@ -84,7 +86,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var end = true;
                 for (; /*totalTime < _bestTime &&*/ _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
                 {
-                    if (!_modelMove(model, m, ref totalImportance))
+                    if (!_modelMove(model, m, totalTime, ref totalImportance))
                     {
                         end = false;
                         break;
@@ -208,6 +210,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 })
                 .ToArray();
 
+            _slickCandidates = MyStrategy.world.OilSlicks
+                .Where(slick => Self.GetAngleTo(slick) < MyStrategy.game.TrackTileSize*6)
+                .Select(slick => new AOilSlick(slick))
+                .Where(slick =>
+                {
+                    var selfCell = MyStrategy.GetCell(Self);
+                    var bCell = MyStrategy.GetCell(slick);
+                    if (selfCell.Equals(bCell))
+                        return true;
+                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[] { });
+                    return dist <= 6;
+                })
+                .ToArray();    
+
+
             if (_cache != null)
             {
                 for (var k = 0; k < _patterns.Length; k++)
@@ -240,29 +257,30 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             model = model.Clone();
             m.Times = 0;
 
-            for (var i = 0; i < from; i++)
+            for (var t = 0; t < from; t++)
             {
-                if (!_modelMove(model, m, ref importance))
+                if (!_modelMove(model, m, time, ref importance))
                     return;
                 m.Times++;
+                time++;
             }
 
             for (var t = from; t <= to; t += step)
             {
                 _movesStack.Add(m);
-                callback(model, time + t, importance);
+                callback(model, time, importance);
                 _movesStack.Pop();
                 for (var r = 0; r < step; r++)
                 {
-                    if (!_modelMove(model, m, ref importance))
+                    if (!_modelMove(model, m, time, ref importance))
                         return;
                     m.Times++;
+                    time++;
                 }
             }
         }
 
-
-        private bool _modelMove(ACar car, AMove m, ref double totalImportance)
+        private bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
         {
             var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             var prevCar = car.Clone();
@@ -270,7 +288,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var bonus in _bonusCandidates)
             {
                 if (car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
-                    totalImportance += bonus.GetImportance(car.Original);
+                    totalImportance += bonus.GetImportance(car.Original) * BonusImportanceCoeff;
+            }
+            foreach (var slick in _slickCandidates)
+            {
+                slick.RemainingLifetime -= elapsedTime;
+                if (slick.Intersect(car) && !slick.Intersect(prevCar))
+                    totalImportance -= slick.GetDanger() * OilSlickDangerCoeff;
+                slick.RemainingLifetime += elapsedTime;
             }
             return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
         }

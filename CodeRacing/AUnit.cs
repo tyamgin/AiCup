@@ -79,5 +79,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Radius = MyStrategy.game.OilSlickRadius;
             RemainingLifetime = MyStrategy.game.OilSlickLifetime;
         }
+
+        public bool Intersect(ACar car, double safeMargin = 0)
+        {
+            return GetDistanceTo2(car) < Geom.Sqr(Radius + safeMargin);
+        }
+
+        public double GetDanger()
+        {
+            // HACK
+            if (RemainingLifetime < -2)
+                return 0;
+            if (RemainingLifetime <= 0)
+                return 0.6;
+
+            return 0.6 + 0.4*RemainingLifetime/MyStrategy.game.OilSlickLifetime;
+        }
     }
 }
