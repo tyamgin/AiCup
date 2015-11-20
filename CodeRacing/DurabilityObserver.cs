@@ -24,5 +24,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return MyStrategy.world.Tick;
             return MyStrategy.game.CarReactivationTimeTicks + _remainTicks[car.Id];
         }
+
+        public static bool IsActive(Car car)
+        {
+            return car.Durability > MyStrategy.Eps;
+        }
     }
 }

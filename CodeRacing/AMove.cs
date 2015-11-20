@@ -53,7 +53,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public void Normalize()
         {
-            this.RemoveAll(m => m.Times == 0);
+            RemoveAll(m => m.Times == 0);
         }
 
         public int ComputeTime()
@@ -88,7 +88,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public void Pop()
         {
-            this.RemoveAt(Count - 1);
+            RemoveAt(Count - 1);
         }
     }
 }

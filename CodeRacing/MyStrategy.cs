@@ -27,6 +27,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static double CarDiagonalHalfLength;
         public static double BonusDiagonalHalfLength;
 
+        public Car[] Opponents;
+        public ACar[][] OpponentsCars;
+        public const int OpponentsTicksPrediction = 100;
+
+        public Points PositionsHistory = new Points();
+        public int BackModeRemainTicks;
+        public double BackModeTurn;
+
         void Initialize()
         {
             // intialize tiles
@@ -42,19 +50,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for(var i = 0; i < waypoints.Length; i++)
                 waypoints[i] = new Cell(wp[i][1], wp[i][0]);
 
-            if (_waypointIterator == null)
-            {
-                _waypointIterator = new Dictionary<long, int>();
-                foreach (var car in world.Cars)
-                    _waypointIterator[car.Id] = 0;
-            }
+            
             foreach (var car in world.Cars)
             {
-                if (waypoints[_waypointIterator[car.Id]].I != car.NextWaypointY ||
-                    waypoints[_waypointIterator[car.Id]].J != car.NextWaypointX)
-                {
-                    _waypointIterator[car.Id] = (_waypointIterator[car.Id] + 1)%waypoints.Length;
-                }
                 DurabilityObserver.Watch(car);
             }
 
@@ -79,10 +77,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Opponents = world.Cars.Where(car => !car.IsTeammate).ToArray();
             PrepareOpponentsPath();
         }
-
-        public Car[] Opponents;
-        public ACar[][] OpponentsCars;
-        public const int OpponentsTicksPrediction = 100;
 
         public void PrepareOpponentsPath()
         {
@@ -141,13 +135,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private void _move()
         {
             var pts = GetWaySegments(self);
-            var to = pts[1];
-
-            if (CheckUseProjectile())
-                move.IsThrowProjectile = true;
+            var turnCenter = pts[1];
 
             if (world.Tick > game.InitialFreezeDurationTicks)
                 PositionsHistory.Add(new Point(self));
+
+            if (!DurabilityObserver.IsActive(self))
+                return;
+
+            if (CheckUseProjectile())
+                move.IsThrowProjectile = true;
 
             if (CheckUseOil())
                 move.IsSpillOil = true;
@@ -167,7 +164,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     if (cn < 25 || IsSomeoneAhead(new ACar(self)))
                     {
                         BackModeRemainTicks = 50;
-                        BackModeTurn = self.GetAngleTo(to.X, to.Y) < 0 ? 1 : -1;
+                        BackModeTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y) < 0 ? 1 : -1;
                     }
                 }
             }
@@ -351,67 +348,55 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }, 8, useNitroInLastStage:true, id: 0),
                 };
             }
-            else
+            
+            TimerStart();
+            var bestMoveStacks = new Moves[brutes.Length];
+            for (var i = 0; i < brutes.Length; i++)
             {
-                TimerStart();
-                var bestMoveStacks = new Moves[brutes.Length];
-                for (var i = 0; i < brutes.Length; i++)
-                {
-                    if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
-                        bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
-                }
-                TimeEndLog("brute");
+                if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
+                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
+            }
+            TimeEndLog("brute");
 
-                var sel = -1;
-                double bestTime = Infinity;
-                for (var i = 0; i < brutes.Length; i++)
+            var sel = -1;
+            double bestTime = Infinity;
+            for (var i = 0; i < brutes.Length; i++)
+            {
+                if (bestMoveStacks[i] == null)
+                    continue;
+                var time = bestMoveStacks[i].ComputeImportance(new ACar(self));
+                if (sel == -1 ||
+                    brutes[i].LastSuccess > brutes[sel].LastSuccess ||
+                    brutes[i].LastSuccess == brutes[sel].LastSuccess && time < bestTime)
                 {
-                    if (bestMoveStacks[i] == null)
-                        continue;
-                    var time = bestMoveStacks[i].ComputeImportance(new ACar(self));
-                    if (sel == -1 ||
-                        brutes[i].LastSuccess > brutes[sel].LastSuccess ||
-                        brutes[i].LastSuccess == brutes[sel].LastSuccess && time < bestTime)
-                    {
-                        sel = i;
-                        bestTime = time;
-                    }
-                }
-
-                if (sel != -1)
-                {
-                    brutes[sel].SelectThis();
-                    bestMoveStacks[sel][0].Apply(move, new ACar(self));
-#if DEBUG
-                    if (bestMoveStacks.Length > 0)
-                        DrawWay(bestMoveStacks[0], Brushes.BlueViolet);
-                    if (bestMoveStacks.Length > 1)
-                        DrawWay(bestMoveStacks[1], Brushes.Red);
-                    if (bestMoveStacks.Length > 2)
-                        DrawWay(bestMoveStacks[2], Brushes.DeepPink);
-                    if (bestMoveStacks.Length > 3)
-                        DrawWay(bestMoveStacks[3], Brushes.Black);
-#endif
-                }
-                else
-                {
-                    // TODO: придумать нормальный альтернативный алгоритм
-                    move.EnginePower = 0.2;
-                    move.WheelTurn = self.GetAngleTo(to.X, to.Y);
-                    var tmp = new ACar(self);
-                    var aa = tmp + tmp.Speed;
-                    if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
-                    {
-                        move.EnginePower = 1;
-                        move.WheelTurn *= -1;
-                    }
+                    sel = i;
+                    bestTime = time;
                 }
             }
-        }
 
-        public Points PositionsHistory = new Points();
-        public int BackModeRemainTicks;
-        public double BackModeTurn;
+            if (sel != -1)
+            {
+                brutes[sel].SelectThis();
+                bestMoveStacks[sel][0].Apply(move, new ACar(self));
+#if DEBUG
+                DrawWays(bestMoveStacks);
+#endif
+            }
+            else
+            {
+                // TODO: придумать нормальный альтернативный алгоритм
+                move.EnginePower = 0.2;
+                move.WheelTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y);
+                var tmp = new ACar(self);
+                var aa = tmp + tmp.Speed;
+                if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
+                {
+                    move.EnginePower = 1;
+                    move.WheelTurn *= -1;
+                }
+            }
+            
+        }
 
         public void Move(Car self, World world, Game game, Move move)
         {
@@ -431,7 +416,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 Debug = false;
             }
-            DrawMap();
+            _drawMap();
 #endif
             if (!self.IsFinishedTrack)
                 _move();
@@ -441,7 +426,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Log(_finishTime);
 #if DEBUG
             TimeEndLog("All");
-            draw();
+            Draw();
             Thread.Sleep(12);
 #endif
         }

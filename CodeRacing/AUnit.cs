@@ -13,14 +13,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var relativeAngleTo = absoluteAngleTo - Angle;
 
             while (relativeAngleTo > Math.PI)
-            {
                 relativeAngleTo -= 2.0D * Math.PI;
-            }
 
             while (relativeAngleTo < -Math.PI)
-            {
                 relativeAngleTo += 2.0D * Math.PI;
-            }
 
             return relativeAngleTo;
         }

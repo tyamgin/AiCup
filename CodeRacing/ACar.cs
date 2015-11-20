@@ -15,8 +15,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int RemainingNitroTicks;
         public int RemainingNitroCooldownTicks;
 
-        private double _carAccelerationUp;
-        private double _carAccelerationDown;
+        private readonly double _carAccelerationUp;
+        private readonly double _carAccelerationDown;
 
         public ACar(Car original)
         {

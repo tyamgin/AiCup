@@ -7,15 +7,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        private static int[] _dx = { 0, 0, -1, 1 };
-        private static int[] _dy = { -1, 1, 0, 0 };
+        private static readonly int[] _dx = { 0, 0, -1, 1 };
+        private static readonly int[] _dy = { -1, 1, 0, 0 };
 
         private static Cell _bfs(Cell start, Cell end, Cell[] forbidden)
         {
-            return _bfs(start.I, start.J, end.I, end.J, forbidden);
+            return BfsNextCell(start.I, start.J, end.I, end.J, forbidden);
         }
 
-        private static bool _canPass(int i1, int j1, int i2, int j2)
+        public static bool CanPass(int i1, int j1, int i2, int j2)
         {
             if (i2 < 0 || i2 >= world.Height || j2 < 0 || j2 >= world.Width)
                 return false;
@@ -41,11 +41,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static int BfsDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
         {
-            _bfs(startI, startJ, endI, endJ, forbidden);
+            BfsNextCell(startI, startJ, endI, endJ, forbidden);
             return _distMap[startI, startJ];
         }
 
-        private static Cell _bfs(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
+        public static Cell BfsNextCell(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
         {
             if (_distMap == null)
                 _distMap = new int[world.Height, world.Width];
@@ -65,7 +65,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var ni = _dx[k] + i;
                     var nj = _dy[k] + j;
-                    if (_canPass(i, j, ni, nj) && _distMap[ni, nj] == Infinity && !forbidden.Any(x => x.Equals(ni, nj)))
+                    if (CanPass(i, j, ni, nj) && _distMap[ni, nj] == Infinity && !forbidden.Any(x => x.Equals(ni, nj)))
                     {
                         _distMap[ni, nj] = _distMap[i, j] + 1;
                         q.Enqueue(ni);
@@ -80,7 +80,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 var ni = _dx[k] + startI;
                 var nj = _dy[k] + startJ;
-                if (_canPass(startI, startJ, ni, nj) && _distMap[ni, nj] == dist - 1)
+                if (CanPass(startI, startJ, ni, nj) && _distMap[ni, nj] == dist - 1)
                 {
                     return new Cell(ni, nj);
                 }

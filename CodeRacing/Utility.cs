@@ -46,12 +46,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             return Math.Sqrt(u.SpeedX * u.SpeedX + u.SpeedY * u.SpeedY);
         }
-
-        private static Dictionary<long, int> _waypointIterator;
         
         public Cell GetNextWayPoint(Car car, int delta = 1)
         {
-            return waypoints[(_waypointIterator[car.Id] + delta - 1) % waypoints.Length];
+            return waypoints[(car.NextWaypointIndex + delta - 1) % waypoints.Length];
         }
 
         public static Cell GetCell(double x, double y)
