@@ -11,30 +11,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const int Infinity = 0x3f3f3f3f;
         public const double Eps = 1e-9;
 
-        public AProjectile[] GetProjectiles(ACar car)
-        {
-            if (car.Original.Type == CarType.Jeep)
-            {
-                return new[] { new AProjectile
-                {
-                    Radius = game.TireRadius,
-                    Type = ProjectileType.Tire,
-                    X = car.X,
-                    Y = car.Y,
-                    Speed = Point.ByAngle(car.Angle) * game.TireInitialSpeed
-                }};
-            }
-
-            return new[] {0.0, -game.SideWasherAngle, game.SideWasherAngle}.Select(angle => new AProjectile
-            {
-                Radius = game.WasherRadius,
-                Type = ProjectileType.Washer,
-                X = car.X,
-                Y = car.Y,
-                Speed = Point.ByAngle(angle + car.Angle) * game.WasherInitialSpeed
-            }).ToArray();
-        }
-
         public double GetSpeed(Unit u)
         {
             return Math.Sqrt(u.SpeedX * u.SpeedX + u.SpeedY * u.SpeedY);
@@ -55,9 +31,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return GetCell(p.X, p.Y);
         }
 
+        public static Point GetCenter(int I, int J)
+        {
+            return new Point((J + 0.5) * game.TrackTileSize, (I + 0.5) * game.TrackTileSize);
+        }
+
         public static Point GetCenter(Cell cell)
         {
-            return new Point((cell.J + 0.5) * game.TrackTileSize, (cell.I + 0.5) * game.TrackTileSize);
+            return GetCenter(cell.I, cell.J);
         }
 
         public static double TurnRound(double x)

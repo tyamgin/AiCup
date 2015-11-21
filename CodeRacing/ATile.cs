@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Policy;
 using System.Text;
 using System.Windows.Forms.VisualStyles;
@@ -126,6 +128,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     part.Start.Y += dy;
                     part.End.X += dx;
                     part.End.Y += dy;
+
+                    if (Geom.VectorProduct(part.Start, part.End, MyStrategy.GetCenter(i, j)) > 0)
+                    {
+                        var tmp = part.Start;
+                        part.Start = part.End;
+                        part.End = tmp;
+                    }
                 }
             }
             Parts = res.ToArray();
@@ -143,6 +152,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public TilePartType Type;
         public Point Start, End;
         public ACircularUnit Circle;
+
+        public Point GetIntersectionPoint(AProjectile proj)
+        {
+            if (Type == TilePartType.Segment)
+            {
+                var pts = Geom.LineCircleIntersect(Start, End, proj, proj.Radius);
+                if (pts.Length == 0)
+                    return null;
+                var inter = pts.Length == 1 ? pts[0] : (pts[0] + pts[1])/2.0;
+                var wallDir = (End - Start).Normalized();
+                // TODO: убедиться что скорость и направление стены идут в нужном направлении
+                var ang = Geom.GetAngleBetween(proj.Speed, wallDir);
+                proj.Speed = proj.Speed.RotateClockwise(2*Math.PI - 2*ang);
+            }
+            else
+            {
+                
+            }
+            return null;
+        }
 
         public static TilePart GetSegment(Point s, Point t)
         {

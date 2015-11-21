@@ -82,7 +82,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (self.RemainingProjectileCooldownTicks > 0)
                 return false;
 
-            var projectiles = GetProjectiles(new ACar(self));
+            var projectiles = AProjectile.GetProjectiles(new ACar(self));
 
             var shot = new bool[projectiles.Length];
             for (var t = 1; t < OpponentsTicksPrediction; t++)

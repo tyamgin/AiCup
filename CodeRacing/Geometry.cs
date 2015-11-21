@@ -50,6 +50,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return new Point(a.X * b, a.Y * b);
         }
 
+        public static Point operator /(Point a, double b)
+        {
+            return new Point(a.X / b, a.Y / b);
+        }
+
         public static Point operator +(Point a, Point b)
         {
             return new Point(a.X + b.X, a.Y + b.Y);
@@ -171,6 +176,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static Point ByAngle(double angle)
         {
             return new Point(Math.Cos(angle), Math.Sin(angle));
+        }
+
+        public Point RotateClockwise(double angle)
+        {
+            var cos = Math.Cos(angle);
+            var sin = Math.Sin(angle);
+            return new Point(cos * X + sin * Y, -sin * X + cos * Y);
         }
     }
 
@@ -307,6 +319,53 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static double Sqr(double x)
         {
             return x*x;
+        }
+
+        public static Point[] LineCircleIntersect(Point a, Point b, Point c, double r)
+        {
+            a = a - c;
+            b = b - c;
+            double A = a.Y - b.Y,
+                B = b.X - a.X,
+                C = -a.X*A - a.Y*B;
+
+            var res = LineCircleIntersect(A, B, C, r);
+            foreach (var p in res)
+            {
+                p.X += c.X;
+                p.Y += c.Y;
+            }
+            return res;
+        }
+
+        public static Point[] LineCircleIntersect(double a, double b, double c, double r)
+        {
+            double x0 = -a * c / (a * a + b * b), 
+                y0 = -b * c / (a * a + b * b);
+
+            if (c * c > r * r * (a * a + b * b) + MyStrategy.Eps)
+                return new Point[]{};
+
+            if (Math.Abs(c*c - r*r*(a*a + b*b)) < MyStrategy.Eps)
+                return new[] {new Point(x0, y0)};
+
+            double d = r*r - c*c/(a*a + b*b),
+                mult = Math.Sqrt(d/(a*a + b*b)),
+                ax = x0 + b*mult,
+                bx = x0 - b*mult,
+                ay = y0 - a*mult,
+                by = y0 + a*mult;
+
+            return new[]
+            {
+                new Point(ax, ay),
+                new Point(bx, by)
+            };
+        }
+
+        public static double GetAngleBetween(Point a, Point b)
+        {
+            return  Math.Acos(a*b/a.Length/b.Length);
         }
     }
 }
