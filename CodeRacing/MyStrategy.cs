@@ -7,8 +7,8 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
-    // TODO: штрафовать лужи
     // TODO: обработать столкновения с бонусами и убрать костыль
+    // TODO: не юзать нитро если лужа
 
     public partial class MyStrategy : IStrategy
     {
@@ -17,6 +17,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Move move;
         public Car self;
         public static TileType[,] tiles;
+        public static ATile[,] MyTiles;
         public Cell[] waypoints;
         public static double MapWidth, MapHeight;
         public static Point[,,] TileCorner;
@@ -72,6 +73,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 CarDiagonalHalfLength = Geom.Gypot(game.CarWidth, game.CarHeight)/2;
                 BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize, game.BonusSize)/2-6;//HACK
+
+                MyTiles = new ATile[world.Height, world.Width];
+                for (var i = 0; i < world.Height; i++)
+                {
+                    for (var j = 0; j < world.Width; j++)
+                    {
+                        MyTiles[i, j] = new ATile(i, j, tiles[i, j]);
+                    }
+                }
             }
 
             Opponents = world.Cars.Where(car => !car.IsTeammate).ToArray();

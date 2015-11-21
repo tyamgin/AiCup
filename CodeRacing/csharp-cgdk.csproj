@@ -77,6 +77,7 @@
     <Compile Include="ACar.cs" />
     <Compile Include="AMove.cs" />
     <Compile Include="AProjectile.cs" />
+    <Compile Include="ATile.cs" />
     <Compile Include="AUnit.cs" />
     <Compile Include="Collections.cs" />
     <Compile Include="Debug\Debug.cs" />
