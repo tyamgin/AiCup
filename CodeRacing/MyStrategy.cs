@@ -115,7 +115,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 #if DEBUG
             foreach (var seg in segs)
-                SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
+                SegmentsDrawQueue.Add(new object[] { Brushes.Indigo, seg, 0.0 });
 #endif
             TimeEndLog("PrepareOpponentsPath");
         }
@@ -394,11 +394,34 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }, 8, useNitroInLastStage:true, id: 3),
 
                     
-                    ///*
-                    // * NEW!!
-                    // */
                     //new PathBruteForce(new[]
                     //{
+                    //    new PathPattern
+                    //    {
+                    //        From = 0,
+                    //        To = 30,
+                    //        Step = 4,
+                    //        Move =
+                    //            new AMove
+                    //            {
+                    //                EnginePower = 0.2,
+                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromCenter},
+                    //                IsBrake = false
+                    //            }
+                    //    },
+                    //    new PathPattern
+                    //    {
+                    //        From = 0,
+                    //        To = 16,
+                    //        Step = 2,
+                    //        Move =
+                    //            new AMove
+                    //            {
+                    //                EnginePower = 0.2,
+                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                    //                IsBrake = false
+                    //            }
+                    //    },
                     //    new PathPattern
                     //    {
                     //        From = 0,
@@ -407,25 +430,55 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     //        Move =
                     //            new AMove
                     //            {
-                    //                EnginePower = 0.5,
-                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToCenter},
-                    //                IsBrake = false
-                    //            }
-                    //    },
-                    //    new PathPattern
-                    //    {
-                    //        From = 0,
-                    //        To = 30,
-                    //        Step = 2,
-                    //        Move =
-                    //            new AMove
-                    //            {
-                    //                EnginePower = 1,
+                    //                EnginePower = 0,
                     //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
-                    //                IsBrake = false
+                    //                IsBrake = true
                     //            }
-                    //    },
-                    //}, 8, useNitroInLastStage:false, id: 4),
+                    //    }
+                    //}, 8, useNitroInLastStage:false, id: 2),
+
+                    new PathBruteForce(new[]
+                    {
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 21,
+                            Step = 3,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0.1,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromNext},
+                                    IsBrake = true
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 21,
+                            Step = 3,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0.1,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = false
+                                }
+                        },
+                        new PathPattern
+                        {
+                            From = 0,
+                            To = 70,
+                            Step = 5,
+                            Move =
+                                new AMove
+                                {
+                                    EnginePower = 0,
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                                    IsBrake = true
+                                }
+                        }
+                    }, 8, useNitroInLastStage:false, id: 2),
                 };
             }
             
@@ -459,7 +512,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
-                DrawWays(bestMoveStacks);
+                DrawWays(bestMoveStacks, sel);
 #endif
             }
             else
@@ -468,6 +521,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 move.EnginePower = 0.2;
                 move.WheelTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y);
                 var tmp = new ACar(self);
+                //if (tmp.Speed.Length > 10)
+                //    move.IsBrake = true;
                 var aa = tmp + tmp.Speed;
                 if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
                 {

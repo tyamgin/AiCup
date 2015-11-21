@@ -1,0 +1,10 @@
+FAILED
+java.lang.IllegalArgumentException: Map width '﻿#' does not match pattern '[8-9]|1[01-6]'.
+	at com.a.b.a.a.b.e.i.a(Unknown Source)
+	at com.a.b.a.a.b.e.i.a(Unknown Source)
+	at com.a.b.a.a.a.b.b(Unknown Source)
+	at com.a.b.a.a.b.a.l(Unknown Source)
+	at com.a.b.a.a.b.a.a(Unknown Source)
+	at com.a.b.c.run(Unknown Source)
+	at LocalTestRunner.main(Unknown Source)
+

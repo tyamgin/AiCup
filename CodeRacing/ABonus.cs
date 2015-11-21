@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     result = 0.4 - 0.6*(self.Durability - 1);
                     break;
                 case BonusType.PureScore:
-                    result = 0.9;
+                    result = 1.0;
                     break;
                 case BonusType.OilCanister:
                     if (self.OilCanisterCount == 0)
@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         result = 0.5;
                     break;
                 case BonusType.NitroBoost:
-                    result = 0.9;
+                    result = 1.0;
                     break;
                 case BonusType.AmmoCrate:
                     if (self.ProjectileCount <= 1)

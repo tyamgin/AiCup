@@ -17,7 +17,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         ToNext,
         ToCenter,
-        FromCenter
+        FromCenter,
+        FromNext,
     }
 
     public class TurnPattern
@@ -174,7 +175,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
-            MyStrategy.SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, bruteWayPoints));
+            MyStrategy.SegmentsDrawQueue.Add(new object[] {Brushes.Brown, bruteWayPoints, 0.0});
 #endif
             _needDist = MyStrategy.game.TrackTileSize/2;
             _turnTo = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount - 1)];
@@ -212,6 +213,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? -1 : 1;
                     else if (turnPattern.Pattern == TurnPatterns.FromCenter)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
+                    else if (turnPattern.Pattern == TurnPatterns.FromNext)
+                        p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? 1 : -1;
                 }
             }
 
