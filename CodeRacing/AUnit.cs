@@ -36,13 +36,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public double Width, Height;
 
-        public Point[] GetRect()
+        public Point[] GetRect(double reduceBorder = 0)
         {
             // 3  o---o  0
             //    o ^ o
             //    o   o
             // 2  o---o  1
-            var dir = new Point(Width / 2, Height / 2);
+            var dir = new Point(Width/2 - reduceBorder, Height/2 - reduceBorder);
             var angle = Math.Atan2(dir.Y, dir.X);
             var angles = new[] { Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle };
             var result = new Point[4];
