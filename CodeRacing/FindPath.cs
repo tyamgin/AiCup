@@ -235,7 +235,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             isWayPoint.Add(false);
             Cell prevCell = null;
 
-            for (var e = 1; result.Count < 5; e++)
+            for (var e = 1; result.Count < 8; e++)
             {
                 var nextWp = GetNextWayPoint(car, e);
                 for (var cur = myCell; !cur.Equals(nextWp);)

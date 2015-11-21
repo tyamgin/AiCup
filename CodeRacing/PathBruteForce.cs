@@ -47,7 +47,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int LastSuccess; // Когда последний раз брут что-то находил
         private int _lastCall; // Когда последний раз вызывали. Если не вызывали - значит был success
 
-        private Point _turnCenter, _turnTo;
+        private Point _turnCenter, _turnTo, _nitroEnsurePoint;
         private double _needDist;
         private readonly int _interval;
         public bool UseNitroInLastStage;
@@ -83,20 +83,27 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     Times = 0
                 };
 
-                var end = true;
-                for (; /*totalTime < _bestTime &&*/ _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
+                for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
                 {
                     if (!_modelMove(model, m, totalTime, ref totalImportance))
-                    {
-                        end = false;
-                        break;
-                    }
+                        return;
                     m.Times++;
                 }
                 if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
                     return;
 
-                if (end && _isBetterTime(totalTime, totalImportance, _bestTime, _bestImportance))
+                if (UseNitroInLastStage)
+                {
+                    // проверка что есть ещё пространство, когда используется нитро
+                    while(_nitroEnsurePoint.GetDistanceTo2(model) > _needDist * _needDist)
+                    {
+                        var tmp = 0.0;
+                        if (!_modelMove(model, m, totalTime, ref tmp))
+                            return;
+                    }   
+                }
+
+                if (_isBetterTime(totalTime, totalImportance, _bestTime, _bestImportance))
                 {
                     _bestTime = totalTime;
                     _bestImportance = totalImportance;
@@ -151,24 +158,41 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             _lastCall = MyStrategy.world.Tick;
 
-            // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
-            if (LastSuccess != MyStrategy.world.Tick - 1 && (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
-                return _lastSuccessStack;
-
-            _turnCenter = pts[1];
-
             var extended = ExtendWaySegments(pts);
-            _bruteWayPoints = extended.GetRange(0, Math.Min(70, extended.Count)).ToArray();
+
+            int bruteWayPointsCount;
+            if (Self.Speed.Length < 4)
+                bruteWayPointsCount = 30;
+            else if (Self.Speed.Length < 8)
+                bruteWayPointsCount = 40;
+            else
+                bruteWayPointsCount = 70;
+
+            const int nitroEnsureDist = 15;
+
+            _bruteWayPoints = extended.GetRange(0, Math.Min(extended.Count, nitroEnsureDist + bruteWayPointsCount)).ToArray();
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
             MyStrategy.SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, bruteWayPoints));
 #endif
             _needDist = MyStrategy.game.TrackTileSize/2;
-            _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
+            _turnTo = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount - 1)];
+            _nitroEnsurePoint = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount + nitroEnsureDist - 1)];
 #if DEBUG
             MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
+            MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Blue, new ACircularUnit { X = _nitroEnsurePoint.X, Y = _nitroEnsurePoint.Y, Radius = 20 }));
 #endif
+
+            // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
+            if (MyStrategy.world.Tick != MyStrategy.game.InitialFreezeDurationTicks &&
+                LastSuccess != MyStrategy.world.Tick - 1 
+                && (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
+            {
+                return _lastSuccessStack;
+            }
+
+            _turnCenter = pts[1];
 
             _patterns = Patterns.Select(pt => new PathPattern
             {

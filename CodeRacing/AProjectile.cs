@@ -19,6 +19,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Y += Speed.Y;
                 return;
             }
+            return;
 
             for (int it = 0; it < UpdateIterations; it++)
             {

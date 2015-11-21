@@ -196,13 +196,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
             }
 
-            if (world.Tick < game.InitialFreezeDurationTicks + 35)
-            {
-                move.WheelTurn = 1;
-                move.EnginePower = 1;
-                return;
-            }
-
             //if (pr == null)
             //{
             //    //var ttt = Geom.LineCircleIntersect(new Point(2, 0), new Point(0, 2), new Point(-1, -1), 2*Math.Sqrt(2));
@@ -221,6 +214,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 brutes = new[]
                 {
+                    /*
+                     * - ехать в сторону поворота на полной можности
+                     * - поворачивать в сторону цели на пол-мощности
+                     * - тормозить
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern
@@ -264,6 +262,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         }
                     }, 8, useNitroInLastStage:false, id: 0),
 
+                    /*
+                     * - снизить мощность
+                     * - тормозить
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern
@@ -294,12 +296,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         }
                     }, 8, useNitroInLastStage:false, id: 1),
 
+                    /*
+                     * - ехать от поворота на пол-мощности
+                     * - поворачивать в сторону цели на полной мощности
+                     * - тормозить
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern
                         {
                             From = 0,
-                            To = 20,
+                            To = 28,
                             Step = 4,
                             Move =
                                 new AMove
@@ -337,7 +344,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         }
                     }, 8, useNitroInLastStage:false, id: 2),
 
-                    // with nitro
+                    /*
+                     * - ехать в сторону поворота на полной можности
+                     * - поворачивать в сторону цели на пол-мощности
+                     * - тормозить
+                     * - НИТРО!!!
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern
@@ -379,7 +391,41 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:true, id: 0),
+                    }, 8, useNitroInLastStage:true, id: 3),
+
+                    
+                    ///*
+                    // * NEW!!
+                    // */
+                    //new PathBruteForce(new[]
+                    //{
+                    //    new PathPattern
+                    //    {
+                    //        From = 0,
+                    //        To = 60,
+                    //        Step = 4,
+                    //        Move =
+                    //            new AMove
+                    //            {
+                    //                EnginePower = 0.5,
+                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToCenter},
+                    //                IsBrake = false
+                    //            }
+                    //    },
+                    //    new PathPattern
+                    //    {
+                    //        From = 0,
+                    //        To = 30,
+                    //        Step = 2,
+                    //        Move =
+                    //            new AMove
+                    //            {
+                    //                EnginePower = 1,
+                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
+                    //                IsBrake = false
+                    //            }
+                    //    },
+                    //}, 8, useNitroInLastStage:false, id: 4),
                 };
             }
             
