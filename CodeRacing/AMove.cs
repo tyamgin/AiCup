@@ -85,7 +85,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 .Sum(bonus => bonus.GetImportance(car.Original)) * PathBruteForce.BonusImportanceCoeff;
             totalImportance -= MyStrategy.world.OilSlicks
                 .Select(slick => new AOilSlick(slick))
-                .Where(slick => slick.Intersect(car) && !slick.Intersect(prevCar))
+                .Where(slick => slick.Intersect(car, 9) && !slick.Intersect(prevCar, 9))
                 .Sum(slick => slick.GetDanger())*PathBruteForce.OilSlickDangerCoeff;
 
             return car.GetRect().All(p => !MyStrategy.IntersectTail(p));

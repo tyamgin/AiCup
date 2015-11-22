@@ -399,7 +399,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var bestMoveStacks = new Moves[brutes.Length];
             for (var i = 0; i < brutes.Length; i++)
             {
-                if (false)
+                if (true)
                 {
                     if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
                         bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
@@ -435,19 +435,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             else
             {
                 AlternativeMove();
-
-                //// TODO: придумать нормальный альтернативный алгоритм
-                //move.EnginePower = 0.2;
-                //move.WheelTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y);
-                //var tmp = new ACar(self);
-                //var aa = tmp + tmp.Speed;
-                //if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
-                //{
-                //    move.EnginePower = 1;
-                //    move.WheelTurn *= -1;
-                //}
             }
-            
         }
 
         public void Move(Car self, World world, Game game, Move move)

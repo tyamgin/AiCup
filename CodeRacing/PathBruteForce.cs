@@ -293,7 +293,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var slick in _slickCandidates)
             {
                 slick.RemainingLifetime -= elapsedTime;
-                if (slick.Intersect(car) && !slick.Intersect(prevCar))
+                if (slick.Intersect(car, 9) && !slick.Intersect(prevCar, 9))
                     totalImportance -= slick.GetDanger() * OilSlickDangerCoeff;
                 slick.RemainingLifetime += elapsedTime;
             }

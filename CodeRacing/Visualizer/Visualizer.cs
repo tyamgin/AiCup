@@ -174,6 +174,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 DrawCircle(canisterPen, slick.X, slick.Y, slick.Radius);
                 if (car.RemainingNitroTicks > 0)
                     FillCircle(Brushes.Blue, car.X, car.Y, 40);
+                if (car.RemainingOiledTicks > 0)
+                    FillCircle(Brushes.Black, car.X, car.Y, 30);
             }
 
 
