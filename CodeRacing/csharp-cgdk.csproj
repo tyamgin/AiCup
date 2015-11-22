@@ -80,13 +80,13 @@
     <Compile Include="ATile.cs" />
     <Compile Include="AUnit.cs" />
     <Compile Include="Collections.cs" />
-    <Compile Include="Debug\Debug.cs" />
+    <Compile Include="Visualizer\Visualizer.cs" />
     <Compile Include="DurabilityObserver.cs" />
     <Compile Include="FindPath.cs" />
-    <Compile Include="Debug\MapForm.cs">
+    <Compile Include="Visualizer\MapForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Debug\MapForm.Designer.cs">
+    <Compile Include="Visualizer\MapForm.Designer.cs">
       <DependentUpon>MapForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\Bonus.cs" />
@@ -141,7 +141,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Debug\MapForm.resx">
+    <EmbeddedResource Include="Visualizer\MapForm.resx">
       <DependentUpon>MapForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
