@@ -29,9 +29,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static double CarDiagonalHalfLength;
         public static double BonusDiagonalHalfLength;
 
+        public const int OpponentsTicksPrediction = 100;
+        public const int ProjectilePredictionTicks = 60;
+
+        public static AProjectile[][] Projectiles;
+        public static ABonus[] Bonuses;
+        public static AOilSlick[] OilSlicks;
+
         public Car[] Opponents;
         public ACar[][] OpponentsCars;
-        public const int OpponentsTicksPrediction = 100;
+        
 
         public Points PositionsHistory = new Points();
         public int BackModeRemainTicks;
@@ -84,6 +91,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }
                 }
             }
+
+            Projectiles = new AProjectile[world.Projectiles.Length][];
+            for (var i = 0; i < world.Projectiles.Length; i++)
+            {
+                Projectiles[i] = new AProjectile[ProjectilePredictionTicks];
+                Projectiles[i][0] = new AProjectile(world.Projectiles[i]);
+                for (var j = 1; j < ProjectilePredictionTicks; j++)
+                {
+                    Projectiles[i][j] = Projectiles[i][j - 1].Clone();
+                    Projectiles[i][j].Move();
+                }
+            }
+
+            Bonuses = world.Bonuses.Select(b => new ABonus(b)).ToArray();
+            OilSlicks = world.OilSlicks.Select(s => new AOilSlick(s)).ToArray();
 
             Opponents = world.Cars.Where(car => !car.IsTeammate).ToArray();
             PrepareOpponentsPath();
@@ -170,6 +192,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         PositionsHistory[PositionsHistory.Count - ln]) < 20)
                 {
                     var md = new ACar(self);
+                    md.EnginePower = 1;
                     var cn = 0;
                     for(var i = 0; i < 80; i++)
                         if (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }, simpleMode:false, exactlyBorders:true))

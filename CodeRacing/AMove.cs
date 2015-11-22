@@ -40,6 +40,37 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (IsUseNitro)
                 move.IsUseNitro = IsUseNitro;
         }
+
+        public static bool ModelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance,
+            ABonus[] bonusCandidates, AOilSlick[] slickCandidates, AProjectile[][] projCandidates)
+        {
+            var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
+            var prevCar = car.Clone();
+            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
+            foreach (var bonus in bonusCandidates)
+            {
+                if (car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
+                    totalImportance += bonus.GetImportance(car.Original) * PathBruteForce.BonusImportanceCoeff;
+            }
+            foreach (var slick in slickCandidates)
+            {
+                slick.RemainingLifetime -= elapsedTime;
+                if (slick.Intersect(car, 9) && !slick.Intersect(prevCar, 9))
+                    totalImportance -= slick.GetDanger() * PathBruteForce.OilSlickDangerCoeff;
+                slick.RemainingLifetime += elapsedTime;
+            }
+            if (projCandidates.Length > 0 && elapsedTime < projCandidates[0].Length)
+            {
+                foreach (var projTimeline in projCandidates)
+                {
+                    var proj = projTimeline[elapsedTime];
+
+                    if (proj.Intersect(car, 5) && !proj.Intersect(prevCar, 5))
+                        totalImportance -= proj.GetDanger()*PathBruteForce.WasherDangerCoeff; //TODO
+                }
+            }
+            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
+        }
     }
 
     public class Moves : List<AMove>
@@ -65,30 +96,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             model = model.Clone();
             var totalImportance = 0.0;
+            var elapsedTime = 0;
             foreach (var move in this)
             {
-                for(var t = 0; t < move.Times; t++)
-                    _modelMove(model, move, ref totalImportance);
+                for (var t = 0; t < move.Times; t++)
+                {
+                    _modelMove(model, move, elapsedTime, ref totalImportance);
+                    elapsedTime++;
+                }
             }
-            return ComputeTime() - totalImportance;
+#if DEBUG
+            if (ComputeTime() != elapsedTime)
+                throw new Exception("ComputeTime() != elapsedTime");
+#endif
+            return elapsedTime - totalImportance;
         }
 
-        private bool _modelMove(ACar car, AMove m, ref double totalImportance)
+        private bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
         {
-            var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
-            var prevCar = car.Clone();
-            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
-            
-            totalImportance += MyStrategy.world.Bonuses
-                .Select(bonus => new ABonus(bonus))
-                .Where(bonus => car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
-                .Sum(bonus => bonus.GetImportance(car.Original)) * PathBruteForce.BonusImportanceCoeff;
-            totalImportance -= MyStrategy.world.OilSlicks
-                .Select(slick => new AOilSlick(slick))
-                .Where(slick => slick.Intersect(car, 9) && !slick.Intersect(prevCar, 9))
-                .Sum(slick => slick.GetDanger())*PathBruteForce.OilSlickDangerCoeff;
-
-            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
+            return AMove.ModelMove(car, m, elapsedTime, ref totalImportance, 
+                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Projectiles);
         }
 
         public void Pop()

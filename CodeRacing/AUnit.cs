@@ -80,7 +80,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             RemainingLifetime = MyStrategy.game.OilSlickLifetime;
         }
 
-        public bool Intersect(ACar car, double safeMargin = 0)
+        public bool Intersect(ACar car, double safeMargin)
         {
             return GetDistanceTo2(car) < Geom.Sqr(Radius + safeMargin);
         }

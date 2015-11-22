@@ -30,6 +30,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public const double BonusImportanceCoeff = 20;
         public const double OilSlickDangerCoeff = 30;
+        public const double WasherDangerCoeff = 45;
 
         public readonly PathPattern[] Patterns;
         public ACar Self;
@@ -54,6 +55,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private ABonus[] _bonusCandidates;
         private AOilSlick[] _slickCandidates;
+        private AProjectile[][] _projCandidates;
 
         private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
         {
@@ -84,7 +86,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 };
 
                 var end = true;
-                for (; /*totalTime < _bestTime &&*/ _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
+                for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
                 {
                     if (!_modelMove(model, m, totalTime, ref totalImportance))
                     {
@@ -196,9 +198,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bestTime = MyStrategy.Infinity;
             _bestImportance = 0;
 
-            _bonusCandidates = MyStrategy.world.Bonuses
+            _bonusCandidates = MyStrategy.Bonuses
                 .Where(b => Self.GetDistanceTo(b) < MyStrategy.game.TrackTileSize*5)
-                .Select(b => new ABonus(b))
                 .Where(b =>
                 {
                     var selfCell = MyStrategy.GetCell(Self);
@@ -210,9 +211,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 })
                 .ToArray();
 
-            _slickCandidates = MyStrategy.world.OilSlicks
-                .Where(slick => Self.GetAngleTo(slick) < MyStrategy.game.TrackTileSize*6)
-                .Select(slick => new AOilSlick(slick))
+            _slickCandidates = MyStrategy.OilSlicks
+                .Where(slick => Self.GetDistanceTo(slick) < MyStrategy.game.TrackTileSize*6)
                 .Where(slick =>
                 {
                     var selfCell = MyStrategy.GetCell(Self);
@@ -222,7 +222,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[] { });
                     return dist <= 6;
                 })
-                .ToArray();    
+                .ToArray();
+  
+            _projCandidates = MyStrategy.Projectiles
+                .Where(proj => Self.GetDistanceTo(proj[0]) < MyStrategy.game.TrackTileSize*7)
+                .ToArray();
 
 
             if (_cache != null)
@@ -280,24 +284,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
         }
 
-        private bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
+        public bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
         {
-            var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
-            var prevCar = car.Clone();
-            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
-            foreach (var bonus in _bonusCandidates)
-            {
-                if (car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
-                    totalImportance += bonus.GetImportance(car.Original) * BonusImportanceCoeff;
-            }
-            foreach (var slick in _slickCandidates)
-            {
-                slick.RemainingLifetime -= elapsedTime;
-                if (slick.Intersect(car, 9) && !slick.Intersect(prevCar, 9))
-                    totalImportance -= slick.GetDanger() * OilSlickDangerCoeff;
-                slick.RemainingLifetime += elapsedTime;
-            }
-            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
+            return AMove.ModelMove(car, m, elapsedTime, ref totalImportance, 
+                _bonusCandidates, _slickCandidates, _projCandidates);
         }
     }
 }
