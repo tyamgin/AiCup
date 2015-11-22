@@ -141,9 +141,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return ok;
         }
 
-        private PathBruteForce[] brutes;
+        private PathBruteForce[] brutes, extraBrutes;
 
-        private AProjectile pr;
+        //private AProjectile pr;
 
         private void _move()
         {
@@ -260,7 +260,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:false, id: 0),
+                    }, 8, useNitroInLastStage: false, id: 0),
 
                     /*
                      * - снизить мощность
@@ -294,7 +294,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:false, id: 1),
+                    }, 8, useNitroInLastStage: false, id: 1),
 
                     /*
                      * - ехать от поворота на пол-мощности
@@ -342,7 +342,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:false, id: 2),
+                    }, 8, useNitroInLastStage: false, id: 2),
 
                     /*
                      * - ехать в сторону поворота на полной можности
@@ -355,8 +355,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         new PathPattern
                         {
                             From = 0,
-                            To = 20,
-                            Step = 4,
+                            To = 16,
+                            Step = 2,
                             Move =
                                 new AMove
                                 {
@@ -368,8 +368,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         new PathPattern
                         {
                             From = 0,
-                            To = 20,
-                            Step = 4,
+                            To = 16,
+                            Step = 2,
                             Move =
                                 new AMove
                                 {
@@ -381,7 +381,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         new PathPattern
                         {
                             From = 0,
-                            To = 34,
+                            To = 30,
                             Step = 3,
                             Move =
                                 new AMove
@@ -391,72 +391,29 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:true, id: 3),
-
-                    
-                    //new PathBruteForce(new[]
-                    //{
-                    //    new PathPattern
-                    //    {
-                    //        From = 0,
-                    //        To = 30,
-                    //        Step = 4,
-                    //        Move =
-                    //            new AMove
-                    //            {
-                    //                EnginePower = 0.2,
-                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromCenter},
-                    //                IsBrake = false
-                    //            }
-                    //    },
-                    //    new PathPattern
-                    //    {
-                    //        From = 0,
-                    //        To = 16,
-                    //        Step = 2,
-                    //        Move =
-                    //            new AMove
-                    //            {
-                    //                EnginePower = 0.2,
-                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
-                    //                IsBrake = false
-                    //            }
-                    //    },
-                    //    new PathPattern
-                    //    {
-                    //        From = 0,
-                    //        To = 60,
-                    //        Step = 4,
-                    //        Move =
-                    //            new AMove
-                    //            {
-                    //                EnginePower = 0,
-                    //                WheelTurn = new TurnPattern {Pattern = TurnPatterns.ToNext},
-                    //                IsBrake = true
-                    //            }
-                    //    }
-                    //}, 8, useNitroInLastStage:false, id: 2),
-
+                    }, 8, useNitroInLastStage: true, id: 3),
+                };
+                extraBrutes = new[] {
                     new PathBruteForce(new[]
                     {
                         new PathPattern
                         {
                             From = 0,
-                            To = 21,
-                            Step = 3,
+                            To = 40,
+                            Step = 4,
                             Move =
                                 new AMove
                                 {
                                     EnginePower = 0.1,
                                     WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromNext},
-                                    IsBrake = true
+                                    IsBrake = false
                                 }
                         },
                         new PathPattern
                         {
                             From = 0,
-                            To = 21,
-                            Step = 3,
+                            To = 32,
+                            Step = 4,
                             Move =
                                 new AMove
                                 {
@@ -468,7 +425,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         new PathPattern
                         {
                             From = 0,
-                            To = 70,
+                            To = 40,
                             Step = 5,
                             Move =
                                 new AMove
@@ -478,38 +435,37 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:false, id: 2),
+                    }, 8, useNitroInLastStage:false, id: 5),
                 };
             }
             
             TimerStart();
-            var bestMoveStacks = new Moves[brutes.Length];
-            for (var i = 0; i < brutes.Length; i++)
-            {
-                if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
-                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
-            }
-            TimeEndLog("brute");
-
             var sel = -1;
             double bestTime = Infinity;
-            for (var i = 0; i < brutes.Length; i++)
+
+            var allBrutes = brutes.Concat(extraBrutes).ToArray();
+            var bestMoveStacks = new Moves[allBrutes.Length];
+            for (var i = 0; i < allBrutes.Length && (sel == -1 || i < brutes.Length || allBrutes[sel].LastSuccess < world.Tick); i++)
             {
+                if (!allBrutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
+                    bestMoveStacks[i] = allBrutes[i].Do(new ACar(self), pts, i >= brutes.Length);
                 if (bestMoveStacks[i] == null)
                     continue;
                 var time = bestMoveStacks[i].ComputeImportance(new ACar(self));
                 if (sel == -1 ||
-                    brutes[i].LastSuccess > brutes[sel].LastSuccess ||
-                    brutes[i].LastSuccess == brutes[sel].LastSuccess && time < bestTime)
+                    allBrutes[i].LastSuccess > allBrutes[sel].LastSuccess ||
+                    allBrutes[i].LastSuccess == allBrutes[sel].LastSuccess && time < bestTime)
                 {
                     sel = i;
                     bestTime = time;
                 }
             }
+            TimeEndLog("brute");
+
 
             if (sel != -1)
             {
-                brutes[sel].SelectThis();
+                allBrutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
                 DrawWays(bestMoveStacks, sel);

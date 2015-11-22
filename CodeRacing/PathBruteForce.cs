@@ -138,7 +138,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _selectThisTick = MyStrategy.world.Tick;
         }
 
-        public Moves Do(ACar car, Points pts)
+        public Moves Do(ACar car, Points pts, bool shortDist)
         {
             // Проверка что данный путь был выбран
             if (_selectThisTick + 1 != MyStrategy.world.Tick)
@@ -167,7 +167,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             else if (Self.Speed.Length < 8)
                 bruteWayPointsCount = 40;
             else
-                bruteWayPointsCount = 70;
+                bruteWayPointsCount = 60;
+            //if (shortDist)
+            //    bruteWayPointsCount = (int)(bruteWayPointsCount*0.7);
 
             const int nitroEnsureDist = 15;
 
@@ -177,7 +179,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             bruteWayPoints.AddRange(_bruteWayPoints);
             MyStrategy.SegmentsDrawQueue.Add(new object[] {Brushes.Brown, bruteWayPoints, 0.0});
 #endif
-            _needDist = MyStrategy.game.TrackTileSize/2;
+            _needDist = MyStrategy.game.TrackTileSize*0.8;
             _turnTo = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount - 1)];
             _nitroEnsurePoint = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount + nitroEnsureDist - 1)];
 #if DEBUG
@@ -257,9 +259,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 for (var k = 0; k < _patterns.Length; k++)
                 {
                     var range = k == 0 ? 8 : 4;
+                    var step = k == 0 ? 1 : 2;
                     _patterns[k].From = Math.Max(0, _cache[k].Times - range);
                     _patterns[k].To = _cache[k].Times + range;
-                    _patterns[k].Step = 2;
+                    _patterns[k].Step = step;
                 }
             }
 
