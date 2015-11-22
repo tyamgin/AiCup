@@ -394,15 +394,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }, 8, useNitroInLastStage:true, id: 0),
                 };
             }
-            
+           
             TimerStart();
             var bestMoveStacks = new Moves[brutes.Length];
             for (var i = 0; i < brutes.Length; i++)
             {
-                if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
-                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
+                if (false)
+                {
+                    if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
+                        bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
+                }
             }
             TimeEndLog("brute");
+
 
             var sel = -1;
             double bestTime = Infinity;
@@ -430,16 +434,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             else
             {
-                // TODO: придумать нормальный альтернативный алгоритм
-                move.EnginePower = 0.2;
-                move.WheelTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y);
-                var tmp = new ACar(self);
-                var aa = tmp + tmp.Speed;
-                if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
-                {
-                    move.EnginePower = 1;
-                    move.WheelTurn *= -1;
-                }
+                AlternativeMove();
+
+                //// TODO: придумать нормальный альтернативный алгоритм
+                //move.EnginePower = 0.2;
+                //move.WheelTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y);
+                //var tmp = new ACar(self);
+                //var aa = tmp + tmp.Speed;
+                //if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
+                //{
+                //    move.EnginePower = 1;
+                //    move.WheelTurn *= -1;
+                //}
             }
             
         }

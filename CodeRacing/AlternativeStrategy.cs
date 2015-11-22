@@ -1,4 +1,5 @@
-﻿using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
+﻿using System.Runtime.InteropServices;
+using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,5 +74,32 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return result;
         }
 
+        void AlternativeMove()
+        {
+            var car = new ACar(self);
+            var pts = GetAlternativeWaySegments(self);
+            var turnCenter = pts[1];
+            var turnNext = pts[2];
+
+
+            move.EnginePower = 1.0;
+
+            if (car.GetDistanceTo(turnCenter) < 1.6 * game.TrackTileSize)
+            {
+                move.EnginePower = 0.8;
+            }
+
+            if (car.GetDistanceTo(turnCenter) < 1.0 * game.TrackTileSize)
+            {
+                if (GetSpeed(self) > 11)
+                    move.IsBrake = true;
+            }
+            move.WheelTurn = car.GetAngleTo(turnCenter);
+
+            if (turnCenter.GetDistanceTo(self) >= 7 * game.TrackTileSize && Math.Abs(car.GetAngleTo(turnCenter)) < Math.PI / 6)
+            {
+                move.IsUseNitro = true;
+            }
+        }
     }
 }
