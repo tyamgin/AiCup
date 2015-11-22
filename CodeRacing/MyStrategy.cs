@@ -214,6 +214,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 brutes = new[]
                 {
+                    /*
+                     * - ехать в сторону поворота на полной можности
+                     * - поворачивать в сторону цели на пол-мощности
+                     * - тормозить
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern
@@ -257,6 +262,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         }
                     }, 8, useNitroInLastStage:false, id: 0),
 
+                    /*
+                     * - снизить мощность
+                     * - тормозить
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern
@@ -287,6 +296,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         }
                     }, 8, useNitroInLastStage:false, id: 1),
 
+                    /*
+                     * - ехать от поворота на пол-мощности
+                     * - поворачивать в сторону цели на полной мощности
+                     * - тормозить
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern
@@ -330,7 +344,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         }
                     }, 8, useNitroInLastStage:false, id: 2),
 
-                    // with nitro
+                    /*
+                     * - ехать в сторону поворота на полной можности
+                     * - поворачивать в сторону цели на пол-мощности
+                     * - тормозить
+                     * - НИТРО!!!
+                     */
                     new PathBruteForce(new[]
                     {
                         new PathPattern

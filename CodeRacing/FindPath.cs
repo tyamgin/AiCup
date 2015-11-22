@@ -247,19 +247,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for (var e = 1; result.Count < 5; e++)
             {
                 var nextWp = GetNextWayPoint(car, e);
-                for (var cur = myCell; !cur.Equals(nextWp);)
+                for (var curCell = myCell; !curCell.Equals(nextWp);)
                 {
-                    var cCell = _bfs(cur, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
-                    var nxt = GetCenter(cCell);
-                    while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nxt))
+                    var nextCell = _bfs(curCell, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
+                    var nextPoint = GetCenter(nextCell);
+                    while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nextPoint))
                     {
                         result.Pop();
                         isWayPoint.RemoveAt(isWayPoint.Count - 1);
                     }
-                    result.Add(nxt);
-                    isWayPoint.Add(cCell.Equals(nextWp));
-                    prevCell = cur;
-                    cur = cCell;
+                    result.Add(nextPoint);
+                    isWayPoint.Add(nextCell.Equals(nextWp));
+                    prevCell = curCell;
+                    curCell = nextCell;
                 }
                 myCell = nextWp;
             }
