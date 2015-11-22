@@ -75,6 +75,7 @@
   <ItemGroup>
     <Compile Include="ABonus.cs" />
     <Compile Include="ACar.cs" />
+    <Compile Include="AlternativeStrategy.cs" />
     <Compile Include="AMove.cs" />
     <Compile Include="AProjectile.cs" />
     <Compile Include="ATile.cs" />

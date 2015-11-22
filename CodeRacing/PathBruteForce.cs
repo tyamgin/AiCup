@@ -157,7 +157,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             _turnCenter = pts[1];
 
-            var extended = ExtendWaySegments(pts);
+            var extended = MyStrategy.ExtendWaySegments(pts, 50);
             _bruteWayPoints = extended.GetRange(0, Math.Min(70, extended.Count)).ToArray();
 #if DEBUG
             var bruteWayPoints = new Points();
@@ -298,24 +298,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 slick.RemainingLifetime += elapsedTime;
             }
             return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
-        }
-
-        public Points ExtendWaySegments(Points pts)
-        {
-            var res = new Points();
-            for (var idx = 1; idx < pts.Count; idx++)
-            {
-                var a = pts[idx - 1];
-                var b = pts[idx];
-
-                var delta = 50.0;
-                var c = (int)(a.GetDistanceTo(b) / delta + 2);
-                delta = a.GetDistanceTo(b) / c;
-                var dir = (b - a).Normalized();
-                for (var i = 0; i <= c; i++)
-                    res.Add(a + dir * (delta * i));
-            }
-            return res;
         }
     }
 }

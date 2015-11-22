@@ -196,13 +196,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
             }
 
-            if (world.Tick < game.InitialFreezeDurationTicks + 35)
-            {
-                move.WheelTurn = 1;
-                move.EnginePower = 1;
-                return;
-            }
-
             //if (pr == null)
             //{
             //    //var ttt = Geom.LineCircleIntersect(new Point(2, 0), new Point(0, 2), new Point(-1, -1), 2*Math.Sqrt(2));

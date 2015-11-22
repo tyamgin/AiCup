@@ -211,19 +211,28 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return _intersectTailCacheSafe[i][j];
         }
 
-        public static bool CheckVisibility(Car car, Point from, Point to)
+        public delegate bool PointDelegate(Point point);
+
+        public static bool PointsBetween(Point from, Point to, double maxDelta, PointDelegate callback)
         {
-            var delta = 10.0;
-            var c = (int)(from.GetDistanceTo(to) / delta + 2);
-            delta = from.GetDistanceTo(to)/c;
+            if (from.Equals(to))
+                return callback(from.Clone());
+
+            var c = (int)(from.GetDistanceTo(to) / maxDelta + 2);
+            maxDelta = from.GetDistanceTo(to) / c;
             var dir = (to - from).Normalized();
             for (var i = 0; i <= c; i++)
             {
-                var p = from + dir*(delta*i);
-                if (IntersectTail(p, car.Height / 2 + 10))
+                // from + dir * (maxDelta * i)
+                if (!callback(new Point(from.X + dir.X * maxDelta * i, from.Y + dir.Y * maxDelta * i)))
                     return false;
             }
             return true;
+        }
+
+        public static bool CheckVisibility(Car car, Point from, Point to)
+        {
+            return PointsBetween(from, to, 10.0, point => !IntersectTail(point, car.Height / 2 + 10));
         }
 
         public Points GetWaySegments(Car car)
@@ -255,6 +264,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 myCell = nextWp;
             }
             return result;
+        }
+
+        public static Points ExtendWaySegments(Points pts, double delta)
+        {
+            var res = new Points();
+
+            for (var idx = 1; idx < pts.Count; idx++)
+            {
+                PointsBetween(pts[idx - 1], pts[idx], delta, point =>
+                {
+                    res.Add(point);
+                    return true;
+                });
+            }
+            return res;
         }
     }
 }
