@@ -192,6 +192,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             RemoveAt(Count - 1);
         }
+
+        public Point Last()
+        {
+            return this[Count - 1];
+        }
     }
 
     public class Cell

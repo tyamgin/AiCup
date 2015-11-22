@@ -211,50 +211,139 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return _intersectTailCacheSafe[i][j];
         }
 
-        public static bool CheckVisibility(Car car, Point from, Point to)
+        public delegate bool PointDelegate(Point point);
+
+        public static bool PointsBetween(Point from, Point to, double maxDelta, PointDelegate callback)
         {
-            var delta = 10.0;
-            var c = (int)(from.GetDistanceTo(to) / delta + 2);
-            delta = from.GetDistanceTo(to)/c;
+            if (from.Equals(to))
+                return callback(from.Clone());
+
+            var c = (int)(from.GetDistanceTo(to) / maxDelta + 2);
+            maxDelta = from.GetDistanceTo(to) / c;
             var dir = (to - from).Normalized();
             for (var i = 0; i <= c; i++)
             {
-                var p = from + dir*(delta*i);
-                if (IntersectTail(p, car.Height / 2 + 10))
+                // from + dir * (maxDelta * i)
+                if (!callback(new Point(from.X + dir.X * maxDelta * i, from.Y + dir.Y * maxDelta * i)))
                     return false;
             }
             return true;
         }
 
+        public static bool CheckVisibility(Car car, Point from, Point to)
+        {
+            return PointsBetween(from, to, 10.0, point => !IntersectTail(point, car.Height / 2 + 10));
+        }
+
+        public static bool CheckVisibilityAndWp(Car car, Point from, Point to, List<Cell> wayPoints)
+        {
+            wayPoints = wayPoints.GetRange(0, wayPoints.Count);
+            if (!PointsBetween(from, to, 10.0, point =>
+            {
+                if (IntersectTail(point, car.Height/2 + 5))
+                    return false;
+                var cell = GetCell(point);
+                if (wayPoints.Count > 0 && cell.Equals(wayPoints[0]))
+                    wayPoints.RemoveAt(0);
+
+                return true;
+            }))
+            {
+                return false;
+            }
+            return wayPoints.Count == 0;
+        }
+
         public Points GetWaySegments(Car car)
         {
             var result = new Points();
-            var isWayPoint = new List<bool>();
             var myCell = GetCell(car.X, car.Y);
             result.Add(new Point(car));
-            isWayPoint.Add(false);
             Cell prevCell = null;
+
+            var passedWayPoints = new List<Cell>();
 
             for (var e = 1; result.Count < 8; e++)
             {
                 var nextWp = GetNextWayPoint(car, e);
-                for (var cur = myCell; !cur.Equals(nextWp);)
+                for (var curCell = myCell; !curCell.Equals(nextWp); )
                 {
-                    var cCell = _bfs(cur, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
-                    var nxt = GetCenter(cCell);
-                    while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nxt))
+                    var nextCell = _bfs(curCell, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
+                    var nextCenter = GetCenter(nextCell);
+                    for (var i = 0; i < result.Count; i++)
                     {
-                        result.Pop();
-                        isWayPoint.RemoveAt(isWayPoint.Count - 1);
+                        if (CheckVisibilityAndWp(car, result[i], nextCenter, passedWayPoints))
+                        {
+                            result.RemoveRange(i + 1, result.Count - i - 1);
+                            break;
+                        }
                     }
-                    result.Add(nxt);
-                    isWayPoint.Add(cCell.Equals(nextWp));
-                    prevCell = cur;
-                    cur = cCell;
+                    result.Add(nextCenter);
+                    prevCell = curCell;
+                    curCell = nextCell;
                 }
                 myCell = nextWp;
+                passedWayPoints.Add(nextWp);
+            }
+            var extended = ExtendWaySegments(result, 100);
+            result.Clear();
+            
+            foreach (var t in extended)
+            {
+                if (result.Count > 0 && result.Last().Equals(t))
+                    continue;
+
+                while(result.Count > 1 && CheckVisibility(car, result[result.Count - 2], t))
+                    result.Pop();
+                result.Add(t);
             }
             return result;
         }
+
+        public static Points ExtendWaySegments(Points pts, double delta)
+        {
+            var res = new Points();
+
+            for (var idx = 1; idx < pts.Count; idx++)
+            {
+                PointsBetween(pts[idx - 1], pts[idx], delta, point =>
+                {
+                    res.Add(point);
+                    return true;
+                });
+            }
+            return res;
+        }
+
+        //public Points old_GetWaySegments(Car car)
+        //{
+        //    var result = new Points();
+        //    var isWayPoint = new List<bool>();
+        //    var myCell = GetCell(car.X, car.Y);
+        //    result.Add(new Point(car));
+        //    isWayPoint.Add(false);
+        //    Cell prevCell = null;
+
+        //    for (var e = 1; result.Count < 8; e++)
+        //    {
+        //        var nextWp = GetNextWayPoint(car, e);
+        //        for (var cur = myCell; !cur.Equals(nextWp);)
+        //        {
+        //            var cCell = _bfs(cur, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
+        //            var nxt = GetCenter(cCell);
+        //            while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nxt))
+        //            {
+        //                result.Pop();
+        //                isWayPoint.RemoveAt(isWayPoint.Count - 1);
+        //            }
+        //            result.Add(nxt);
+        //            isWayPoint.Add(cCell.Equals(nextWp));
+        //            prevCell = cur;
+        //            cur = cCell;
+        //        }
+        //        myCell = nextWp;
+        //    }
+        //    return result;
+        //}
     }
 }

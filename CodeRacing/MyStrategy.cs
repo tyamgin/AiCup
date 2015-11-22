@@ -312,7 +312,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 new AMove
                                 {
                                     EnginePower = 0.5,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromCenter},
+                                    WheelTurn = new TurnPattern {Pattern = TurnPatterns.FromNext},
                                     IsBrake = false
                                 }
                         },

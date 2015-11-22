@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         ToNext,
         ToCenter,
-        FromCenter,
+        //FromCenter,
         FromNext,
     }
 
@@ -93,16 +93,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
                     return;
 
-                if (UseNitroInLastStage)
-                {
-                    // проверка что есть ещё пространство, когда используется нитро
-                    while(_nitroEnsurePoint.GetDistanceTo2(model) > _needDist * _needDist)
-                    {
-                        var tmp = 0.0;
-                        if (!_modelMove(model, m, totalTime, ref tmp))
-                            return;
-                    }   
-                }
+                //if (UseNitroInLastStage)
+                //{
+                //    // проверка что есть ещё пространство, когда используется нитро
+                //    while(_nitroEnsurePoint.GetDistanceTo2(model) > _needDist * _needDist)
+                //    {
+                //        var tmp = 0.0;
+                //        if (!_modelMove(model, m, totalTime, ref tmp))
+                //            return;
+                //    }   
+                //}
 
                 if (_isBetterTime(totalTime, totalImportance, _bestTime, _bestImportance))
                 {
@@ -159,15 +159,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             _lastCall = MyStrategy.world.Tick;
 
-            var extended = ExtendWaySegments(pts);
+            var extended = MyStrategy.ExtendWaySegments(pts, 50);
 
             int bruteWayPointsCount;
             if (Self.Speed.Length < 4)
                 bruteWayPointsCount = 30;
             else if (Self.Speed.Length < 8)
-                bruteWayPointsCount = 40;
+                bruteWayPointsCount = 35;
             else
-                bruteWayPointsCount = 60;
+                bruteWayPointsCount = 50;
             //if (shortDist)
             //    bruteWayPointsCount = (int)(bruteWayPointsCount*0.7);
 
@@ -179,12 +179,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             bruteWayPoints.AddRange(_bruteWayPoints);
             MyStrategy.SegmentsDrawQueue.Add(new object[] {Brushes.Brown, bruteWayPoints, 0.0});
 #endif
-            _needDist = MyStrategy.game.TrackTileSize*0.8;
+            _needDist = MyStrategy.game.TrackTileSize*0.5;
             _turnTo = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount - 1)];
-            _nitroEnsurePoint = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount + nitroEnsureDist - 1)];
+            //_nitroEnsurePoint = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, bruteWayPointsCount + nitroEnsureDist - 1)];
 #if DEBUG
             MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
-            MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Blue, new ACircularUnit { X = _nitroEnsurePoint.X, Y = _nitroEnsurePoint.Y, Radius = 20 }));
+            //MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Blue, new ACircularUnit { X = _nitroEnsurePoint.X, Y = _nitroEnsurePoint.Y, Radius = 20 }));
 #endif
 
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
@@ -213,8 +213,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         p.Move.WheelTurn = _turnCenter;
                     else if (turnPattern.Pattern == TurnPatterns.ToNext)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? -1 : 1;
-                    else if (turnPattern.Pattern == TurnPatterns.FromCenter)
-                        p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
+                    //else if (turnPattern.Pattern == TurnPatterns.FromCenter)
+                    //    p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
                     else if (turnPattern.Pattern == TurnPatterns.FromNext)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? 1 : -1;
                 }
@@ -259,10 +259,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 for (var k = 0; k < _patterns.Length; k++)
                 {
                     var range = k == 0 ? 8 : 4;
-                    var step = k == 0 ? 1 : 2;
                     _patterns[k].From = Math.Max(0, _cache[k].Times - range);
                     _patterns[k].To = _cache[k].Times + range;
-                    _patterns[k].Step = step;
+                    _patterns[k].Step = 2;
                 }
             }
 
@@ -327,25 +326,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     totalImportance -= slick.GetDanger() * OilSlickDangerCoeff;
                 slick.RemainingLifetime += elapsedTime;
             }
-            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
-        }
-
-        public Points ExtendWaySegments(Points pts)
-        {
-            var res = new Points();
-            for (var idx = 1; idx < pts.Count; idx++)
-            {
-                var a = pts[idx - 1];
-                var b = pts[idx];
-
-                var delta = 50.0;
-                var c = (int)(a.GetDistanceTo(b) / delta + 2);
-                delta = a.GetDistanceTo(b) / c;
-                var dir = (b - a).Normalized();
-                for (var i = 0; i <= c; i++)
-                    res.Add(a + dir * (delta * i));
-            }
-            return res;
+            var useSafeMaegin = Math.Abs(totalImportance) > MyStrategy.Eps;
+            return car.GetRect()
+                      .All(p => !MyStrategy.IntersectTail(p, useSafeMaegin ? MyStrategy.SafeMargin : /*3*/MyStrategy.SafeMargin));
         }
     }
 }
