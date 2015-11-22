@@ -81,6 +81,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var turnCenter = pts[1];
             var turnNext = pts[2];
 
+            
+            var tmp = new ACar(self);
+            var aa = tmp + tmp.Speed;
+            if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI / 2)
+            {
+                move.EnginePower = 1;
+                move.WheelTurn *= -1;
+                return;
+            }
+
 
             move.EnginePower = 1.0;
 
