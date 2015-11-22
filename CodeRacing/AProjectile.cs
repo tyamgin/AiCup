@@ -20,6 +20,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
             }
 
+            return;
+            // TODO: выход за пределы карты
             for (int it = 0; it < UpdateIterations; it++)
             {
                 X += Speed.X / UpdateIterations;

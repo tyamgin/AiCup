@@ -115,7 +115,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 #if DEBUG
             foreach (var seg in segs)
-                SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Indigo, seg));
+                SegmentsDrawQueue.Add(new object[] { Brushes.Indigo, seg, 0.0 });
 #endif
             TimeEndLog("PrepareOpponentsPath");
         }
@@ -413,7 +413,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
-                DrawWays(bestMoveStacks);
+                DrawWays(bestMoveStacks, sel);
 #endif
             }
             else

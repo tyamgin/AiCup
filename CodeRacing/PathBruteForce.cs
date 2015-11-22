@@ -162,7 +162,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
-            MyStrategy.SegmentsDrawQueue.Add(new Tuple<Brush, Points>(Brushes.Brown, bruteWayPoints));
+            MyStrategy.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
 #endif
             _needDist = MyStrategy.game.TrackTileSize/2;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
