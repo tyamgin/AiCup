@@ -14,6 +14,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool OutOfMap;
         public int RemainingNitroTicks;
         public int RemainingNitroCooldownTicks;
+        public int RemainingInactiveTicks;
 
         private readonly double _carAccelerationUp;
         private readonly double _carAccelerationDown;
@@ -32,6 +33,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             OutOfMap = false;
             RemainingNitroTicks = original.RemainingNitroTicks;
             RemainingNitroCooldownTicks = original.RemainingNitroCooldownTicks;
+            RemainingInactiveTicks = DurabilityObserver.ReactivationTime(original) - MyStrategy.world.Tick;
 
             Width = original.Width;
             Height = original.Height;
@@ -61,6 +63,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             OutOfMap = car.OutOfMap;
             RemainingNitroTicks = car.RemainingNitroTicks;
             RemainingNitroCooldownTicks = car.RemainingNitroCooldownTicks;
+            RemainingInactiveTicks = car.RemainingInactiveTicks;
 
             Width = car.Width;
             Height = car.Height;
@@ -93,6 +96,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public void Move(double enginePower, double wheelTurn, bool isBreak, bool useNitro, bool simpleMode)
         {
+            if (RemainingInactiveTicks > 0 || MyStrategy.IsCrashed(Original))
+            {
+                isBreak = false;
+                useNitro = false;
+                enginePower = 0;
+                wheelTurn = WheelTurn;
+            }
+
             useNitro = useNitro && Original.NitroChargeCount > 0;
             if (useNitro && RemainingNitroTicks == 0 && RemainingNitroCooldownTicks == 0)
             {
@@ -177,6 +188,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     RemainingNitroCooldownTicks--;
                 if (RemainingNitroTicks > 0)
                     RemainingNitroTicks--;
+                if (RemainingInactiveTicks > 0)
+                    RemainingInactiveTicks--;
             }
         }
 
@@ -185,6 +198,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (GetDistanceTo2(bonus) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.BonusDiagonalHalfLength))
                 return false;
             return Geom.PolygonsIntersect(GetRect(), bonus.GetRect());
+        }
+
+        public bool IntersectWith(ACar car)
+        {
+            if (GetDistanceTo2(car) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.CarDiagonalHalfLength))
+                return false;
+            return Geom.PolygonsIntersect(GetRect(), car.GetRect());
         }
     }
 }

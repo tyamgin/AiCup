@@ -18,7 +18,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
                 {
                     StartInfo =
                     {
-                        FileName = "D:\\Projects\\AiCup\\CodeRacing\\local-runner\\alternate" + 0 + ".exe",
+                        //FileName = "D:\\Projects\\AiCup\\CodeRacing\\local-runner\\alternate" + 0 + ".exe",
+                        FileName = "D:\\Projects\\AiCup\\CodeRacing\\local-runner\\crash400.exe",
                         Arguments = "127.0.0.1 " + (31002 + i) + " 0000000000000000",
                         CreateNoWindow = true
                     }

@@ -42,7 +42,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
 
         public static bool ModelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance,
-            ABonus[] bonusCandidates, AOilSlick[] slickCandidates, AProjectile[][] projCandidates)
+            ABonus[] bonusCandidates, AOilSlick[] slickCandidates, AProjectile[][] projCandidates, ACar[][] carCandidates)
         {
             var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             var prevCar = car.Clone();
@@ -66,8 +66,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     var proj = projTimeline[elapsedTime];
 
                     if (proj.Intersect(car, 5) && !proj.Intersect(prevCar, 5))
-                        totalImportance -= proj.GetDanger()*PathBruteForce.WasherDangerCoeff; //TODO
+                        totalImportance -= proj.GetDanger()*PathBruteForce.ProjectileDangerCoeff; //TODO
                 }
+            }
+            if (carCandidates.Length > 0 && elapsedTime < carCandidates[0].Length)
+            {
+                //foreach (var oppTimeline in carCandidates)
+                //{
+                //    var opp = oppTimeline[elapsedTime];
+
+                //    if (car.IntersectWith(opp) && !prevCar.IntersectWith(opp))
+                //        totalImportance -= PathBruteForce.ProjectileDangerCoeff;
+                //}
             }
             return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
         }
@@ -115,7 +125,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
         {
             return AMove.ModelMove(car, m, elapsedTime, ref totalImportance, 
-                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Projectiles);
+                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Projectiles, MyStrategy.OpponentsCars);
         }
 
         public void Pop()

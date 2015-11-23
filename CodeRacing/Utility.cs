@@ -50,6 +50,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return x;
         }
 
+        public static bool IsCrashed(Car car)
+        {
+            return Players[car.PlayerId].IsStrategyCrashed;
+        }
 
         private readonly List<Stopwatch> _timers = new List<Stopwatch>();
 

@@ -30,7 +30,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public const double BonusImportanceCoeff = 20;
         public const double OilSlickDangerCoeff = 30;
-        public const double WasherDangerCoeff = 45;
+        public const double ProjectileDangerCoeff = 45;
+        public const double InactiveCarDangerCoeff = 30;
 
         public readonly PathPattern[] Patterns;
         public ACar Self;
@@ -56,6 +57,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private ABonus[] _bonusCandidates;
         private AOilSlick[] _slickCandidates;
         private AProjectile[][] _projCandidates;
+        private ACar[][] _carCandidates;
 
         private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
         {
@@ -228,6 +230,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 .Where(proj => Self.GetDistanceTo(proj[0]) < MyStrategy.game.TrackTileSize*7)
                 .ToArray();
 
+            _carCandidates = MyStrategy.OpponentsCars
+                .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*6)
+                .Where(opp =>
+                {
+                    var selfCell = MyStrategy.GetCell(Self);
+                    var bCell = MyStrategy.GetCell(opp[0]);
+                    if (selfCell.Equals(bCell))
+                        return true;
+                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[] { });
+                    return dist <= 6;
+                })
+                .ToArray();
+
 
             if (_cache != null)
             {
@@ -287,7 +302,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
         {
             return AMove.ModelMove(car, m, elapsedTime, ref totalImportance, 
-                _bonusCandidates, _slickCandidates, _projCandidates);
+                _bonusCandidates, _slickCandidates, _projCandidates, _carCandidates);
         }
     }
 }

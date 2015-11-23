@@ -22,6 +22,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Cell[] waypoints;
         public static double MapWidth, MapHeight;
         public static Point[,,] TileCorner;
+        public static Dictionary<long, Player> Players; 
 
         public const double SafeMargin = 10.0;
         public const long TimerLogLimit = 5;
@@ -36,8 +37,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static ABonus[] Bonuses;
         public static AOilSlick[] OilSlicks;
 
-        public Car[] Opponents;
-        public ACar[][] OpponentsCars;
+        public static Car[] Opponents;
+        public static ACar[][] OpponentsCars;
         
 
         public Points PositionsHistory = new Points();
@@ -59,7 +60,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for(var i = 0; i < waypoints.Length; i++)
                 waypoints[i] = new Cell(wp[i][1], wp[i][0]);
 
-            
+
+            Players = new Dictionary<long, Player>();
+            foreach (var player in world.Players)
+                Players[player.Id] = player;
+
             foreach (var car in world.Cars)
             {
                 DurabilityObserver.Watch(car);
@@ -117,24 +122,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
 
             TimerStart();
-            OpponentsCars = new ACar[OpponentsTicksPrediction][];
-            OpponentsCars[0] = Opponents.Select(car => new ACar(car)).ToArray();
             var ways = Opponents.Select(GetWaySegments).ToArray();
 #if DEBUG
             var segs = Opponents.Select(x => new Points()).ToArray();
 #endif
-            for (var t = 1; t < OpponentsTicksPrediction; t++)
+
+            OpponentsCars = new ACar[Opponents.Length][];
+            for (var i = 0; i < Opponents.Length; i++)
             {
-                OpponentsCars[t] = new ACar[Opponents.Length];
-                for (var i = 0; i < Opponents.Length; i++)
+                OpponentsCars[i] = new ACar[OpponentsTicksPrediction];
+                OpponentsCars[i][0] = new ACar(Opponents[i]);
+                for (var t = 1; t < OpponentsTicksPrediction; t++)
                 {
-                    OpponentsCars[t][i] = OpponentsCars[t - 1][i].Clone();
-                    _simulateOpponentMove(ways[i], OpponentsCars[t][i]);
+                    OpponentsCars[i][t] = OpponentsCars[i][t - 1].Clone();
+                    _simulateOpponentMove(ways[i], OpponentsCars[i][t]);
 #if DEBUG
-                    segs[i].Add(new Point(OpponentsCars[t][i]));
+                    segs[i].Add(new Point(OpponentsCars[i][t]));
 #endif
                 }
             }
+
 #if DEBUG
             foreach (var seg in segs)
                 SegmentsDrawQueue.Add(new object[] { Brushes.Indigo, seg, 0.0 });
@@ -169,6 +176,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private void _move()
         {
+            //if (world.Tick < 250)
+            //    return;
             var pts = GetWaySegments(self);
             var turnCenter = pts[1];
 
@@ -457,6 +466,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             else
             {
+                //if (world.Tick >= 400)
+                //    throw new Exception("test exception");
                 AlternativeMove();
             }
         }

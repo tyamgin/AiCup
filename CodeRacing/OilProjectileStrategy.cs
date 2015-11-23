@@ -63,8 +63,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 for (var i = 0; i < Opponents.Length; i++)
                 {
-                    if (slick.GetDistanceTo2(OpponentsCars[t][i]) < rad * rad
-                        && (self.OilCanisterCount > 1 || Math.Abs(OpponentsCars[t][i].WheelTurn) > 0.2))
+                    if (slick.GetDistanceTo2(OpponentsCars[i][t]) < rad * rad
+                        && (self.OilCanisterCount > 1 || Math.Abs(OpponentsCars[i][t].WheelTurn) > 0.2))
                     {
                         result = true;
                     }
@@ -85,7 +85,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var projectiles = AProjectile.GetProjectiles(new ACar(self));
 
             var shot = new bool[projectiles.Length];
-            for (var t = 1; t < OpponentsTicksPrediction; t++)
+            for (var t = 1; t < OpponentsTicksPrediction * 0.6; t++)
             {
                 for(var prId = 0; prId < projectiles.Length; prId++)
                 {
@@ -95,8 +95,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     pr.Move();
 
-                    foreach (var opp in OpponentsCars[t])
+                    for(var i = 0; i < Opponents.Length; i++)
                     {
+                        var opp = OpponentsCars[i][t];
                         if (Geom.ContainPoint(opp.GetRect(), pr))
                         {
                             if (DurabilityObserver.ReactivationTime(opp.Original) + 2 < world.Tick + t)
