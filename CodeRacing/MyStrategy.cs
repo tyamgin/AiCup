@@ -10,10 +10,11 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
     // TODO: обработать столкновения с бонусами и убрать костыль
-    // TODO: не юзать нитро если лужа
 
     public partial class MyStrategy : IStrategy
     {
+        public static bool BAD_TESTING_STRATEGY = false;
+
         public static World world;
         public static Game game;
         public Move move;
@@ -293,7 +294,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:false, id: 0),
+                    }, 8, false, 0, 70),
 
                     /*
                      * - снизить мощность
@@ -327,7 +328,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:false, id: 1),
+                    }, 8, false, 1, 70),
 
                     /*
                      * - ехать от поворота на пол-мощности
@@ -375,7 +376,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:false, id: 2),
+                    }, 8, false, 2, 70),
 
                     /*
                      * - ехать в сторону поворота на полной можности
@@ -424,7 +425,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     IsBrake = true
                                 }
                         }
-                    }, 8, useNitroInLastStage:true, id: 0),
+                    }, 8, true, 0, 70),
                 };
             }
            
@@ -432,10 +433,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var bestMoveStacks = new Moves[brutes.Length];
             for (var i = 0; i < brutes.Length; i++)
             {
-                if (true)
+                if (!BAD_TESTING_STRATEGY)
                 {
-                    if (!brutes[i].UseNitroInLastStage || self.NitroChargeCount > 0)
-                        bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
+                    if (brutes[i].UseNitroInLastStage && self.NitroChargeCount == 0)
+                        continue;
+                    if (brutes[i].UseNitroInLastStage && self.RemainingOiledTicks > 0)
+                        continue;
+
+                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
                 }
             }
             TimeEndLog("brute");
@@ -493,6 +498,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             _drawMap();
 #endif
+            //if (world.Tick >= 350)
+            //    BAD_TESTING_STRATEGY = true;
             if (!self.IsFinishedTrack)
                 _move();
             else if (_finishTime == Infinity)

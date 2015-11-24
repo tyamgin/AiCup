@@ -52,7 +52,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
     public class PathBruteForce
     {
-        public const double BonusImportanceCoeff = 20;
+        public const double BonusImportanceCoeff = 30;
         public const double OilSlickDangerCoeff = 30;
         public const double ProjectileDangerCoeff = 45;
         public const double InactiveCarDangerCoeff = 30;
@@ -77,6 +77,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private double _needDist;
         private readonly int _interval;
         public bool UseNitroInLastStage;
+        private int _waypointsCount;
 
         private ABonus[] _bonusCandidates;
         private AOilSlick[] _slickCandidates;
@@ -88,12 +89,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return time1 - importance1 < time2 - importance2;
         }
 
-        public PathBruteForce(PathPattern[] patterns, int interval, bool useNitroInLastStage, int id)
+        public PathBruteForce(PathPattern[] patterns, int interval, bool useNitroInLastStage, int id, int waypointsCount)
         {
             Patterns = patterns;
             _interval = interval;
             Id = id;
             UseNitroInLastStage = useNitroInLastStage;
+            _waypointsCount = waypointsCount;
         }
 
         private void _doRecursive(ACar model, int idx, PassedInfo total)
@@ -184,7 +186,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _turnCenter = pts[1];
 
             var extended = MyStrategy.ExtendWaySegments(pts, 50);
-            _bruteWayPoints = extended.GetRange(0, Math.Min(70, extended.Count)).ToArray();
+            _bruteWayPoints = extended.GetRange(0, Math.Min(_waypointsCount, extended.Count)).ToArray();
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);

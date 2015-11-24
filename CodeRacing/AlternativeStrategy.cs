@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Drawing;
+using System.Runtime.InteropServices;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 using System;
 using System.Collections.Generic;
@@ -74,41 +75,68 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return result;
         }
 
-        void AlternativeMove()
+        private PathBruteForce[] _alternativeBrutes;
+
+        private void AlternativeMove()
         {
             var car = new ACar(self);
             var pts = GetAlternativeWaySegments(self);
+            //var pts = GetWaySegments(self);
             var turnCenter = pts[1];
             var turnNext = pts[2];
 
-            
+#if DEBUG
+            SegmentsDrawQueue.Add(new object[] {Brushes.DarkSlateBlue, pts, 3.0});
+#endif
+
             var tmp = new ACar(self);
             var aa = tmp + tmp.Speed;
-            if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI / 2)
+            if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI/2)
             {
                 move.EnginePower = 1;
                 move.WheelTurn *= -1;
                 return;
             }
 
-
-            move.EnginePower = 1.0;
-
-            if (car.GetDistanceTo(turnCenter) < 1.6 * game.TrackTileSize)
-            {
-                move.EnginePower = 0.8;
-            }
-
-            if (car.GetDistanceTo(turnCenter) < 1.0 * game.TrackTileSize)
-            {
-                if (GetSpeed(self) > 11)
-                    move.IsBrake = true;
-            }
+            move.EnginePower = 0.7;
             move.WheelTurn = car.GetAngleTo(turnCenter);
 
-            if (turnCenter.GetDistanceTo(self) >= 7 * game.TrackTileSize && Math.Abs(car.GetAngleTo(turnCenter)) < Math.PI / 6)
+            if (car.GetDistanceTo(turnCenter) < 2.0*game.TrackTileSize)
             {
-                move.IsUseNitro = true;
+                move.EnginePower = 0.5;
+            }
+            if (car.GetDistanceTo(turnCenter) < 1.6*game.TrackTileSize)
+            {
+                move.EnginePower = 0.2;
+            }
+
+            if (car.GetAngleTo(turnCenter) > Math.PI / 8)
+            {
+                move.EnginePower = 0.2;
+            }
+
+            if (car.GetDistanceTo(turnCenter) < 2.0*game.TrackTileSize && GetSpeed(self) > 7)
+            {
+                move.IsBrake = true;
+            }
+
+            if (car.GetDistanceTo(turnCenter) < 0.6*game.TrackTileSize && GetSpeed(self) > 7)
+            {
+                move.WheelTurn = car.GetAngleTo(turnNext);
+            }
+
+            if (Math.Abs(car.GetAngleTo(turnCenter)) > Math.PI/4)
+            {
+                move.IsBrake = true;
+            }
+
+            if (BAD_TESTING_STRATEGY) 
+            {
+                if (turnCenter.GetDistanceTo(self) >= 7*game.TrackTileSize &&
+                    Math.Abs(car.GetAngleTo(turnCenter)) < Math.PI/6)
+                {
+                    move.IsUseNitro = true;
+                }
             }
         }
     }

@@ -69,7 +69,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     slick.RemainingLifetime -= total.Time;
                     if (slick.Intersect(car, 9))
                     {
-                        total.Importance -= slick.GetDanger()*PathBruteForce.OilSlickDangerCoeff;
+                        total.Importance -= slick.GetDanger()*PathBruteForce.OilSlickDangerCoeff*(car.RemainingNitroTicks > 0 ? 2 : 1);
                         total.Slicks = true;
                     }
                     slick.RemainingLifetime += total.Time;
