@@ -13,7 +13,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public AMove Move;
     }
 
-    public enum TurnPatterns
+    public enum TurnPatternType
     {
         ToNext,
         ToCenter,
@@ -22,8 +22,32 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
     public class TurnPattern
     {
-        public TurnPatterns Pattern;
-        //public double Coeff = 1;
+        public TurnPatternType Pattern;
+    }
+
+    public class PassedInfo
+    {
+        public BitMask Bonuses = new BitMask();
+        public bool Slicks;
+        public BitMask Projectiles = new BitMask();
+        public bool Cars;
+
+        public int Time;
+        public double Importance;
+
+        public PassedInfo Clone()
+        {
+            return new PassedInfo
+            {
+                Bonuses = Bonuses.Clone(),
+                Slicks = Slicks,
+                Projectiles = Projectiles.Clone(),
+                Cars = Cars,
+
+                Time = Time,
+                Importance = Importance
+            };
+        }
     }
 
     public class PathBruteForce
@@ -43,7 +67,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private double _bestImportance;
         private Point[] _bruteWayPoints;
 
-        private delegate void CarCallback(ACar car, int time, double importance);
+        private delegate void CarCallback(ACar car, PassedInfo passed);
 
         private Moves _cache;
         public int LastSuccess; // Когда последний раз брут что-то находил
@@ -72,9 +96,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             UseNitroInLastStage = useNitroInLastStage;
         }
 
-        private void _doRecursive(ACar model, int idx, int totalTime, double totalImportance)
+        private void _doRecursive(ACar model, int idx, PassedInfo total)
         {
             model = model.Clone();
+            total = total.Clone();
 
             if (idx == _patterns.Length)
             {
@@ -88,22 +113,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 };
 
                 var end = true;
-                for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; totalTime++)
+                for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; )
                 {
-                    if (!_modelMove(model, m, totalTime, ref totalImportance))
-                    {
-                        end = false;
-                        break;
-                    }
+                    if (!_modelMove(model, m, total))
+                        return;
                     m.Times++;
                 }
                 if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
                     return;
 
-                if (end && _isBetterTime(totalTime, totalImportance, _bestTime, _bestImportance))
+                if (_isBetterTime(total.Time, total.Importance, _bestTime, _bestImportance))
                 {
-                    _bestTime = totalTime;
-                    _bestImportance = totalImportance;
+                    _bestTime = total.Time;
+                    _bestImportance = total.Importance;
                     _bestMovesStack = _movesStack.Clone();
                     _bestMovesStack.Add(m);
                 }
@@ -118,10 +140,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     IsBrake = pattern.Move.IsBrake,
                     WheelTurn = pattern.Move.WheelTurn,
                     Times = 0
-                }, totalTime, totalImportance, (aCar, totalTimeAfter, totalImportanceAfter) =>
+                }, total, (aCar, passed) =>
                 {
-                    // TODO: как-то отсечь мб?
-                    _doRecursive(aCar.Clone(), idx + 1, totalTimeAfter, totalImportanceAfter);
+                    // ReSharper disable once ConvertToLambdaExpression
+                    _doRecursive(aCar.Clone(), idx + 1, passed.Clone());
                 });
         }
 
@@ -186,11 +208,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (p.Move.WheelTurn is TurnPattern)
                 {
                     var turnPattern = p.Move.WheelTurn as TurnPattern;
-                    if (turnPattern.Pattern == TurnPatterns.ToCenter)
+                    if (turnPattern.Pattern == TurnPatternType.ToCenter)
                         p.Move.WheelTurn = _turnCenter;
-                    else if (turnPattern.Pattern == TurnPatterns.ToNext)
+                    else if (turnPattern.Pattern == TurnPatternType.ToNext)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? -1 : 1;
-                    else if (turnPattern.Pattern == TurnPatterns.FromCenter)
+                    else if (turnPattern.Pattern == TurnPatternType.FromCenter)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
                 }
             }
@@ -255,7 +277,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
 
-            _doRecursive(Self, 0, 0, 0);
+            _doRecursive(Self, 0, new PassedInfo());
             _cache = null;
             if (_bestTime == MyStrategy.Infinity)
                 return _lastSuccessStack;
@@ -271,37 +293,36 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
 
 
-        private void _carMoveFunc(ACar model, int from, int to, int step, AMove m, int time, double importance, CarCallback callback)
+        private void _carMoveFunc(ACar model, int from, int to, int step, AMove m, PassedInfo passed, CarCallback callback)
         {
             model = model.Clone();
+            passed = passed.Clone();
             m.Times = 0;
 
             for (var t = 0; t < from; t++)
             {
-                if (!_modelMove(model, m, time, ref importance))
+                if (!_modelMove(model, m, passed))
                     return;
                 m.Times++;
-                time++;
             }
 
             for (var t = from; t <= to; t += step)
             {
                 _movesStack.Add(m);
-                callback(model, time, importance);
+                callback(model, passed);
                 _movesStack.Pop();
                 for (var r = 0; r < step; r++)
                 {
-                    if (!_modelMove(model, m, time, ref importance))
+                    if (!_modelMove(model, m, passed))
                         return;
                     m.Times++;
-                    time++;
                 }
             }
         }
 
-        public bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
+        public bool _modelMove(ACar car, AMove m, PassedInfo total)
         {
-            return AMove.ModelMove(car, m, elapsedTime, ref totalImportance, 
+            return AMove.ModelMove(car, m, total, 
                 _bonusCandidates, _slickCandidates, _projCandidates, _carCandidates);
         }
     }

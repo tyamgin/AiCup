@@ -101,6 +101,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             var margin = game.TrackTileMargin;
 
+            var myNextWp = GetNextWayPoint(self);
+            FillRect(Brushes.Aqua, myNextWp.J * game.TrackTileSize, myNextWp.I * game.TrackTileSize, game.TrackTileSize, game.TrackTileSize);
+
             // tiles
             foreach (var tile in MyTiles)
             {

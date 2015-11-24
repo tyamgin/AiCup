@@ -25,22 +25,32 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
     }
 
-    //public class BitSet
-    //{
-    //    public readonly int Size;
-    //    private bool[] _bytes;
-    //    public BitSet(int size)
-    //    {
-    //        Size = size;
-    //        _bytes = new bool[size];
-    //    }
+    public class BitMask
+    {
+        private uint _mask;
+        
 
-    //    public bool this[int idx]
-    //    {
-    //        get { return _bytes[idx]; }
-    //        set { _bytes[idx] = value; }
-    //    }
-    //}
+        public BitMask(uint mask = 0)
+        {
+            _mask = mask;
+        }
+
+        public BitMask Clone()
+        {
+            return new BitMask(_mask);
+        }
+
+        public bool this[int idx]
+        {
+            get { return 1 == (1 & (_mask >> idx)); }
+            set
+            {
+                if (value != (1 == (1 & (_mask >> idx))))
+                    _mask ^= 1u << idx;
+            }
+        }
+    }
+    
 
     public class Pair<TFirst, TSecond> : IComparable<Pair<TFirst, TSecond>>
         where TFirst : IComparable<TFirst>

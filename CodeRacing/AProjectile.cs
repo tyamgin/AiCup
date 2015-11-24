@@ -86,7 +86,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }).ToArray();
         }
 
-        public bool Intersect(ACar car, double safeMargin)
+        public bool Intersect(ACar car, double safeMargin)//TODO: это не правильно
         {
             return GetDistanceTo2(car) < Geom.Sqr(Radius + safeMargin);
         }

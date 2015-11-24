@@ -41,44 +41,74 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 move.IsUseNitro = IsUseNitro;
         }
 
-        public static bool ModelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance,
+        public static bool ModelMove(ACar car, AMove m, PassedInfo total,
             ABonus[] bonusCandidates, AOilSlick[] slickCandidates, AProjectile[][] projCandidates, ACar[][] carCandidates)
         {
             var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
-            var prevCar = car.Clone();
             car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
-            foreach (var bonus in bonusCandidates)
-            {
-                if (car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
-                    totalImportance += bonus.GetImportance(car.Original) * PathBruteForce.BonusImportanceCoeff;
-            }
-            foreach (var slick in slickCandidates)
-            {
-                slick.RemainingLifetime -= elapsedTime;
-                if (slick.Intersect(car, 9) && !slick.Intersect(prevCar, 9))
-                    totalImportance -= slick.GetDanger() * PathBruteForce.OilSlickDangerCoeff;
-                slick.RemainingLifetime += elapsedTime;
-            }
-            if (projCandidates.Length > 0 && elapsedTime < projCandidates[0].Length)
-            {
-                foreach (var projTimeline in projCandidates)
-                {
-                    var proj = projTimeline[elapsedTime];
 
-                    if (proj.Intersect(car, 5) && !proj.Intersect(prevCar, 5))
-                        totalImportance -= proj.GetDanger()*PathBruteForce.ProjectileDangerCoeff; //TODO
+            for(var i = 0; i < bonusCandidates.Length; i++)
+            {
+                if (total.Bonuses[i]) // бонус уже взят
+                    continue;
+
+                var bonus = bonusCandidates[i];
+                if (car.TakeBonus(bonus))
+                {
+                    total.Importance += bonus.GetImportance(car.Original)*PathBruteForce.BonusImportanceCoeff;
+                    total.Bonuses[i] = true;
                 }
             }
-            if (carCandidates.Length > 0 && elapsedTime < carCandidates[0].Length)
-            {
-                //foreach (var oppTimeline in carCandidates)
-                //{
-                //    var opp = oppTimeline[elapsedTime];
 
-                //    if (car.IntersectWith(opp) && !prevCar.IntersectWith(opp))
-                //        totalImportance -= PathBruteForce.ProjectileDangerCoeff;
-                //}
+            if (!total.Slicks) // если не въехал ни в одну лужу
+            {
+                foreach (var slick in slickCandidates)
+                {
+                    if (total.Slicks)
+                        break;
+                    slick.RemainingLifetime -= total.Time;
+                    if (slick.Intersect(car, 9))
+                    {
+                        total.Importance -= slick.GetDanger()*PathBruteForce.OilSlickDangerCoeff;
+                        total.Slicks = true;
+                    }
+                    slick.RemainingLifetime += total.Time;
+                }
             }
+            if (projCandidates.Length > 0 && total.Time < projCandidates[0].Length)
+            {
+                for(var i = 0; i < projCandidates.Length; i++)
+                {
+                    if (total.Projectiles[i])
+                        continue;
+
+                    var proj = projCandidates[i][total.Time];
+
+                    if (proj.Intersect(car, 5))
+                    {
+                        total.Importance -= proj.GetDanger()*PathBruteForce.ProjectileDangerCoeff; //TODO: обработать шину отдельно
+                        total.Projectiles[i] = true;
+                    }
+                }
+            }
+            if (carCandidates.Length > 0 && total.Time < carCandidates[0].Length && !total.Cars)
+            {
+                for (var i = 0; i < carCandidates.Length; i++)
+                {
+                    var opp = carCandidates[i][total.Time];
+
+                    if (car.IntersectWith(opp))
+                    {
+                        total.Importance -= PathBruteForce.InactiveCarDangerCoeff;
+                        total.Cars = true;
+                        break;
+                    }
+                }
+            }
+
+            total.Time++;
+
+            // проверка на стены
             return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
         }
     }
@@ -105,26 +135,22 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public double ComputeImportance(ACar model)
         {
             model = model.Clone();
-            var totalImportance = 0.0;
-            var elapsedTime = 0;
+            var total = new PassedInfo();
             foreach (var move in this)
             {
                 for (var t = 0; t < move.Times; t++)
-                {
-                    _modelMove(model, move, elapsedTime, ref totalImportance);
-                    elapsedTime++;
-                }
+                    _modelMove(model, move, total);
             }
 #if DEBUG
-            if (ComputeTime() != elapsedTime)
+            if (ComputeTime() != total.Time)
                 throw new Exception("ComputeTime() != elapsedTime");
 #endif
-            return elapsedTime - totalImportance;
+            return total.Time - total.Importance;
         }
 
-        private bool _modelMove(ACar car, AMove m, int elapsedTime, ref double totalImportance)
+        private bool _modelMove(ACar car, AMove m, PassedInfo total)
         {
-            return AMove.ModelMove(car, m, elapsedTime, ref totalImportance, 
+            return AMove.ModelMove(car, m, total, 
                 MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Projectiles, MyStrategy.OpponentsCars);
         }
 
