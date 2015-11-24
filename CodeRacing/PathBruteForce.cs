@@ -256,13 +256,20 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             _carCandidates = MyStrategy.OpponentsCars
                 .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*6)
+                .Where(
+                    opp =>
+                        MyStrategy.IsCrashed(opp[0].Original) || 
+                        !DurabilityObserver.IsActive(opp[0].Original) ||
+                        opp[0].EnginePower < 0.5 || 
+                        Self.RemainingNitroTicks > 0
+                        )
                 .Where(opp =>
                 {
                     var selfCell = MyStrategy.GetCell(Self);
                     var bCell = MyStrategy.GetCell(opp[0]);
                     if (selfCell.Equals(bCell))
                         return true;
-                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[] { });
+                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[] {});
                     return dist <= 6;
                 })
                 .ToArray();
