@@ -79,7 +79,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var car = new ACar(self);
             var pts = GetAlternativeWaySegments(self);
             var turnCenter = pts[1];
-            var turnNext = pts[2];
+            //var turnNext = pts[2];
 
 
             var tmp = new ACar(self);
@@ -106,9 +106,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             move.WheelTurn = car.GetAngleTo(turnCenter);
 
-            if (turnCenter.GetDistanceTo(self) >= 7 * game.TrackTileSize && Math.Abs(car.GetAngleTo(turnCenter)) < Math.PI / 6)
+            if (BAD_TESTING_STRATEGY)
             {
-                move.IsUseNitro = true;
+                if (turnCenter.GetDistanceTo(self) >= 7*game.TrackTileSize &&
+                    Math.Abs(car.GetAngleTo(turnCenter)) < Math.PI/6)
+                {
+                    move.IsUseNitro = true;
+                }
             }
         }
     }

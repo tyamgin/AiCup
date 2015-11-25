@@ -114,7 +114,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Bonuses = world.Bonuses.Select(b => new ABonus(b)).ToArray();
             OilSlicks = world.OilSlicks.Select(s => new AOilSlick(s)).ToArray();
 
-            Opponents = world.Cars.Where(car => !car.IsTeammate).ToArray();
+            Opponents = world.Cars.Where(car => !car.IsTeammate && !car.IsFinishedTrack).ToArray();
             PrepareOpponentsPath();
         }
 
@@ -178,7 +178,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private void _move()
         {
-            //if (world.Tick < 250)
+            //if (world.Tick < 800)
             //    return;
             var pts = GetWaySegments(self);
             var turnCenter = pts[1];

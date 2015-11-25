@@ -111,7 +111,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
             var shotCount = shot.Count(val => val);
-            return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 1;
+            return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 2;
         }
     }
 }

@@ -88,6 +88,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong in bfs");
         }
 
+        public static int CellDistance(Point from, Point to)
+        {
+            var cellFrom = GetCell(from);
+            var cellTo = GetCell(to);
+            if (cellFrom.Equals(cellTo))
+                return 0;
+            return BfsDist(cellFrom.I, cellFrom.J, cellTo.I, cellTo.J, new Cell[] { });
+        }
+
         private static bool _tileFreeLeft(TileType type)
         {
             return type == TileType.Crossroads ||

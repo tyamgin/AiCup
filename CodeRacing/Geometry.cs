@@ -368,9 +368,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             };
         }
 
-        public static double GetAngleBetween(Point a, Point b)
+        /// <summary>
+        /// Угол между векторами
+        /// </summary>
+        /// <param name="vec1">Первый вектор</param>
+        /// <param name="vec2">Второй вектор</param>
+        /// <returns></returns>
+        public static double GetAngleBetween(Point vec1, Point vec2)
         {
-            return  Math.Acos(a*b/a.Length/b.Length);
+            return Math.Acos(vec1*vec2/vec1.Length/vec2.Length);
         }
     }
 }

@@ -53,9 +53,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     public class PathBruteForce
     {
         public const double BonusImportanceCoeff = 30;
-        public const double OilSlickDangerCoeff = 30;
-        public const double ProjectileDangerCoeff = 45;
-        public const double InactiveCarDangerCoeff = 30;
+        public const double OilSlickDangerCoeff = 40;
+        public const double ProjectileDangerCoeff = 40;
+        public const double InactiveCarDangerCoeff = 40;
 
         public readonly PathPattern[] Patterns;
         public ACar Self;
@@ -98,12 +98,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _waypointsCount = waypointsCount;
         }
 
-        private void _doRecursive(ACar model, int idx, PassedInfo total)
+        private void _doRecursive(ACar model, int patternIndex, PassedInfo total)
         {
             model = model.Clone();
             total = total.Clone();
 
-            if (idx == _patterns.Length)
+            if (patternIndex == _patterns.Length)
             {
                 var m = new AMove
                 {
@@ -114,7 +114,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     Times = 0
                 };
 
-                var end = true;
                 for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; )
                 {
                     if (!_modelMove(model, m, total))
@@ -134,7 +133,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
             }
 
-            var pattern = _patterns[idx];
+            var pattern = _patterns[patternIndex];
             _carMoveFunc(model, pattern.From, pattern.To, pattern.Step,
                 new AMove
                 {
@@ -145,7 +144,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }, total, (aCar, passed) =>
                 {
                     // ReSharper disable once ConvertToLambdaExpression
-                    _doRecursive(aCar.Clone(), idx + 1, passed.Clone());
+                    _doRecursive(aCar.Clone(), patternIndex + 1, passed.Clone());
                 });
         }
 
@@ -225,53 +224,45 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bestImportance = 0;
 
             _bonusCandidates = MyStrategy.Bonuses
-                .Where(b => Self.GetDistanceTo(b) < MyStrategy.game.TrackTileSize*5)
-                .Where(b =>
-                {
-                    var selfCell = MyStrategy.GetCell(Self);
-                    var bCell = MyStrategy.GetCell(b);
-                    if (selfCell.Equals(bCell))
-                        return true;
-                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[]{});
-                    return dist <= 5;
-                })
+                .Where(
+                    bonus =>
+                        Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize*6 &&
+                        MyStrategy.CellDistance(Self, bonus) <= 6
+                )
                 .ToArray();
 
             _slickCandidates = MyStrategy.OilSlicks
-                .Where(slick => Self.GetDistanceTo(slick) < MyStrategy.game.TrackTileSize*6)
-                .Where(slick =>
-                {
-                    var selfCell = MyStrategy.GetCell(Self);
-                    var bCell = MyStrategy.GetCell(slick);
-                    if (selfCell.Equals(bCell))
-                        return true;
-                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[] { });
-                    return dist <= 6;
-                })
+                .Where(
+                    slick =>
+                        Self.GetDistanceTo(slick) < MyStrategy.game.TrackTileSize*6 &&
+                        MyStrategy.CellDistance(Self, slick) <= 6
+                )
                 .ToArray();
   
             _projCandidates = MyStrategy.Projectiles
                 .Where(proj => Self.GetDistanceTo(proj[0]) < MyStrategy.game.TrackTileSize*7)
                 .ToArray();
 
+            /*
+             * Пытаться объехать тех, которые
+             * - Крашнулись
+             * - Убиты
+             * - Двигатель меньше чем на 0.5 мощности
+             * - Двигаются по встречной
+             * 
+             * - Если у меня нитро
+             */
             _carCandidates = MyStrategy.OpponentsCars
                 .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*6)
                 .Where(
                     opp =>
-                        MyStrategy.IsCrashed(opp[0].Original) || 
+                        MyStrategy.IsCrashed(opp[0].Original) ||
                         !DurabilityObserver.IsActive(opp[0].Original) ||
-                        opp[0].EnginePower < 0.5 || 
-                        Self.RemainingNitroTicks > 0
-                        )
-                .Where(opp =>
-                {
-                    var selfCell = MyStrategy.GetCell(Self);
-                    var bCell = MyStrategy.GetCell(opp[0]);
-                    if (selfCell.Equals(bCell))
-                        return true;
-                    var dist = MyStrategy.BfsDist(selfCell.I, selfCell.J, bCell.I, bCell.J, new Cell[] {});
-                    return dist <= 6;
-                })
+                        opp[0].EnginePower < 0.5 ||
+                        Self.RemainingNitroTicks > 0 ||
+                        Math.Abs(Geom.GetAngleBetween(Self.Speed, opp[0].Speed)) > Math.PI / 2
+                )
+                .Where(opp => MyStrategy.CellDistance(Self, opp[0]) <= 6)
                 .ToArray();
 
 
