@@ -55,7 +55,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double BonusImportanceCoeff = 30;
         public const double OilSlickDangerCoeff = 40;
         public const double ProjectileDangerCoeff = 40;
-        public const double InactiveCarDangerCoeff = 40;
+        public const double InactiveCarDangerCoeff = 60;
 
         public readonly PathPattern[] Patterns;
         public ACar Self;
@@ -76,7 +76,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private Point _turnCenter, _turnTo;
         private double _needDist;
         private readonly int _interval;
-        public bool UseNitroInLastStage;
+        public AMove LastStageMove;
         private int _waypointsCount;
 
         private ABonus[] _bonusCandidates;
@@ -89,12 +89,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return time1 - importance1 < time2 - importance2;
         }
 
-        public PathBruteForce(PathPattern[] patterns, int interval, bool useNitroInLastStage, int id, int waypointsCount)
+        public PathBruteForce(PathPattern[] patterns, int interval, AMove lastStageMove, int id, int waypointsCount)
         {
             Patterns = patterns;
             _interval = interval;
             Id = id;
-            UseNitroInLastStage = useNitroInLastStage;
+            LastStageMove = lastStageMove;
             _waypointsCount = waypointsCount;
         }
 
@@ -105,19 +105,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (patternIndex == _patterns.Length)
             {
-                var m = new AMove
-                {
-                    EnginePower = 1,
-                    IsBrake = false,
-                    WheelTurn = _turnTo.Clone(),
-                    IsUseNitro = UseNitroInLastStage,
-                    Times = 0
-                };
+                var m = LastStageMove.Clone();
+                m.EnginePower = 1;
+                m.WheelTurn = _turnTo.Clone();
 
                 for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; )
                 {
                     if (!_modelMove(model, m, total))
                         return;
+
                     m.Times++;
                 }
                 if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
@@ -134,14 +130,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             var pattern = _patterns[patternIndex];
+
             _carMoveFunc(model, pattern.From, pattern.To, pattern.Step,
-                new AMove
-                {
-                    EnginePower = pattern.Move.EnginePower,
-                    IsBrake = pattern.Move.IsBrake,
-                    WheelTurn = pattern.Move.WheelTurn,
-                    Times = 0
-                }, total, (aCar, passed) =>
+                pattern.Move.Clone(), total, (aCar, passed) =>
                 {
                     // ReSharper disable once ConvertToLambdaExpression
                     _doRecursive(aCar.Clone(), patternIndex + 1, passed.Clone());
@@ -253,7 +244,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
              * - Если у меня нитро
              */
             _carCandidates = MyStrategy.OpponentsCars
-                .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*6)
+                .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*9)
                 .Where(
                     opp =>
                         MyStrategy.IsCrashed(opp[0].Original) ||
@@ -262,7 +253,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         Self.RemainingNitroTicks > 0 ||
                         Math.Abs(Geom.GetAngleBetween(Self.Speed, opp[0].Speed)) > Math.PI / 2
                 )
-                .Where(opp => MyStrategy.CellDistance(Self, opp[0]) <= 6)
+                .Where(opp => MyStrategy.CellDistance(Self, opp[0]) <= 9)
                 .ToArray();
 
 

@@ -80,6 +80,7 @@
     <Compile Include="AProjectile.cs" />
     <Compile Include="ATile.cs" />
     <Compile Include="AUnit.cs" />
+    <Compile Include="BrutePatterns.cs" />
     <Compile Include="Collections.cs" />
     <Compile Include="Visualizer\Visualizer.cs" />
     <Compile Include="DurabilityObserver.cs" />

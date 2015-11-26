@@ -82,6 +82,31 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             //var turnNext = pts[2];
 
 
+            var backBruteRes = _doAndSelectBrute(BackBrutes, pts);
+
+            
+                //var md = new ACar(self);
+                //md.EnginePower = 1;
+                //var cn = 0;
+                //for(var i = 0; i < 80; i++)
+                //    if (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }, simpleMode:false, exactlyBorders:true))
+                //        cn++;
+                //if (cn < 25 || IsSomeoneAhead(new ACar(self)))
+                //{
+                //    BackModeRemainTicks = 50;
+                //    BackModeTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y) < 0 ? 1 : -1;
+                //}
+            
+            if (backBruteRes.Item1 != -1)
+            {
+                BackBrutes[backBruteRes.Item1].SelectThis();
+                backBruteRes.Item2[backBruteRes.Item1][0].Apply(move, new ACar(self));
+#if DEBUG
+                DrawWays(backBruteRes.Item2, backBruteRes.Item1);
+#endif
+                return;
+            }
+
             var tmp = new ACar(self);
             var aa = tmp + tmp.Speed;
             if (Math.Abs(tmp.GetAngleTo(aa)) > Math.PI / 2)

@@ -172,9 +172,45 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return ok;
         }
 
-        private PathBruteForce[] brutes;
-
         private AProjectile pr;
+
+        private Tuple<int, Moves[]> _doAndSelectBrute(PathBruteForce[] brutes, Points pts)
+        {
+            TimerStart();
+            var bestMoveStacks = new Moves[brutes.Length];
+            for (var i = 0; i < brutes.Length; i++)
+            {
+                if (!BAD_TESTING_STRATEGY)
+                {
+                    if (brutes[i].LastStageMove.IsUseNitro && self.NitroChargeCount == 0)
+                        continue;
+                    if (brutes[i].LastStageMove.IsUseNitro && self.RemainingOiledTicks > 0)
+                        continue;
+
+                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
+                }
+            }
+            TimeEndLog("brute");
+
+
+            var sel = -1;
+            double bestTime = Infinity;
+            for (var i = 0; i < brutes.Length; i++)
+            {
+                if (bestMoveStacks[i] == null)
+                    continue;
+                var time = bestMoveStacks[i].ComputeImportance(new ACar(self));
+                if (sel == -1 ||
+                    brutes[i].LastSuccess > brutes[sel].LastSuccess ||
+                    brutes[i].LastSuccess == brutes[sel].LastSuccess && time < bestTime)
+                {
+                    sel = i;
+                    bestTime = time;
+                }
+            }
+
+            return new Tuple<int, Moves[]>(sel, bestMoveStacks);
+        }
 
         private void _move()
         {
@@ -195,6 +231,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (CheckUseOil())
                 move.IsSpillOil = true;
 
+            InitBrutes();
+
             const int ln = 50;
             if (BackModeRemainTicks == 0 && PositionsHistory.Count > ln)
             {
@@ -202,17 +240,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     PositionsHistory[PositionsHistory.Count - 1].GetDistanceTo(
                         PositionsHistory[PositionsHistory.Count - ln]) < 20)
                 {
-                    var md = new ACar(self);
-                    md.EnginePower = 1;
-                    var cn = 0;
-                    for(var i = 0; i < 80; i++)
-                        if (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }, simpleMode:false, exactlyBorders:true))
-                            cn++;
-                    if (cn < 25 || IsSomeoneAhead(new ACar(self)))
-                    {
-                        BackModeRemainTicks = 50;
-                        BackModeTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y) < 0 ? 1 : -1;
-                    }
+                    self = self;
                 }
             }
 
@@ -244,227 +272,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             //}
             //return;
 
-            if (brutes == null)
-            {
-                brutes = new[]
-                {
-                    /*
-                     * - ехать в сторону поворота на полной можности
-                     * - поворачивать в сторону цели на пол-мощности
-                     * - тормозить
-                     */
-                    new PathBruteForce(new[]
-                    {
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 40,
-                            Step = 4,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 1,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter},
-                                    IsBrake = false
-                                }
-                        },
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 20,
-                            Step = 4,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0.5,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = false
-                                }
-                        },
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 34,
-                            Step = 2,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = true
-                                }
-                        }
-                    }, 8, false, 0, 70),
 
-                    /*
-                     * - снизить мощность
-                     * - тормозить
-                     */
-                    new PathBruteForce(new[]
-                    {
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 25,
-                            Step = 1,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0.2,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = false
-                                }
-                        },
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 34,
-                            Step = 2,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = true
-                                }
-                        }
-                    }, 8, false, 1, 70),
-
-                    /*
-                     * - ехать от поворота на пол-мощности
-                     * - поворачивать в сторону цели на полной мощности
-                     * - тормозить
-                     */
-                    new PathBruteForce(new[]
-                    {
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 20,
-                            Step = 4,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0.5,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromCenter},
-                                    IsBrake = false
-                                }
-                        },
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 24,
-                            Step = 2,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 1,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = false
-                                }
-                        },
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 32,
-                            Step = 4,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = true
-                                }
-                        }
-                    }, 8, false, 2, 70),
-
-                    /*
-                     * - ехать в сторону поворота на полной можности
-                     * - поворачивать в сторону цели на пол-мощности
-                     * - тормозить
-                     * - НИТРО!!!
-                     */
-                    new PathBruteForce(new[]
-                    {
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 20,
-                            Step = 4,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 1,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter},
-                                    IsBrake = false
-                                }
-                        },
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 20,
-                            Step = 4,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0.5,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = false
-                                }
-                        },
-                        new PathPattern
-                        {
-                            From = 0,
-                            To = 34,
-                            Step = 3,
-                            Move =
-                                new AMove
-                                {
-                                    EnginePower = 0,
-                                    WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                    IsBrake = true
-                                }
-                        }
-                    }, 8, true, 0, 70),
-                };
-            }
-           
-            TimerStart();
-            var bestMoveStacks = new Moves[brutes.Length];
-            for (var i = 0; i < brutes.Length; i++)
-            {
-                if (!BAD_TESTING_STRATEGY)
-                {
-                    if (brutes[i].UseNitroInLastStage && self.NitroChargeCount == 0)
-                        continue;
-                    if (brutes[i].UseNitroInLastStage && self.RemainingOiledTicks > 0)
-                        continue;
-
-                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
-                }
-            }
-            TimeEndLog("brute");
-
-
-            var sel = -1;
-            double bestTime = Infinity;
-            for (var i = 0; i < brutes.Length; i++)
-            {
-                if (bestMoveStacks[i] == null)
-                    continue;
-                var time = bestMoveStacks[i].ComputeImportance(new ACar(self));
-                if (sel == -1 ||
-                    brutes[i].LastSuccess > brutes[sel].LastSuccess ||
-                    brutes[i].LastSuccess == brutes[sel].LastSuccess && time < bestTime)
-                {
-                    sel = i;
-                    bestTime = time;
-                }
-            }
+            var bruteRes = _doAndSelectBrute(Brutes, pts);
+            var sel = bruteRes.Item1;
+            var bestMoveStacks = bruteRes.Item2;
 
             if (sel != -1)
             {
-                brutes[sel].SelectThis();
+                Brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
                 DrawWays(bestMoveStacks, sel);

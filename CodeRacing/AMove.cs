@@ -13,6 +13,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool IsUseNitro;
 
         public int Times;
+        public double SafeMargin = MyStrategy.SafeMargin;
+        public bool RangesMode;
 
         public AMove Clone()
         {
@@ -22,6 +24,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 IsBrake = IsBrake,
                 IsUseNitro = IsUseNitro,
                 Times = Times,
+                SafeMargin = SafeMargin,
+                RangesMode = RangesMode,
             };
             if (WheelTurn is Point)
                 ret.WheelTurn = (WheelTurn as Point).Clone();
@@ -32,11 +36,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return ret;
         }
 
-        public void Apply(Move move, ACar self)
+        public void Apply(Move move, ACar car)
         {
             move.EnginePower = EnginePower;
             move.IsBrake = IsBrake;
-            move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(self.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
+            move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
+
+            if (EnginePower < 0 && car.EnginePower > 0)
+                move.IsBrake = true;
+
+            if (car.EnginePower < 0 && EnginePower > 0)
+            {
+                move.WheelTurn *= -1;
+                move.IsBrake = true;
+            }
+            
             if (IsUseNitro)
                 move.IsUseNitro = IsUseNitro;
         }
@@ -44,8 +58,31 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static bool ModelMove(ACar car, AMove m, PassedInfo total,
             ABonus[] bonusCandidates, AOilSlick[] slickCandidates, AProjectile[][] projCandidates, ACar[][] carCandidates)
         {
+            double prevStateX = 0, prevStateY = 0, prevStateAngle = 0;
+            if (m.RangesMode)
+            {
+                prevStateX = car.X;
+                prevStateY = car.Y;
+                prevStateAngle = car.Angle;   
+            }
+
             var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
-            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
+            var isBreak = m.IsBrake;
+
+            // если сдаю назад но кочусь вперед
+//            if (!isBreak && m.EnginePower < 0 && Math.Abs(Geom.GetAngleBetween(Point.ByAngle(car.Angle), car.Speed)) < Math.PI/3)
+            if (m.EnginePower < 0 && car.EnginePower > 0)
+                isBreak = true;
+
+            // если еду вперед но кочусь назад
+            //if (car.EnginePower < 0 && Math.Abs(Geom.GetAngleBetween(Point.ByAngle(car.Angle), car.Speed)) > Math.PI/2)
+            if (car.EnginePower < 0 && m.EnginePower > 0)
+            {
+                turn *= -1;
+                isBreak = true;
+            }
+
+            car.Move(m.EnginePower, turn, isBreak, m.IsUseNitro, false);
 
             for(var i = 0; i < bonusCandidates.Length; i++)
             {
@@ -109,7 +146,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             total.Time++;
 
             // проверка на стены
-            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
+            var res = car.GetRect().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
+            if (!res && m.RangesMode)
+            {
+                res = true;
+
+                // HACK
+                car.X = prevStateX;
+                car.Y = prevStateY;
+                car.Angle = prevStateAngle;
+                car.Speed = Point.Zero;
+                car.AngularSpeed = 0;
+            }
+            return res;
         }
     }
 

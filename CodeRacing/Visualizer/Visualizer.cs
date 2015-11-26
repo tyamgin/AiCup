@@ -189,14 +189,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // Segments
-            foreach (var _el in SegmentsDrawQueue)
+            try
             {
-                var el = _el as object[];
-                var brush = el[0] as Brush;
-                var line = el[1] as Points;
-                var width = Convert.ToDouble(el[2]);
-                for(var i = 1; i < line.Count; i++)
-                    DrawLine(brush, line[i - 1].X, line[i - 1].Y, line[i].X, line[i].Y, (float)width);
+                foreach (var _el in SegmentsDrawQueue)
+                {
+                    var el = _el as object[];
+                    var brush = el[0] as Brush;
+                    var line = el[1] as Points;
+                    var width = Convert.ToDouble(el[2]);
+                    for (var i = 1; i < line.Count; i++)
+                        DrawLine(brush, line[i - 1].X, line[i - 1].Y, line[i].X, line[i].Y, (float)width);
+                }
+            }
+            catch (Exception)
+            {
+                var tmp = 0;
             }
 
             // Circles
