@@ -82,20 +82,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var car = new ACar(self);
             var pts = GetAlternativeWaySegments(self);
             var turnCenter = pts[1];
-            //var turnNext = pts[2];
-
-
-            var backBruteRes = _doAndSelectBrute(BackBrutes, pts);
-            
-            if (backBruteRes.Item1 != -1)
-            {
-                BackBrutes[backBruteRes.Item1].SelectThis();
-                backBruteRes.Item2[backBruteRes.Item1][0].Apply(move, new ACar(self));
-#if DEBUG
-                DrawWays(backBruteRes.Item2, backBruteRes.Item1);
-#endif
-                return;
-            }
 
             const int ln = 40;
             if (BackModeRemainTicks == 0 && PositionsHistory.Count > ln)
@@ -123,6 +109,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 BackModeRemainTicks--;
                 move.EnginePower = -1;
                 move.WheelTurn = BackModeTurn;
+                return;
+            }
+
+            var backBruteRes = _doAndSelectBrute(BackBrutes, pts);
+            
+            if (backBruteRes.Item1 != -1)
+            {
+                BackBrutes[backBruteRes.Item1].SelectThis();
+                backBruteRes.Item2[backBruteRes.Item1][0].Apply(move, new ACar(self));
+#if DEBUG
+                DrawWays(backBruteRes.Item2, backBruteRes.Item1);
+#endif
                 return;
             }
 

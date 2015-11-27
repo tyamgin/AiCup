@@ -279,7 +279,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 for (var k = 0; k < _patterns.Length; k++)
                 {
-                    var range = k == 0 ? 8 : 4;
+                    var range = k == 0 ? 6 : 4;
                     _patterns[k].From = Math.Max(0, _cache[k].Times - range);
                     _patterns[k].To = Math.Min(_patterns[k].To * 9 / 7, _cache[k].Times + range);
                     _patterns[k].Step = 2;
