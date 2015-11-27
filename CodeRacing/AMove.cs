@@ -7,13 +7,22 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class AMove
     {
+        public const double BonusImportanceCoeff = 30;
+        public const double OilSlickDangerCoeff = 40;
+        public const double ProjectileDangerCoeff = 40;
+        public const double InactiveCarDangerCoeff = 60;
+        public const double ExactlyBorderDangerCoeff = 50;
+        public const double OutOfBorderDangerCoeff = 60;
+
         public double EnginePower;
         public bool IsBrake;
-        public object WheelTurn; // Point or double
+        public object WheelTurn;
         public bool IsUseNitro;
 
         public int Times;
         public double SafeMargin = MyStrategy.SafeMargin;
+        public double ExactlyMargin = 1;
+        public double ExtraMargin = -20;
         public bool RangesMode;
 
         public AMove Clone()
@@ -25,6 +34,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 IsUseNitro = IsUseNitro,
                 Times = Times,
                 SafeMargin = SafeMargin,
+                ExactlyMargin = ExactlyMargin,
+                ExtraMargin = ExtraMargin,
                 RangesMode = RangesMode,
             };
             if (WheelTurn is Point)
@@ -92,7 +103,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var bonus = bonusCandidates[i];
                 if (car.TakeBonus(bonus))
                 {
-                    total.Importance += bonus.GetImportance(car.Original)*PathBruteForce.BonusImportanceCoeff;
+                    total.Importance += bonus.GetImportance(car.Original)*BonusImportanceCoeff;
                     total.Bonuses[i] = true;
                 }
             }
@@ -106,7 +117,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     slick.RemainingLifetime -= total.Time;
                     if (slick.Intersect(car, 9))
                     {
-                        total.Importance -= slick.GetDanger()*PathBruteForce.OilSlickDangerCoeff*(car.RemainingNitroTicks > 0 ? 2 : 1);
+                        total.Importance -= slick.GetDanger()*OilSlickDangerCoeff*(car.RemainingNitroTicks > 0 ? 2 : 1);
                         total.Slicks = true;
                     }
                     slick.RemainingLifetime += total.Time;
@@ -123,7 +134,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     if (proj.Intersect(car, 5))
                     {
-                        total.Importance -= proj.GetDanger()*PathBruteForce.ProjectileDangerCoeff; //TODO: обработать шину отдельно
+                        total.Importance -= proj.GetDanger()*ProjectileDangerCoeff; //TODO: обработать шину отдельно
                         total.Projectiles[i] = true;
                     }
                 }
@@ -136,7 +147,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     if (car.IntersectWith(opp))
                     {
-                        total.Importance -= PathBruteForce.InactiveCarDangerCoeff;
+                        total.Importance -= InactiveCarDangerCoeff;
                         total.Cars = true;
                         break;
                     }
@@ -147,6 +158,25 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             // проверка на стены
             var res = car.GetRect().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
+
+            // проверка что можно проехать точно возле стены
+            if (!res && car.RemainingNitroTicks == 0 && car.GetRect().All(p => !MyStrategy.IntersectTail(p, m.ExactlyMargin)))
+            {
+                if (!total.ExactlyBorder)
+                    total.Importance -= ExactlyBorderDangerCoeff;
+                total.ExactlyBorder = true;
+                res = true;
+            }
+
+            // проверка что можно потереться вдоль стены
+            if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && car.GetRect().All(p => !MyStrategy.IntersectTail(p, m.ExtraMargin)))
+            {
+                if (!total.OutOfBoreder)
+                    total.Importance -= OutOfBorderDangerCoeff;
+                total.OutOfBoreder = true;
+                res = true;
+            }
+
             if (!res && m.RangesMode)
             {
                 res = true;

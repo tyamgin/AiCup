@@ -212,7 +212,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             SafeMargin = -1,
                         }
                 }
-            }, 8, new AMove {SafeMargin = 1.0}, 66, 40))
+            }, 8, new AMove(), 66, 30))
                 .ToArray();
         }
     }

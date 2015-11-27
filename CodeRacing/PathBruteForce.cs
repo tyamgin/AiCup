@@ -31,6 +31,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool Slicks;
         public BitMask Projectiles = new BitMask();
         public bool Cars;
+        public bool ExactlyBorder;
+        public bool OutOfBoreder;
 
         public int Time;
         public double Importance;
@@ -43,6 +45,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Slicks = Slicks,
                 Projectiles = Projectiles.Clone(),
                 Cars = Cars,
+                ExactlyBorder = ExactlyBorder,
+                OutOfBoreder = OutOfBoreder,
 
                 Time = Time,
                 Importance = Importance
@@ -52,11 +56,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
     public class PathBruteForce
     {
-        public const double BonusImportanceCoeff = 30;
-        public const double OilSlickDangerCoeff = 40;
-        public const double ProjectileDangerCoeff = 40;
-        public const double InactiveCarDangerCoeff = 60;
-
         public readonly PathPattern[] Patterns;
         public ACar Self;
         public int Id;
@@ -170,8 +169,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _lastCall = MyStrategy.world.Tick;
 
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
-            if (LastSuccess != MyStrategy.world.Tick - 1 && (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
+            if (MyStrategy.game.InitialFreezeDurationTicks != MyStrategy.world.Tick &&
+                LastSuccess != MyStrategy.world.Tick - 1 &&
+                (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
+            {
                 return _lastSuccessStack;
+            }
 
             _turnCenter = pts[1];
 

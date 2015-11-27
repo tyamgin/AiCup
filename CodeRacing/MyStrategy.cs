@@ -44,8 +44,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         
 
         public Points PositionsHistory = new Points();
-        public int BackModeRemainTicks;
-        public double BackModeTurn;
 
         void Initialize()
         {
@@ -172,7 +170,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return ok;
         }
 
-        private AProjectile pr;
+        //private AProjectile pr;
 
         private Tuple<int, Moves[]> _doAndSelectBrute(PathBruteForce[] brutes, Points pts)
         {
@@ -214,10 +212,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private void _move()
         {
-            //if (world.Tick < 800)
-            //    return;
             var pts = GetWaySegments(self);
-            var turnCenter = pts[1];
 
             if (world.Tick > game.InitialFreezeDurationTicks)
                 PositionsHistory.Add(new Point(self));
@@ -232,25 +227,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 move.IsSpillOil = true;
 
             InitBrutes();
-
-            const int ln = 50;
-            if (BackModeRemainTicks == 0 && PositionsHistory.Count > ln)
-            {
-                if (
-                    PositionsHistory[PositionsHistory.Count - 1].GetDistanceTo(
-                        PositionsHistory[PositionsHistory.Count - ln]) < 20)
-                {
-                    self = self;
-                }
-            }
-
-            if (BackModeRemainTicks > 0)
-            {
-                BackModeRemainTicks--;
-                move.EnginePower = -1;
-                move.WheelTurn = BackModeTurn;
-                return;
-            }
 
             if (world.Tick < game.InitialFreezeDurationTicks)
             {
@@ -287,8 +263,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             else
             {
-                //if (world.Tick >= 400)
-                //    throw new Exception("test exception");
                 AlternativeMove();
             }
         }
