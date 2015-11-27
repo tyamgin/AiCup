@@ -83,7 +83,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private AProjectile[][] _projCandidates;
         private ACar[][] _carCandidates;
 
-        private int _bonusesCount;
+        private int _clBonusesCount;
 
         private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
         {
@@ -170,26 +170,20 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             _lastCall = MyStrategy.world.Tick;
 
-            _bonusCandidates = MyStrategy.Bonuses
-                .Where(
-                    bonus =>
-                        Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize * 6 &&
-                        MyStrategy.CellDistance(Self, bonus) <= 6
-                )
-                .ToArray();
+            var clBonusesCount = MyStrategy.Bonuses.Count(bonus => Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize / 2);
 
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
             if (MyStrategy.game.InitialFreezeDurationTicks < MyStrategy.world.Tick &&
-                _bonusesCount == _bonusCandidates.Length &&
+                _clBonusesCount == clBonusesCount &&
                 LastSuccess < MyStrategy.world.Tick - 1 &&
                 (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
             {
                 return _lastSuccessStack;
             }
 
-            if (_bonusesCount != _bonusCandidates.Length)
+            if (_clBonusesCount != clBonusesCount)
                 _cache = null;
-            _bonusesCount = _bonusCandidates.Length;
+            _clBonusesCount = clBonusesCount;
 
             _turnCenter = pts[1];
 
@@ -231,6 +225,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bestMovesStack = new Moves();
             _bestTime = MyStrategy.Infinity;
             _bestImportance = 0;
+
+            _bonusCandidates = MyStrategy.Bonuses
+                .Where(
+                    bonus =>
+                        Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize*6 &&
+                        MyStrategy.CellDistance(Self, bonus) <= 6
+                )
+                .ToArray();
+
 
             _slickCandidates = MyStrategy.OilSlicks
                 .Where(

@@ -62,12 +62,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var angle = Math.Atan2(dir.Y, dir.X);
             var angles = new[]
             {
-                Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle,
-                Angle + Math.PI/2, Angle - Math.PI/2
+                Angle + angle, 
+                Angle + Math.PI - angle, 
+                Angle + Math.PI + angle, 
+                Angle - angle                
             };
-            var result = new Point[angles.Length];
-            for (var i = 0; i < angles.Length; i++)
+            var result = new Point[6];
+            for (var i = 0; i < 4; i++)
                 result[i] = this + ByAngle(angles[i]) * dir.Length;
+            result[4] = (result[0] + result[1])/2;
+            result[5] = (result[2] + result[3]) / 2;
 
             return result;
         }

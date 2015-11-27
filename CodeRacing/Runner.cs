@@ -9,8 +9,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
 
         public static void Main(string[] args) {
 
-            //Process.Start("D:\\Projects\\AiCup\\CodeRacing\\local-runner\\local-runner-sync.bat");
-            //Thread.Sleep(2000);
+            Process.Start("D:\\Projects\\AiCup\\CodeRacing\\local-runner\\local-runner-sync.bat");
+            Thread.Sleep(2000);
 
             //for (var i = 0; i < 3; i++)
             //{
