@@ -291,11 +291,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             LastSuccess = MyStrategy.world.Tick;
             _cache = _bestMovesStack.Clone();
+
+            if (_maxTicksInfo == null) 
+                _maxTicksInfo = new int[_bestMovesStack.Count];
+            for (var i = 0; i < _maxTicksInfo.Length; i++)
+                _maxTicksInfo[i] = Math.Max(_maxTicksInfo[i], _bestMovesStack[i].Times);
+
             _bestMovesStack.Normalize();
             _lastSuccessStack = _bestMovesStack.Clone();
             return _bestMovesStack;
         }
 
+        private int[] _maxTicksInfo;
+
+        public int[] GetMaxTicksInfo()
+        {
+            return _maxTicksInfo;
+        }
 
         private void _carMoveFunc(ACar model, int from, int to, int step, AMove m, PassedInfo passed, CarCallback callback)
         {

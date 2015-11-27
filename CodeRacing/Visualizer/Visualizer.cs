@@ -151,7 +151,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var car in world.Cars)
             {
                 var isAvtive = DurabilityObserver.IsActive(car);
-                var rect = new ACar(car).GetRect(isAvtive ? 0 : 1);
+                var rect = new ACar(car).GetRectEx(isAvtive ? 0 : 1);
                 for (var i = 0; i < 4; i++)
                 {
                     DrawLine(car.IsTeammate ? Brushes.Green : Brushes.Red, 

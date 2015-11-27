@@ -191,6 +191,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (RemainingInactiveTicks > 0)
                     RemainingInactiveTicks--;
             }
+            _rect = null;
+            _rectEx = null;
         }
 
         public bool TakeBonus(ABonus bonus)
@@ -205,6 +207,22 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (GetDistanceTo2(car) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.CarDiagonalHalfLength))
                 return false;
             return Geom.PolygonsIntersect(GetRect(), car.GetRect());
+        }
+
+        private Point[] _rectEx, _rect;
+
+        public new Point[] GetRectEx()
+        {
+            if (_rectEx == null)
+                _rectEx = base.GetRectEx();
+            return _rectEx;
+        }
+
+        public new Point[] GetRect()
+        {
+            if (_rect == null)
+                _rect = base.GetRect();
+            return _rect;
         }
     }
 }

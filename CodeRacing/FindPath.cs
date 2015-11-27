@@ -175,16 +175,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // по бокам
-            if (p.X < lx)
-                return !_tileFreeLeft(tileType);
-            if (p.X > rx)
-                return !_tileFreeRight(tileType);
-            if (p.Y < ly)
-                return !_tileFreeTop(tileType);
-            if (p.Y > ry)
-                return !_tileFreeBottom(tileType);
+            if (p.X < lx && !_tileFreeLeft(tileType))
+                return true;
+            if (p.X > rx && !_tileFreeRight(tileType))
+                return true;
+            if (p.Y < ly && !_tileFreeTop(tileType))
+                return true;
+            if (p.Y > ry && !_tileFreeBottom(tileType))
+                return true;
 
-            throw new Exception("something wrong");
+            return false;
         }
 
         public static bool IntersectTail(Point p, double additionalMargin = SafeMargin)

@@ -23,7 +23,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static ATile[,] MyTiles;
         public Cell[] waypoints;
         public static double MapWidth, MapHeight;
-        public static Point[,,] TileCorner;
         public static Dictionary<long, Player> Players; 
 
         public const double SafeMargin = 10.0;
@@ -41,8 +40,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static Car[] Opponents;
         public static ACar[][] OpponentsCars;
-
-        //
 
         public Points PositionsHistory = new Points();
 
@@ -71,17 +68,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 DurabilityObserver.Watch(car);
             }
 
-            if (TileCorner == null)
+            if (MyTiles == null)
             {
-                TileCorner = new Point[world.Height, world.Width, 4];
-                for (var i = 0; i < world.Height; i++)
-                    for (var j = 0; j < world.Width; j++)
-                        for (var di = 0; di < 2; di++)
-                            for (var dj = 0; dj < 2; dj++)
-                                TileCorner[i, j, di*2 + dj]
-                                    = new Point((j + dj)*game.TrackTileSize, (i + di)*game.TrackTileSize);
-
-
                 MapWidth = game.TrackTileSize*world.Width;
                 MapHeight = game.TrackTileSize*world.Height;
 
@@ -296,8 +284,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 _finishTime = world.Tick;
             if (_finishTime < Infinity)
                 Log(_finishTime);
+
 #if DEBUG
             TimeEndLog("All");
+            for (var i = 0; i < Brutes.Length; i++)
+            {
+                var info = Brutes[i].GetMaxTicksInfo();
+                if (info == null)
+                    continue;
+                Console.Write(i + ": ");
+                foreach(var a in info)
+                    Console.Write(" " + a);
+                Console.WriteLine("\n");
+            }
             Draw();
             Thread.Sleep(12);
 #endif

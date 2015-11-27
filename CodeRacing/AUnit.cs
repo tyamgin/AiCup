@@ -71,7 +71,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             for (var i = 0; i < 4; i++)
                 result[i] = this + ByAngle(angles[i]) * dir.Length;
             result[4] = (result[0] + result[1])/2;
-            result[5] = (result[2] + result[3]) / 2;
+            result[5] = (result[2] + result[3])/2;
 
             return result;
         }
