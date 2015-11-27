@@ -51,6 +51,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             return result;
         }
+
+        public Point[] GetRectEx(double reduceBorder = 0)
+        {
+            // 3  o---o  0
+            // 5  o ^ o  4
+            //    o   o
+            // 2  o---o  1
+            var dir = new Point(Width / 2 - reduceBorder, Height / 2 - reduceBorder);
+            var angle = Math.Atan2(dir.Y, dir.X);
+            var angles = new[]
+            {
+                Angle + angle, Angle + Math.PI - angle, Angle + Math.PI + angle, Angle - angle,
+                Angle + Math.PI/2, Angle - Math.PI/2
+            };
+            var result = new Point[angles.Length];
+            for (var i = 0; i < angles.Length; i++)
+                result[i] = this + ByAngle(angles[i]) * dir.Length;
+
+            return result;
+        }
     }
 
     public class ACircularUnit : AUnit

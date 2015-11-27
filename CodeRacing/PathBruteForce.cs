@@ -181,7 +181,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
             if (MyStrategy.game.InitialFreezeDurationTicks < MyStrategy.world.Tick &&
                 _bonusesCount == _bonusCandidates.Length &&
-                LastSuccess != MyStrategy.world.Tick - 1 &&
+                LastSuccess < MyStrategy.world.Tick - 1 &&
                 (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
             {
                 return _lastSuccessStack;

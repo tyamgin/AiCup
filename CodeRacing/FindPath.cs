@@ -145,9 +145,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.Unknown; // TODO
         }
 
-        private static BitSet[] _intersectTailCacheSafe;
-        private static BitSet[] _intersectTailCacheSafeIsComputed;
-
         private static bool _intersectTailNoCache(Point p, double additionalMargin)
         {
             var cell = GetCell(p.X, p.Y);
@@ -156,7 +153,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return true;
 
             var c = GetCenter(cell);
-            var margin = game.TrackTileSize/2 - game.TrackTileMargin - additionalMargin;
+            var margin = game.TrackTileSize/2 - game.TrackTileMargin - Math.Max(1.0, additionalMargin);
             var lx = c.X - margin;
             var rx = c.X + margin;
             var ly = c.Y - margin;
@@ -192,33 +189,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static bool IntersectTail(Point p, double additionalMargin = SafeMargin)
         {
-            if (_intersectTailCacheSafe == null)
-            {
-                // TODO: if UNKNOWN?
-                var w = (int) (MapWidth + Eps);
-                var h = (int) (MapHeight + Eps);
-                _intersectTailCacheSafe = new BitSet[w];
-                _intersectTailCacheSafeIsComputed = new BitSet[w];
-                for (var k = 0; k < w; k++)
-                {
-                    _intersectTailCacheSafe[k] = new BitSet(h);
-                    _intersectTailCacheSafeIsComputed[k] = new BitSet(h);
-                }
-            }
             if (p.X < 0 || p.X >= MapWidth || p.Y < 0 || p.Y >= MapHeight)
                 return true;
 
-            if (Math.Abs(SafeMargin - additionalMargin) > Eps)
-                return _intersectTailNoCache(p, additionalMargin);
-
-            var i = (int) p.X;
-            var j = (int) p.Y;
-            if (!_intersectTailCacheSafeIsComputed[i][j])
-            {
-                _intersectTailCacheSafe[i][j] = _intersectTailNoCache(p, SafeMargin);
-                _intersectTailCacheSafeIsComputed[i][j] = true;
-            }
-            return _intersectTailCacheSafe[i][j];
+            return _intersectTailNoCache(p, additionalMargin);
         }
 
         public delegate bool PointDelegate(Point point);

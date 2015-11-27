@@ -157,10 +157,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             total.Time++;
 
             // проверка на стены
-            var res = car.GetRect().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
+            var res = car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
 
             // проверка что можно проехать точно возле стены
-            if (!res && car.RemainingNitroTicks == 0 && car.GetRect().All(p => !MyStrategy.IntersectTail(p, m.ExactlyMargin)))
+            if (!res && car.RemainingNitroTicks == 0 && car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExactlyMargin)))
             {
                 if (!total.ExactlyBorder)
                     total.Importance -= ExactlyBorderDangerCoeff;
@@ -169,7 +169,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // проверка что можно потереться вдоль стены
-            if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && car.GetRect().All(p => !MyStrategy.IntersectTail(p, m.ExtraMargin)))
+            if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExtraMargin)))
             {
                 if (!total.OutOfBoreder)
                     total.Importance -= OutOfBorderDangerCoeff;
