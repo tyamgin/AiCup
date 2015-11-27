@@ -229,7 +229,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var m = stack[0];
 
                 drawPts.Add(new Point(drawModel));
-                ModelMove(drawModel, m);
+                AMove.ModelMove(drawModel, m, new PassedInfo(), Bonuses, OilSlicks, Projectiles, OpponentsCars);
                 m.Times--;
                 stack.Normalize();
             }

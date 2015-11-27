@@ -166,14 +166,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (lx <= p.X && p.X <= rx && ly <= p.Y && p.Y <= ry)
                 return false;
 
+            var cornerDist2 = Geom.Sqr(game.TrackTileMargin + Math.Max(1.0, additionalMargin));
+
             // в углу
-            for (var k = 0; k < 4; k++)
+            foreach (var corner in MyTiles[cell.I, cell.J].Parts)
             {
-                if (TileCorner[cell.I, cell.J, k].GetDistanceTo2(p) <
-                    (game.TrackTileMargin + additionalMargin)*(game.TrackTileMargin + additionalMargin))
-                {
+                if (corner.Type != TilePartType.Circle)
+                    continue;
+                if (corner.Circle.GetDistanceTo2(p) < cornerDist2)
                     return true;
-                }
             }
 
             // по бокам
