@@ -26,7 +26,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     new PathPattern
                     {
                         From = 0,
-                        To = 40,
+                        To = 32,
                         Step = 4,
                         Move =
                             new AMove
@@ -39,7 +39,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     new PathPattern
                     {
                         From = 0,
-                        To = 20,
+                        To = 16,
                         Step = 4,
                         Move =
                             new AMove
@@ -86,8 +86,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     new PathPattern
                     {
                         From = 0,
-                        To = 34,
-                        Step = 2,
+                        To = 33,
+                        Step = 3,
                         Move =
                             new AMove
                             {
@@ -201,8 +201,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 new PathPattern
                 {
                     From = 0,
-                    To = 250,
-                    Step = 5,
+                    To = 200,
+                    Step = 10,
                     Move =
                         new AMove
                         {
