@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return Math.Sqrt(u.SpeedX * u.SpeedX + u.SpeedY * u.SpeedY);
         }
         
-        public Cell GetNextWayPoint(Car car, int delta = 1)
+        public static Cell GetNextWayPoint(Car car, int delta = 1)
         {
             return waypoints[(car.NextWaypointIndex + delta - 1) % waypoints.Length];
         }

@@ -177,6 +177,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 res = true;
             }
 
+            if (!total.WayPoint)
+                total.WayPoint = MyStrategy.GetNextWayPoint(car.Original).Equals(MyStrategy.GetCell(car));
+
             if (!res && m.RangesMode)
             {
                 res = true;

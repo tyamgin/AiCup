@@ -21,7 +21,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Car self;
         public static TileType[,] tiles;
         public static ATile[,] MyTiles;
-        public Cell[] waypoints;
+        public static Cell[] waypoints;
         public static double MapWidth, MapHeight;
         public static Dictionary<long, Player> Players; 
 
@@ -242,7 +242,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var sel = bruteRes.Item1;
             var bestMoveStacks = bruteRes.Item2;
 
-            if (sel != -1 && bestMoveStacks[sel].Count > 0) // FIXME!!!!!!!!!!!!!!!! Пропуск waypoint'a
+            if (sel != -1 && bestMoveStacks[sel].Count > 0)
             {
                 Brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));

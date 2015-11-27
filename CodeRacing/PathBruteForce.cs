@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Linq;
+using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
@@ -33,6 +34,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool Cars;
         public bool ExactlyBorder;
         public bool OutOfBoreder;
+        public bool WayPoint; // TODO: HARD FIX: можно пропустить несколько вейпоинтов
 
         public int Time;
         public double Importance;
@@ -47,6 +49,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Cars = Cars,
                 ExactlyBorder = ExactlyBorder,
                 OutOfBoreder = OutOfBoreder,
+                WayPoint = WayPoint,
 
                 Time = Time,
                 Importance = Importance
@@ -118,6 +121,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     m.Times++;
                 }
                 if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
+                    return;
+                if (!total.WayPoint)
                     return;
 
                 if (_isBetterTime(total.Time, total.Importance, _bestTime, _bestImportance))
@@ -194,7 +199,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             bruteWayPoints.AddRange(_bruteWayPoints);
             MyStrategy.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
 #endif
-            _needDist = MyStrategy.game.TrackTileSize/2;
+            _needDist = MyStrategy.game.TrackTileSize/2 - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
 #if DEBUG
             MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
@@ -281,7 +286,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
 
-            _doRecursive(Self, 0, new PassedInfo());
+            var wayPointRequired = false;
+            foreach (var pt in _bruteWayPoints)
+            {
+                if (pt.GetDistanceTo2(_turnTo) < _needDist*_needDist)
+                    break;
+                wayPointRequired |= MyStrategy.GetNextWayPoint(Self.Original).Equals(MyStrategy.GetCell(pt));
+            }
+
+            _doRecursive(Self, 0, new PassedInfo { WayPoint = !wayPointRequired });
             _cache = null;
             if (_bestTime == MyStrategy.Infinity)
                 return _lastSuccessStack;
