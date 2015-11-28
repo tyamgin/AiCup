@@ -62,12 +62,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var extended = ExtendWaySegments(result, 100);
             result.Clear();
 
+            passedWayPoints.Clear();
             foreach (var t in extended)
             {
                 if (result.Count > 0 && result.Last().Equals(t))
                     continue;
+                if (GetNextWayPoint(car).Equals(GetCell(t)))
+                    passedWayPoints.Add(GetCell(t));
 
-                while (result.Count > 1 && CheckVisibility(car, result[result.Count - 2], t))
+                while (result.Count > 1 && CheckVisibilityAndWp(car, result[result.Count - 2], t, passedWayPoints))
                     result.Pop();
                 result.Add(t);
             }
@@ -77,10 +80,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int BackModeRemainTicks;
         public double BackModeTurn;
 
-        void AlternativeMove()
+        void AlternativeMove(Points pts)
         {
             var car = new ACar(self);
-            var pts = GetAlternativeWaySegments(self);
             var turnCenter = pts[1];
 
             const int ln = 40;
@@ -123,6 +125,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
                 return;
             }
+
+            // change points
+            pts = GetAlternativeWaySegments(self);
+            turnCenter = pts[1];
 
             var tmp = new ACar(self);
             var aa = tmp + tmp.Speed;

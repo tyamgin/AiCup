@@ -236,7 +236,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (BAD_TESTING_STRATEGY)
             {
-                AlternativeMove();
+                AlternativeMove(pts);
                 return;
             }
 
@@ -276,7 +276,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             else
             {
-                AlternativeMove();
+                AlternativeMove(pts);
             }
         }
 
