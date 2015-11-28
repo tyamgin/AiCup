@@ -16,7 +16,7 @@ var createGameWith = function(opponents, callback) {
 $('.form-horizontal').attr('target', '_blank');
 
 var createGames = function(games) {
-	if (users.length == 0)
+	if (games.length == 0)
 		return;
 		
 	createGameWith(games[0], function() {
@@ -25,5 +25,16 @@ var createGames = function(games) {
 };
 
 createGames([
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
 	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile']
 ]);
