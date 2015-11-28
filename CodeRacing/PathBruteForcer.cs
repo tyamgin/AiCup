@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Linq;
-using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
@@ -35,7 +34,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool Cars;
         public bool ExactlyBorder;
         public bool OutOfBoreder;
-        public bool WayPoint; // TODO: HARD FIX: можно пропустить несколько вейпоинтов
+        public bool WayPoint; // TODO: HARD TO FIX: можно пропустить несколько вейпоинтов
 
         public int Time;
         public double Importance;
@@ -58,7 +57,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
     }
 
-    public class PathBruteForce
+    public class PathBruteForcer
     {
         public readonly PathPattern[] Patterns;
         public ACar Self;
@@ -94,7 +93,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return time1 - importance1 < time2 - importance2;
         }
 
-        public PathBruteForce(PathPattern[] patterns, int interval, AMove lastStageMove, int id, int waypointsCount)
+        public PathBruteForcer(PathPattern[] patterns, int interval, AMove lastStageMove, int id, int waypointsCount)
         {
             Patterns = patterns;
             _interval = interval;

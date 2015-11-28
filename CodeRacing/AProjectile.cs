@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Xml.Schema;
+﻿using System.Linq;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -9,7 +7,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public ProjectileType Type;
         public Point Speed;
-        public bool Exists = true;
+        public bool Exists = true; // Вышел-ли за пределы поля, или исчез
 
         public const int UpdateIterations = 30;
 
@@ -145,8 +143,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public double GetDanger()
         {
-            return 1.0;
-            // TODO: шины
+            if (Type == ProjectileType.Washer)
+                return 1.0;
+            return 2.0;
         }
     }
 }

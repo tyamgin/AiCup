@@ -1,9 +1,6 @@
-﻿using System.Runtime.InteropServices;
-using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
+﻿using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
@@ -12,7 +9,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static bool CheckVisibilityAndWp(Car car, Point from, Point to, List<Cell> wayPoints)
         {
             wayPoints = wayPoints.GetRange(0, wayPoints.Count);
-            if (!PointsBetween(from, to, 10.0, point =>
+            if (!EnumeratePointsBetween(from, to, 10.0, point =>
             {
                 if (IntersectTail(point, car.Height / 2 + 5))
                     return false;

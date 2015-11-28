@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double BonusImportanceCoeff = 60;
         public const double OilSlickDangerCoeff = 70;
         public const double ProjectileDangerCoeff = 40;
-        public const double InactiveCarDangerCoeff = 80;
+        public const double InactiveCarDangerCoeff = 65;
         public const double ExactlyBorderDangerCoeff = 50;
 
         public double EnginePower;

@@ -6,6 +6,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
+        // Проверка что кто-то стоит впереди
         public bool IsSomeoneAhead(ACar car)
         {
             var carRect = car.GetRect();

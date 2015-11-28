@@ -192,7 +192,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public delegate bool PointDelegate(Point point);
 
-        public static bool PointsBetween(Point from, Point to, double maxDelta, PointDelegate callback)
+        public static bool EnumeratePointsBetween(Point from, Point to, double maxDelta, PointDelegate callback)
         {
             if (from.Equals(to))
                 return callback(from.Clone());
@@ -211,7 +211,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static bool CheckVisibility(Car car, Point from, Point to)
         {
-            return PointsBetween(from, to, 10.0, point => !IntersectTail(point, car.Height / 2 + 10));
+            return EnumeratePointsBetween(from, to, 10.0, point => !IntersectTail(point, car.Height / 2 + 10));
         }
 
         public Points GetWaySegments(Car car)
@@ -251,7 +251,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             for (var idx = 1; idx < pts.Count; idx++)
             {
-                PointsBetween(pts[idx - 1], pts[idx], delta, point =>
+                EnumeratePointsBetween(pts[idx - 1], pts[idx], delta, point =>
                 {
                     res.Add(point);
                     return true;

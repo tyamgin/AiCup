@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
@@ -159,7 +157,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return ok;
         }
 
-        private Tuple<int, Moves[]> _doAndSelectBrute(PathBruteForce[] brutes, Points pts)
+        private Tuple<int, Moves[]> _doAndSelectBrute(PathBruteForcer[] brutes, Points pts)
         {
             TimerStart();
             var bestMoveStacks = new Moves[brutes.Length];
@@ -310,8 +308,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             _drawMap();
 #endif
-            //if (world.Tick >= 350)
-            //    BAD_TESTING_STRATEGY = true;
             if (!self.IsFinishedTrack)
                 _move();
             else if (_finishTime == Infinity)

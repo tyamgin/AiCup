@@ -1,5 +1,3 @@
-using System;
-
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
     public class Player {
         private readonly long id;

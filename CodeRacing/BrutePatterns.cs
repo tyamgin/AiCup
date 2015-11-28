@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        public PathBruteForce[] Brutes, AdditionalBrutes, BackBrutes;
+        public PathBruteForcer[] Brutes, AdditionalBrutes, BackBrutes;
 
         public void InitBrutes()
         {
@@ -23,7 +20,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                      * - поворачивать в сторону цели на пол-мощности
                      * - тормозить
                      */
-                new PathBruteForce(new[]
+                new PathBruteForcer(new[]
                 {
                     new PathPattern
                     {
@@ -66,7 +63,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                      * - тормозить
                      * - НИТРО!!!
                      */
-                new PathBruteForce(new[]
+                new PathBruteForcer(new[]
                 {
                     new PathPattern
                     {
@@ -107,7 +104,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                      * - снизить мощность
                      * - тормозить
                      */
-                new PathBruteForce(new[]
+                new PathBruteForcer(new[]
                 {
                     new PathPattern
                     {
@@ -137,7 +134,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 * - снизить мощность
                 * - тормозить
                 */
-                new PathBruteForce(new[]
+                new PathBruteForcer(new[]
                 {
                     new PathPattern
                     {
@@ -168,7 +165,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                      * - поворачивать в сторону цели на полной мощности
                      * - тормозить
                      */
-                new PathBruteForce(new[]
+                new PathBruteForcer(new[]
                 {
                     new PathPattern
                     {
@@ -206,7 +203,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }, 8, new AMove(), 2, subWayPointsCount),
             };
 
-            BackBrutes = new[] {-1, -0.5, 0, 0.5, 1}.Select(turn => new PathBruteForce(new[]
+            BackBrutes = new[] {-1, -0.5, 0, 0.5, 1}.Select(turn => new PathBruteForcer(new[]
             {
                 new PathPattern
                 {
