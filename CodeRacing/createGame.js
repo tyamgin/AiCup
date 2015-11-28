@@ -26,15 +26,22 @@ var createGames = function(games) {
 
 createGames([
 	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['ud1', 'SKolotienko', 'Mr.Smile', 'tyamgin'],
+	['SKolotienko', 'Mr.Smile', 'tyamgin', 'ud1'],
+	['Mr.Smile', 'tyamgin', 'ud1', 'SKolotienko'],
+	
 	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['ud1', 'SKolotienko', 'Mr.Smile', 'tyamgin'],
+	['SKolotienko', 'Mr.Smile', 'tyamgin', 'ud1'],
+	['Mr.Smile', 'tyamgin', 'ud1', 'SKolotienko'],
+
 	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
+	['ud1', 'SKolotienko', 'Mr.Smile', 'tyamgin'],
+	['SKolotienko', 'Mr.Smile', 'tyamgin', 'ud1'],
+	['Mr.Smile', 'tyamgin', 'ud1', 'SKolotienko'],
+
 	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile'],
-	['tyamgin', 'ud1', 'SKolotienko', 'Mr.Smile']
+	['ud1', 'SKolotienko', 'Mr.Smile', 'tyamgin'],
+	['SKolotienko', 'Mr.Smile', 'tyamgin', 'ud1'],
+	['Mr.Smile', 'tyamgin', 'ud1', 'SKolotienko'],
 ]);

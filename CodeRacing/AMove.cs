@@ -7,8 +7,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class AMove
     {
-        public const double BonusImportanceCoeff = 30;
-        public const double OilSlickDangerCoeff = 40;
+        public const double BonusImportanceCoeff = 45;
+        public const double OilSlickDangerCoeff = 50;
         public const double ProjectileDangerCoeff = 40;
         public const double InactiveCarDangerCoeff = 60;
         public const double ExactlyBorderDangerCoeff = 50;

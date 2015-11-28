@@ -113,6 +113,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 m.EnginePower = 1;
                 m.WheelTurn = _turnTo.Clone();
 
+                if (m.IsUseNitro && model.Speed.Length > 15)
+                    return;
+
                 for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; )
                 {
                     if (!_modelMove(model, m, total))

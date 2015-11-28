@@ -62,7 +62,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 0, 70),
+                }, 8, new AMove(), 0, 65),
 
                                 /*
                      * - ехать в сторону поворота на полной можности
@@ -111,7 +111,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove {IsUseNitro = true}, 0, 70),
+                }, 8, new AMove {IsUseNitro = true}, 0, 65),
 
                 /*
                      * - снизить мощность
@@ -145,7 +145,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 1, 70),
+                }, 8, new AMove(), 1, 65),
 
                 /*
                      * - ехать от поворота на пол-мощности
@@ -193,7 +193,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 2, 70),
+                }, 8, new AMove(), 2, 65),
             };
 
             AdditionalBrutes = new[]
