@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Xml.Schema;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -9,30 +11,80 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Point Speed;
         public bool Exists = true;
 
-        public const int UpdateIterations = 10;
+        public const int UpdateIterations = 30;
 
         public void Move()
         {
+            if (!Exists)
+                return;
+
             if (Type == ProjectileType.Washer)
             {
                 X += Speed.X;
                 Y += Speed.Y;
+
+                if (X < 0 || Y < 0 || X > MyStrategy.MapWidth || Y > MyStrategy.MapHeight)
+                    Exists = false;
                 return;
             }
 
-            return;
-            // TODO: выход за пределы карты
+            var reflected = false;
+
             for (int it = 0; it < UpdateIterations; it++)
             {
                 X += Speed.X / UpdateIterations;
                 Y += Speed.Y / UpdateIterations;
 
+                if (reflected)
+                    continue;
+
                 var currentCell = MyStrategy.GetCell(this);
                 foreach (var part in MyStrategy.MyTiles[currentCell.I, currentCell.J].Parts)
                 {
-                    var intersection = part.GetIntersectionPoint(this);
+                    Point e = null, n = null;
+                    // e - направление стены
+                    // n - нормаль от стены
+                    double en = 0, et = 0, d = 0, d1 = 0, d2 = 0;
+
+                    if (part.Type == TilePartType.Segment)
+                    {
+                        var pts = Geom.LineCircleIntersect(part.Start, part.End, this, this.Radius);
+                        if (pts.Length == 0)
+                            continue;
+
+                        
+                        e = (part.End - part.Start).Normalized();
+                        n = ~e * -1;
+                    }
+                    else
+                    {
+                        if (GetDistanceTo2(part.Circle) <= Geom.Sqr(Radius + part.Circle.Radius))
+                        {
+                            n = (this - part.Circle).Normalized();
+                            e = ~n;
+                        }
+                    }
+
+                    if (e == null || n == null)
+                        continue;
+
+                    en = Speed * n; // норм.
+                    et = Speed * e; // танг.
+
+                    en *= -0.5;
+
+                    d = n.X * e.Y - n.Y * e.X;
+                    d1 = n.X * et - en * e.X;
+                    d2 = en * e.Y - n.Y * et;
+                    Speed.X = d2 / d;
+                    Speed.Y = d1 / d;
+
+                    reflected = true;
+                    break;
                 }
             }
+            if (Speed.Length <= MyStrategy.game.TireDisappearSpeedFactor*MyStrategy.game.TireInitialSpeed)
+                Exists = false;
         }
 
         public AProjectile()

@@ -142,7 +142,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public override string ToString()
         {
-            return "(" + X + "; " + Y + ")";
+            return "(" + X.ToString().Replace(',', '.') + ", " + Y.ToString().Replace(',', '.') + ")";
         }
 
         public int CompareTo(Point other)

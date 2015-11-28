@@ -159,8 +159,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return ok;
         }
 
-        //private AProjectile pr;
-
         private Tuple<int, Moves[]> _doAndSelectBrute(PathBruteForce[] brutes, Points pts)
         {
             TimerStart();
@@ -196,6 +194,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return new Tuple<int, Moves[]>(sel, bestMoveStacks);
         }
 
+        private AProjectile pr;
+
         private void _move()
         {
             var pts = GetWaySegments(self);
@@ -220,10 +220,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
             }
 
+            //if (world.Tick <= 225)
+            //{
+            //    move.WheelTurn = 1;
+            //    move.EnginePower = 1;
+            //    return;
+            //}
+
             //if (pr == null)
             //{
-            //    //var ttt = Geom.LineCircleIntersect(new Point(2, 0), new Point(0, 2), new Point(-1, -1), 2*Math.Sqrt(2));
-
             //    pr = AProjectile.GetProjectiles(new ACar(self))[0];
             //    move.IsThrowProjectile = true;
             //}

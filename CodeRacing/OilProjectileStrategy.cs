@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
@@ -113,7 +114,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
             var shotCount = shot.Count(val => val);
-            return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 2;
+            if (self.Type == CarType.Buggy)
+            {
+                return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 2;
+            }
+            return shotCount == 1;
         }
     }
 }

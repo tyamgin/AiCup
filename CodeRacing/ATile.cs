@@ -30,47 +30,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             switch (type)
             {
-                // Верхняя полоса
-                case TileType.BottomHeadedT:
-                case TileType.Horizontal:
-                case TileType.LeftTopCorner:
-                case TileType.RightTopCorner:
-                    res.Add(TilePart.GetSegment(sy, lx + sy));
-                    break;
-            }
-            switch (type)
-            {
-                // Нижняя полоса
-                case TileType.TopHeadedT:
-                case TileType.Horizontal:
-                case TileType.LeftBottomCorner:
-                case TileType.RightBottomCorner:
-                    res.Add(TilePart.GetSegment(ly - sy, lx + ly - sy));
-                    break;
-            }
-            switch (type)
-            {
-                // Левая полоса
-                case TileType.RightHeadedT:
-                case TileType.Vertical:
-                case TileType.LeftBottomCorner:
-                case TileType.LeftTopCorner:
-                    res.Add(TilePart.GetSegment(sx, ly + sx));
-                    break;
-            }
-            switch (type)
-            {
-                // Правая полоса
-                case TileType.LeftHeadedT:
-                case TileType.Vertical:
-                case TileType.RightBottomCorner:
-                case TileType.RightTopCorner:
-                    res.Add(TilePart.GetSegment(lx - sx, lx + ly - sx));
-                    break;
-            }
-
-            switch (type)
-            {
                 // Левый верхний угол
                 case TileType.LeftHeadedT:
                 case TileType.TopHeadedT:
@@ -113,6 +72,47 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     break;
             }
 
+            switch (type)
+            {
+                // Верхняя полоса
+                case TileType.BottomHeadedT:
+                case TileType.Horizontal:
+                case TileType.LeftTopCorner:
+                case TileType.RightTopCorner:
+                    res.Add(TilePart.GetSegment(sy, lx + sy));
+                    break;
+            }
+            switch (type)
+            {
+                // Нижняя полоса
+                case TileType.TopHeadedT:
+                case TileType.Horizontal:
+                case TileType.LeftBottomCorner:
+                case TileType.RightBottomCorner:
+                    res.Add(TilePart.GetSegment(ly - sy, lx + ly - sy));
+                    break;
+            }
+            switch (type)
+            {
+                // Левая полоса
+                case TileType.RightHeadedT:
+                case TileType.Vertical:
+                case TileType.LeftBottomCorner:
+                case TileType.LeftTopCorner:
+                    res.Add(TilePart.GetSegment(sx, ly + sx));
+                    break;
+            }
+            switch (type)
+            {
+                // Правая полоса
+                case TileType.LeftHeadedT:
+                case TileType.Vertical:
+                case TileType.RightBottomCorner:
+                case TileType.RightTopCorner:
+                    res.Add(TilePart.GetSegment(lx - sx, lx + ly - sx));
+                    break;
+            }
+
             var dx = MyStrategy.game.TrackTileSize*j;
             var dy = MyStrategy.game.TrackTileSize*i;
             foreach (var part in res)
@@ -152,26 +152,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public TilePartType Type;
         public Point Start, End;
         public ACircularUnit Circle;
-
-        public Point GetIntersectionPoint(AProjectile proj)
-        {
-            if (Type == TilePartType.Segment)
-            {
-                var pts = Geom.LineCircleIntersect(Start, End, proj, proj.Radius);
-                if (pts.Length == 0)
-                    return null;
-                var inter = pts.Length == 1 ? pts[0] : (pts[0] + pts[1])/2.0;
-                var wallDir = (End - Start).Normalized();
-                // TODO: убедиться что скорость и направление стены идут в нужном направлении
-                var ang = Geom.GetAngleBetween(proj.Speed, wallDir);
-                proj.Speed = proj.Speed.RotateClockwise(2*Math.PI - 2*ang);
-            }
-            else
-            {
-                
-            }
-            return null;
-        }
 
         public static TilePart GetSegment(Point s, Point t)
         {
