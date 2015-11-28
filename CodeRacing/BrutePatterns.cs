@@ -25,7 +25,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     new PathPattern
                     {
-                        From = 0,
                         To = 32,
                         Step = 4,
                         Move =
@@ -33,12 +32,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 EnginePower = 1,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter},
-                                IsBrake = false
                             }
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 16,
                         Step = 4,
                         Move =
@@ -46,18 +43,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 EnginePower = 0.5,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                IsBrake = false
                             }
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 34,
                         Step = 2,
                         Move =
                             new AMove
                             {
-                                EnginePower = 0,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
                                 IsBrake = true
                             }
@@ -74,7 +68,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     new PathPattern
                     {
-                        From = 0,
                         To = 20,
                         Step = 4,
                         Move =
@@ -82,12 +75,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 EnginePower = 1,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter},
-                                IsBrake = false
                             }
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 20,
                         Step = 4,
                         Move =
@@ -95,18 +86,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 EnginePower = 0.5,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                IsBrake = false
                             }
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 34,
                         Step = 3,
                         Move =
                             new AMove
                             {
-                                EnginePower = 0,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
                                 IsBrake = true
                             }
@@ -121,7 +109,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     new PathPattern
                     {
-                        From = 0,
                         To = 25,
                         Step = 1,
                         Move =
@@ -129,18 +116,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 EnginePower = 0.2,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                IsBrake = false
                             }
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 33,
                         Step = 3,
                         Move =
                             new AMove
                             {
-                                EnginePower = 0,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
                                 IsBrake = true
                             }
@@ -156,7 +140,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     new PathPattern
                     {
-                        From = 0,
                         To = 20,
                         Step = 4,
                         Move =
@@ -164,12 +147,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 EnginePower = 0.5,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromCenter},
-                                IsBrake = false
                             }
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 24,
                         Step = 2,
                         Move =
@@ -177,18 +158,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 EnginePower = 1,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                IsBrake = false
                             }
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 32,
                         Step = 4,
                         Move =
                             new AMove
                             {
-                                EnginePower = 0,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
                                 IsBrake = true
                             }
@@ -206,7 +184,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     new PathPattern
                     {
-                        From = 0,
                         To = 24,
                         Step = 2,
                         Move =
@@ -218,7 +195,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 32,
                         Step = 4,
                         Move =
@@ -238,7 +214,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     new PathPattern
                     {
-                        From = 0,
                         To = 24,
                         Step = 2,
                         Move =
@@ -250,7 +225,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     },
                     new PathPattern
                     {
-                        From = 0,
                         To = 32,
                         Step = 4,
                         Move =
@@ -267,7 +241,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 new PathPattern
                 {
-                    From = 0,
                     To = 200,
                     Step = 10,
                     Move =
