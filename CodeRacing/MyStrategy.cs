@@ -273,6 +273,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (sel != -1 && bestMoveStacks[sel].Count > 0)
             {
+                if (Brutes[sel].Id == 121)
+                {
+                    self = self;
+                }
+
                 Brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
@@ -324,7 +329,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Console.Write(i + ": ");
                 foreach(var a in info)
                     Console.Write(" " + a);
-                Console.WriteLine();
+                Console.WriteLine("(" + Brutes[i].SelectedCount + ")");
             }
             Console.WriteLine();
             Draw();

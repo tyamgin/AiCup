@@ -17,8 +17,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     public enum TurnPatternType
     {
         ToNext,
+        FromNext,
         ToCenter,
-        FromCenter
+        FromCenter,
     }
 
     public class TurnPattern
@@ -151,9 +152,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private Moves _lastSuccessStack;
 
         private int _selectThisTick;
+        public int SelectedCount;
 
         public void SelectThis()
         {
+            SelectedCount++;
             _selectThisTick = MyStrategy.world.Tick;
         }
 
@@ -226,6 +229,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? -1 : 1;
                     else if (turnPattern.Pattern == TurnPatternType.FromCenter)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
+                    else if (turnPattern.Pattern == TurnPatternType.FromNext)
+                        p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? 1 : -1;
                 }
             }
 

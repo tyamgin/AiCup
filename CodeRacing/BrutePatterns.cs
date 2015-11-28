@@ -14,6 +14,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (Brutes != null)
                 return;
 
+            const int subWayPointsCount = 60;
+
             Brutes = new[]
             {
                 /*
@@ -56,7 +58,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 0, 65),
+                }, 8, new AMove(), 0, subWayPointsCount),
 
                                 /*
                      * - ехать в сторону поворота на полной можности
@@ -99,7 +101,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove {IsUseNitro = true}, 0, 65),
+                }, 8, new AMove {IsUseNitro = true}, 0, subWayPointsCount),
 
                 /*
                      * - снизить мощность
@@ -129,7 +131,37 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 1, 65),
+                }, 8, new AMove(), 1, subWayPointsCount),
+
+                               /*
+                * - снизить мощность
+                * - тормозить
+                */
+                new PathBruteForce(new[]
+                {
+                    new PathPattern
+                    {
+                        To = 30,
+                        Step = 5,
+                        Move =
+                            new AMove
+                            {
+                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromNext},
+                                IsBrake = true
+                            }
+                    },
+                    new PathPattern
+                    {
+                        To = 40,
+                        Step = 5,
+                        Move =
+                            new AMove
+                            {
+                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
+                                IsBrake = true
+                            }
+                    }
+                }, 8, new AMove(), 121, subWayPointsCount),
 
                 /*
                      * - ехать от поворота на пол-мощности
@@ -171,70 +203,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 2, 65),
-            };
-
-            AdditionalBrutes = new[]
-            {
-               /*
-                * - снизить мощность
-                * - тормозить
-                */
-                new PathBruteForce(new[]
-                {
-                    new PathPattern
-                    {
-                        To = 24,
-                        Step = 2,
-                        Move =
-                            new AMove
-                            {
-                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter},
-                                IsBrake = true
-                            }
-                    },
-                    new PathPattern
-                    {
-                        To = 32,
-                        Step = 4,
-                        Move =
-                            new AMove
-                            {
-                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                IsBrake = true
-                            }
-                    }
-                }, 8, new AMove(), 1, 40),
-
-                                /*
-                     * - снизить мощность
-                     * - тормозить
-                     */
-                new PathBruteForce(new[]
-                {
-                    new PathPattern
-                    {
-                        To = 24,
-                        Step = 2,
-                        Move =
-                            new AMove
-                            {
-                                EnginePower = 0.2,
-                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                            }
-                    },
-                    new PathPattern
-                    {
-                        To = 32,
-                        Step = 4,
-                        Move =
-                            new AMove
-                            {
-                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
-                                IsBrake = true
-                            }
-                    }
-                }, 8, new AMove(), 1, 40),
+                }, 8, new AMove(), 2, subWayPointsCount),
             };
 
             BackBrutes = new[] {-1, -0.5, 0, 0.5, 1}.Select(turn => new PathBruteForce(new[]
