@@ -145,25 +145,28 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                    type == TileType.Unknown; // TODO
         }
 
-        private static bool _intersectTailNoCache(Point p, double additionalMargin)
+        public static bool IntersectTail(Point p, double additionalMargin)
         {
+            if (p.X < 0 || p.X >= MapWidth || p.Y < 0 || p.Y >= MapHeight)
+                return true;
+
             var cell = GetCell(p.X, p.Y);
             var tileType = tiles[cell.I, cell.J];
             if (tileType == TileType.Empty)
                 return true;
 
             var c = GetCenter(cell);
-            var margin = game.TrackTileSize/2 - game.TrackTileMargin - Math.Max(1.0, additionalMargin);
+            var margin = game.TrackTileSize / 2 - game.TrackTileMargin - additionalMargin;
             var lx = c.X - margin;
             var rx = c.X + margin;
             var ly = c.Y - margin;
             var ry = c.Y + margin;
-            
+
             // внутри квадрата
             if (lx <= p.X && p.X <= rx && ly <= p.Y && p.Y <= ry)
                 return false;
 
-            var cornerDist2 = Geom.Sqr(game.TrackTileMargin + Math.Max(1.0, additionalMargin));
+            var cornerDist2 = Geom.Sqr(game.TrackTileMargin + additionalMargin);
 
             // в углу
             foreach (var corner in MyTiles[cell.I, cell.J].Parts)
@@ -185,14 +188,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return true;
 
             return false;
-        }
-
-        public static bool IntersectTail(Point p, double additionalMargin = SafeMargin)
-        {
-            if (p.X < 0 || p.X >= MapWidth || p.Y < 0 || p.Y >= MapHeight)
-                return true;
-
-            return _intersectTailNoCache(p, additionalMargin);
         }
 
         public delegate bool PointDelegate(Point point);

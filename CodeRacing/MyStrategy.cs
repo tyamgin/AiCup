@@ -167,15 +167,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var bestMoveStacks = new Moves[brutes.Length];
             for (var i = 0; i < brutes.Length; i++)
             {
-                if (!BAD_TESTING_STRATEGY)
-                {
-                    if (brutes[i].LastStageMove.IsUseNitro && self.NitroChargeCount == 0)
-                        continue;
-                    if (brutes[i].LastStageMove.IsUseNitro && self.RemainingOiledTicks > 0)
-                        continue;
+                if (brutes[i].LastStageMove.IsUseNitro && self.NitroChargeCount == 0)
+                    continue;
+                if (brutes[i].LastStageMove.IsUseNitro && self.RemainingOiledTicks > 0)
+                    continue;
 
-                    bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
-                }
+                bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
             }
             TimeEndLog("brute");
 
@@ -237,10 +234,37 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             //}
             //return;
 
+            if (BAD_TESTING_STRATEGY)
+            {
+                AlternativeMove();
+                return;
+            }
 
-            var bruteRes = _doAndSelectBrute(Brutes, pts);
+            // если еду назад, то запускать только первый перебор
+            // если маленькая скорость, то 1-й и 2-й
+            var bruteRes =
+                _doAndSelectBrute(
+                    self.EnginePower < 0.01
+                        ? new[] {Brutes[0]}
+                        : (GetSpeed(self) < 5 ? new[] {Brutes[0], Brutes[1]} : Brutes), pts);
+
             var sel = bruteRes.Item1;
             var bestMoveStacks = bruteRes.Item2;
+
+//            if (sel == -1 || Brutes[sel].LastSuccess < world.Tick)
+//            {
+//                var additionalBruteRes = _doAndSelectBrute(AdditionalBrutes, pts);
+//                if (additionalBruteRes.Item1 != -1 &&
+//                    (sel == -1 || additionalBruteRes.Item2[additionalBruteRes.Item1].ComputeTime() > bestMoveStacks[sel].ComputeTime()))
+//                {
+//                    AdditionalBrutes[additionalBruteRes.Item1].SelectThis();
+//                    additionalBruteRes.Item2[additionalBruteRes.Item1][0].Apply(move, new ACar(self));
+//#if DEBUG
+//                    DrawWays(additionalBruteRes.Item2, additionalBruteRes.Item1);
+//#endif
+//                    return;
+//                }
+//            }
 
             if (sel != -1 && bestMoveStacks[sel].Count > 0)
             {

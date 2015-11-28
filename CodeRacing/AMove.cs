@@ -12,7 +12,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double ProjectileDangerCoeff = 40;
         public const double InactiveCarDangerCoeff = 60;
         public const double ExactlyBorderDangerCoeff = 50;
-        public const double OutOfBorderDangerCoeff = 60;
 
         public double EnginePower;
         public bool IsBrake;
@@ -22,7 +21,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int Times;
         public double SafeMargin = MyStrategy.SafeMargin;
         public double ExactlyMargin = 1;
-        public double ExtraMargin = -20;
         public bool RangesMode;
 
         public AMove Clone()
@@ -35,7 +33,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Times = Times,
                 SafeMargin = SafeMargin,
                 ExactlyMargin = ExactlyMargin,
-                ExtraMargin = ExtraMargin,
                 RangesMode = RangesMode,
             };
             if (WheelTurn is Point)
@@ -169,13 +166,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // проверка что можно потереться вдоль стены
-            if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExtraMargin)))
-            {
-                if (!total.OutOfBoreder)
-                    total.Importance -= OutOfBorderDangerCoeff;
-                total.OutOfBoreder = true;
-                res = true;
-            }
+            // -- убрано --
 
             if (!total.WayPoint)
                 total.WayPoint = MyStrategy.GetNextWayPoint(car.Original).Equals(MyStrategy.GetCell(car));

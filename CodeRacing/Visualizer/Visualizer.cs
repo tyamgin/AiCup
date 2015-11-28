@@ -167,6 +167,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var stick in world.OilSlicks)
                 FillCircle(Brushes.Black, stick.X, stick.Y, stick.Radius);
 
+            // Nitro
+            foreach (var car in world.Cars)
+                if (car.RemainingNitroTicks > 0)
+                    FillCircle(Brushes.Blue, car.X, car.Y, 40);
+
             // Canisters
             foreach (var car in world.Cars)
             {
@@ -175,8 +180,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var canisterPen = car.RemainingOilCooldownTicks == 0 ? Pens.DarkSlateGray : Pens.Lavender;
                 var slick = new AOilSlick(new ACar(car));
                 DrawCircle(canisterPen, slick.X, slick.Y, slick.Radius);
-                if (car.RemainingNitroTicks > 0)
-                    FillCircle(Brushes.Blue, car.X, car.Y, 40);
                 if (car.RemainingOiledTicks > 0)
                     FillCircle(Brushes.Black, car.X, car.Y, 30);
             }
