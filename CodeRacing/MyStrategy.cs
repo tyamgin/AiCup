@@ -319,8 +319,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Console.Write(i + ": ");
                 foreach(var a in info)
                     Console.Write(" " + a);
-                Console.WriteLine("\n");
+                Console.WriteLine();
             }
+            Console.WriteLine();
             Draw();
             Thread.Sleep(12);
 #endif
