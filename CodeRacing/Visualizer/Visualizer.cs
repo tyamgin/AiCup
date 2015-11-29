@@ -128,15 +128,35 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             // tiles
             foreach (var tile in MyStrategy.MyTiles)
             {
+                var margin = MyStrategy.game.TrackTileMargin;
+                var tsize = MyStrategy.game.TrackTileSize;
+
+                var dx = MyStrategy.game.TrackTileSize*tile.J;
+                var dy = MyStrategy.game.TrackTileSize*tile.I;
+
+                if (tile.Type == TileType.Unknown)
+                    FillRect(Brushes.DarkGray, dx, dy, tsize, tsize);
+                if (tile.Type == TileType.Empty)
+                    FillRect(Brushes.Black, dx, dy, tsize, tsize);
+
+                if (!tile.IsFreeLeft)
+                    FillRect(Brushes.Black, dx, dy, margin, tsize);
+                if (!tile.IsFreeTop)
+                    FillRect(Brushes.Black, dx, dy, tsize, margin);
+                if (!tile.IsFreeRight)
+                    FillRect(Brushes.Black, dx + tsize - margin, dy, margin, tsize);
+                if (!tile.IsFreeBottom)
+                    FillRect(Brushes.Black, dx, dy + tsize - margin, tsize, margin);
+
                 foreach (var part in tile.Parts)
                 {
                     switch (part.Type)
                     {
                         case TilePartType.Circle:
-                            DrawCircle(Pens.Black, part.Circle.X, part.Circle.Y, part.Circle.Radius);
+                            FillCircle(Brushes.Black, part.Circle.X, part.Circle.Y, part.Circle.Radius);
                             break;
                         case TilePartType.Segment:
-                            DrawLine(Brushes.Black, part.Start.X, part.Start.Y, part.End.X, part.End.Y, 1);
+                            DrawLine(Brushes.DarkRed, part.Start.X, part.Start.Y, part.End.X, part.End.Y, 1);
                             break;
                         default:
                             throw new Exception("Unknown TilePartType");
