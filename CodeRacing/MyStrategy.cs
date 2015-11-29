@@ -50,6 +50,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize, game.BonusSize) / 2 - 6;//HACK
 
                 MyTiles = new ATile[world.Height, world.Width];
+                for (var i = 0; i < world.Height; i++)
+                    for (var j = 0; j < world.Width; j++)
+                        MyTiles[i, j] = new ATile(i, j, TileType.Unknown);
             }
 
             // intialize tiles
@@ -58,12 +61,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 for (var j = 0; j < world.Width; j++)
                 {
-                    if (MyTiles[i, j] != null && MyTiles[i, j].Type != TileType.Unknown)
-                        continue;
-
-                    if (t[j][i] == TileType.Unknown)
-                        MyTiles[i, j] = ATile.Unknown;
-                    else
+                    if (MyTiles[i, j].Type == TileType.Unknown && t[j][i] != TileType.Unknown)
                         MyTiles[i, j] = new ATile(i, j, t[j][i]);
                 }
             }
@@ -286,7 +284,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 // pause here
             }
-            Visualizer.CreateForm();
+            Visualizer.CreateForm(world.Cars.Count(x => x.IsTeammate));
 #endif
             if (!self.IsFinishedTrack)
                 _move();

@@ -10,10 +10,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class Visualizer
     {
-        public static void CreateForm()
+        private static int _myCarsCount;
+        private static int _renderTick;
+
+        public static void CreateForm(int myCarsCount)
         {
             if (_form == null)
             {
+                _myCarsCount = myCarsCount;
+                _renderTick = 0;
+
                 _thread = new Thread(_showWindow);
                 _thread.Start();
                 Thread.Sleep(2000);
@@ -87,6 +93,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
             }
 
+            _renderTick++;
+            if ((_renderTick - 1) % _myCarsCount != _myCarsCount - 1)
+                return;
+
             var panel = _form.panel;
 
             _form.tickLabel.Text = MyStrategy.world.Tick + "";
@@ -95,9 +105,22 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
-            LookUp(new Point(MyStrategy.world.Cars.FirstOrDefault(x => x.IsTeammate)));
-
-            var margin = MyStrategy.game.TrackTileMargin;
+            if (_myCarsCount == 1)
+            {
+                _form.jeepRadioButton.Enabled = false;
+                _form.buggyRadioButton.Enabled = false;
+                LookUp(new Point(MyStrategy.world.Cars.FirstOrDefault(x => x.IsTeammate)));
+            }
+            else
+            {
+                LookUp(
+                    new Point(
+                        MyStrategy.world.Cars.FirstOrDefault(
+                            x =>
+                                x.IsTeammate &&
+                                (x.Type == CarType.Jeep && _form.jeepRadioButton.Checked ||
+                                 x.Type == CarType.Buggy && _form.buggyRadioButton.Checked))));
+            }
 
             //var myNextWp = MyStrategy.GetNextWayPoint(self);
             //FillRect(Brushes.Aqua, myNextWp.J * MyStrategy.game.TrackTileSize, myNextWp.I * MyStrategy.game.TrackTileSize, MyStrategy.game.TrackTileSize, MyStrategy.game.TrackTileSize);
@@ -277,14 +300,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _lookY = p.Y - _scale*_form.panel.Height/2;
             if (_lookY < 0)
                 _lookY = 0;
-            if (_lookY > MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height / 2)
-                _lookY = MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height / 2;
+            if (_lookY > MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height)
+                _lookY = MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height;
 
             _lookX = p.X - _scale*_form.panel.Width/2;
             if (_lookX < 0)
                 _lookX = 0;
-            if (_lookX > MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width / 2)
-                _lookX = MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width / 2;
+            if (_lookX > MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width)
+                _lookX = MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width;
         }
     }
 }

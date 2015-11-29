@@ -14,14 +14,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             IsFreeTop = true,
             IsFreeBottom = true;
 
-        public static ATile Unknown = new ATile(-1, -1, TileType.Unknown);
-
         public ATile(int i, int j, TileType type) : base(i, j)
         {
             Type = type;
-
-            if (type == TileType.Unknown)
-                return;
 
             IsFreeLeft = _tileFreeLeft(type);
             IsFreeRight = _tileFreeRight(type);
@@ -44,6 +39,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 case TileType.TopHeadedT:
                 case TileType.RightBottomCorner:
                 case TileType.Crossroads:
+                case TileType.Unknown:
                     res.Add(TilePart.GetCircle(Point.Zero, margin));
                     break;
             }
@@ -55,6 +51,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 case TileType.TopHeadedT:
                 case TileType.LeftBottomCorner:
                 case TileType.Crossroads:
+                case TileType.Unknown:
                     res.Add(TilePart.GetCircle(lx, margin));
                     break;
             }
@@ -66,6 +63,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 case TileType.RightHeadedT:
                 case TileType.LeftTopCorner:
                 case TileType.Crossroads:
+                case TileType.Unknown:
                     res.Add(TilePart.GetCircle(lx + ly, margin));
                     break;
             }
@@ -77,6 +75,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 case TileType.LeftHeadedT:
                 case TileType.RightTopCorner:
                 case TileType.Crossroads:
+                case TileType.Unknown:
                     res.Add(TilePart.GetCircle(ly, margin));
                     break;
             }
