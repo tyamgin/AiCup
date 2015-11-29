@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     result = 0.4 - 0.6*(self.Durability - 1);
                     break;
                 case BonusType.PureScore:
-                    result = 1.0;
+                    result = 2.0;
                     break;
                 case BonusType.OilCanister:
                     if (self.OilCanisterCount == 0)
@@ -50,12 +50,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     result = 1.0;
                     break;
                 case BonusType.AmmoCrate:
-                    if (self.ProjectileCount <= 1)
+                    if (self.ProjectileCount <= 2)
                         result = 1.0;
-                    else if (self.ProjectileCount == 2)
-                        result = 0.8;
                     else
-                        result = 0.7;
+                        result = 0.8;
                     break;
                 default:
                     throw new Exception("Unknown BonusType");

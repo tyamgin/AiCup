@@ -8,14 +8,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public TileType Type;
         public TilePart[] Parts;
         
-        public List<AOilSlick> Slicks = new List<AOilSlick>();
-        public List<ABonus> Bonuses = new List<ABonus>();
+        public double Weight = 0;
 
         public bool
             IsFreeLeft = true,
             IsFreeRight = true,
             IsFreeTop = true,
             IsFreeBottom = true;
+
+        public void AddBonus(ABonus bonus)
+        {
+            Weight -= bonus.Type == BonusType.PureScore ? 0.6 : 0.2;
+        }
+
+        public void AddSlick(AOilSlick slick)
+        {
+            Weight += 0.6;
+        }
 
         public ATile(int i, int j, TileType type) : base(i, j)
         {

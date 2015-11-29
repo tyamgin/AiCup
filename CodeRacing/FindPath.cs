@@ -42,11 +42,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static double GetCost(Cell cell)
         {
-            //TODO
-            //var tile = MyTiles[cell.I, cell.J];
-            //var danger = tile.Slicks.Count*0.1 - tile.Bonuses.Count*0.1;
-            //return 1 + danger;
-            return 1.0;
+            var tile = MyTiles[cell.I, cell.J];
+            return Math.Max(0.01, 1 + tile.Weight);
         }
 
         public static double DijkstraDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)

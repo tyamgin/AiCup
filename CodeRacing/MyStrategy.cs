@@ -64,8 +64,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     if (MyTiles[i, j].Type == TileType.Unknown && t[j][i] != TileType.Unknown)
                         MyTiles[i, j] = new ATile(i, j, t[j][i]);
 
-                    MyTiles[i, j].Bonuses.Clear();
-                    MyTiles[i, j].Slicks.Clear();
+                    MyTiles[i, j].Weight = 0;
                 }
             }
 
@@ -102,12 +101,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var bonus in Bonuses)
             {
                 var cell = GetCell(bonus);
-                MyTiles[cell.I, cell.J].Bonuses.Add(bonus);
+                MyTiles[cell.I, cell.J].AddBonus(bonus);
             }
             foreach (var slick in OilSlicks)
             {
                 var cell = GetCell(slick);
-                MyTiles[cell.I, cell.J].Slicks.Add(slick);
+                MyTiles[cell.I, cell.J].AddSlick(slick);
             }
 
             Opponents = world.Cars.Where(car => !car.IsTeammate && !car.IsFinishedTrack).ToArray();
@@ -181,8 +180,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 bestMoveStacks[i] = brutes[i].Do(new ACar(self), pts);
             }
-            TimeEndLog("brute");
-
 
             var sel = -1;
             double bestTime = Infinity;
@@ -200,6 +197,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
 
+            TimeEndLog("brute");
             return new Tuple<int, Moves[]>(sel, bestMoveStacks);
         }
 
@@ -280,7 +278,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             else
             {
+                TimerStart();
                 AlternativeMove(pts);
+                TimeEndLog("AlternativeMove", 30);
             }
         }
 
