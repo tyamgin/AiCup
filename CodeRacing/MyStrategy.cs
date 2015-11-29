@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static Game game;
         public Move move;
         public Car self;
-        public static TileType[,] tiles;
+
         public static ATile[,] MyTiles;
         public static Cell[] waypoints;
         public static double MapWidth, MapHeight;
@@ -43,19 +43,38 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         void Initialize()
         {
+            if (Players == null) // check for first call
+            {
+                MapWidth = game.TrackTileSize * world.Width;
+                MapHeight = game.TrackTileSize * world.Height;
+
+                CarDiagonalHalfLength = Geom.Gypot(game.CarWidth, game.CarHeight) / 2;
+                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize, game.BonusSize) / 2 - 6;//HACK
+
+                MyTiles = new ATile[world.Height, world.Width];
+            }
+
             // intialize tiles
-            tiles = new TileType[world.Height, world.Width];
             var t = world.TilesXY;
-            for(var i = 0; i < world.Height; i++)
+            for (var i = 0; i < world.Height; i++)
+            {
                 for (var j = 0; j < world.Width; j++)
-                    tiles[i, j] = t[j][i];
+                {
+                    if (MyTiles[i, j] != null && MyTiles[i, j].Type != TileType.Unknown)
+                        continue;
+
+                    if (t[j][i] == TileType.Unknown)
+                        MyTiles[i, j] = ATile.Unknown;
+                    else
+                        MyTiles[i, j] = new ATile(i, j, t[j][i]);
+                }
+            }
 
             // intialize waypoints
             var wp = world.Waypoints;
             waypoints = new Cell[wp.Length];
             for(var i = 0; i < waypoints.Length; i++)
                 waypoints[i] = new Cell(wp[i][1], wp[i][0]);
-
 
             Players = new Dictionary<long, Player>();
             foreach (var player in world.Players)
@@ -64,24 +83,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var car in world.Cars)
             {
                 DurabilityObserver.Watch(car);
-            }
-
-            if (MyTiles == null)
-            {
-                MapWidth = game.TrackTileSize*world.Width;
-                MapHeight = game.TrackTileSize*world.Height;
-
-                CarDiagonalHalfLength = Geom.Gypot(game.CarWidth, game.CarHeight)/2;
-                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize, game.BonusSize)/2-6;//HACK
-
-                MyTiles = new ATile[world.Height, world.Width];
-                for (var i = 0; i < world.Height; i++)
-                {
-                    for (var j = 0; j < world.Width; j++)
-                    {
-                        MyTiles[i, j] = new ATile(i, j, tiles[i, j]);
-                    }
-                }
             }
 
             Projectiles = new AProjectile[world.Projectiles.Length][];

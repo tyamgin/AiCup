@@ -23,18 +23,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (i1 == i2)
             {
                 if (j2 == j1 + 1) // go right
-                    return _tileFreeRight(tiles[i1, j1]) && _tileFreeLeft(tiles[i2, j2]);
+                    return MyTiles[i1, j1].IsFreeRight && MyTiles[i2, j2].IsFreeLeft;
                 if (j2 == j1 - 1)  // go left
-                    return _tileFreeLeft(tiles[i1, j1]) && _tileFreeRight(tiles[i2, j2]);
+                    return MyTiles[i1, j1].IsFreeLeft && MyTiles[i2, j2].IsFreeRight;
             }
             else if (j1 == j2)
             {
                 if (i2 == i1 + 1) // go bottom
-                    return _tileFreeBottom(tiles[i1, j1]) && _tileFreeTop(tiles[i2, j2]);
+                    return MyTiles[i1, j1].IsFreeBottom && MyTiles[i2, j2].IsFreeTop;
                 if (i2 == i1 - 1) // go top
-                    return _tileFreeTop(tiles[i1, j1]) && _tileFreeBottom(tiles[i2, j2]);
+                    return MyTiles[i1, j1].IsFreeTop && MyTiles[i2, j2].IsFreeBottom;
             }
-            throw new Exception("something wrong in _canPass");
+            throw new Exception("something wrong in CanPass(" + i1 + ", " + j1 + ", " + i2 + ", " + j2 + ")");
         }
 
         private static int[,] _distMap;
@@ -97,62 +97,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return BfsDist(cellFrom.I, cellFrom.J, cellTo.I, cellTo.J, new Cell[] { });
         }
 
-        private static bool _tileFreeLeft(TileType type)
-        {
-            return type == TileType.Crossroads ||
-                   type == TileType.Horizontal ||
-                   type == TileType.RightBottomCorner ||
-                   type == TileType.RightTopCorner ||
-                   type == TileType.LeftHeadedT ||
-                   type == TileType.TopHeadedT ||
-                   type == TileType.BottomHeadedT ||
-                   type == TileType.Unknown; // TODO
-        }
-
-        private static bool _tileFreeRight(TileType type)
-        {
-            return type == TileType.Crossroads ||
-                   type == TileType.Horizontal ||
-                   type == TileType.LeftBottomCorner ||
-                   type == TileType.LeftTopCorner ||
-                   type == TileType.RightHeadedT ||
-                   type == TileType.TopHeadedT ||
-                   type == TileType.BottomHeadedT ||
-                   type == TileType.Unknown; // TODO
-        }
-
-        private static bool _tileFreeTop(TileType type)
-        {
-            return type == TileType.Crossroads ||
-                   type == TileType.Vertical ||
-                   type == TileType.LeftBottomCorner ||
-                   type == TileType.RightBottomCorner ||
-                   type == TileType.LeftHeadedT ||
-                   type == TileType.TopHeadedT ||
-                   type == TileType.RightHeadedT ||
-                   type == TileType.Unknown; // TODO
-        }
-
-        private static bool _tileFreeBottom(TileType type)
-        {
-            return type == TileType.Crossroads ||
-                   type == TileType.Vertical ||
-                   type == TileType.LeftTopCorner ||
-                   type == TileType.RightTopCorner ||
-                   type == TileType.LeftHeadedT ||
-                   type == TileType.BottomHeadedT ||
-                   type == TileType.RightHeadedT ||
-                   type == TileType.Unknown; // TODO
-        }
-
         public static bool IntersectTail(Point p, double additionalMargin)
         {
             if (p.X < 0 || p.X >= MapWidth || p.Y < 0 || p.Y >= MapHeight)
                 return true;
 
             var cell = GetCell(p.X, p.Y);
-            var tileType = tiles[cell.I, cell.J];
-            if (tileType == TileType.Empty)
+            var tile = MyTiles[cell.I, cell.J];
+            if (tile.Type == TileType.Empty)
                 return true;
 
             var c = GetCenter(cell);
@@ -178,13 +130,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // по бокам
-            if (p.X < lx && !_tileFreeLeft(tileType))
+            if (p.X < lx && !tile.IsFreeLeft)
                 return true;
-            if (p.X > rx && !_tileFreeRight(tileType))
+            if (p.X > rx && !tile.IsFreeRight)
                 return true;
-            if (p.Y < ly && !_tileFreeTop(tileType))
+            if (p.Y < ly && !tile.IsFreeTop)
                 return true;
-            if (p.Y > ry && !_tileFreeBottom(tileType))
+            if (p.Y > ry && !tile.IsFreeBottom)
                 return true;
 
             return false;
