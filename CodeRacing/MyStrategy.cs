@@ -63,6 +63,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     if (MyTiles[i, j].Type == TileType.Unknown && t[j][i] != TileType.Unknown)
                         MyTiles[i, j] = new ATile(i, j, t[j][i]);
+
+                    MyTiles[i, j].Bonuses.Clear();
+                    MyTiles[i, j].Slicks.Clear();
                 }
             }
 
@@ -95,6 +98,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             Bonuses = world.Bonuses.Select(b => new ABonus(b)).ToArray();
             OilSlicks = world.OilSlicks.Select(s => new AOilSlick(s)).ToArray();
+
+            foreach (var bonus in Bonuses)
+            {
+                var cell = GetCell(bonus);
+                MyTiles[cell.I, cell.J].Bonuses.Add(bonus);
+            }
+            foreach (var slick in OilSlicks)
+            {
+                var cell = GetCell(slick);
+                MyTiles[cell.I, cell.J].Slicks.Add(slick);
+            }
 
             Opponents = world.Cars.Where(car => !car.IsTeammate && !car.IsFinishedTrack).ToArray();
             PrepareOpponentsPath();

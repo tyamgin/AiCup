@@ -43,7 +43,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static double GetCost(Cell cell)
         {
             //TODO
-            return 1;
+            //var tile = MyTiles[cell.I, cell.J];
+            //var danger = tile.Slicks.Count*0.1 - tile.Bonuses.Count*0.1;
+            //return 1 + danger;
+            return 1.0;
         }
 
         public static double DijkstraDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
@@ -78,8 +81,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 for (var k = 0; k < 4; k++)
                 {
                     var to = new Cell(_dx[k] + cur.I, _dy[k] + cur.J);
+                    if (!CanPass(cur.I, cur.J, to.I, to.J) || forbidden.Any(x => x.Equals(to.I, to.J)))
+                        continue;
+
                     var distTo = _distMap[cur.I, cur.J] + GetCost(to);
-                    if (CanPass(cur.I, cur.J, to.I, to.J) && !forbidden.Any(x => x.Equals(to.I, to.J)) && distTo < _distMap[to.I, to.J])
+                    if (distTo < _distMap[to.I, to.J])
                     {
                         _distMap[to.I, to.J] = distTo;
                         _distPrev[to.I, to.J] = cur;

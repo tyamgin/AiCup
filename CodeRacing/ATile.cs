@@ -7,6 +7,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public TileType Type;
         public TilePart[] Parts;
+        
+        public List<AOilSlick> Slicks = new List<AOilSlick>();
+        public List<ABonus> Bonuses = new List<ABonus>();
 
         public bool
             IsFreeLeft = true,
