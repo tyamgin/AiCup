@@ -32,7 +32,6 @@
             this.tickLabel = new System.Windows.Forms.Label();
             this.buttonZoom = new System.Windows.Forms.Button();
             this.buttonUnZoom = new System.Windows.Forms.Button();
-            this.buttonStop = new System.Windows.Forms.Button();
             this.buttonPause = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.panel)).BeginInit();
             this.SuspendLayout();
@@ -67,7 +66,7 @@
             // 
             // buttonUnZoom
             // 
-            this.buttonUnZoom.Location = new System.Drawing.Point(7, 71);
+            this.buttonUnZoom.Location = new System.Drawing.Point(29, 42);
             this.buttonUnZoom.Name = "buttonUnZoom";
             this.buttonUnZoom.Size = new System.Drawing.Size(21, 23);
             this.buttonUnZoom.TabIndex = 3;
@@ -75,19 +74,9 @@
             this.buttonUnZoom.UseVisualStyleBackColor = true;
             this.buttonUnZoom.Click += new System.EventHandler(this.buttonUnZoom_Click);
             // 
-            // buttonStop
-            // 
-            this.buttonStop.Location = new System.Drawing.Point(7, 101);
-            this.buttonStop.Name = "buttonStop";
-            this.buttonStop.Size = new System.Drawing.Size(43, 48);
-            this.buttonStop.TabIndex = 4;
-            this.buttonStop.Text = "Stop";
-            this.buttonStop.UseVisualStyleBackColor = true;
-            this.buttonStop.Click += new System.EventHandler(this.buttonStop_Click);
-            // 
             // buttonPause
             // 
-            this.buttonPause.Location = new System.Drawing.Point(7, 155);
+            this.buttonPause.Location = new System.Drawing.Point(7, 71);
             this.buttonPause.Name = "buttonPause";
             this.buttonPause.Size = new System.Drawing.Size(43, 48);
             this.buttonPause.TabIndex = 5;
@@ -101,7 +90,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1216, 623);
             this.Controls.Add(this.buttonPause);
-            this.Controls.Add(this.buttonStop);
             this.Controls.Add(this.buttonUnZoom);
             this.Controls.Add(this.buttonZoom);
             this.Controls.Add(this.tickLabel);
@@ -120,7 +108,6 @@
         public System.Windows.Forms.Label tickLabel;
         private System.Windows.Forms.Button buttonZoom;
         private System.Windows.Forms.Button buttonUnZoom;
-        private System.Windows.Forms.Button buttonStop;
         private System.Windows.Forms.Button buttonPause;
     }
 }

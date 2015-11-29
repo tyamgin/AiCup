@@ -202,12 +202,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
-            MyStrategy.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
+            Visualizer.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
 #endif
             _needDist = MyStrategy.game.TrackTileSize/2 - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
 #if DEBUG
-            MyStrategy.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
+            Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
 #endif
 
             _patterns = Patterns.Select(pt => new PathPattern

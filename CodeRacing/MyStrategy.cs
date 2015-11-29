@@ -7,8 +7,6 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
-    // TODO: обработать столкновения с бонусами и убрать костыль
-
     public partial class MyStrategy : IStrategy
     {
         public static bool BAD_TESTING_STRATEGY = false;
@@ -132,7 +130,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
 #if DEBUG
             foreach (var seg in segs)
-                SegmentsDrawQueue.Add(new object[] { Brushes.Indigo, seg, 0.0 });
+                Visualizer.SegmentsDrawQueue.Add(new object[] { Brushes.Indigo, seg, 0.0 });
 #endif
             TimeEndLog("PrepareOpponentsPath");
         }
@@ -255,21 +253,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var sel = bruteRes.Item1;
             var bestMoveStacks = bruteRes.Item2;
 
-//            if (sel == -1 || Brutes[sel].LastSuccess < world.Tick)
-//            {
-//                var additionalBruteRes = _doAndSelectBrute(AdditionalBrutes, pts);
-//                if (additionalBruteRes.Item1 != -1 &&
-//                    (sel == -1 || additionalBruteRes.Item2[additionalBruteRes.Item1].ComputeTime() > bestMoveStacks[sel].ComputeTime()))
-//                {
-//                    AdditionalBrutes[additionalBruteRes.Item1].SelectThis();
-//                    additionalBruteRes.Item2[additionalBruteRes.Item1][0].Apply(move, new ACar(self));
-//#if DEBUG
-//                    DrawWays(additionalBruteRes.Item2, additionalBruteRes.Item1);
-//#endif
-//                    return;
-//                }
-//            }
-
             if (sel != -1 && bestMoveStacks[sel].Count > 0)
             {
                 if (Brutes[sel].Id == 121)
@@ -280,7 +263,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
 #if DEBUG
-                DrawWays(bestMoveStacks, sel);
+                Visualizer.DrawWays(self, bestMoveStacks, sel);
 #endif
             }
             else
@@ -299,15 +282,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Initialize();
 
 #if DEBUG
-            while (Pause)
+            while (Visualizer.Pause)
             {
-                // pass
+                // pause here
             }
-            if (Debug)
-            {
-                Debug = false;
-            }
-            _drawMap();
+            Visualizer.CreateForm();
 #endif
             if (!self.IsFinishedTrack)
                 _move();
@@ -329,7 +308,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Console.WriteLine("(" + Brutes[i].SelectedCount + ")");
             }
             Console.WriteLine();
-            Draw();
+            Visualizer.Draw();
             Thread.Sleep(12);
 #endif
         }

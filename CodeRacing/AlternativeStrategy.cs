@@ -118,7 +118,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 BackBrutes[backBruteRes.Item1].SelectThis();
                 backBruteRes.Item2[backBruteRes.Item1][0].Apply(move, new ACar(self));
 #if DEBUG
-                DrawWays(backBruteRes.Item2, backBruteRes.Item1);
+                Visualizer.DrawWays(self, backBruteRes.Item2, backBruteRes.Item1);
 #endif
                 return;
             }

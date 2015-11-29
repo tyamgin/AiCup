@@ -8,9 +8,9 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
-    public partial class MyStrategy
+    public class Visualizer
     {
-        private void _drawMap()
+        public static void CreateForm()
         {
             if (_form == null)
             {
@@ -29,19 +29,34 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private static MapForm _form;
         private static Thread _thread;
-        private Graphics _graphics;
+        private static Graphics _graphics;
 
         private delegate void DrawDelegate();
 
-
-        private void DrawCircle(Pen pen, double x, double y, double radius)
+        private static void DrawCircle(Pen pen, double x, double y, double radius)
         {
             _graphics.DrawEllipse(pen, _X(x - radius), _Y(y - radius), _S(radius * 2), _S(radius * 2));
         }
 
-        private void FillCircle(Brush brush, double x, double y, double radius)
+        private static void FillCircle(Brush brush, double x, double y, double radius)
         {
             _graphics.FillEllipse(brush, _X(x - radius), _Y(y - radius), _S(radius * 2), _S(radius * 2));
+        }
+
+        private static void FillRect(Brush brush, double x, double y, double w, double h)
+        {
+            _graphics.FillRectangle(brush, _X(x), _Y(y), _S(w), _S(h));
+        }
+
+        private static void DrawLine(Brush brush, double x, double y, double X, double Y, float width = 0F)
+        {
+            _graphics.DrawLine(new Pen(brush, width), _X(x), _Y(y), _X(X), _Y(Y));
+        }
+
+        private static void DrawText(string text, double size, Brush brush, double x, double y)
+        {
+            var font = new Font("Comic Sans MS", _S(size));
+            _graphics.DrawString(text, font, brush, _X(x), _Y(y));
         }
 
         private static double _lookX = 0, _lookY = 0, _scale = 6;
@@ -61,26 +76,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return (int)Math.Ceiling(x / _scale);
         }
 
-        private void FillRect(Brush brush, double x, double y, double w, double h)
-        {
-            _graphics.FillRectangle(brush, _X(x), _Y(y), _S(w), _S(h));
-        }
-
-        private void DrawLine(Brush brush, double x, double y, double X, double Y, float width = 0F)
-        {
-            _graphics.DrawLine(new Pen(brush, width), _X(x), _Y(y), _X(X), _Y(Y));
-        }
-
-        private void DrawText(string text, double size, Brush brush, double x, double y)
-        {
-            var font = new Font("Comic Sans MS", _S(size));
-            _graphics.DrawString(text, font, brush, _X(x), _Y(y));
-        }
-
         public static ArrayList SegmentsDrawQueue = new ArrayList();
         public static List<Tuple<Brush, ACircularUnit>> CircleFillQueue = new List<Tuple<Brush, ACircularUnit>>();
 
-        private void Draw()
+        public static void Draw()
         {
             if (_form.InvokeRequired)
             {
@@ -90,21 +89,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             var panel = _form.panel;
 
-            _form.tickLabel.Text = world.Tick + "";
+            _form.tickLabel.Text = MyStrategy.world.Tick + "";
             
             var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
-            LookUp(new Point(world.Cars.FirstOrDefault(x => x.IsTeammate)));
+            LookUp(new Point(MyStrategy.world.Cars.FirstOrDefault(x => x.IsTeammate)));
 
-            var margin = game.TrackTileMargin;
+            var margin = MyStrategy.game.TrackTileMargin;
 
-            var myNextWp = GetNextWayPoint(self);
-            FillRect(Brushes.Aqua, myNextWp.J * game.TrackTileSize, myNextWp.I * game.TrackTileSize, game.TrackTileSize, game.TrackTileSize);
+            //var myNextWp = MyStrategy.GetNextWayPoint(self);
+            //FillRect(Brushes.Aqua, myNextWp.J * MyStrategy.game.TrackTileSize, myNextWp.I * MyStrategy.game.TrackTileSize, MyStrategy.game.TrackTileSize, MyStrategy.game.TrackTileSize);
 
             // tiles
-            foreach (var tile in MyTiles)
+            foreach (var tile in MyStrategy.MyTiles)
             {
                 foreach (var part in tile.Parts)
                 {
@@ -123,7 +122,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // Bonuses
-            foreach (var bonus in world.Bonuses)
+            foreach (var bonus in MyStrategy.world.Bonuses)
             {
                 var rect = new ABonus(bonus).GetRect();
                 for (var i = 0; i < 4; i++)
@@ -147,7 +146,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // Cars
-            foreach (var car in world.Cars)
+            foreach (var car in MyStrategy.world.Cars)
             {
                 var isAvtive = DurabilityObserver.IsActive(car);
                 var rect = new ACar(car).GetRectEx(isAvtive ? 0 : 1);
@@ -163,16 +162,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // Oil
-            foreach (var stick in world.OilSlicks)
+            foreach (var stick in MyStrategy.world.OilSlicks)
                 FillCircle(Brushes.Black, stick.X, stick.Y, stick.Radius);
 
             // Nitro
-            foreach (var car in world.Cars)
+            foreach (var car in MyStrategy.world.Cars)
                 if (car.RemainingNitroTicks > 0)
                     FillCircle(Brushes.Blue, car.X, car.Y, 40);
 
             // Canisters
-            foreach (var car in world.Cars)
+            foreach (var car in MyStrategy.world.Cars)
             {
                 if (car.OilCanisterCount == 0)
                     continue;
@@ -185,7 +184,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
 
             // Projectiles
-            foreach (var pr in world.Projectiles)
+            foreach (var pr in MyStrategy.world.Projectiles)
             {
                 FillCircle(Brushes.OrangeRed, pr.X, pr.Y, pr.Radius);
             }
@@ -219,7 +218,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             CircleFillQueue.Clear();
             SegmentsDrawQueue.Clear();
         }
-        void DrawWay(Moves stack, Brush brush, double width)
+        public static void DrawWay(Car self, Moves stack, Brush brush, double width)
         {
             if (stack == null)
                 return;
@@ -231,27 +230,27 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var m = stack[0];
 
                 drawPts.Add(new Point(drawModel));
-                AMove.ModelMove(drawModel, m, new PassedInfo(), Bonuses, OilSlicks, Projectiles, OpponentsCars);
+                AMove.ModelMove(drawModel, m, new PassedInfo(), MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Projectiles, MyStrategy.OpponentsCars);
                 m.Times--;
                 stack.Normalize();
             }
             SegmentsDrawQueue.Add(new object[] { brush, drawPts, width });
         }
 
-        void DrawWays(Moves[] stacks, int sel)
+        public static void DrawWays(Car self, Moves[] stacks, int sel)
         {
             if (stacks.Length > 0)
-                DrawWay(stacks[0], Brushes.BlueViolet, sel == 0 ? 2 : 0);
+                DrawWay(self, stacks[0], Brushes.BlueViolet, sel == 0 ? 2 : 0);
             if (stacks.Length > 1)
-                DrawWay(stacks[1], Brushes.Red, sel == 1 ? 2 : 0);
+                DrawWay(self, stacks[1], Brushes.Red, sel == 1 ? 2 : 0);
             if (stacks.Length > 2)
-                DrawWay(stacks[2], Brushes.DeepPink, sel == 2 ? 2 : 0);
+                DrawWay(self, stacks[2], Brushes.DeepPink, sel == 2 ? 2 : 0);
             if (stacks.Length > 3)
-                DrawWay(stacks[3], Brushes.Black, sel == 3 ? 2 : 0);
+                DrawWay(self, stacks[3], Brushes.Black, sel == 3 ? 2 : 0);
             if (stacks.Length > 4)
-                DrawWay(stacks[4], Brushes.SpringGreen, sel == 4 ? 2 : 0);
+                DrawWay(self, stacks[4], Brushes.SpringGreen, sel == 4 ? 2 : 0);
             if (stacks.Length > 5)
-                DrawWay(stacks[5], Brushes.Coral, sel == 5 ? 2 : 0);
+                DrawWay(self, stacks[5], Brushes.Coral, sel == 5 ? 2 : 0);
             if (stacks.Length > 6)
                 throw new NotImplementedException("Please select color for this path");
         }
@@ -269,24 +268,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
         }
 
-        public static bool Debug = false;
         public static bool Pause = false;
 
-        public void LookUp(Point p, double scale = -1)
+        public static void LookUp(Point p, double scale = -1)
         {
             Zoom = scale;
 
             _lookY = p.Y - _scale*_form.panel.Height/2;
             if (_lookY < 0)
                 _lookY = 0;
-            if (_lookY > world.Height*game.TrackTileSize - _scale*_form.panel.Height/2)
-                _lookY = world.Height*game.TrackTileSize - _scale*_form.panel.Height/2;
+            if (_lookY > MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height / 2)
+                _lookY = MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height / 2;
 
             _lookX = p.X - _scale*_form.panel.Width/2;
             if (_lookX < 0)
                 _lookX = 0;
-            if (_lookX > world.Width*game.TrackTileSize - _scale*_form.panel.Width/2)
-                _lookX = world.Width*game.TrackTileSize - _scale*_form.panel.Width/2;
+            if (_lookX > MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width / 2)
+                _lookX = MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width / 2;
         }
     }
 }
