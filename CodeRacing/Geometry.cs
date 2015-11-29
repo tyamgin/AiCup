@@ -198,7 +198,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
     }
 
-    public class Cell
+    public class Cell : IComparable<Cell>
     {
         public int I, J;
 
@@ -216,6 +216,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool Equals(Cell other)
         {
             return Equals(other.I, other.J);
+        }
+
+        public int CompareTo(Cell other)
+        {
+            if (I != other.I)
+                return I < other.I ? -1 : 1;
+            if (J != other.J)
+                return J < other.J ? -1 : 1;
+            return 0;
         }
 
         public override string ToString()

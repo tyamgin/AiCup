@@ -10,9 +10,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private static readonly int[] _dx = { 0, 0, -1, 1 };
         private static readonly int[] _dy = { -1, 1, 0, 0 };
 
-        private static Cell _bfs(Cell start, Cell end, Cell[] forbidden)
+        private static Cell DijkstraNextCell(Cell start, Cell end, Cell[] forbidden)
         {
-            return BfsNextCell(start.I, start.J, end.I, end.J, forbidden);
+            return DijkstraNextCell(start.I, start.J, end.I, end.J, forbidden);
         }
 
         public static bool CanPass(int i1, int j1, int i2, int j2)
@@ -37,64 +37,70 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             throw new Exception("something wrong in CanPass(" + i1 + ", " + j1 + ", " + i2 + ", " + j2 + ")");
         }
 
-        private static int[,] _distMap;
+        private static double[,] _distMap;
+        private static Cell[,] _distPrev;
 
-        public static int BfsDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
+        public static double GetCost(Cell cell)
         {
-            BfsNextCell(startI, startJ, endI, endJ, forbidden);
+            //TODO
+            return 1;
+        }
+
+        public static double DijkstraDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
+        {
+            DijkstraNextCell(startI, startJ, endI, endJ, forbidden);
             return _distMap[startI, startJ];
         }
 
-        public static Cell BfsNextCell(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
+        public static Cell DijkstraNextCell(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
         {
             if (_distMap == null)
-                _distMap = new int[world.Height, world.Width];
+            {
+                _distMap = new double[world.Height, world.Width];
+                _distPrev = new Cell[world.Height, world.Width];
+            }
 
-            var q = new Queue<int>();
-            q.Enqueue(endI);
-            q.Enqueue(endJ);
+            var q = new PriorityQueue<Pair<double, Cell>>();
+            q.Push(new Pair<double, Cell>(0.0, new Cell(endI, endJ)));
             for (var i = 0; i < world.Height; i++)
                 for (var j = 0; j < world.Width; j++)
                     _distMap[i, j] = Infinity;
             _distMap[endI, endJ] = 0;
             while (q.Count > 0)
             {
-                var i = q.Dequeue();
-                var j = q.Dequeue();
+                var cur = q.Top().Second;
+                var minDist = -q.Top().First;
+                q.Pop();
+
+                if (minDist > _distMap[cur.I, cur.J])
+                    continue;
+                
                 for (var k = 0; k < 4; k++)
                 {
-                    var ni = _dx[k] + i;
-                    var nj = _dy[k] + j;
-                    if (CanPass(i, j, ni, nj) && _distMap[ni, nj] == Infinity && !forbidden.Any(x => x.Equals(ni, nj)))
+                    var to = new Cell(_dx[k] + cur.I, _dy[k] + cur.J);
+                    var distTo = _distMap[cur.I, cur.J] + GetCost(to);
+                    if (CanPass(cur.I, cur.J, to.I, to.J) && !forbidden.Any(x => x.Equals(to.I, to.J)) && distTo < _distMap[to.I, to.J])
                     {
-                        _distMap[ni, nj] = _distMap[i, j] + 1;
-                        q.Enqueue(ni);
-                        q.Enqueue(nj);
+                        _distMap[to.I, to.J] = distTo;
+                        _distPrev[to.I, to.J] = cur;
+                        q.Push(new Pair<double, Cell>(-distTo, to));
                     }
                 }
             }
-            var dist = _distMap[startI, startJ];
-            if (dist == Infinity)
+
+            if (_distPrev[startI, startJ] == null)
                 throw new Exception("path not found");
-            for (var k = 0; k < 4; k++)
-            {
-                var ni = _dx[k] + startI;
-                var nj = _dy[k] + startJ;
-                if (CanPass(startI, startJ, ni, nj) && _distMap[ni, nj] == dist - 1)
-                {
-                    return new Cell(ni, nj);
-                }
-            }
-            throw new Exception("something wrong in bfs");
+
+            return _distPrev[startI, startJ];
         }
 
-        public static int CellDistance(Point from, Point to)
+        public static double CellDistance(Point from, Point to)
         {
             var cellFrom = GetCell(from);
             var cellTo = GetCell(to);
-            if (cellFrom.Equals(cellTo))
-                return 0;
-            return BfsDist(cellFrom.I, cellFrom.J, cellTo.I, cellTo.J, new Cell[] { });
+            return cellFrom.Equals(cellTo)
+                ? 0
+                : DijkstraDist(cellFrom.I, cellFrom.J, cellTo.I, cellTo.J, new Cell[] {});
         }
 
         public static bool IntersectTail(Point p, double additionalMargin)
@@ -180,7 +186,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var nextWp = GetNextWayPoint(car, e);
                 for (var curCell = myCell; !curCell.Equals(nextWp);)
                 {
-                    var nextCell = _bfs(curCell, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
+                    var nextCell = DijkstraNextCell(curCell, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
                     var nextPoint = GetCenter(nextCell);
                     while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nextPoint))
                     {

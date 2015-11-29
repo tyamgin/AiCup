@@ -39,7 +39,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var nextWp = GetNextWayPoint(car, e);
                 for (var curCell = myCell; !curCell.Equals(nextWp); )
                 {
-                    var nextCell = _bfs(curCell, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
+                    var nextCell = DijkstraNextCell(curCell, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
                     var nextCenter = GetCenter(nextCell);
                     for (var i = 0; i < result.Count; i++)
                     {
