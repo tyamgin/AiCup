@@ -183,6 +183,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     AngularSpeed = baseAngSpd + (AngularSpeed - baseAngSpd)*rotationFrictionMultiplier;
                 }
 
+                Geom.AngleNormalize(ref Angle);
                 if (RemainingNitroCooldownTicks > 0)
                     RemainingNitroCooldownTicks--;
                 if (RemainingNitroTicks > 0)

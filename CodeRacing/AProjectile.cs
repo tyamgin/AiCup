@@ -136,9 +136,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }).ToArray();
         }
 
-        public bool Intersect(ACar car, double safeMargin)//TODO: это не правильно
+        public bool Intersect(ACar car, double safeMargin)
         {
-            return GetDistanceTo2(car) < Geom.Sqr(Radius + safeMargin);
+            var r = Radius + safeMargin;
+            if (GetDistanceTo(car) > r + MyStrategy.CarDiagonalHalfLength)
+                return false;
+
+            return car.GetRectEx().Any(p => GetDistanceTo(p) < r);
         }
 
         public double GetDanger()

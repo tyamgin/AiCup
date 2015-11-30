@@ -10,7 +10,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double BonusImportanceCoeff = 60;
         public const double OilSlickDangerCoeff = 70;
         public const double ProjectileDangerCoeff = 40;
-        public const double InactiveCarDangerCoeff = 65;
+        public const double InactiveCarDangerCoeff = 55;
+        public const double InactiveCarNitroDangerCoeff = 80;
         public const double ExactlyBorderDangerCoeff = 50;
 
         public double EnginePower;
@@ -78,12 +79,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var isBreak = m.IsBrake;
 
             // если сдаю назад но кочусь вперед
-//            if (!isBreak && m.EnginePower < 0 && Math.Abs(Geom.GetAngleBetween(Point.ByAngle(car.Angle), car.Speed)) < Math.PI/3)
             if (m.EnginePower < 0 && car.EnginePower > 0)
                 isBreak = true;
 
             // если еду вперед но кочусь назад
-            //if (car.EnginePower < 0 && Math.Abs(Geom.GetAngleBetween(Point.ByAngle(car.Angle), car.Speed)) > Math.PI/2)
             if (car.EnginePower < 0 && m.EnginePower > 0)
             {
                 turn *= -1;
@@ -144,7 +143,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     if (car.IntersectWith(opp))
                     {
-                        total.Importance -= InactiveCarDangerCoeff;
+                        if (car.Speed.Length > 8) // чтобы не тупил в начале
+                            total.Importance -= car.RemainingNitroTicks > 0 ? InactiveCarNitroDangerCoeff : InactiveCarDangerCoeff;
                         total.Cars = true;
                         break;
                     }
@@ -224,7 +224,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private bool _modelMove(ACar car, AMove m, PassedInfo total)
         {
             return AMove.ModelMove(car, m, total, 
-                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Projectiles, MyStrategy.OpponentsCars);
+                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Tires, MyStrategy.OpponentsCars);
         }
 
         public void Pop()

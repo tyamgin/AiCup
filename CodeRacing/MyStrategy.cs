@@ -30,7 +30,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const int OpponentsTicksPrediction = 100;
         public const int ProjectilePredictionTicks = 60;
 
-        public static AProjectile[][] Projectiles;
+        public static AProjectile[][] Tires;
         public static ABonus[] Bonuses;
         public static AOilSlick[] OilSlicks;
 
@@ -83,20 +83,28 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 DurabilityObserver.Watch(car);
             }
 
-            Projectiles = new AProjectile[world.Projectiles.Length][];
-            for (var i = 0; i < world.Projectiles.Length; i++)
+            var tires = world.Projectiles.Where(x => x.Type == ProjectileType.Tire).ToArray();
+
+            Tires = new AProjectile[tires.Length][];
+            for (var i = 0; i < tires.Length; i++)
             {
-                Projectiles[i] = new AProjectile[ProjectilePredictionTicks];
-                Projectiles[i][0] = new AProjectile(world.Projectiles[i]);
+                Tires[i] = new AProjectile[ProjectilePredictionTicks];
+                Tires[i][0] = new AProjectile(tires[i]);
                 for (var j = 1; j < ProjectilePredictionTicks; j++)
                 {
-                    Projectiles[i][j] = Projectiles[i][j - 1].Clone();
-                    Projectiles[i][j].Move();
+                    Tires[i][j] = Tires[i][j - 1].Clone();
+                    Tires[i][j].Move();
                 }
             }
 
             Bonuses = world.Bonuses.Select(b => new ABonus(b)).ToArray();
             OilSlicks = world.OilSlicks.Select(s => new AOilSlick(s)).ToArray();
+
+            EnumerateNeigbours(GetCell(self), to =>
+            {
+                var center = GetCenter(to);
+                MyTiles[to.I, to.J].Weight += Math.Abs(self.GetAngleTo(center.X, center.Y));
+            });
 
             foreach (var bonus in Bonuses)
             {
@@ -143,7 +151,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             foreach (var seg in segs)
                 Visualizer.SegmentsDrawQueue.Add(new object[] { Brushes.Indigo, seg, 0.0 });
 #endif
-            TimeEndLog("PrepareOpponentsPath");
+            TimerEndLog("PrepareOpponentsPath");
         }
 
         public static bool ModelMove(ACar car, AMove m, bool simpleMode = false, bool exactlyBorders = false)
@@ -197,7 +205,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
 
-            TimeEndLog("brute");
+            TimerEndLog("brute");
             return new Tuple<int, Moves[]>(sel, bestMoveStacks);
         }
 
@@ -213,8 +221,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (!DurabilityObserver.IsActive(self))
                 return;
 
+            TimerStart();
             if (CheckUseProjectile())
                 move.IsThrowProjectile = true;
+            TimerEndLog("CheckUseProjectile", 2);
+
+            if (CheckBackMove(pts[1]))
+                return;
 
             if (CheckUseOil())
                 move.IsSpillOil = true;
@@ -256,7 +269,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             // если маленькая скорость, то 1-й и 2-й
             var bruteRes =
                 _doAndSelectBrute(
-                    self.EnginePower < 0.01
+                    self.EnginePower < 0
                         ? new[] {Brutes[0]}
                         : (GetSpeed(self) < 5 ? new[] {Brutes[0], Brutes[1]} : Brutes), pts);
 
@@ -280,7 +293,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 TimerStart();
                 AlternativeMove(pts);
-                TimeEndLog("AlternativeMove", 30);
+                TimerEndLog("AlternativeMove", 30);
             }
         }
 
@@ -307,8 +320,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (_finishTime < Infinity)
                 Log(_finishTime);
 
+            if (move.IsBrake)
+                Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Red,
+                    new ACircularUnit {X = self.X, Y = self.Y, Radius = 30}));
+
 #if DEBUG
-            TimeEndLog("All");
+            TimerEndLog("All");
             for (var i = 0; i < Brutes.Length; i++)
             {
                 var info = Brutes[i].GetMaxTicksInfo();

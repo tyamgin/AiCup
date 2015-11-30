@@ -30,6 +30,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return GetCell(p.X, p.Y);
         }
 
+        public static Cell GetCell(Unit p)
+        {
+            return GetCell(p.X, p.Y);
+        }
+
         public static Point GetCenter(int I, int J)
         {
             return new Point((J + 0.5) * game.TrackTileSize, (I + 0.5) * game.TrackTileSize);
@@ -77,7 +82,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
         }
 
-        public void TimeEndLog(string caption, long limit = TimerLogLimit)
+        public void TimerEndLog(string caption, long limit = TimerLogLimit)
         {
 #if DEBUG
             var time = TimerStop();

@@ -210,8 +210,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             // Nitro
             foreach (var car in MyStrategy.world.Cars)
+            {
                 if (car.RemainingNitroTicks > 0)
-                    FillCircle(Brushes.Blue, car.X, car.Y, 40);
+                    FillCircle(Brushes.Blue, car.X, car.Y, 40);   
+            }
+
+
 
             // Canisters
             foreach (var car in MyStrategy.world.Cars)
@@ -273,7 +277,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var m = stack[0];
 
                 drawPts.Add(new Point(drawModel));
-                AMove.ModelMove(drawModel, m, new PassedInfo(), MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Projectiles, MyStrategy.OpponentsCars);
+                AMove.ModelMove(drawModel, m, new PassedInfo(), MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Tires, MyStrategy.OpponentsCars);
                 m.Times--;
                 stack.Normalize();
             }

@@ -10,6 +10,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private static readonly int[] _dx = { 0, 0, -1, 1 };
         private static readonly int[] _dy = { -1, 1, 0, 0 };
 
+        public delegate void CellCallback(Cell cell);
+
+        public static void EnumerateNeigbours(Cell cell, CellCallback callback)
+        {
+            for (var k = 0; k < 4; k++)
+            {
+                var ni = cell.I + _dx[k];
+                var nj = cell.J + _dy[k];
+                if (ni >= 0 && nj >= 0 && ni < world.Height && nj < world.Width)
+                    callback(new Cell(ni, nj));
+            }
+        }
+
         private static Cell DijkstraNextCell(Cell start, Cell end, Cell[] forbidden)
         {
             return DijkstraNextCell(start.I, start.J, end.I, end.J, forbidden);
@@ -74,12 +87,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 if (minDist > _distMap[cur.I, cur.J])
                     continue;
-                
-                for (var k = 0; k < 4; k++)
+
+                EnumerateNeigbours(cur, to =>
                 {
-                    var to = new Cell(_dx[k] + cur.I, _dy[k] + cur.J);
                     if (!CanPass(cur.I, cur.J, to.I, to.J) || forbidden.Any(x => x.Equals(to.I, to.J)))
-                        continue;
+                        return;
 
                     var distTo = _distMap[cur.I, cur.J] + GetCost(to);
                     if (distTo < _distMap[to.I, to.J])
@@ -88,7 +100,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         _distPrev[to.I, to.J] = cur;
                         q.Push(new Pair<double, Cell>(-distTo, to));
                     }
-                }
+                });
             }
 
             if (_distPrev[startI, startJ] == null)

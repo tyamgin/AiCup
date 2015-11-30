@@ -113,19 +113,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 m.EnginePower = 1;
                 m.WheelTurn = _turnTo.Clone();
 
-                if (m.IsUseNitro && model.Speed.Length > 15)
+                if (m.IsUseNitro && model.Speed.Length > 18)
                     return;
 
-                for (; _turnTo.GetDistanceTo2(model) > _needDist * _needDist; )
+                for (var i = 0; i < 200 && _turnTo.GetDistanceTo2(model) > _needDist * _needDist; i++)
                 {
                     if (!_modelMove(model, m, total))
                         return;
 
                     m.Times++;
                 }
-                if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
-                    return;
                 if (!total.WayPoint)
+                    return;
+                if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
                     return;
 
                 if (_isBetterTime(total.Time, total.Importance, _bestTime, _bestImportance))
@@ -191,10 +191,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return _lastSuccessStack;
             }
 
-            if (_clBonusesCount != clBonusesCount)
-                _cache = null;
-            _clBonusesCount = clBonusesCount;
-
             _turnCenter = pts[1];
 
             var extended = MyStrategy.ExtendWaySegments(pts, 50);
@@ -238,25 +234,31 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bestTime = MyStrategy.Infinity;
             _bestImportance = 0;
 
+            var prevBonuses = _bonusCandidates;
             _bonusCandidates = MyStrategy.Bonuses
                 .Where(
                     bonus =>
-                        Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize*6 &&
-                        MyStrategy.CellDistance(Self, bonus) <= 6
+                        Self.GetDistanceTo(bonus) <= MyStrategy.game.TrackTileSize*3 &&
+                        MyStrategy.CellDistance(Self, bonus) <= 3
                 )
                 .ToArray();
 
 
+            var prevSlicks = _slickCandidates;
             _slickCandidates = MyStrategy.OilSlicks
                 .Where(
                     slick =>
-                        Self.GetDistanceTo(slick) < MyStrategy.game.TrackTileSize*6 &&
-                        MyStrategy.CellDistance(Self, slick) <= 6
+                        Self.GetDistanceTo(slick) <= MyStrategy.game.TrackTileSize*5 &&
+                        MyStrategy.CellDistance(Self, slick) <= 5
                 )
                 .ToArray();
-  
-            _projCandidates = MyStrategy.Projectiles
-                .Where(proj => Self.GetDistanceTo(proj[0]) < MyStrategy.game.TrackTileSize*7)
+
+            var prevProj = _projCandidates;
+            _projCandidates = MyStrategy.Tires
+                .Where(
+                    proj =>
+                        Self.GetDistanceTo(proj[0]) <= MyStrategy.game.TrackTileSize*6 &&
+                        MyStrategy.CellDistance(Self, proj[0]) <= 6)
                 .ToArray();
 
             /*
@@ -268,6 +270,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
              * 
              * - Если у меня нитро
              */
+            var prevCars = _carCandidates;
             _carCandidates = MyStrategy.OpponentsCars
                 .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*9)
                 .Where(
@@ -286,12 +289,24 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 for (var k = 0; k < _patterns.Length; k++)
                 {
-                    var range = k == 0 ? 6 : 4;
+                    var range = (prevBonuses == null || prevSlicks == null || prevCars == null || prevProj == null 
+                        || prevBonuses.Length != _bonusCandidates.Length 
+                        || prevSlicks.Length != _slickCandidates.Length
+                        || prevCars.Length != _carCandidates.Length
+                        || prevProj.Length != _projCandidates.Length)
+                        ? (k == 0 ? 6 : 4)
+                        : (k == 0 ? 4 : 2);
+
+                    if (_clBonusesCount != clBonusesCount)
+                        range = 10;
+                    
                     _patterns[k].From = Math.Max(0, _cache[k].Times - range);
                     _patterns[k].To = Math.Min(_patterns[k].To * 9 / 7, _cache[k].Times + range);
                     _patterns[k].Step = 2;
                 }
             }
+            
+            _clBonusesCount = clBonusesCount;   
 
             var wayPointRequired = false;
             foreach (var pt in _bruteWayPoints)

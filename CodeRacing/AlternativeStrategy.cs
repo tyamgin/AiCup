@@ -77,11 +77,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int BackModeRemainTicks;
         public double BackModeTurn;
 
-        void AlternativeMove(Points pts)
+        bool CheckBackMove(Point turnCenter)
         {
-            var car = new ACar(self);
-            var turnCenter = pts[1];
-
             const int ln = 40;
             if (BackModeRemainTicks == 0 && PositionsHistory.Count > ln)
             {
@@ -108,8 +105,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 BackModeRemainTicks--;
                 move.EnginePower = -1;
                 move.WheelTurn = BackModeTurn;
-                return;
+                return true;
             }
+            return false;
+        }
+
+        void AlternativeMove(Points pts)
+        {
+            var car = new ACar(self);
 
             var backBruteRes = _doAndSelectBrute(BackBrutes, pts);
             
@@ -125,7 +128,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             // change points
             pts = GetAlternativeWaySegments(self);
-            turnCenter = pts[1];
+            var turnCenter = pts[1];
 
             var tmp = new ACar(self);
             var aa = tmp + tmp.Speed;

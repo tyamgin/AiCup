@@ -12,12 +12,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var absoluteAngleTo = Math.Atan2(y - Y, x - X);
             var relativeAngleTo = absoluteAngleTo - Angle;
 
-            while (relativeAngleTo > Math.PI)
-                relativeAngleTo -= 2.0D * Math.PI;
-
-            while (relativeAngleTo < -Math.PI)
-                relativeAngleTo += 2.0D * Math.PI;
-
+            Geom.AngleNormalize(ref relativeAngleTo);
             return relativeAngleTo;
         }
 

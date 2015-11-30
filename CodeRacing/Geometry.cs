@@ -386,5 +386,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             return Math.Acos(vec1*vec2/vec1.Length/vec2.Length);
         }
+
+        /// <summary>
+        /// Приводит угол в промежуток [-Pi, Pi]
+        /// </summary>
+        /// <param name="angle"></param>
+        public static void AngleNormalize(ref double angle)
+        {
+            while (angle > Math.PI)
+                angle -= 2.0D * Math.PI;
+
+            while (angle < -Math.PI)
+                angle += 2.0D * Math.PI;
+        }
     }
 }
