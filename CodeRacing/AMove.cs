@@ -143,7 +143,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     if (car.IntersectWith(opp))
                     {
-                        if (car.Speed.Length > 8) // чтобы не тупил в начале
+                        if (car.Speed.Length > 8 && MyStrategy.world.Tick > 400) // чтобы не боялся протаранить на маленькой скорости
                             total.Importance -= car.RemainingNitroTicks > 0 ? InactiveCarNitroDangerCoeff : InactiveCarDangerCoeff;
                         total.Cars = true;
                         break;
