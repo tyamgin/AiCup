@@ -199,14 +199,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (GetDistanceTo2(bonus) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.BonusDiagonalHalfLength))
                 return false;
-            return Geom.PolygonsIntersect(GetRect(), bonus.GetRect());
+            return Geom.PolygonsIntersect(GetRect(0), bonus.GetRect());
         }
 
-        public bool IntersectWith(ACar car)
+        public bool IntersectWith(ACar car, double safeMargin)
         {
             if (GetDistanceTo2(car) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.CarDiagonalHalfLength))
                 return false;
-            return Geom.PolygonsIntersect(GetRect(), car.GetRect());
+            return Geom.PolygonsIntersect(GetRect(0), car.GetRect(safeMargin));
         }
 
         private Point[] _rectEx, _rect;
@@ -218,11 +218,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return _rectEx;
         }
 
-        public new Point[] GetRect()
+        public new Point[] GetRect(double safeMargin)
         {
-            if (_rect == null)
-                _rect = base.GetRect();
-            return _rect;
+            if (Math.Abs(safeMargin) > MyStrategy.Eps)
+                return base.GetRect(safeMargin);
+
+            return _rect ?? (_rect = base.GetRect(safeMargin));
         }
     }
 }

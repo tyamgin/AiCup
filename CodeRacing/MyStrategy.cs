@@ -35,12 +35,24 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static AOilSlick[] OilSlicks;
 
         public static Car[] Opponents;
-        public static ACar[][] OpponentsCars;
+        public static ACar[][] OpponentsCars, Others, MyTeam, All;
+
+        public static Dictionary<long, ACar[]> TeammatePath = new Dictionary<long, ACar[]>();
+        public static ACar[] TeammateCar;
+        public static Car Teammate;
 
         public Points PositionsHistory = new Points();
 
         void Initialize()
         {
+            Teammate = world.Cars.FirstOrDefault(car => car.IsTeammate && car.Id != self.Id);
+
+            TeammatePath.Remove(self.Id);
+            if (Teammate != null)
+                TeammateCar = TeammatePath.ContainsKey(Teammate.Id) ? TeammatePath[Teammate.Id] : null;
+
+            TeammatePath.Clear();
+
             if (Players == null) // check for first call
             {
                 MapWidth = game.TrackTileSize * world.Width;
@@ -119,6 +131,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             Opponents = world.Cars.Where(car => !car.IsTeammate && !car.IsFinishedTrack).ToArray();
             PrepareOpponentsPath();
+            if (OpponentsCars != null)
+                Others = OpponentsCars
+                    .Concat(TeammateCar == null ? new ACar[][] { } : new[] { TeammateCar })
+                    .ToArray();
         }
 
         public void PrepareOpponentsPath()
@@ -162,7 +178,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             var turn = m.WheelTurn is Point ? TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, simpleMode);
-            var ok = car.GetRect().All(p => !IntersectTail(p, exactlyBorders ? 0 : SafeMargin));
+            var ok = car.GetRect(0).All(p => !IntersectTail(p, exactlyBorders ? 0 : SafeMargin));
             if (!ok)
             {
                 // HACK
@@ -221,11 +237,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (!DurabilityObserver.IsActive(self))
                 return;
 
-            TimerStart();
-            if (CheckUseProjectile())
-                move.IsThrowProjectile = true;
-            TimerEndLog("CheckUseProjectile", 2);
-
             if (CheckBackMove(pts[1]))
                 return;
 
@@ -278,13 +289,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (sel != -1 && bestMoveStacks[sel].Count > 0)
             {
-                if (Brutes[sel].Id == 121)
-                {
-                    self = self;
-                }
-
                 Brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
+                TeammatePath[self.Id] = GetCarPath(self, bestMoveStacks[sel]);
 #if DEBUG
                 Visualizer.DrawWays(self, bestMoveStacks, sel);
 #endif
@@ -295,6 +302,25 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 AlternativeMove(pts);
                 TimerEndLog("AlternativeMove", 30);
             }
+        }
+
+        public static ACar[] GetCarPath(Car self, Moves stack)
+        {
+            if (stack == null)
+                return null;
+
+            stack = stack.Clone();
+            var res = new List<ACar>();
+            var model = new ACar(self);
+            while (stack.Count > 0)
+            {
+                var m = stack[0];
+                AMove.ModelMove(model, m, new PassedInfo(), Bonuses, OilSlicks, Tires, Others);
+                m.Times--;
+                stack.Normalize();
+                res.Add(model.Clone());
+            }
+            return res.ToArray();
         }
 
         public void Move(Car self, World world, Game game, Move move)
@@ -314,7 +340,29 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Visualizer.CreateForm(world.Cars.Count(x => x.IsTeammate));
 #endif
             if (!self.IsFinishedTrack)
+            {
+                All = null;
+                MyTeam = null;
+
                 _move();
+
+                if (OpponentsCars != null)
+                {
+                    var myTeam = new List<ACar[]>();
+                    if (TeammatePath.ContainsKey(self.Id))
+                        myTeam.Add(TeammatePath[self.Id]);
+                    if (TeammateCar != null)
+                        myTeam.Add(TeammateCar);
+                    MyTeam = myTeam.ToArray();
+
+                    All = MyTeam.Concat(OpponentsCars).ToArray();
+
+                    TimerStart();
+                    if (CheckUseProjectile())
+                        move.IsThrowProjectile = true;
+                    TimerEndLog("CheckUseProjectile", 2);
+                }
+            }
             else if (_finishTime == Infinity)
                 _finishTime = world.Tick;
             if (_finishTime < Infinity)

@@ -234,6 +234,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bestTime = MyStrategy.Infinity;
             _bestImportance = 0;
 
+            /*
+             * Смотрим на бонусы, которые на расстоянии не более 3 тайла
+             * TODO: уменьшить приоритет бонусов, которые может быть возьмет тиммейт
+             */
             var prevBonuses = _bonusCandidates;
             _bonusCandidates = MyStrategy.Bonuses
                 .Where(
@@ -244,6 +248,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 .ToArray();
 
 
+            /*
+             * Смотрим на лужи, которые на расстоянии не более 5 тайлов
+             */
             var prevSlicks = _slickCandidates;
             _slickCandidates = MyStrategy.OilSlicks
                 .Where(
@@ -253,6 +260,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 )
                 .ToArray();
 
+            /*
+             * Смотрим на шины, которые на расстоянии не более 6 тайлов
+             */
             var prevProj = _projCandidates;
             _projCandidates = MyStrategy.Tires
                 .Where(
@@ -268,20 +278,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
              * - Двигатель меньше чем на 0.5 мощности
              * - Двигаются по встречной
              * 
-             * - Если у меня нитро
+             * - Если у меня нитро, или будет нитро
+             * 
+             * - Своих
              */
             var prevCars = _carCandidates;
-            _carCandidates = MyStrategy.OpponentsCars
+            _carCandidates = MyStrategy.Others
                 .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*9)
                 .Where(
                     opp =>
+                        opp[0].Original.IsTeammate ||
                         MyStrategy.IsCrashed(opp[0].Original) ||
                         !DurabilityObserver.IsActive(opp[0].Original) ||
                         opp[0].EnginePower < 0.5 ||
                         Self.RemainingNitroTicks > 0 ||
                         Math.Abs(Geom.GetAngleBetween(Self.Speed, opp[0].Speed)) > Math.PI / 2
                 )
-                .Where(opp => MyStrategy.CellDistance(Self, opp[0]) <= 9)
+                .Where(opp => MyStrategy.CellDistance(Self, opp[0]) <= 9) // 9 - потому что он может ехать по встречке
                 .ToArray();
 
 

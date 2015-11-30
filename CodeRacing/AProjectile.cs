@@ -33,6 +33,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 X += Speed.X / UpdateIterations;
                 Y += Speed.Y / UpdateIterations;
 
+                // может выйти за пределы если тайлы unknown
+                if (X < 1 || Y < 1 || X >= MyStrategy.MapWidth - 1 || Y >= MyStrategy.MapHeight - 1)
+                {
+                    Exists = false;
+                    break;
+                }
+
                 if (reflected)
                     continue;
 
@@ -136,10 +143,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }).ToArray();
         }
 
-        public bool Intersect(ACar car, double safeMargin)
+        public bool Intersect(ACar car, double extendRadius)
         {
-            var r = Radius + safeMargin;
-            if (GetDistanceTo(car) > r + MyStrategy.CarDiagonalHalfLength)
+            if (Type == ProjectileType.Washer)
+                return Geom.ContainPoint(car.GetRect(-extendRadius), this);
+
+            var r = Radius + extendRadius;
+            if (GetDistanceTo2(car) > Geom.Sqr(r + MyStrategy.CarDiagonalHalfLength))
                 return false;
 
             return car.GetRectEx().Any(p => GetDistanceTo(p) < r);

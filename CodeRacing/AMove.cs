@@ -135,15 +135,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }
                 }
             }
-            if (carCandidates.Length > 0 && total.Time < carCandidates[0].Length && !total.Cars)
+            if (!total.Cars)
             {
                 for (var i = 0; i < carCandidates.Length; i++)
                 {
+                    if (total.Time >= carCandidates[i].Length)
+                        continue;
+
                     var opp = carCandidates[i][total.Time];
 
-                    if (car.IntersectWith(opp))
+                    if (car.IntersectWith(opp, opp.Original.IsTeammate ? 20 : 0))
                     {
-                        if (car.Speed.Length > 8 && MyStrategy.world.Tick > 400) // чтобы не боялся протаранить на маленькой скорости
+                        if (car.Speed.Length > 8 && MyStrategy.world.Tick > 400 || car.Original.IsTeammate) // чтобы не боялся протаранить на маленькой скорости
                             total.Importance -= car.RemainingNitroTicks > 0 ? InactiveCarNitroDangerCoeff : InactiveCarDangerCoeff;
                         total.Cars = true;
                         break;
@@ -224,7 +227,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private bool _modelMove(ACar car, AMove m, PassedInfo total)
         {
             return AMove.ModelMove(car, m, total, 
-                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Tires, MyStrategy.OpponentsCars);
+                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Tires, MyStrategy.Others);
         }
 
         public void Pop()

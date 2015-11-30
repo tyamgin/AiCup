@@ -269,19 +269,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (stack == null)
                 return;
-            stack = stack.Clone();
-            var drawPts = new Points();
-            var drawModel = new ACar(self);
-            while (stack.Count > 0)
-            {
-                var m = stack[0];
 
-                drawPts.Add(new Point(drawModel));
-                AMove.ModelMove(drawModel, m, new PassedInfo(), MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Tires, MyStrategy.OpponentsCars);
-                m.Times--;
-                stack.Normalize();
-            }
-            SegmentsDrawQueue.Add(new object[] { brush, drawPts, width });
+            var pts = new Points();
+            pts.AddRange(MyStrategy.GetCarPath(self, stack).Select(car => new Point(car)));
+
+            SegmentsDrawQueue.Add(new object[]
+            {
+                brush, 
+                pts, 
+                width
+            });
         }
 
         public static void DrawWays(Car self, Moves[] stacks, int sel)
