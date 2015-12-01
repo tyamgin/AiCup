@@ -251,7 +251,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             catch (Exception)
             {
-                var tmp = 0;
             }
 
             // Circles

@@ -61,11 +61,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return result;
         }
 
-        public new Point[] GetRect()
+        public Point[] GetRect()
         {
             if (_computedRect.ContainsKey(Id))
                 return _computedRect[Id];
-            var result = base.GetRect(0);
+            var result = GetRect(0);
             _computedRect[Id] = result;
             return result;
         }

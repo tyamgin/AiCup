@@ -106,7 +106,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Radius = proj.Radius;
         }
 
-        public AProjectile Clone()
+        public new AProjectile Clone()
         {
             return new AProjectile
             {

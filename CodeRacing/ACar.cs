@@ -211,7 +211,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         private Point[] _rectEx, _rect;
 
-        public new Point[] GetRectEx()
+        public Point[] GetRectEx()
         {
             if (_rectEx == null)
                 _rectEx = base.GetRectEx();
