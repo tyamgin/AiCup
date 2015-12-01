@@ -1,5 +1,3 @@
-using System;
-
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
     public class OilSlick : CircularUnit {
         private readonly int remainingLifetime;

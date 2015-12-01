@@ -7,12 +7,22 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class AMove
     {
+        public const double BonusImportanceCoeff = 60;
+        public const double OilSlickDangerCoeff = 70;
+        public const double ProjectileDangerCoeff = 40;
+        public const double InactiveCarDangerCoeff = 55;
+        public const double InactiveCarNitroDangerCoeff = 80;
+        public const double ExactlyBorderDangerCoeff = 50;
+
         public double EnginePower;
         public bool IsBrake;
-        public object WheelTurn; // Point or double
+        public object WheelTurn;
         public bool IsUseNitro;
 
         public int Times;
+        public double SafeMargin = MyStrategy.SafeMargin;
+        public double ExactlyMargin = 1;
+        public bool RangesMode;
 
         public AMove Clone()
         {
@@ -22,6 +32,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 IsBrake = IsBrake,
                 IsUseNitro = IsUseNitro,
                 Times = Times,
+                SafeMargin = SafeMargin,
+                ExactlyMargin = ExactlyMargin,
+                RangesMode = RangesMode,
             };
             if (WheelTurn is Point)
                 ret.WheelTurn = (WheelTurn as Point).Clone();
@@ -32,13 +45,147 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return ret;
         }
 
-        public void Apply(Move move, ACar self)
+        public void Apply(Move move, ACar car)
         {
             move.EnginePower = EnginePower;
             move.IsBrake = IsBrake;
-            move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(self.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
+            move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
+
+            if (EnginePower < 0 && car.EnginePower > 0)
+                move.IsBrake = true;
+
+            if (car.EnginePower < 0 && EnginePower > 0)
+            {
+                move.WheelTurn *= -1;
+                move.IsBrake = true;
+            }
+            
             if (IsUseNitro)
                 move.IsUseNitro = IsUseNitro;
+        }
+
+        public static bool ModelMove(ACar car, AMove m, PassedInfo total,
+            ABonus[] bonusCandidates, AOilSlick[] slickCandidates, AProjectile[][] projCandidates, ACar[][] carCandidates)
+        {
+            double prevStateX = 0, prevStateY = 0, prevStateAngle = 0;
+            if (m.RangesMode)
+            {
+                prevStateX = car.X;
+                prevStateY = car.Y;
+                prevStateAngle = car.Angle;   
+            }
+
+            var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
+            var isBreak = m.IsBrake;
+
+            // если сдаю назад но кочусь вперед
+            if (m.EnginePower < 0 && car.EnginePower > 0)
+                isBreak = true;
+
+            // если еду вперед но кочусь назад
+            if (car.EnginePower < 0 && m.EnginePower > 0)
+            {
+                turn *= -1;
+                isBreak = true;
+            }
+
+            car.Move(m.EnginePower, turn, isBreak, m.IsUseNitro, false);
+
+            for(var i = 0; i < bonusCandidates.Length; i++)
+            {
+                if (total.Bonuses[i]) // бонус уже взят
+                    continue;
+
+                var bonus = bonusCandidates[i];
+                if (car.TakeBonus(bonus))
+                {
+                    total.Importance += bonus.GetImportance(car.Original)*BonusImportanceCoeff;
+                    total.Bonuses[i] = true;
+                }
+            }
+
+            if (!total.Slicks) // если не въехал ни в одну лужу
+            {
+                foreach (var slick in slickCandidates)
+                {
+                    if (total.Slicks)
+                        break;
+                    slick.RemainingLifetime -= total.Time;
+                    if (slick.Intersect(car, 9))
+                    {
+                        total.Importance -= slick.GetDanger()*OilSlickDangerCoeff*(car.RemainingNitroTicks > 0 ? 2 : 1);
+                        total.Slicks = true;
+                    }
+                    slick.RemainingLifetime += total.Time;
+                }
+            }
+            if (projCandidates.Length > 0 && total.Time < projCandidates[0].Length)
+            {
+                for(var i = 0; i < projCandidates.Length; i++)
+                {
+                    if (total.Projectiles[i])
+                        continue;
+
+                    var proj = projCandidates[i][total.Time];
+
+                    if (proj.Intersect(car, 5))
+                    {
+                        total.Importance -= proj.GetDanger()*ProjectileDangerCoeff; //TODO: обработать шину отдельно
+                        total.Projectiles[i] = true;
+                    }
+                }
+            }
+            if (!total.Cars)
+            {
+                for (var i = 0; i < carCandidates.Length; i++)
+                {
+                    if (total.Time >= carCandidates[i].Length)
+                        continue;
+
+                    var opp = carCandidates[i][total.Time];
+
+                    if (car.IntersectWith(opp, opp.Original.IsTeammate ? 20 : 0))
+                    {
+                        if (car.Speed.Length > 8 && MyStrategy.world.Tick > 400 || car.Original.IsTeammate) // чтобы не боялся протаранить на маленькой скорости
+                            total.Importance -= car.RemainingNitroTicks > 0 ? InactiveCarNitroDangerCoeff : InactiveCarDangerCoeff;
+                        total.Cars = true;
+                        break;
+                    }
+                }
+            }
+
+            total.Time++;
+
+            // проверка на стены
+            var res = car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
+
+            // проверка что можно проехать точно возле стены
+            if (!res && car.RemainingNitroTicks == 0 && car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExactlyMargin)))
+            {
+                if (!total.ExactlyBorder)
+                    total.Importance -= ExactlyBorderDangerCoeff;
+                total.ExactlyBorder = true;
+                res = true;
+            }
+
+            // проверка что можно потереться вдоль стены
+            // -- убрано --
+
+            if (!total.WayPoint)
+                total.WayPoint = MyStrategy.GetNextWayPoint(car.Original).Equals(MyStrategy.GetCell(car));
+
+            if (!res && m.RangesMode)
+            {
+                res = true;
+
+                // HACK
+                car.X = prevStateX;
+                car.Y = prevStateY;
+                car.Angle = prevStateAngle;
+                car.Speed = Point.Zero;
+                car.AngularSpeed = 0;
+            }
+            return res;
         }
     }
 
@@ -64,31 +211,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public double ComputeImportance(ACar model)
         {
             model = model.Clone();
-            var totalImportance = 0.0;
+            var total = new PassedInfo();
             foreach (var move in this)
             {
-                for(var t = 0; t < move.Times; t++)
-                    _modelMove(model, move, ref totalImportance);
+                for (var t = 0; t < move.Times; t++)
+                    _modelMove(model, move, total);
             }
-            return ComputeTime() - totalImportance;
+#if DEBUG
+            if (ComputeTime() != total.Time)
+                throw new Exception("ComputeTime() != elapsedTime");
+#endif
+            return total.Time - total.Importance;
         }
 
-        private bool _modelMove(ACar car, AMove m, ref double totalImportance)
+        private bool _modelMove(ACar car, AMove m, PassedInfo total)
         {
-            var turn = m.WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
-            var prevCar = car.Clone();
-            car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, false);
-            
-            totalImportance += MyStrategy.world.Bonuses
-                .Select(bonus => new ABonus(bonus))
-                .Where(bonus => car.TakeBonus(bonus) && !prevCar.TakeBonus(bonus))
-                .Sum(bonus => bonus.GetImportance(car.Original)) * PathBruteForce.BonusImportanceCoeff;
-            totalImportance -= MyStrategy.world.OilSlicks
-                .Select(slick => new AOilSlick(slick))
-                .Where(slick => slick.Intersect(car) && !slick.Intersect(prevCar))
-                .Sum(slick => slick.GetDanger())*PathBruteForce.OilSlickDangerCoeff;
-
-            return car.GetRect().All(p => !MyStrategy.IntersectTail(p));
+            return AMove.ModelMove(car, m, total, 
+                MyStrategy.Bonuses, MyStrategy.OilSlicks, MyStrategy.Tires, MyStrategy.Others);
         }
 
         public void Pop()

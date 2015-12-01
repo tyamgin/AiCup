@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -16,7 +15,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return Math.Sqrt(u.SpeedX * u.SpeedX + u.SpeedY * u.SpeedY);
         }
         
-        public Cell GetNextWayPoint(Car car, int delta = 1)
+        public static Cell GetNextWayPoint(Car car, int delta = 1)
         {
             return waypoints[(car.NextWaypointIndex + delta - 1) % waypoints.Length];
         }
@@ -27,6 +26,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
 
         public static Cell GetCell(Point p)
+        {
+            return GetCell(p.X, p.Y);
+        }
+
+        public static Cell GetCell(Unit p)
         {
             return GetCell(p.X, p.Y);
         }
@@ -50,6 +54,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return x;
         }
 
+        public static bool IsCrashed(Car car)
+        {
+            return Players[car.PlayerId].IsStrategyCrashed;
+        }
 
         private readonly List<Stopwatch> _timers = new List<Stopwatch>();
 
@@ -74,7 +82,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
         }
 
-        public void TimeEndLog(string caption, long limit = TimerLogLimit)
+        public void TimerEndLog(string caption, long limit = TimerLogLimit)
         {
 #if DEBUG
             var time = TimerStop();

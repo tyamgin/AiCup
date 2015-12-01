@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -37,13 +36,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     result = 0.4 - 0.6*(self.Durability - 1);
                     break;
                 case BonusType.PureScore:
-                    result = 1.0;
+                    result = 2.0;
                     break;
                 case BonusType.OilCanister:
                     if (self.OilCanisterCount == 0)
-                        result = 0.9;
+                        result = 0.8;
                     else if (self.OilCanisterCount == 1)
-                        result = 0.7;
+                        result = 0.6;
                     else
                         result = 0.5;
                     break;
@@ -51,12 +50,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     result = 1.0;
                     break;
                 case BonusType.AmmoCrate:
-                    if (self.ProjectileCount <= 1)
-                        result = 0.9;
-                    else if (self.ProjectileCount == 2)
-                        result = 0.8;
+                    if (self.ProjectileCount <= 2)
+                        result = 1.0;
                     else
-                        result = 0.7;
+                        result = 0.8;
                     break;
                 default:
                     throw new Exception("Unknown BonusType");
@@ -68,7 +65,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (_computedRect.ContainsKey(Id))
                 return _computedRect[Id];
-            var result = base.GetRect();
+            var result = base.GetRect(0);
             _computedRect[Id] = result;
             return result;
         }

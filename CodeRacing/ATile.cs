@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Security.Policy;
-using System.Text;
-using System.Windows.Forms.VisualStyles;
+﻿using System.Collections.Generic;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -14,10 +7,33 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public TileType Type;
         public TilePart[] Parts;
+        
+        public double Weight = 0;
+
+        public bool
+            IsFreeLeft = true,
+            IsFreeRight = true,
+            IsFreeTop = true,
+            IsFreeBottom = true;
+
+        public void AddBonus(ABonus bonus)
+        {
+            Weight -= bonus.Type == BonusType.PureScore ? 0.6 : 0.2;
+        }
+
+        public void AddSlick(AOilSlick slick)
+        {
+            Weight += 0.6;
+        }
 
         public ATile(int i, int j, TileType type) : base(i, j)
         {
             Type = type;
+
+            IsFreeLeft = _tileFreeLeft(type);
+            IsFreeRight = _tileFreeRight(type);
+            IsFreeTop = _tileFreeTop(type);
+            IsFreeBottom = _tileFreeBottom(type);
 
             var margin = MyStrategy.game.TrackTileMargin;
 
@@ -30,7 +46,55 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             switch (type)
             {
-                // Верхняя полоса
+                    // Левый верхний угол
+                case TileType.LeftHeadedT:
+                case TileType.TopHeadedT:
+                case TileType.RightBottomCorner:
+                case TileType.Crossroads:
+                case TileType.Unknown:
+                    res.Add(TilePart.GetCircle(Point.Zero, margin));
+                    break;
+            }
+
+            switch (type)
+            {
+                    // Правый верхний угол
+                case TileType.RightHeadedT:
+                case TileType.TopHeadedT:
+                case TileType.LeftBottomCorner:
+                case TileType.Crossroads:
+                case TileType.Unknown:
+                    res.Add(TilePart.GetCircle(lx, margin));
+                    break;
+            }
+
+            switch (type)
+            {
+                    // Правый нижний угол
+                case TileType.BottomHeadedT:
+                case TileType.RightHeadedT:
+                case TileType.LeftTopCorner:
+                case TileType.Crossroads:
+                case TileType.Unknown:
+                    res.Add(TilePart.GetCircle(lx + ly, margin));
+                    break;
+            }
+
+            switch (type)
+            {
+                    // Левый нижний угол
+                case TileType.BottomHeadedT:
+                case TileType.LeftHeadedT:
+                case TileType.RightTopCorner:
+                case TileType.Crossroads:
+                case TileType.Unknown:
+                    res.Add(TilePart.GetCircle(ly, margin));
+                    break;
+            }
+
+            switch (type)
+            {
+                    // Верхняя полоса
                 case TileType.BottomHeadedT:
                 case TileType.Horizontal:
                 case TileType.LeftTopCorner:
@@ -40,7 +104,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             switch (type)
             {
-                // Нижняя полоса
+                    // Нижняя полоса
                 case TileType.TopHeadedT:
                 case TileType.Horizontal:
                 case TileType.LeftBottomCorner:
@@ -50,7 +114,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             switch (type)
             {
-                // Левая полоса
+                    // Левая полоса
                 case TileType.RightHeadedT:
                 case TileType.Vertical:
                 case TileType.LeftBottomCorner:
@@ -60,56 +124,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             switch (type)
             {
-                // Правая полоса
+                    // Правая полоса
                 case TileType.LeftHeadedT:
                 case TileType.Vertical:
                 case TileType.RightBottomCorner:
                 case TileType.RightTopCorner:
                     res.Add(TilePart.GetSegment(lx - sx, lx + ly - sx));
-                    break;
-            }
-
-            switch (type)
-            {
-                // Левый верхний угол
-                case TileType.LeftHeadedT:
-                case TileType.TopHeadedT:
-                case TileType.RightBottomCorner:
-                case TileType.Crossroads:
-                    res.Add(TilePart.GetCircle(Point.Zero, margin));
-                    break;
-            }
-
-            switch (type)
-            {
-                // Правый верхний угол
-                case TileType.RightHeadedT:
-                case TileType.TopHeadedT:
-                case TileType.LeftBottomCorner:
-                case TileType.Crossroads:
-                    res.Add(TilePart.GetCircle(lx, margin));
-                    break;
-            }
-
-            switch (type)
-            {
-                // Правый нижний угол
-                case TileType.BottomHeadedT:
-                case TileType.RightHeadedT:
-                case TileType.LeftTopCorner:
-                case TileType.Crossroads:
-                    res.Add(TilePart.GetCircle(lx + ly, margin));
-                    break;
-            }
-
-            switch (type)
-            {
-                // Левый нижний угол
-                case TileType.BottomHeadedT:
-                case TileType.LeftHeadedT:
-                case TileType.RightTopCorner:
-                case TileType.Crossroads:
-                    res.Add(TilePart.GetCircle(ly, margin));
                     break;
             }
 
@@ -139,6 +159,54 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             Parts = res.ToArray();
         }
+
+        private static bool _tileFreeLeft(TileType type)
+        {
+            return type == TileType.Crossroads ||
+                   type == TileType.Horizontal ||
+                   type == TileType.RightBottomCorner ||
+                   type == TileType.RightTopCorner ||
+                   type == TileType.LeftHeadedT ||
+                   type == TileType.TopHeadedT ||
+                   type == TileType.BottomHeadedT ||
+                   type == TileType.Unknown;
+        }
+
+        private static bool _tileFreeRight(TileType type)
+        {
+            return type == TileType.Crossroads ||
+                   type == TileType.Horizontal ||
+                   type == TileType.LeftBottomCorner ||
+                   type == TileType.LeftTopCorner ||
+                   type == TileType.RightHeadedT ||
+                   type == TileType.TopHeadedT ||
+                   type == TileType.BottomHeadedT ||
+                   type == TileType.Unknown;
+        }
+
+        private static bool _tileFreeTop(TileType type)
+        {
+            return type == TileType.Crossroads ||
+                   type == TileType.Vertical ||
+                   type == TileType.LeftBottomCorner ||
+                   type == TileType.RightBottomCorner ||
+                   type == TileType.LeftHeadedT ||
+                   type == TileType.TopHeadedT ||
+                   type == TileType.RightHeadedT ||
+                   type == TileType.Unknown;
+        }
+
+        private static bool _tileFreeBottom(TileType type)
+        {
+            return type == TileType.Crossroads ||
+                   type == TileType.Vertical ||
+                   type == TileType.LeftTopCorner ||
+                   type == TileType.RightTopCorner ||
+                   type == TileType.LeftHeadedT ||
+                   type == TileType.BottomHeadedT ||
+                   type == TileType.RightHeadedT ||
+                   type == TileType.Unknown;
+        }
     }
 
     public enum TilePartType
@@ -152,26 +220,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public TilePartType Type;
         public Point Start, End;
         public ACircularUnit Circle;
-
-        public Point GetIntersectionPoint(AProjectile proj)
-        {
-            if (Type == TilePartType.Segment)
-            {
-                var pts = Geom.LineCircleIntersect(Start, End, proj, proj.Radius);
-                if (pts.Length == 0)
-                    return null;
-                var inter = pts.Length == 1 ? pts[0] : (pts[0] + pts[1])/2.0;
-                var wallDir = (End - Start).Normalized();
-                // TODO: убедиться что скорость и направление стены идут в нужном направлении
-                var ang = Geom.GetAngleBetween(proj.Speed, wallDir);
-                proj.Speed = proj.Speed.RotateClockwise(2*Math.PI - 2*ang);
-            }
-            else
-            {
-                
-            }
-            return null;
-        }
 
         public static TilePart GetSegment(Point s, Point t)
         {

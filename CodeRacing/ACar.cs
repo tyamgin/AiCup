@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -14,6 +13,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool OutOfMap;
         public int RemainingNitroTicks;
         public int RemainingNitroCooldownTicks;
+        public int RemainingInactiveTicks;
 
         private readonly double _carAccelerationUp;
         private readonly double _carAccelerationDown;
@@ -32,6 +32,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             OutOfMap = false;
             RemainingNitroTicks = original.RemainingNitroTicks;
             RemainingNitroCooldownTicks = original.RemainingNitroCooldownTicks;
+            RemainingInactiveTicks = DurabilityObserver.ReactivationTime(original) - MyStrategy.world.Tick;
 
             Width = original.Width;
             Height = original.Height;
@@ -61,6 +62,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             OutOfMap = car.OutOfMap;
             RemainingNitroTicks = car.RemainingNitroTicks;
             RemainingNitroCooldownTicks = car.RemainingNitroCooldownTicks;
+            RemainingInactiveTicks = car.RemainingInactiveTicks;
 
             Width = car.Width;
             Height = car.Height;
@@ -93,6 +95,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public void Move(double enginePower, double wheelTurn, bool isBreak, bool useNitro, bool simpleMode)
         {
+            if (RemainingInactiveTicks > 0 || MyStrategy.IsCrashed(Original))
+            {
+                isBreak = false;
+                useNitro = false;
+                enginePower = 0;
+                wheelTurn = WheelTurn;
+            }
+
             useNitro = useNitro && Original.NitroChargeCount > 0;
             if (useNitro && RemainingNitroTicks == 0 && RemainingNitroCooldownTicks == 0)
             {
@@ -173,18 +183,47 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     AngularSpeed = baseAngSpd + (AngularSpeed - baseAngSpd)*rotationFrictionMultiplier;
                 }
 
+                Geom.AngleNormalize(ref Angle);
                 if (RemainingNitroCooldownTicks > 0)
                     RemainingNitroCooldownTicks--;
                 if (RemainingNitroTicks > 0)
                     RemainingNitroTicks--;
+                if (RemainingInactiveTicks > 0)
+                    RemainingInactiveTicks--;
             }
+            _rect = null;
+            _rectEx = null;
         }
 
         public bool TakeBonus(ABonus bonus)
         {
             if (GetDistanceTo2(bonus) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.BonusDiagonalHalfLength))
                 return false;
-            return Geom.PolygonsIntersect(GetRect(), bonus.GetRect());
+            return Geom.PolygonsIntersect(GetRect(0), bonus.GetRect());
+        }
+
+        public bool IntersectWith(ACar car, double safeMargin)
+        {
+            if (GetDistanceTo2(car) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.CarDiagonalHalfLength))
+                return false;
+            return Geom.PolygonsIntersect(GetRect(0), car.GetRect(safeMargin));
+        }
+
+        private Point[] _rectEx, _rect;
+
+        public new Point[] GetRectEx()
+        {
+            if (_rectEx == null)
+                _rectEx = base.GetRectEx();
+            return _rectEx;
+        }
+
+        public new Point[] GetRect(double safeMargin)
+        {
+            if (Math.Abs(safeMargin) > MyStrategy.Eps)
+                return base.GetRect(safeMargin);
+
+            return _rect ?? (_rect = base.GetRect(safeMargin));
         }
     }
 }

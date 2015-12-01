@@ -11,16 +11,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk {
 
             Process.Start("D:\\Projects\\AiCup\\CodeRacing\\local-runner\\local-runner-sync.bat");
             Thread.Sleep(2000);
-            //var oldStrategy = new Process
+
+            //for (var i = 0; i < 3; i++)
             //{
-            //    StartInfo =
+            //    var oldStrategy = new Process
             //    {
-            //        FileName = "D:\\Projects\\AiCup\\CodeHockey\\local_runner\\stress1\\57.exe",
-            //        Arguments = "127.0.0.1 31002 0000000000000000",
-            //        CreateNoWindow = true
-            //    }
-            //};
-            //oldStrategy.Start();
+            //        StartInfo =
+            //        {
+            //            FileName = "D:\\Projects\\AiCup\\CodeRacing\\local-runner\\alternate" + 1 + ".exe",
+            //            //FileName = "D:\\Projects\\AiCup\\CodeRacing\\local-runner\\crash400.exe",
+            //            Arguments = "127.0.0.1 " + (31002 + i) + " 0000000000000000",
+            //            CreateNoWindow = true
+            //        }
+            //    };
+            //    oldStrategy.Start();
+            //}
 
             if (args.Length == 3) {
                 new Runner(args).run();

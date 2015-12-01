@@ -35,7 +35,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
+    <Optimize>true</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -76,18 +76,21 @@
   <ItemGroup>
     <Compile Include="ABonus.cs" />
     <Compile Include="ACar.cs" />
+    <Compile Include="AlternativeStrategy.cs" />
     <Compile Include="AMove.cs" />
+    <Compile Include="AOilSlick.cs" />
     <Compile Include="AProjectile.cs" />
     <Compile Include="ATile.cs" />
     <Compile Include="AUnit.cs" />
+    <Compile Include="BrutePatterns.cs" />
     <Compile Include="Collections.cs" />
-    <Compile Include="Debug\Debug.cs" />
+    <Compile Include="Visualizer\Visualizer.cs" />
     <Compile Include="DurabilityObserver.cs" />
     <Compile Include="FindPath.cs" />
-    <Compile Include="Debug\MapForm.cs">
+    <Compile Include="Visualizer\MapForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Debug\MapForm.Designer.cs">
+    <Compile Include="Visualizer\MapForm.Designer.cs">
       <DependentUpon>MapForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\Bonus.cs" />
@@ -110,7 +113,7 @@
     <Compile Include="IStrategy.cs" />
     <Compile Include="MyStrategy.cs" />
     <Compile Include="OilProjectileStrategy.cs" />
-    <Compile Include="PathBruteForce.cs" />
+    <Compile Include="PathBruteForcer.cs" />
     <Compile Include="Geometry.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -142,7 +145,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Debug\MapForm.resx">
+    <EmbeddedResource Include="Visualizer\MapForm.resx">
       <DependentUpon>MapForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

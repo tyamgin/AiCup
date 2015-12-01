@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
@@ -142,7 +141,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public override string ToString()
         {
-            return "(" + X + "; " + Y + ")";
+            return "(" + X.ToString().Replace(',', '.') + ", " + Y.ToString().Replace(',', '.') + ")";
         }
 
         public int CompareTo(Point other)
@@ -199,7 +198,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
     }
 
-    public class Cell
+    public class Cell : IComparable<Cell>
     {
         public int I, J;
 
@@ -217,6 +216,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool Equals(Cell other)
         {
             return Equals(other.I, other.J);
+        }
+
+        public int CompareTo(Cell other)
+        {
+            if (I != other.I)
+                return I < other.I ? -1 : 1;
+            if (J != other.J)
+                return J < other.J ? -1 : 1;
+            return 0;
         }
 
         public override string ToString()
@@ -368,9 +376,28 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             };
         }
 
-        public static double GetAngleBetween(Point a, Point b)
+        /// <summary>
+        /// Угол между векторами
+        /// </summary>
+        /// <param name="vec1">Первый вектор</param>
+        /// <param name="vec2">Второй вектор</param>
+        /// <returns></returns>
+        public static double GetAngleBetween(Point vec1, Point vec2)
         {
-            return  Math.Acos(a*b/a.Length/b.Length);
+            return Math.Acos(vec1*vec2/vec1.Length/vec2.Length);
+        }
+
+        /// <summary>
+        /// Приводит угол в промежуток [-Pi, Pi]
+        /// </summary>
+        /// <param name="angle"></param>
+        public static void AngleNormalize(ref double angle)
+        {
+            while (angle > Math.PI)
+                angle -= 2.0D * Math.PI;
+
+            while (angle < -Math.PI)
+                angle += 2.0D * Math.PI;
         }
     }
 }

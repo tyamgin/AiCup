@@ -1,5 +1,3 @@
-using System;
-
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model {
     public class Car : RectangularUnit {
         private readonly long playerId;

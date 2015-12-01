@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Linq;
+using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
+        // Проверка что кто-то стоит впереди
         public bool IsSomeoneAhead(ACar car)
         {
-            var carRect = car.GetRect();
+            var carRect = car.GetRect(0);
             var p1 = carRect[0] + Point.ByAngle(car.Angle)*20;
             var p2 = carRect[3] + Point.ByAngle(car.Angle)*20;
             var p3 = car + Point.ByAngle(car.Angle) * (car.Original.Width / 2 + 20);
-            return world.Cars.Select(x => new ACar(x).GetRect()).Any(
+            return world.Cars.Select(x => new ACar(x).GetRect(0)).Any(
                 rect => Geom.ContainPoint(rect, p1) ||
                         Geom.ContainPoint(rect, p2) ||
                         Geom.ContainPoint(rect, p3)
@@ -54,6 +56,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (self.RemainingOilCooldownTicks != 0 || world.Tick < game.InitialFreezeDurationTicks)
                 return false;
+            if (self.EnginePower < 0)
+                return false;
 
             var slick = new AOilSlick(new ACar(self));
             var rad = slick.Radius * 0.8;
@@ -63,8 +67,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 for (var i = 0; i < Opponents.Length; i++)
                 {
-                    if (slick.GetDistanceTo2(OpponentsCars[t][i]) < rad * rad
-                        && (self.OilCanisterCount > 1 || Math.Abs(OpponentsCars[t][i].WheelTurn) > 0.2))
+                    if (slick.GetDistanceTo2(OpponentsCars[i][t]) < rad * rad
+                        && (self.OilCanisterCount > 1 || Math.Abs(OpponentsCars[i][t].WheelTurn) > 0.2))
                     {
                         result = true;
                     }
@@ -85,7 +89,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var projectiles = AProjectile.GetProjectiles(new ACar(self));
 
             var shot = new bool[projectiles.Length];
-            for (var t = 1; t < OpponentsTicksPrediction; t++)
+
+            for (var t = 1; t < OpponentsTicksPrediction * 0.5; t++)
             {
                 for(var prId = 0; prId < projectiles.Length; prId++)
                 {
@@ -95,11 +100,31 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     pr.Move();
 
-                    foreach (var opp in OpponentsCars[t])
+                    for(var i = 0; i < All.Length; i++)
                     {
-                        if (Geom.ContainPoint(opp.GetRect(), pr))
+                        if (t >= All[i].Length)
+                            continue;
+
+                        var car = All[i][t];
+                        if (pr.Intersect(car, car.Original.IsTeammate ? 5 : -5))
                         {
-                            if (DurabilityObserver.ReactivationTime(opp.Original) + 2 < world.Tick + t)
+                            if (pr.Type == ProjectileType.Tire)
+                            {
+                                // если это я только что выпустил шину
+                                if (car.Original.Id == self.Id && Math.Abs(pr.Speed.Length - game.TireInitialSpeed) < Eps)
+                                    continue;
+                            }
+                            else
+                            {
+                                // если это я выпустил шайбу
+                                if (car.Original.Id == self.Id)
+                                    continue;
+                            }
+
+                            if (car.Original.IsTeammate) // попал в своего
+                                return false;
+
+                            if (DurabilityObserver.ReactivationTime(car.Original) + 2 < world.Tick + t)
                             {
                                 // если он не мертв
                                 shot[prId] = true;
@@ -110,7 +135,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
             var shotCount = shot.Count(val => val);
-            return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 1;
+            
+            if (self.Type == CarType.Buggy)
+            {
+                return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 2;
+            }
+            return shotCount == 1;
         }
     }
 }
