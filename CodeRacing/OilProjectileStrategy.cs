@@ -89,6 +89,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var projectiles = AProjectile.GetProjectiles(new ACar(self));
 
             var shot = new bool[projectiles.Length];
+            var shotSpeed = 0.0;
 
             for (var t = 1; t < OpponentsTicksPrediction * 0.5; t++)
             {
@@ -128,6 +129,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             {
                                 // если он не мертв
                                 shot[prId] = true;
+                                if (pr.Type == ProjectileType.Tire)
+                                    shotSpeed = pr.Speed.Length;
                             }
                             pr.Exists = false;
                         }
@@ -140,7 +143,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 2;
             }
-            return shotCount == 1;
+            return shotCount == 1 &&
+                   (shotSpeed >= game.TireInitialSpeed - Eps ||
+                    shotSpeed >= game.TireInitialSpeed/2.5 && self.ProjectileCount > 1);
         }
     }
 }
