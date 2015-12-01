@@ -89,6 +89,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var projectiles = AProjectile.GetProjectiles(new ACar(self));
 
             var shot = new bool[projectiles.Length];
+
             for (var t = 1; t < OpponentsTicksPrediction * 0.5; t++)
             {
                 for(var prId = 0; prId < projectiles.Length; prId++)
@@ -134,6 +135,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
             }
             var shotCount = shot.Count(val => val);
+            
             if (self.Type == CarType.Buggy)
             {
                 return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 2;

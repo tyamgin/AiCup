@@ -98,6 +98,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var tires = world.Projectiles.Where(x => x.Type == ProjectileType.Tire).ToArray();
 
             Tires = new AProjectile[tires.Length][];
+#if DEBUG
+            var trajectories = Tires.Select(x => new Points()).ToArray();
+#endif
             for (var i = 0; i < tires.Length; i++)
             {
                 Tires[i] = new AProjectile[ProjectilePredictionTicks];
@@ -106,8 +109,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     Tires[i][j] = Tires[i][j - 1].Clone();
                     Tires[i][j].Move();
+#if DEBUG
+                    trajectories[i].Add(new Point(Tires[i][j]));
+#endif
                 }
             }
+#if DEBUG
+            foreach (var tr in trajectories)
+                Visualizer.SegmentsDrawQueue.Add(new object[] {Brushes.Indigo, tr, 0.0});
+#endif
 
             Bonuses = world.Bonuses.Select(b => new ABonus(b)).ToArray();
             OilSlicks = world.OilSlicks.Select(s => new AOilSlick(s)).ToArray();
@@ -225,8 +235,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return new Tuple<int, Moves[]>(sel, bestMoveStacks);
         }
 
-        private AProjectile pr;
-
         private void _move()
         {
             var pts = GetWaySegments(self);
@@ -250,25 +258,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 move.EnginePower = 1;
                 return;
             }
-
-            //if (world.Tick <= 225)
-            //{
-            //    move.WheelTurn = 1;
-            //    move.EnginePower = 1;
-            //    return;
-            //}
-
-            //if (pr == null)
-            //{
-            //    pr = AProjectile.GetProjectiles(new ACar(self))[0];
-            //    move.IsThrowProjectile = true;
-            //}
-            //else
-            //{
-            //    pr.Move();
-            //    return;
-            //}
-            //return;
 
             if (BAD_TESTING_STRATEGY)
             {
@@ -368,21 +357,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (_finishTime < Infinity)
                 Log(_finishTime);
 
+#if DEBUG
             if (move.IsBrake)
                 Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Red,
                     new ACircularUnit {X = self.X, Y = self.Y, Radius = 30}));
 
-#if DEBUG
+
             TimerEndLog("All");
-            for (var i = 0; i < Brutes.Length; i++)
+
+            if (Brutes != null)
             {
-                var info = Brutes[i].GetMaxTicksInfo();
-                if (info == null)
-                    continue;
-                Console.Write(i + ": ");
-                foreach(var a in info)
-                    Console.Write(" " + a);
-                Console.WriteLine("(" + Brutes[i].SelectedCount + ")");
+                for (var i = 0; i < Brutes.Length; i++)
+                {
+                    var info = Brutes[i].GetMaxTicksInfo();
+                    if (info == null)
+                        continue;
+                    Console.Write(i + ": ");
+                    foreach (var a in info)
+                        Console.Write(" " + a);
+                    Console.WriteLine("(" + Brutes[i].SelectedCount + ")");
+                }
             }
             Console.WriteLine();
             Visualizer.Draw();
