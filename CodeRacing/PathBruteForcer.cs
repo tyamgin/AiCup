@@ -86,7 +86,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private AProjectile[][] _projCandidates;
         private ACar[][] _carCandidates;
 
-        private int _clBonusesCount;
+        private int _bonusesCount05;
+        private int _bonusesCount2;
 
         private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
         {
@@ -180,21 +181,49 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             _lastCall = MyStrategy.world.Tick;
 
-            var clBonusesCount = MyStrategy.Bonuses.Count(bonus => Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize / 2);
+            /*
+             * Количество бонусов на расстоянии 0.5t
+             * Если изменилось - пересчитывать сильно
+             */
+            var bonusesCount05 = MyStrategy.Bonuses
+                .Count(bonus => Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize / 2);
+
+            /*
+             * Количество бонусов на расстоянии 2t
+             * Если изменилось - чуть нужно пересчитать
+             */
+            var bonusesCount2 = MyStrategy.Bonuses
+                .Count(
+                    bonus =>
+                        Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize*2 &&
+                        MyStrategy.CellDistance(Self, bonus) <= 2);
 
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
             if (MyStrategy.game.InitialFreezeDurationTicks < MyStrategy.world.Tick &&
-                _clBonusesCount == clBonusesCount &&
+                bonusesCount05 == _bonusesCount05 &&
                 LastSuccess < MyStrategy.world.Tick - 1 &&
                 (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
             {
                 return _lastSuccessStack;
             }
 
+            /*
+             * Смотрим на шины, которые на расстоянии не более 6 тайлов
+             */
+            var prevProj = _projCandidates;
+            _projCandidates = MyStrategy.Tires
+                .Where(
+                    proj =>
+                        Self.GetDistanceTo(proj[0]) <= MyStrategy.game.TrackTileSize * 6 &&
+                        MyStrategy.CellDistance(Self, proj[0]) <= 6)
+                .ToArray();
+
             _turnCenter = pts[1];
 
             var extended = MyStrategy.ExtendWaySegments(pts, 50);
-            _bruteWayPoints = extended.GetRange(0, Math.Min(_waypointsCount, extended.Count)).ToArray();
+            _bruteWayPoints =
+                extended.GetRange(0, Math.Min(_waypointsCount, extended.Count))
+                    .ToArray();
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
@@ -235,15 +264,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bestImportance = 0;
 
             /*
-             * Смотрим на бонусы, которые на расстоянии не более 3 тайла
-             * TODO: уменьшить приоритет бонусов, которые может быть возьмет тиммейт
+             * Смотрим на бонусы, которые на расстоянии не более 4t
+             * TODO: уменьшить приоритет бонусов, которые может быть возьмет другой (в.т.ч тиммейт)
              */
-            var prevBonuses = _bonusCandidates;
             _bonusCandidates = MyStrategy.Bonuses
                 .Where(
                     bonus =>
-                        Self.GetDistanceTo(bonus) <= MyStrategy.game.TrackTileSize*3 &&
-                        MyStrategy.CellDistance(Self, bonus) <= 3
+                        Self.GetDistanceTo(bonus) <= MyStrategy.game.TrackTileSize * 4 &&
+                        MyStrategy.CellDistance(Self, bonus) <= 4
                 )
                 .ToArray();
 
@@ -258,17 +286,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         Self.GetDistanceTo(slick) <= MyStrategy.game.TrackTileSize*5 &&
                         MyStrategy.CellDistance(Self, slick) <= 5
                 )
-                .ToArray();
-
-            /*
-             * Смотрим на шины, которые на расстоянии не более 6 тайлов
-             */
-            var prevProj = _projCandidates;
-            _projCandidates = MyStrategy.Tires
-                .Where(
-                    proj =>
-                        Self.GetDistanceTo(proj[0]) <= MyStrategy.game.TrackTileSize*6 &&
-                        MyStrategy.CellDistance(Self, proj[0]) <= 6)
                 .ToArray();
 
             /*
@@ -302,15 +319,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 for (var k = 0; k < _patterns.Length; k++)
                 {
-                    var range = (prevBonuses == null || prevSlicks == null || prevCars == null || prevProj == null 
-                        || prevBonuses.Length != _bonusCandidates.Length 
+                    var range = (prevSlicks == null || prevCars == null || prevProj == null
+                        || _bonusesCount2 != bonusesCount2 
                         || prevSlicks.Length != _slickCandidates.Length
                         || prevCars.Length != _carCandidates.Length
                         || prevProj.Length != _projCandidates.Length)
                         ? (k == 0 ? 6 : 4)
                         : (k == 0 ? 4 : 2);
 
-                    if (_clBonusesCount != clBonusesCount)
+                    if (_bonusesCount05 != bonusesCount05)
                         range = 10;
                     
                     _patterns[k].From = Math.Max(0, _cache[k].Times - range);
@@ -318,8 +335,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     _patterns[k].Step = 2;
                 }
             }
-            
-            _clBonusesCount = clBonusesCount;   
+
+            _bonusesCount05 = bonusesCount05;
+            _bonusesCount2 = bonusesCount2;   
 
             var wayPointRequired = false;
             foreach (var pt in _bruteWayPoints)

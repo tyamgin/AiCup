@@ -9,7 +9,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public const double BonusImportanceCoeff = 60;
         public const double OilSlickDangerCoeff = 70;
-        public const double ProjectileDangerCoeff = 40;
+        public const double TireDangerCoeff = 120;
         public const double InactiveCarDangerCoeff = 55;
         public const double InactiveCarNitroDangerCoeff = 80;
         public const double ExactlyBorderDangerCoeff = 50;
@@ -130,7 +130,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     if (proj.Intersect(car, 5))
                     {
-                        total.Importance -= proj.GetDanger()*ProjectileDangerCoeff; //TODO: обработать шину отдельно
+                        total.Importance -= proj.GetDanger()*TireDangerCoeff; //TODO: обработать шину отдельно
                         total.Projectiles[i] = true;
                     }
                 }

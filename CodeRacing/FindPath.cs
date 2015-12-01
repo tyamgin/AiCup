@@ -51,6 +51,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         }
 
         private static double[,] _distMap;
+        private static int[,] _bfsDistMap;
         private static Cell[,] _distPrev;
 
         public static double GetCost(Cell cell)
@@ -59,10 +60,45 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return Math.Max(0.01, 1 + tile.Weight);
         }
 
-        public static double DijkstraDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
+        public static double BfsDist(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
         {
-            DijkstraNextCell(startI, startJ, endI, endJ, forbidden);
-            return _distMap[startI, startJ];
+            if (_bfsDistMap == null)
+                _bfsDistMap = new int[world.Height, world.Width];
+
+            var q = new Queue<int>();
+            q.Enqueue(endI);
+            q.Enqueue(endJ);
+            
+            for (var i = 0; i < world.Height; i++)
+                for (var j = 0; j < world.Width; j++)
+                    _bfsDistMap[i, j] = Infinity;
+
+            _bfsDistMap[endI, endJ] = 0;
+            while (q.Count > 0)
+            {
+                var curI = q.Dequeue();
+                var curJ = q.Dequeue();
+                var cur = new Cell(curI, curJ);
+
+                EnumerateNeigbours(cur, to =>
+                {
+                    if (!CanPass(cur.I, cur.J, to.I, to.J) || forbidden.Any(x => x.Equals(to.I, to.J)))
+                        return;
+
+                    var distTo = _bfsDistMap[cur.I, cur.J] + 1;
+                    if (distTo < _bfsDistMap[to.I, to.J])
+                    {
+                        _bfsDistMap[to.I, to.J] = distTo;
+                        q.Enqueue(to.I);
+                        q.Enqueue(to.J);
+                    }
+                });
+            }
+
+            if (_bfsDistMap[startI, startJ] == Infinity)
+                throw new Exception("bfs path not found");
+
+            return _bfsDistMap[startI, startJ];
         }
 
         public static Cell DijkstraNextCell(int startI, int startJ, int endI, int endJ, Cell[] forbidden)
@@ -115,7 +151,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var cellTo = GetCell(to);
             return cellFrom.Equals(cellTo)
                 ? 0
-                : DijkstraDist(cellFrom.I, cellFrom.J, cellTo.I, cellTo.J, new Cell[] {});
+                : BfsDist(cellFrom.I, cellFrom.J, cellTo.I, cellTo.J, new Cell[] {});
         }
 
         public static bool IntersectTail(Point p, double additionalMargin)
