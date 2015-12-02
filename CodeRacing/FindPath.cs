@@ -218,9 +218,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return true;
         }
 
-        public static bool CheckVisibility(Car car, Point from, Point to)
+        public static bool CheckVisibility(Car car, Point from, Point to, double width)
         {
-            return EnumeratePointsBetween(from, to, 10.0, point => !IntersectTail(point, car.Height / 2 + 10));
+            return EnumeratePointsBetween(from, to, 10.0, point => !IntersectTail(point, width));
         }
 
         public Points GetWaySegments(Car car)
@@ -239,7 +239,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     var nextCell = DijkstraNextCell(curCell, nextWp, prevCell == null ? new Cell[] { } : new[] { prevCell });
                     var nextPoint = GetCenter(nextCell);
-                    while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nextPoint))
+                    while (result.Count > 1 && !isWayPoint[isWayPoint.Count - 1] && CheckVisibility(car, result[result.Count - 2], nextPoint, car.Height / 2 + 10))
                     {
                         result.Pop();
                         isWayPoint.RemoveAt(isWayPoint.Count - 1);

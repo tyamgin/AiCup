@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (Brutes != null)
                 return;
 
-            const int subWayPointsCount = 60;
+            const int subWayPointsCount = 70;
 
             Brutes = new[]
             {
@@ -55,7 +55,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 0, subWayPointsCount),
+                }, 8, new AMove(), 0, subWayPointsCount, useDist2:true),
 
                                 /*
                      * - ехать в сторону поворота на полной можности
@@ -98,7 +98,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove {IsUseNitro = true}, 0, subWayPointsCount),
+                }, 8, new AMove {IsUseNitro = true}, 0, subWayPointsCount, useDist2:true),
 
                 /*
                      * - снизить мощность
@@ -128,7 +128,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 1, subWayPointsCount),
+                }, 8, new AMove(), 1, subWayPointsCount, useDist2:true),
 
                                /*
                 * - снизить мощность
@@ -158,7 +158,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 121, subWayPointsCount),
+                }, 8, new AMove(), 121, subWayPointsCount, useDist2:true),
 
                 /*
                      * - ехать от поворота на пол-мощности
@@ -200,7 +200,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove(), 2, subWayPointsCount),
+                }, 8, new AMove(), 2, subWayPointsCount, useDist2:true),
             };
 
             BackBrutes = new[] {-1, -0.5, 0, 0.5, 1}.Select(turn => new PathBruteForcer(new[]
@@ -218,7 +218,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             SafeMargin = -1,
                         }
                 }
-            }, 8, new AMove(), 66, 30))
+            }, 8, new AMove(), 66, 30, useDist2: false))
                 .ToArray();
         }
     }

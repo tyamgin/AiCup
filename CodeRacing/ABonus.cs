@@ -6,6 +6,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class ABonus : ARectangularUnit
     {
+        public const int SafeMargin = 3;
         public static Dictionary<long, Point[]> _computedRect = new Dictionary<long, Point[]>();
  
         public BonusType Type;
@@ -65,7 +66,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (_computedRect.ContainsKey(Id))
                 return _computedRect[Id];
-            var result = GetRect(0);
+            var result = GetRect(SafeMargin);
             _computedRect[Id] = result;
             return result;
         }

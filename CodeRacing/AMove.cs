@@ -7,12 +7,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class AMove
     {
-        public const double BonusImportanceCoeff = 60;
+        public const double BonusImportanceCoeff = 75;
         public const double OilSlickDangerCoeff = 70;
         public const double TireDangerCoeff = 120;
         public const double InactiveCarDangerCoeff = 55;
         public const double InactiveCarNitroDangerCoeff = 80;
         public const double ExactlyBorderDangerCoeff = 50;
+        public const double SecondDistCoeff = 70;
+        public const double ThirdDistCoeff = 100;
 
         public double EnginePower;
         public bool IsBrake;
@@ -191,10 +193,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
     public class Moves : List<AMove>
     {
+        public double Penalty;
+
         public Moves Clone()
         {
             var clone = new Moves();
             clone.AddRange(this.Select(m => m.Clone()));
+            clone.Penalty = Penalty;
             return clone;
         }
 
@@ -221,7 +226,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (ComputeTime() != total.Time)
                 throw new Exception("ComputeTime() != elapsedTime");
 #endif
-            return total.Time - total.Importance;
+            return total.Time - total.Importance - Penalty;
         }
 
         private bool _modelMove(ACar car, AMove m, PassedInfo total)

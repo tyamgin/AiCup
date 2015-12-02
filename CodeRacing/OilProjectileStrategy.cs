@@ -107,7 +107,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             continue;
 
                         var car = All[i][t];
-                        if (pr.Intersect(car, car.Original.IsTeammate ? 5 : -5))
+
+                        /*
+                         * Чужие машинки считать меньшими по размеру
+                         * Свои - большими
+                         */
+                        if (pr.Intersect(car, car.Original.IsTeammate ? 5 : -(pr.Type == ProjectileType.Tire ? 20 : 5)))
                         {
                             if (pr.Type == ProjectileType.Tire)
                             {

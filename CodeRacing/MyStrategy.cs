@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 MapHeight = game.TrackTileSize * world.Height;
 
                 CarDiagonalHalfLength = Geom.Gypot(game.CarWidth, game.CarHeight) / 2;
-                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize, game.BonusSize) / 2 - 6;//HACK
+                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize - ABonus.SafeMargin, game.BonusSize - ABonus.SafeMargin) / 2;//HACK
 
                 MyTiles = new ATile[world.Height, world.Width];
                 for (var i = 0; i < world.Height; i++)

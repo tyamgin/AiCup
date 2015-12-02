@@ -34,7 +34,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public bool Cars;
         public bool ExactlyBorder;
         public bool OutOfBoreder;
-        public bool WayPoint; // TODO: HARD TO FIX: можно пропустить несколько вейпоинтов
+        public bool WayPoint; // HARD TO FIX: можно пропустить несколько вейпоинтов
 
         public int Time;
         public double Importance;
@@ -75,11 +75,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int LastSuccess; // Когда последний раз брут что-то находил
         private int _lastCall; // Когда последний раз вызывали. Если не вызывали - значит был success
 
-        private Point _turnCenter, _turnTo;
-        private double _needDist;
+        private Point _turnCenter, _turnTo, _turnTo23;
+        private double _needDist, _needDist2, _needDist3;
         private readonly int _interval;
         public AMove LastStageMove;
         private int _waypointsCount;
+        private bool _useDist2;
 
         private ABonus[] _bonusCandidates;
         private AOilSlick[] _slickCandidates;
@@ -94,13 +95,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return time1 - importance1 < time2 - importance2;
         }
 
-        public PathBruteForcer(PathPattern[] patterns, int interval, AMove lastStageMove, int id, int waypointsCount)
+        public PathBruteForcer(PathPattern[] patterns, int interval, AMove lastStageMove, int id, int waypointsCount, bool useDist2)
         {
             Patterns = patterns;
             _interval = interval;
             Id = id;
             LastStageMove = lastStageMove;
             _waypointsCount = waypointsCount;
+            _useDist2 = useDist2;
         }
 
         private void _doRecursive(ACar model, int patternIndex, PassedInfo total)
@@ -117,16 +119,41 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (m.IsUseNitro && model.Speed.Length > 18)
                     return;
 
-                for (var i = 0; i < 200 && _turnTo.GetDistanceTo2(model) > _needDist * _needDist; i++)
+                var penalty = 0.0;
+
+                for (var i = 0; i < 200; i++)
                 {
+                    var dst = _turnTo.GetDistanceTo2(model);
+                    if (dst < _needDist*_needDist)
+                        break;
+
                     if (!_modelMove(model, m, total))
+                    {
+                        if (_useDist2 && m.EnginePower <= 1)
+                        {
+                            if (dst < _needDist2*_needDist2)
+                            {
+                                penalty = AMove.SecondDistCoeff;
+                                total.Importance -= penalty;
+                                m.Times++;
+                                break;
+                            }
+                            if (dst < _needDist3*_needDist3)
+                            {
+                                penalty = AMove.ThirdDistCoeff;
+                                total.Importance -= penalty;
+                                m.Times++;
+                                break;
+                            }
+                        }
                         return;
+                    }
 
                     m.Times++;
                 }
                 if (!total.WayPoint)
                     return;
-                if (!MyStrategy.CheckVisibility(Self.Original, model, _turnTo))
+                if (!MyStrategy.CheckVisibility(Self.Original, model, penalty > 0 ? _turnTo23 : _turnTo, 20))
                     return;
 
                 if (_isBetterTime(total.Time, total.Importance, _bestTime, _bestImportance))
@@ -135,6 +162,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     _bestImportance = total.Importance;
                     _bestMovesStack = _movesStack.Clone();
                     _bestMovesStack.Add(m);
+                    _bestMovesStack.Penalty = penalty;
                 }
                 return;
             }
@@ -229,10 +257,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             bruteWayPoints.AddRange(_bruteWayPoints);
             Visualizer.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
 #endif
-            _needDist = MyStrategy.game.TrackTileSize/2 - 3;
+            _needDist = MyStrategy.game.TrackTileSize*0.5 - 3;
+            _needDist2 = MyStrategy.game.TrackTileSize - 3;
+            _needDist3 = MyStrategy.game.TrackTileSize*1.5 - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
+            _turnTo23 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.9))];
 #if DEBUG
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
+            Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Orange, new ACircularUnit { X = _turnTo23.X, Y = _turnTo23.Y, Radius = 20 }));
 #endif
 
             _patterns = Patterns.Select(pt => new PathPattern
@@ -270,6 +302,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bonusCandidates = MyStrategy.Bonuses
                 .Where(
                     bonus =>
+                        MyStrategy.world.Tick > 270 && // Не смотреть на бонусы при старте!!!
                         Self.GetDistanceTo(bonus) <= MyStrategy.game.TrackTileSize * 4 &&
                         MyStrategy.CellDistance(Self, bonus) <= 4
                 )
