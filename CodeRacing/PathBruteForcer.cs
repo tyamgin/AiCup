@@ -138,13 +138,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 m.Times++;
                                 break;
                             }
-                            if (dst < _needDist3*_needDist3)
-                            {
-                                penalty = AMove.ThirdDistCoeff;
-                                total.Importance -= penalty;
-                                m.Times++;
-                                break;
-                            }
+                            //if (dst < _needDist3*_needDist3)
+                            //{
+                            //    penalty = AMove.ThirdDistCoeff;
+                            //    total.Importance -= penalty;
+                            //    m.Times++;
+                            //    break;
+                            //}
                         }
                         return;
                     }
@@ -204,7 +204,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 _lastSuccessStack[0].Times--;
                 _lastSuccessStack.Normalize();
             }
-            if (_lastSuccessStack != null && _lastSuccessStack.Count == 0)
+            if (_lastSuccessStack != null && (_lastSuccessStack.Count == 0 || _useDist2 && _lastSuccessStack.ComputeTime() < 30))
                 _lastSuccessStack = null;
 
             _lastCall = MyStrategy.world.Tick;
@@ -249,9 +249,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _turnCenter = pts[1];
 
             var extended = MyStrategy.ExtendWaySegments(pts, 50);
-            _bruteWayPoints =
+            var extendedList =
                 extended.GetRange(0, Math.Min(_waypointsCount, extended.Count))
-                    .ToArray();
+                    .ToList();
+            //if (_useDist2)
+            //{
+            //    while (extendedList.Count > 1 &&
+            //           extendedList[extendedList.Count - 1].GetDistanceTo2(Self) <
+            //           extendedList[extendedList.Count - 2].GetDistanceTo2(Self))
+            //        extendedList.RemoveAt(extendedList.Count - 1);
+            //}
+
+            _bruteWayPoints = extendedList.ToArray();
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
@@ -373,11 +382,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _bonusesCount2 = bonusesCount2;   
 
             var wayPointRequired = false;
-            foreach (var pt in _bruteWayPoints)
+            for(var i = _bruteWayPoints.Length - 1; i >= 0; i--)
             {
-                if (pt.GetDistanceTo2(_turnTo) < _needDist*_needDist)
+                if (_bruteWayPoints[i].GetDistanceTo2(_turnTo) < _needDist*_needDist)
+                {
+                    for (var j = 0; j < i; j++)
+                        wayPointRequired |=
+                            MyStrategy.GetNextWayPoint(Self.Original).Equals(MyStrategy.GetCell(_bruteWayPoints[j]));
                     break;
-                wayPointRequired |= MyStrategy.GetNextWayPoint(Self.Original).Equals(MyStrategy.GetCell(pt));
+                }
             }
 
             _doRecursive(Self, 0, new PassedInfo { WayPoint = !wayPointRequired });

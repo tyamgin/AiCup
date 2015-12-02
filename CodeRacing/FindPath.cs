@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Forms;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -96,7 +97,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             if (_bfsDistMap[startI, startJ] == Infinity)
-                throw new Exception("bfs path not found");
+            {
+                if (forbidden.Length == 0)
+                    throw new Exception("bfs path not found");
+                return BfsDist(startI, startJ, endI, endJ, new Cell[] {});
+            }
 
             return _bfsDistMap[startI, startJ];
         }
@@ -140,7 +145,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             if (_distPrev[startI, startJ] == null)
-                throw new Exception("path not found");
+            {
+                if (forbidden.Length == 0)
+                    throw new Exception("path not found");
+                return DijkstraNextCell(startI, startJ, endI, endJ, new Cell[] {});
+            }
 
             return _distPrev[startI, startJ];
         }

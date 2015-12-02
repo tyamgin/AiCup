@@ -119,11 +119,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (backBruteRes.Item1 != -1)
             {
                 BackBrutes[backBruteRes.Item1].SelectThis();
-                backBruteRes.Item2[backBruteRes.Item1][0].Apply(move, new ACar(self));
+                var mv = backBruteRes.Item2[backBruteRes.Item1];
+                if (mv.Count > 0)
+                {
+                    mv[0].Apply(move, new ACar(self));
 #if DEBUG
-                Visualizer.DrawWays(self, backBruteRes.Item2, backBruteRes.Item1);
+                    Visualizer.DrawWays(self, backBruteRes.Item2, backBruteRes.Item1);
 #endif
-                return;
+                    return;
+                }
             }
 
             // change points
