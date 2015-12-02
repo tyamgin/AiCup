@@ -156,6 +156,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (!MyStrategy.CheckVisibility(Self.Original, model, penalty > 0 ? _turnTo23 : _turnTo, 20))
                     return;
 
+                if (model.EnginePower < 0)
+                {
+                    penalty += AMove.BackMoveCoeff;
+                    total.Importance -= AMove.BackMoveCoeff;
+                }
+
                 if (_isBetterTime(total.Time, total.Importance, _bestTime, _bestImportance))
                 {
                     _bestTime = total.Time;
@@ -249,18 +255,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _turnCenter = pts[1];
 
             var extended = MyStrategy.ExtendWaySegments(pts, 50);
-            var extendedList =
-                extended.GetRange(0, Math.Min(_waypointsCount, extended.Count))
-                    .ToList();
-            //if (_useDist2)
-            //{
-            //    while (extendedList.Count > 1 &&
-            //           extendedList[extendedList.Count - 1].GetDistanceTo2(Self) <
-            //           extendedList[extendedList.Count - 2].GetDistanceTo2(Self))
-            //        extendedList.RemoveAt(extendedList.Count - 1);
-            //}
-
-            _bruteWayPoints = extendedList.ToArray();
+            _bruteWayPoints = extended.GetRange(0, Math.Min(_waypointsCount, extended.Count)).ToArray();
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
@@ -270,7 +265,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _needDist2 = MyStrategy.game.TrackTileSize - 3;
             _needDist3 = MyStrategy.game.TrackTileSize*1.5 - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
-            _turnTo23 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.9))];
+            _turnTo23 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.83))];
 #if DEBUG
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Orange, new ACircularUnit { X = _turnTo23.X, Y = _turnTo23.Y, Radius = 20 }));

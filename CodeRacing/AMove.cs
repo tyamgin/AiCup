@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Resources;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
@@ -14,7 +15,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double InactiveCarNitroDangerCoeff = 80;
         public const double ExactlyBorderDangerCoeff = 50;
         public const double SecondDistCoeff = 70;
-        public const double ThirdDistCoeff = 100;
+        //public const double ThirdDistCoeff = 100;
+        public const double BackMoveCoeff = 150;
+        public const double OutOfBorederDangerCoeff = 80;
 
         public double EnginePower;
         public bool IsBrake;
@@ -167,6 +170,15 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (!total.ExactlyBorder)
                     total.Importance -= ExactlyBorderDangerCoeff;
                 total.ExactlyBorder = true;
+                res = true;
+            }
+
+            // проверка что можно проскользнуть по стене
+            if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, -20)))
+            {
+                if (!total.OutOfBoreder)
+                    total.Importance -= OutOfBorederDangerCoeff;
+                total.OutOfBoreder = true;
                 res = true;
             }
 
