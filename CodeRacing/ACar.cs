@@ -110,7 +110,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 RemainingNitroCooldownTicks = MyStrategy.game.UseNitroCooldownTicks;
             }
 
-            double updateIterations = simpleMode ? 2 : 10; // TODO: make it int
+            var updateIterations = simpleMode ? 2 : 10;
             var frictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarMovementAirFrictionFactor, 1.0/updateIterations);
             var rotationFrictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarRotationFrictionFactor,
                 1.0/updateIterations);
@@ -142,7 +142,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 var dir = Point.ByAngle(Angle);
 
-                var baseAngSpd = AngularSpeed; // WTF???
+                var baseAngSpd = AngularSpeed; // HACK
                 AngularSpeed -= baseAngSpd;
                 baseAngSpd = MyStrategy.game.CarAngularSpeedFactor*WheelTurn*(Speed*dir);
                 AngularSpeed += baseAngSpd;
@@ -191,6 +191,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (RemainingInactiveTicks > 0)
                     RemainingInactiveTicks--;
             }
+
+            // clear rectangles cache
             _rect = null;
             _rectEx = null;
         }
@@ -209,13 +211,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             return Geom.PolygonsIntersect(GetRect(0), car.GetRect(safeMargin));
         }
 
+        /*
+         * Rectangles cache
+         */
         private Point[] _rectEx, _rect;
 
         public Point[] GetRectEx()
         {
-            if (_rectEx == null)
-                _rectEx = base.GetRectEx();
-            return _rectEx;
+            return _rectEx ?? (_rectEx = base.GetRectEx());
         }
 
         public new Point[] GetRect(double safeMargin)

@@ -7,6 +7,11 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
+    public class Const
+    {
+        
+    }
+
     public partial class MyStrategy : IStrategy
     {
         public static bool BAD_TESTING_STRATEGY = false;
@@ -17,7 +22,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public Car self;
 
         public static ATile[,] MyTiles;
-        public static Cell[] waypoints;
+        public static Cell[] Waypoints;
         public static double MapWidth, MapHeight;
         public static Dictionary<long, Player> Players; 
 
@@ -59,7 +64,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 MapHeight = game.TrackTileSize * world.Height;
 
                 CarDiagonalHalfLength = Geom.Gypot(game.CarWidth, game.CarHeight) / 2;
-                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize - ABonus.SafeMargin, game.BonusSize - ABonus.SafeMargin) / 2;//HACK
+                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize/2 - ABonus.SafeMargin, game.BonusSize/2 - ABonus.SafeMargin);
 
                 MyTiles = new ATile[world.Height, world.Width];
                 for (var i = 0; i < world.Height; i++)
@@ -82,9 +87,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             // intialize waypoints
             var wp = world.Waypoints;
-            waypoints = new Cell[wp.Length];
-            for(var i = 0; i < waypoints.Length; i++)
-                waypoints[i] = new Cell(wp[i][1], wp[i][0]);
+            Waypoints = new Cell[wp.Length];
+            for(var i = 0; i < Waypoints.Length; i++)
+                Waypoints[i] = new Cell(wp[i][1], wp[i][0]);
 
             Players = new Dictionary<long, Player>();
             foreach (var player in world.Players)

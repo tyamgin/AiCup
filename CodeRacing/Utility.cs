@@ -17,7 +17,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         
         public static Cell GetNextWayPoint(Car car, int delta = 1)
         {
-            return waypoints[(car.NextWaypointIndex + delta - 1) % waypoints.Length];
+            return Waypoints[(car.NextWaypointIndex + delta - 1) % Waypoints.Length];
         }
 
         public static Cell GetCell(double x, double y)

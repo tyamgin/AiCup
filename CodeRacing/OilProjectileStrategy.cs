@@ -91,6 +91,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var shot = new bool[projectiles.Length];
             var shotSpeed = 0.0;
 
+            var checkTicks = OpponentsTicksPrediction*(self.Type == CarType.Buggy ? 0.5 : 0.4);
+
             for (var t = 1; t < OpponentsTicksPrediction * 0.5; t++)
             {
                 for(var prId = 0; prId < projectiles.Length; prId++)
@@ -112,7 +114,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                          * Чужие машинки считать меньшими по размеру
                          * Свои - большими
                          */
-                        if (pr.Intersect(car, car.Original.IsTeammate ? 5 : -(pr.Type == ProjectileType.Tire ? 20 : 5)))
+                        if (pr.Intersect(car, car.Original.IsTeammate ? 5 : -(pr.Type == ProjectileType.Tire ? 35 : 5)))
                         {
                             if (pr.Type == ProjectileType.Tire)
                             {
@@ -150,7 +152,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
             return shotCount == 1 &&
                    (shotSpeed >= game.TireInitialSpeed - Eps ||
-                    shotSpeed >= game.TireInitialSpeed/2.5 && self.ProjectileCount > 1);
+                    shotSpeed >= game.TireInitialSpeed/2.5 && self.ProjectileCount > 2);
         }
     }
 }

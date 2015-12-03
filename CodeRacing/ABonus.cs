@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (_computedRect.ContainsKey(Id))
                 return _computedRect[Id];
-            var result = GetRect(SafeMargin);
+            var result = GetRect(-SafeMargin);
             _computedRect[Id] = result;
             return result;
         }
