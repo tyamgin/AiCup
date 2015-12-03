@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static Cell GetCell(double x, double y)
         {
-            return new Cell((int)(y / game.TrackTileSize), (int)(x / game.TrackTileSize));
+            return new Cell((int)(y / Const.TileSize), (int)(x / Const.TileSize));
         }
 
         public static Cell GetCell(Point p)
@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static Point GetCenter(int I, int J)
         {
-            return new Point((J + 0.5) * game.TrackTileSize, (I + 0.5) * game.TrackTileSize);
+            return new Point((J + 0.5) * Const.TileSize, (I + 0.5) * Const.TileSize);
         }
 
         public static Point GetCenter(Cell cell)
@@ -82,7 +82,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
         }
 
-        public void TimerEndLog(string caption, long limit = TimerLogLimit)
+        public void TimerEndLog(string caption, long limit = MagicConst.TimerLogLimit)
         {
 #if DEBUG
             var time = TimerStop();

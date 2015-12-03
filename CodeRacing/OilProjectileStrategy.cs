@@ -54,7 +54,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public bool CheckUseOil()
         {
-            if (self.RemainingOilCooldownTicks != 0 || world.Tick < game.InitialFreezeDurationTicks)
+            if (self.RemainingOilCooldownTicks != 0 || world.Tick < Const.Game.InitialFreezeDurationTicks)
                 return false;
             if (self.EnginePower < 0)
                 return false;
@@ -63,7 +63,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var rad = slick.Radius * 0.8;
             var result = false;
 
-            for (var t = 0; t < OpponentsTicksPrediction; t++)
+            for (var t = 0; t < MagicConst.OpponentsTicksPrediction; t++)
             {
                 for (var i = 0; i < Opponents.Length; i++)
                 {
@@ -79,7 +79,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public bool CheckUseProjectile()
         {
-            if (world.Tick < game.InitialFreezeDurationTicks)
+            if (world.Tick < Const.Game.InitialFreezeDurationTicks)
                 return false;
             if (self.ProjectileCount == 0)
                 return false;
@@ -91,9 +91,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var shot = new bool[projectiles.Length];
             var shotSpeed = 0.0;
 
-            var checkTicks = OpponentsTicksPrediction*(self.Type == CarType.Buggy ? 0.5 : 0.4);
+            var checkTicks = MagicConst.OpponentsTicksPrediction*(self.Type == CarType.Buggy ? 0.5 : 0.4);
 
-            for (var t = 1; t < OpponentsTicksPrediction * 0.5; t++)
+            for (var t = 1; t < MagicConst.OpponentsTicksPrediction * 0.5; t++)
             {
                 for(var prId = 0; prId < projectiles.Length; prId++)
                 {
@@ -119,7 +119,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             if (pr.Type == ProjectileType.Tire)
                             {
                                 // если это я только что выпустил шину
-                                if (car.Original.Id == self.Id && Math.Abs(pr.Speed.Length - game.TireInitialSpeed) < Eps)
+                                if (car.Original.Id == self.Id && Math.Abs(pr.Speed.Length - Const.Game.TireInitialSpeed) < Eps)
                                     continue;
                             }
                             else
@@ -151,8 +151,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return shotCount >= 3 || shotCount == 2 && self.ProjectileCount > 2;
             }
             return shotCount == 1 &&
-                   (shotSpeed >= game.TireInitialSpeed - Eps ||
-                    shotSpeed >= game.TireInitialSpeed/2.5 && self.ProjectileCount > 2);
+                   (shotSpeed >= Const.Game.TireInitialSpeed - Eps ||
+                    shotSpeed >= Const.Game.TireInitialSpeed / 2.5 && self.ProjectileCount > 2);
         }
     }
 }

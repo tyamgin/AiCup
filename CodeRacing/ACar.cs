@@ -39,13 +39,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (original.Type == CarType.Buggy)
             {
-                _carAccelerationUp = MyStrategy.game.BuggyEngineForwardPower / original.Mass;
-                _carAccelerationDown = MyStrategy.game.BuggyEngineRearPower / original.Mass;
+                _carAccelerationUp = Const.Game.BuggyEngineForwardPower / original.Mass;
+                _carAccelerationDown = Const.Game.BuggyEngineRearPower / original.Mass;
             }
             else
             {
-                _carAccelerationUp = MyStrategy.game.JeepEngineForwardPower / original.Mass;
-                _carAccelerationDown = MyStrategy.game.JeepEngineRearPower / original.Mass;
+                _carAccelerationUp = Const.Game.JeepEngineForwardPower / original.Mass;
+                _carAccelerationDown = Const.Game.JeepEngineRearPower / original.Mass;
             }
         }
 
@@ -106,13 +106,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             useNitro = useNitro && Original.NitroChargeCount > 0;
             if (useNitro && RemainingNitroTicks == 0 && RemainingNitroCooldownTicks == 0)
             {
-                RemainingNitroTicks = MyStrategy.game.NitroDurationTicks;
-                RemainingNitroCooldownTicks = MyStrategy.game.UseNitroCooldownTicks;
+                RemainingNitroTicks = Const.Game.NitroDurationTicks;
+                RemainingNitroCooldownTicks = Const.Game.UseNitroCooldownTicks;
             }
 
             var updateIterations = simpleMode ? 2 : 10;
-            var frictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarMovementAirFrictionFactor, 1.0/updateIterations);
-            var rotationFrictionMultiplier = Math.Pow(1.0 - MyStrategy.game.CarRotationFrictionFactor,
+            var frictionMultiplier = Math.Pow(1.0 - Const.Game.CarMovementAirFrictionFactor, 1.0/updateIterations);
+            var rotationFrictionMultiplier = Math.Pow(1.0 - Const.Game.CarRotationFrictionFactor,
                 1.0/updateIterations);
 
             if (enginePower > 1 + MyStrategy.Eps || enginePower < -1 - MyStrategy.Eps)
@@ -126,17 +126,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             else
             {
                 EnginePower = enginePower > EnginePower
-                    ? Math.Min(EnginePower + MyStrategy.game.CarEnginePowerChangePerTick, enginePower)
-                    : Math.Max(EnginePower - MyStrategy.game.CarEnginePowerChangePerTick, enginePower);
+                    ? Math.Min(EnginePower + Const.Game.CarEnginePowerChangePerTick, enginePower)
+                    : Math.Max(EnginePower - Const.Game.CarEnginePowerChangePerTick, enginePower);
             }
 
 
             WheelTurn = wheelTurn > WheelTurn
-                ? Math.Min(WheelTurn + MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn)
-                : Math.Max(WheelTurn - MyStrategy.game.CarWheelTurnChangePerTick, wheelTurn);
+                ? Math.Min(WheelTurn + Const.Game.CarWheelTurnChangePerTick, wheelTurn)
+                : Math.Max(WheelTurn - Const.Game.CarWheelTurnChangePerTick, wheelTurn);
 
 
-            if (MyStrategy.world.Tick >= MyStrategy.game.InitialFreezeDurationTicks)
+            if (MyStrategy.world.Tick >= Const.Game.InitialFreezeDurationTicks)
             {
                 // http://russianaicup.ru/forum/index.php?topic=394.msg3888#msg3888
 
@@ -144,7 +144,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 var baseAngSpd = AngularSpeed; // HACK
                 AngularSpeed -= baseAngSpd;
-                baseAngSpd = MyStrategy.game.CarAngularSpeedFactor*WheelTurn*(Speed*dir);
+                baseAngSpd = Const.Game.CarAngularSpeedFactor*WheelTurn*(Speed*dir);
                 AngularSpeed += baseAngSpd;
 
                 var carAcceleration = EnginePower >= 0
@@ -154,10 +154,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var accelerationDelta = dir*(carAcceleration*EnginePower/updateIterations);
 
                 var lengthwiseMovementFrictionFactor = isBreak
-                    ? MyStrategy.game.CarCrosswiseMovementFrictionFactor
-                    : MyStrategy.game.CarLengthwiseMovementFrictionFactor;
+                    ? Const.Game.CarCrosswiseMovementFrictionFactor
+                    : Const.Game.CarLengthwiseMovementFrictionFactor;
                 lengthwiseMovementFrictionFactor /= updateIterations;
-                var crosswiseMovementFrictionFactor = MyStrategy.game.CarCrosswiseMovementFrictionFactor/
+                var crosswiseMovementFrictionFactor = Const.Game.CarCrosswiseMovementFrictionFactor/
                                                       updateIterations;
 
                 for (var i = 0; i < updateIterations; i++)
@@ -199,14 +199,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public bool TakeBonus(ABonus bonus)
         {
-            if (GetDistanceTo2(bonus) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.BonusDiagonalHalfLength))
+            if (GetDistanceTo2(bonus) > Geom.Sqr(Const.CarDiagonalHalfLength + Const.BonusDiagonalHalfLength))
                 return false;
             return Geom.PolygonsIntersect(GetRect(0), bonus.GetRect());
         }
 
         public bool IntersectWith(ACar car, double safeMargin)
         {
-            if (GetDistanceTo2(car) > Geom.Sqr(MyStrategy.CarDiagonalHalfLength + MyStrategy.CarDiagonalHalfLength))
+            if (GetDistanceTo2(car) > Geom.Sqr(Const.CarDiagonalHalfLength + Const.CarDiagonalHalfLength))
                 return false;
             return Geom.PolygonsIntersect(GetRect(0), car.GetRect(safeMargin));
         }

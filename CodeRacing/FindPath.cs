@@ -165,7 +165,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static bool IntersectTail(Point p, double additionalMargin)
         {
-            if (p.X < 0 || p.X >= MapWidth || p.Y < 0 || p.Y >= MapHeight)
+            if (p.X < 0 || p.X >= Const.MapWidth || p.Y < 0 || p.Y >= Const.MapHeight)
                 return true;
 
             var cell = GetCell(p.X, p.Y);
@@ -174,7 +174,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return true;
 
             var c = GetCenter(cell);
-            var margin = game.TrackTileSize / 2 - game.TrackTileMargin - additionalMargin;
+            var margin = Const.TileSize / 2 - Const.TileMargin - additionalMargin;
             var lx = c.X - margin;
             var rx = c.X + margin;
             var ly = c.Y - margin;
@@ -184,7 +184,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (lx <= p.X && p.X <= rx && ly <= p.Y && p.Y <= ry)
                 return false;
 
-            var cornerDist2 = Geom.Sqr(game.TrackTileMargin + additionalMargin);
+            var cornerDist2 = Geom.Sqr(Const.TileMargin + additionalMargin);
 
             // в углу
             foreach (var corner in MyTiles[cell.I, cell.J].Parts)

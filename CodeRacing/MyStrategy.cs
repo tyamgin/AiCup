@@ -7,9 +7,37 @@ using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk 
 {
+    public class MagicConst
+    {
+        public const double BonusImportanceCoeff = 75;
+        public const double OilSlickDangerCoeff = 70;
+        public const double TireDangerCoeff = 120;
+        public const double InactiveCarDangerCoeff = 55;
+        public const double InactiveCarNitroDangerCoeff = 80;
+        public const double ExactlyBorderDangerCoeff = 50;
+        public const double SecondDistDangerCoeff = 70;
+        public const double BackMoveDangerCoeff = 150;
+        public const double OutOfBorederDangerCoeff = 80;
+
+        public const double SafeMargin = 10.0;
+        public const int BonusSafeMargin = 3;
+        public const long TimerLogLimit = 5;
+
+        public const int OpponentsTicksPrediction = 100;
+        public const int ProjectilePredictionTicks = 60;
+    }
+
     public class Const
     {
-        
+        public static Game Game;
+        public static double TileSize;
+        public static double TileMargin;
+        public static double CarDiagonalHalfLength;
+        public static double BonusDiagonalHalfLength;
+        public static double MapWidth;
+        public static double MapHeight;
+
+        public static bool Initialized;
     }
 
     public partial class MyStrategy : IStrategy
@@ -17,23 +45,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static bool BAD_TESTING_STRATEGY = false;
 
         public static World world;
-        public static Game game;
         public Move move;
         public Car self;
 
         public static ATile[,] MyTiles;
         public static Cell[] Waypoints;
-        public static double MapWidth, MapHeight;
         public static Dictionary<long, Player> Players; 
-
-        public const double SafeMargin = 10.0;
-        public const long TimerLogLimit = 5;
-
-        public static double CarDiagonalHalfLength;
-        public static double BonusDiagonalHalfLength;
-
-        public const int OpponentsTicksPrediction = 100;
-        public const int ProjectilePredictionTicks = 60;
 
         public static AProjectile[][] Tires;
         public static ABonus[] Bonuses;
@@ -50,6 +67,20 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         void Initialize()
         {
+            if (!Const.Initialized)
+            {
+                Const.Initialized = true;
+
+                Const.TileSize = Const.Game.TrackTileSize;
+                Const.TileMargin = Const.Game.TrackTileMargin;
+
+                Const.CarDiagonalHalfLength = Geom.Gypot(Const.Game.CarWidth, Const.Game.CarHeight) / 2;
+                Const.BonusDiagonalHalfLength = Geom.Gypot(Const.Game.BonusSize / 2 - MagicConst.BonusSafeMargin, Const.Game.BonusSize / 2 - MagicConst.BonusSafeMargin);
+
+                Const.MapWidth = Const.TileSize * world.Width;
+                Const.MapHeight = Const.TileSize * world.Height;
+            }
+
             Teammate = world.Cars.FirstOrDefault(car => car.IsTeammate && car.Id != self.Id);
 
             TeammatePath.Remove(self.Id);
@@ -60,12 +91,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (Players == null) // check for first call
             {
-                MapWidth = game.TrackTileSize * world.Width;
-                MapHeight = game.TrackTileSize * world.Height;
-
-                CarDiagonalHalfLength = Geom.Gypot(game.CarWidth, game.CarHeight) / 2;
-                BonusDiagonalHalfLength = Geom.Gypot(game.BonusSize/2 - ABonus.SafeMargin, game.BonusSize/2 - ABonus.SafeMargin);
-
                 MyTiles = new ATile[world.Height, world.Width];
                 for (var i = 0; i < world.Height; i++)
                     for (var j = 0; j < world.Width; j++)
@@ -108,9 +133,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 #endif
             for (var i = 0; i < tires.Length; i++)
             {
-                Tires[i] = new AProjectile[ProjectilePredictionTicks];
+                Tires[i] = new AProjectile[MagicConst.ProjectilePredictionTicks];
                 Tires[i][0] = new AProjectile(tires[i]);
-                for (var j = 1; j < ProjectilePredictionTicks; j++)
+                for (var j = 1; j < MagicConst.ProjectilePredictionTicks; j++)
                 {
                     Tires[i][j] = Tires[i][j - 1].Clone();
                     Tires[i][j].Move();
@@ -154,7 +179,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public void PrepareOpponentsPath()
         {
-            if (world.Tick < game.InitialFreezeDurationTicks)
+            if (world.Tick < Const.Game.InitialFreezeDurationTicks)
                 return;
 
             TimerStart();
@@ -166,9 +191,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             OpponentsCars = new ACar[Opponents.Length][];
             for (var i = 0; i < Opponents.Length; i++)
             {
-                OpponentsCars[i] = new ACar[OpponentsTicksPrediction];
+                OpponentsCars[i] = new ACar[MagicConst.OpponentsTicksPrediction];
                 OpponentsCars[i][0] = new ACar(Opponents[i]);
-                for (var t = 1; t < OpponentsTicksPrediction; t++)
+                for (var t = 1; t < MagicConst.OpponentsTicksPrediction; t++)
                 {
                     OpponentsCars[i][t] = OpponentsCars[i][t - 1].Clone();
                     _simulateOpponentMove(ways[i], OpponentsCars[i][t]);
@@ -193,7 +218,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             var turn = m.WheelTurn is Point ? TurnRound(car.GetAngleTo(m.WheelTurn as Point)) : Convert.ToDouble(m.WheelTurn);
             car.Move(m.EnginePower, turn, m.IsBrake, m.IsUseNitro, simpleMode);
-            var ok = car.GetRect(0).All(p => !IntersectTail(p, exactlyBorders ? 0 : SafeMargin));
+            var ok = car.GetRect(0).All(p => !IntersectTail(p, exactlyBorders ? 0 : MagicConst.SafeMargin));
             if (!ok)
             {
                 // HACK
@@ -244,7 +269,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             var pts = GetWaySegments(self);
 
-            if (world.Tick > game.InitialFreezeDurationTicks)
+            if (world.Tick > Const.Game.InitialFreezeDurationTicks)
                 PositionsHistory.Add(new Point(self));
 
             if (!DurabilityObserver.IsActive(self))
@@ -258,7 +283,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             InitBrutes();
 
-            if (world.Tick < game.InitialFreezeDurationTicks)
+            if (world.Tick < Const.Game.InitialFreezeDurationTicks)
             {
                 move.EnginePower = 1;
                 return;
@@ -321,7 +346,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             TimerStart();
             MyStrategy.world = world;
-            MyStrategy.game = game;
+            Const.Game = game;
             this.move = move;
             this.self = self;
             Initialize();

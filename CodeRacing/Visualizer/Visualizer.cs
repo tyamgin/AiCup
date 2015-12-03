@@ -123,16 +123,16 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             //var myNextWp = MyStrategy.GetNextWayPoint(self);
-            //FillRect(Brushes.Aqua, myNextWp.J * MyStrategy.game.TrackTileSize, myNextWp.I * MyStrategy.game.TrackTileSize, MyStrategy.game.TrackTileSize, MyStrategy.game.TrackTileSize);
+            //FillRect(Brushes.Aqua, myNextWp.J * Const.TileSize, myNextWp.I * Const.TileSize, Const.TileSize, Const.TileSize);
 
             // tiles
             foreach (var tile in MyStrategy.MyTiles)
             {
-                var margin = MyStrategy.game.TrackTileMargin;
-                var tsize = MyStrategy.game.TrackTileSize;
+                var margin = Const.TileMargin;
+                var tsize = Const.TileSize;
 
-                var dx = MyStrategy.game.TrackTileSize*tile.J;
-                var dy = MyStrategy.game.TrackTileSize*tile.I;
+                var dx = Const.TileSize*tile.J;
+                var dy = Const.TileSize*tile.I;
 
                 if (tile.Type == TileType.Unknown)
                     FillRect(Brushes.DarkGray, dx, dy, tsize, tsize);
@@ -320,14 +320,14 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _lookY = p.Y - _scale*_form.panel.Height/2;
             if (_lookY < 0)
                 _lookY = 0;
-            if (_lookY > MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height)
-                _lookY = MyStrategy.world.Height * MyStrategy.game.TrackTileSize - _scale * _form.panel.Height;
+            if (_lookY > MyStrategy.world.Height * Const.TileSize - _scale * _form.panel.Height)
+                _lookY = MyStrategy.world.Height * Const.TileSize - _scale * _form.panel.Height;
 
             _lookX = p.X - _scale*_form.panel.Width/2;
             if (_lookX < 0)
                 _lookX = 0;
-            if (_lookX > MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width)
-                _lookX = MyStrategy.world.Width * MyStrategy.game.TrackTileSize - _scale * _form.panel.Width;
+            if (_lookX > MyStrategy.world.Width * Const.TileSize - _scale * _form.panel.Width)
+                _lookX = MyStrategy.world.Width * Const.TileSize - _scale * _form.panel.Width;
         }
     }
 }

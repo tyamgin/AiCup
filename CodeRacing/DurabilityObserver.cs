@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (!_remainTicks.ContainsKey(car.Id))
                 return MyStrategy.world.Tick;
-            return MyStrategy.game.CarReactivationTimeTicks + _remainTicks[car.Id];
+            return Const.Game.CarReactivationTimeTicks + _remainTicks[car.Id];
         }
 
         public static bool IsActive(Car car)

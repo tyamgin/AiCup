@@ -35,12 +35,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             IsFreeTop = _tileFreeTop(type);
             IsFreeBottom = _tileFreeBottom(type);
 
-            var margin = MyStrategy.game.TrackTileMargin;
+            var margin = Const.TileMargin;
 
             var sy = new Point(0, margin);
             var sx = new Point(margin, 0);
-            var ly = new Point(0, MyStrategy.game.TrackTileSize);
-            var lx = new Point(MyStrategy.game.TrackTileSize, 0);
+            var ly = new Point(0, Const.TileSize);
+            var lx = new Point(Const.TileSize, 0);
 
             var res = new List<TilePart>();
 
@@ -133,8 +133,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     break;
             }
 
-            var dx = MyStrategy.game.TrackTileSize*j;
-            var dy = MyStrategy.game.TrackTileSize*i;
+            var dx = Const.TileSize*j;
+            var dy = Const.TileSize*i;
             foreach (var part in res)
             {
                 if (part.Type == TilePartType.Circle)

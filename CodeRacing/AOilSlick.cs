@@ -16,12 +16,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public AOilSlick(ACar car)
         {
-            var dist = MyStrategy.game.OilSlickInitialRange + car.Original.Width / 2 + MyStrategy.game.OilSlickRadius;
+            var dist = Const.Game.OilSlickInitialRange + car.Original.Width / 2 + Const.Game.OilSlickRadius;
             var slick = car - Point.ByAngle(car.Angle) * dist;
             X = slick.X;
             Y = slick.Y;
-            Radius = MyStrategy.game.OilSlickRadius;
-            RemainingLifetime = MyStrategy.game.OilSlickLifetime;
+            Radius = Const.Game.OilSlickRadius;
+            RemainingLifetime = Const.Game.OilSlickLifetime;
         }
 
         public bool Intersect(ACar car, double safeMargin)
@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (RemainingLifetime <= 0)
                 return 0.6;
 
-            return 0.6 + 0.4 * RemainingLifetime / MyStrategy.game.OilSlickLifetime;
+            return 0.6 + 0.4 * RemainingLifetime / Const.Game.OilSlickLifetime;
         }
     }
 }

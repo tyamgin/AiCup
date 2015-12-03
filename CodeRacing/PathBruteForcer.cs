@@ -133,18 +133,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         {
                             if (dst < _needDist2*_needDist2)
                             {
-                                penalty = AMove.SecondDistCoeff;
+                                penalty = MagicConst.SecondDistDangerCoeff;
                                 total.Importance -= penalty;
                                 m.Times++;
                                 break;
                             }
-                            //if (dst < _needDist3*_needDist3)
-                            //{
-                            //    penalty = AMove.ThirdDistCoeff;
-                            //    total.Importance -= penalty;
-                            //    m.Times++;
-                            //    break;
-                            //}
                         }
                         return;
                     }
@@ -158,8 +151,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 if (model.EnginePower < 0)
                 {
-                    penalty += AMove.BackMoveCoeff;
-                    total.Importance -= AMove.BackMoveCoeff;
+                    penalty += MagicConst.BackMoveDangerCoeff;
+                    total.Importance -= MagicConst.BackMoveDangerCoeff;
                 }
 
                 if (_isBetterTime(total.Time, total.Importance, _bestTime, _bestImportance))
@@ -220,7 +213,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
              * Если изменилось - пересчитывать сильно
              */
             var bonusesCount05 = MyStrategy.Bonuses
-                .Count(bonus => Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize / 2);
+                .Count(bonus => Self.GetDistanceTo(bonus) < Const.TileSize / 2);
 
             /*
              * Количество бонусов на расстоянии 2t
@@ -229,11 +222,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             var bonusesCount2 = MyStrategy.Bonuses
                 .Count(
                     bonus =>
-                        Self.GetDistanceTo(bonus) < MyStrategy.game.TrackTileSize*2 &&
+                        Self.GetDistanceTo(bonus) < Const.TileSize*2 &&
                         MyStrategy.CellDistance(Self, bonus) <= 2);
 
             // Если был success на прошлом тике, то продолжаем. Или каждые _interval тиков.
-            if (MyStrategy.game.InitialFreezeDurationTicks < MyStrategy.world.Tick &&
+            if (Const.Game.InitialFreezeDurationTicks < MyStrategy.world.Tick &&
                 bonusesCount05 == _bonusesCount05 &&
                 LastSuccess < MyStrategy.world.Tick - 1 &&
                 (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
@@ -248,7 +241,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _projCandidates = MyStrategy.Tires
                 .Where(
                     proj =>
-                        Self.GetDistanceTo(proj[0]) <= MyStrategy.game.TrackTileSize * 6 &&
+                        Self.GetDistanceTo(proj[0]) <= Const.TileSize * 6 &&
                         MyStrategy.CellDistance(Self, proj[0]) <= 6)
                 .ToArray();
 
@@ -261,9 +254,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             bruteWayPoints.AddRange(_bruteWayPoints);
             Visualizer.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
 #endif
-            _needDist = MyStrategy.game.TrackTileSize*0.5 - 3;
-            _needDist2 = MyStrategy.game.TrackTileSize - 3;
-            _needDist3 = MyStrategy.game.TrackTileSize*1.5 - 3;
+            _needDist = Const.TileSize*0.5 - 3;
+            _needDist2 = Const.TileSize - 3;
+            _needDist3 = Const.TileSize*1.5 - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
             _turnTo23 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.83))];
 #if DEBUG
@@ -307,7 +300,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 .Where(
                     bonus =>
                         MyStrategy.world.Tick > 270 && // Не смотреть на бонусы при старте!!!
-                        Self.GetDistanceTo(bonus) <= MyStrategy.game.TrackTileSize * 4 &&
+                        Self.GetDistanceTo(bonus) <= Const.TileSize * 4 &&
                         MyStrategy.CellDistance(Self, bonus) <= 4
                 )
                 .ToArray();
@@ -320,7 +313,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _slickCandidates = MyStrategy.OilSlicks
                 .Where(
                     slick =>
-                        Self.GetDistanceTo(slick) <= MyStrategy.game.TrackTileSize*5 &&
+                        Self.GetDistanceTo(slick) <= Const.TileSize*5 &&
                         MyStrategy.CellDistance(Self, slick) <= 5
                 )
                 .ToArray();
@@ -338,7 +331,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
              */
             var prevCars = _carCandidates;
             _carCandidates = MyStrategy.Others
-                .Where(opp => opp[0].GetDistanceTo(Self) < MyStrategy.game.TrackTileSize*9)
+                .Where(opp => opp[0].GetDistanceTo(Self) < Const.TileSize*9)
                 .Where(
                     opp =>
                         opp[0].Original.IsTeammate ||

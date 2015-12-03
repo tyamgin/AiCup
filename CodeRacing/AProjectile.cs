@@ -21,7 +21,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 X += Speed.X;
                 Y += Speed.Y;
 
-                if (X < 0 || Y < 0 || X > MyStrategy.MapWidth || Y > MyStrategy.MapHeight)
+                if (X < 0 || Y < 0 || X > Const.MapWidth || Y > Const.MapHeight)
                     Exists = false;
                 return;
             }
@@ -34,7 +34,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Y += Speed.Y / UpdateIterations;
 
                 // может выйти за пределы если тайлы unknown
-                if (X < 1 || Y < 1 || X >= MyStrategy.MapWidth - 1 || Y >= MyStrategy.MapHeight - 1)
+                if (X < 1 || Y < 1 || X >= Const.MapWidth - 1 || Y >= Const.MapHeight - 1)
                 {
                     Exists = false;
                     break;
@@ -88,7 +88,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     break;
                 }
             }
-            if (Speed.Length <= MyStrategy.game.TireDisappearSpeedFactor*MyStrategy.game.TireInitialSpeed)
+            if (Speed.Length <= Const.Game.TireDisappearSpeedFactor*Const.Game.TireInitialSpeed)
                 Exists = false;
         }
 
@@ -125,21 +125,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 return new[] { new AProjectile
                 {
-                    Radius = MyStrategy.game.TireRadius,
+                    Radius = Const.Game.TireRadius,
                     Type = ProjectileType.Tire,
                     X = car.X,
                     Y = car.Y,
-                    Speed = Point.ByAngle(car.Angle) * MyStrategy.game.TireInitialSpeed
+                    Speed = Point.ByAngle(car.Angle) * Const.Game.TireInitialSpeed
                 }};
             }
 
-            return new[] { 0.0, -MyStrategy.game.SideWasherAngle, MyStrategy.game.SideWasherAngle }.Select(angle => new AProjectile
+            return new[] { 0.0, -Const.Game.SideWasherAngle, Const.Game.SideWasherAngle }.Select(angle => new AProjectile
             {
-                Radius = MyStrategy.game.WasherRadius,
+                Radius = Const.Game.WasherRadius,
                 Type = ProjectileType.Washer,
                 X = car.X,
                 Y = car.Y,
-                Speed = Point.ByAngle(angle + car.Angle) * MyStrategy.game.WasherInitialSpeed
+                Speed = Point.ByAngle(angle + car.Angle) * Const.Game.WasherInitialSpeed
             }).ToArray();
         }
 
@@ -149,7 +149,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return Geom.ContainPoint(car.GetRect(-extendRadius), this);
 
             var r = Radius + extendRadius;
-            if (GetDistanceTo2(car) > Geom.Sqr(r + MyStrategy.CarDiagonalHalfLength))
+            if (GetDistanceTo2(car) > Geom.Sqr(r + Const.CarDiagonalHalfLength))
                 return false;
 
             return car.GetRectEx().Any(p => GetDistanceTo(p) < r);

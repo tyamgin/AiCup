@@ -146,12 +146,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             move.EnginePower = 1.0;
 
-            if (car.GetDistanceTo(turnCenter) < 1.6 * game.TrackTileSize)
+            if (car.GetDistanceTo(turnCenter) < 1.6 * Const.TileSize)
             {
                 move.EnginePower = 0.8;
             }
 
-            if (car.GetDistanceTo(turnCenter) < 1.0 * game.TrackTileSize)
+            if (car.GetDistanceTo(turnCenter) < 1.0 * Const.TileSize)
             {
                 if (GetSpeed(self) > 11)
                     move.IsBrake = true;
@@ -160,7 +160,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (BAD_TESTING_STRATEGY)
             {
-                if (turnCenter.GetDistanceTo(self) >= 7*game.TrackTileSize &&
+                if (turnCenter.GetDistanceTo(self) >= 7*Const.TileSize &&
                     Math.Abs(car.GetAngleTo(turnCenter)) < Math.PI/6)
                 {
                     move.IsUseNitro = true;

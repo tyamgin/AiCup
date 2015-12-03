@@ -6,7 +6,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class ABonus : ARectangularUnit
     {
-        public const int SafeMargin = 3;
         public static Dictionary<long, Point[]> _computedRect = new Dictionary<long, Point[]>();
  
         public BonusType Type;
@@ -22,12 +21,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Id = bonus.Id;
         }
 
-        /// <summary>
-        /// Важность бонуса для машины.
-        /// Число от 0 до 1
-        /// </summary>
-        /// <param name="self"></param>
-        /// <returns></returns>
         public double GetImportance(Car self)
         {
             double result;
@@ -66,7 +59,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         {
             if (_computedRect.ContainsKey(Id))
                 return _computedRect[Id];
-            var result = GetRect(-SafeMargin);
+            var result = GetRect(-MagicConst.BonusSafeMargin);
             _computedRect[Id] = result;
             return result;
         }
