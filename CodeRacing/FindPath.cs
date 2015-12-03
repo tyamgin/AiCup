@@ -174,17 +174,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return true;
 
             var c = GetCenter(cell);
-            var margin = Const.TileSize / 2 - Const.TileMargin - additionalMargin;
+            var margin = Const.TileSize / 2 - Const.TileMargin;
             var lx = c.X - margin;
             var rx = c.X + margin;
             var ly = c.Y - margin;
             var ry = c.Y + margin;
 
             // внутри квадрата
-            if (lx <= p.X && p.X <= rx && ly <= p.Y && p.Y <= ry)
+            if (lx <= p.X && p.X <= rx && ly <= p.Y && p.Y <= ry) // optimization
                 return false;
 
-            var cornerDist2 = Geom.Sqr(Const.TileMargin + additionalMargin);
+            var cornerDist2 = Geom.Sqr(Const.TileMargin + Math.Max(-5, additionalMargin));
 
             // в углу
             foreach (var corner in MyTiles[cell.I, cell.J].Parts)
@@ -196,13 +196,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             }
 
             // по бокам
-            if (p.X < lx && !tile.IsFreeLeft)
+            if (p.X < lx + additionalMargin && !tile.IsFreeLeft)
                 return true;
-            if (p.X > rx && !tile.IsFreeRight)
+            if (p.X > rx - additionalMargin && !tile.IsFreeRight)
                 return true;
-            if (p.Y < ly && !tile.IsFreeTop)
+            if (p.Y < ly + additionalMargin && !tile.IsFreeTop)
                 return true;
-            if (p.Y > ry && !tile.IsFreeBottom)
+            if (p.Y > ry - additionalMargin && !tile.IsFreeBottom)
                 return true;
 
             return false;
