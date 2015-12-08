@@ -176,6 +176,26 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 });
         }
 
+        private void _validateLastSuccessStack()
+        {
+            if (_lastSuccessStack == null)
+                return;
+            var car = new ACar(Self);
+            var stack = _lastSuccessStack.Clone();
+            var info = new PassedInfo();
+            while (stack.Count > 0)
+            {
+                if (!AMove.ModelMove(car, stack[0], info, 
+                    new ABonus[] {}, new AOilSlick[] {}, new AProjectile[][] {}, new ACar[][] {}))
+                {
+                    _lastSuccessStack = null;
+                    return;
+                }
+                stack[0].Times--;
+                stack.Normalize();
+            }
+        }
+
         private Moves _lastSuccessStack;
 
         private int _selectThisTick;
@@ -231,6 +251,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 LastSuccess < MyStrategy.world.Tick - 1 &&
                 (MyStrategy.world.Tick - (LastSuccess + 1))%_interval != 0)
             {
+                _validateLastSuccessStack();
                 return _lastSuccessStack;
             }
 

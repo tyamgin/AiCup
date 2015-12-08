@@ -295,6 +295,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (stacks.Length > 5)
                 DrawWay(self, stacks[5], Brushes.Coral, sel == 5 ? 2 : 0);
             if (stacks.Length > 6)
+                DrawWay(self, stacks[6], Brushes.DarkGreen, sel == 6 ? 2 : 0);
+            if (stacks.Length > 7)
+                DrawWay(self, stacks[7], Brushes.DarkGreen, sel == 7 ? 2 : 0);
+            if (stacks.Length > 8)
                 throw new NotImplementedException("Please select color for this path");
         }
 

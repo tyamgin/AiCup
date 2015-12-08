@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
@@ -219,6 +220,21 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         }
                 }
             }, 8, new AMove(), 66, 40, useDist2: true))
+                .Concat(
+                    new[] {-1.0, 1.0}.Select(sign => new PathBruteForcer(new[]
+                    {
+                        new PathPattern
+                        {
+                            To = 40,
+                            Step = 5,
+                            Move = new AMove
+                            {
+                                EnginePower = 1.0,
+                                WheelTurn = sign
+                            }
+                        }
+                    }, 8, new AMove(), 111, 40, useDist2: true)
+                        ))
                 .ToArray();
         }
     }
