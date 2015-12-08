@@ -46,13 +46,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             move.WheelTurn = WheelTurn is Point ? MyStrategy.TurnRound(car.GetAngleTo(WheelTurn as Point)) : Convert.ToDouble(WheelTurn);
 
             if (EnginePower < 0 && car.EnginePower > 0)
+            {
                 move.IsBrake = true;
-
-            if (car.EnginePower < 0 && EnginePower > 0)
+            }
+            else if (car.EnginePower < 0 && EnginePower > 0)
             {
                 move.WheelTurn *= -1;
                 move.IsBrake = true;
             }
+            //else if (EnginePower < 0 && WheelTurn is Point)
+            //{
+            //    move.WheelTurn *= -1;
+            //}
             
             if (IsUseNitro)
                 move.IsUseNitro = IsUseNitro;
@@ -74,14 +79,19 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             // если сдаю назад но кочусь вперед
             if (m.EnginePower < 0 && car.EnginePower > 0)
+            {
                 isBreak = true;
-
+            }
             // если еду вперед но кочусь назад
-            if (car.EnginePower < 0 && m.EnginePower > 0)
+            else if (car.EnginePower < 0 && m.EnginePower > 0)
             {
                 turn *= -1;
                 isBreak = true;
             }
+            //else if (m.EnginePower < 0 && m.WheelTurn is Point)
+            //{
+            //    turn *= -1;
+            //}
 
             car.Move(m.EnginePower, turn, isBreak, m.IsUseNitro, false);
 
@@ -170,9 +180,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 total.OutOfBoreder = true;
                 res = true;
             }
-
-            // проверка что можно потереться вдоль стены
-            // -- убрано --
 
             if (!total.WayPoint)
                 total.WayPoint = MyStrategy.GetNextWayPoint(car.Original).Equals(MyStrategy.GetCell(car));

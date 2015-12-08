@@ -113,10 +113,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (patternIndex == _patterns.Length)
             {
                 var m = LastStageMove.Clone();
-                m.EnginePower = 1;
                 m.WheelTurn = _turnTo.Clone();
 
-                if (m.IsUseNitro && model.Speed.Length > 18)
+                if (m.IsUseNitro && (model.Speed.Length > 18 || m.EnginePower < 0))
                     return;
 
                 var penalty = 0.0;
@@ -305,6 +304,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
                     else if (turnPattern.Pattern == TurnPatternType.FromNext)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? 1 : -1;
+
+                    //if (!(p.Move.WheelTurn is Point) && p.Move.EnginePower < 0)
+                    //    p.Move.WheelTurn = -Convert.ToDouble(p.Move.WheelTurn);
                 }
             }
 
