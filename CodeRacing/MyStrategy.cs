@@ -9,7 +9,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public class MagicConst
     {
-        public const double BonusImportanceCoeff = 75;
+        public const double BonusImportanceCoeff = 90;
         public const double OilSlickDangerCoeff = 70;
         public const double TireDangerCoeff = 120;
         public const double InactiveCarDangerCoeff = 55;

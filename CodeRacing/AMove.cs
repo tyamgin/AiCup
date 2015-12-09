@@ -54,10 +54,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 move.WheelTurn *= -1;
                 move.IsBrake = true;
             }
-            //else if (EnginePower < 0 && WheelTurn is Point)
-            //{
-            //    move.WheelTurn *= -1;
-            //}
             
             if (IsUseNitro)
                 move.IsUseNitro = IsUseNitro;
@@ -88,112 +84,126 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 turn *= -1;
                 isBreak = true;
             }
-            //else if (m.EnginePower < 0 && m.WheelTurn is Point)
-            //{
-            //    turn *= -1;
-            //}
 
-            car.Move(m.EnginePower, turn, isBreak, m.IsUseNitro, false);
+            var simpleMode = total.Time > 50;
+            var checking = !simpleMode || (MyStrategy.world.Tick + total.Time) % 3 == 0;
 
-            for(var i = 0; i < bonusCandidates.Length; i++)
+            car.Move(m.EnginePower, turn, isBreak, m.IsUseNitro, simpleMode);
+
+            if (checking)
             {
-                if (total.Bonuses[i]) // бонус уже взят
-                    continue;
-
-                var bonus = bonusCandidates[i];
-                if (car.TakeBonus(bonus))
+                for (var i = 0; i < bonusCandidates.Length; i++)
                 {
-                    total.Importance += bonus.GetImportance(car.Original)*MagicConst.BonusImportanceCoeff;
-                    total.Bonuses[i] = true;
-                }
-            }
-
-            if (!total.Slicks) // если не въехал ни в одну лужу
-            {
-                foreach (var slick in slickCandidates)
-                {
-                    if (total.Slicks)
-                        break;
-                    slick.RemainingLifetime -= total.Time;
-                    if (slick.Intersect(car, 9))
-                    {
-                        total.Importance -= slick.GetDanger()*MagicConst.OilSlickDangerCoeff*(car.RemainingNitroTicks > 0 ? 2 : 1);
-                        total.Slicks = true;
-                    }
-                    slick.RemainingLifetime += total.Time;
-                }
-            }
-            if (projCandidates.Length > 0 && total.Time < projCandidates[0].Length)
-            {
-                for(var i = 0; i < projCandidates.Length; i++)
-                {
-                    if (total.Projectiles[i])
+                    if (total.Bonuses[i]) // бонус уже взят
                         continue;
 
-                    var proj = projCandidates[i][total.Time];
-
-                    if (proj.Intersect(car, 5))
+                    var bonus = bonusCandidates[i];
+                    if (car.TakeBonus(bonus))
                     {
-                        total.Importance -= proj.GetDanger()*MagicConst.TireDangerCoeff; //TODO: обработать шину отдельно
-                        total.Projectiles[i] = true;
+                        total.Importance += bonus.GetImportance(car.Original)*MagicConst.BonusImportanceCoeff;
+                        total.Bonuses[i] = true;
                     }
                 }
-            }
-            if (!total.Cars)
-            {
-                for (var i = 0; i < carCandidates.Length; i++)
+
+                if (!total.Slicks) // если не въехал ни в одну лужу
                 {
-                    if (total.Time >= carCandidates[i].Length)
-                        continue;
-
-                    var opp = carCandidates[i][total.Time];
-
-                    if (car.IntersectWith(opp, opp.Original.IsTeammate ? 20 : 0))
+                    foreach (var slick in slickCandidates)
                     {
-                        if (car.Speed.Length > 8 && MyStrategy.world.Tick > 400 || car.Original.IsTeammate) // чтобы не боялся протаранить на маленькой скорости
-                            total.Importance -= car.RemainingNitroTicks > 0 ? MagicConst.InactiveCarNitroDangerCoeff : MagicConst.InactiveCarDangerCoeff;
-                        total.Cars = true;
-                        break;
+                        if (total.Slicks)
+                            break;
+                        slick.RemainingLifetime -= total.Time;
+                        if (slick.Intersect(car, 9))
+                        {
+                            total.Importance -= slick.GetDanger()*MagicConst.OilSlickDangerCoeff*
+                                                (car.RemainingNitroTicks > 0 ? 2 : 1);
+                            total.Slicks = true;
+                        }
+                        slick.RemainingLifetime += total.Time;
+                    }
+                }
+                if (projCandidates.Length > 0 && total.Time < projCandidates[0].Length)
+                {
+                    for (var i = 0; i < projCandidates.Length; i++)
+                    {
+                        if (total.Projectiles[i])
+                            continue;
+
+                        var proj = projCandidates[i][total.Time];
+
+                        if (proj.Intersect(car, 5))
+                        {
+                            total.Importance -= proj.GetDanger()*MagicConst.TireDangerCoeff;
+                                //TODO: обработать шину отдельно
+                            total.Projectiles[i] = true;
+                        }
+                    }
+                }
+                if (!total.Cars)
+                {
+                    for (var i = 0; i < carCandidates.Length; i++)
+                    {
+                        if (total.Time >= carCandidates[i].Length)
+                            continue;
+
+                        var opp = carCandidates[i][total.Time];
+
+                        if (car.IntersectWith(opp, opp.Original.IsTeammate ? 20 : 0))
+                        {
+                            if (car.Speed.Length > 8 && MyStrategy.world.Tick > 400 || car.Original.IsTeammate)
+                                // чтобы не боялся протаранить на маленькой скорости
+                                total.Importance -= car.RemainingNitroTicks > 0
+                                    ? MagicConst.InactiveCarNitroDangerCoeff
+                                    : MagicConst.InactiveCarDangerCoeff;
+                            total.Cars = true;
+                            break;
+                        }
                     }
                 }
             }
 
             total.Time++;
 
-            // проверка на стены
-            var res = car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
+            var res = true;
 
-            // проверка что можно проехать точно возле стены
-            if (!res && car.RemainingNitroTicks == 0 && car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExactlyMargin)))
+            if (checking)
             {
-                if (!total.ExactlyBorder)
-                    total.Importance -= MagicConst.ExactlyBorderDangerCoeff;
-                total.ExactlyBorder = true;
-                res = true;
-            }
+                // проверка на стены
+                res = car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
 
-            // проверка что можно проскользнуть по стене
-            if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, -20)))
-            {
-                if (!total.OutOfBoreder)
-                    total.Importance -= MagicConst.OutOfBorederDangerCoeff;
-                total.OutOfBoreder = true;
-                res = true;
-            }
+                // проверка что можно проехать точно возле стены
+                if (!res && car.RemainingNitroTicks == 0 &&
+                    car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExactlyMargin)))
+                {
+                    if (!total.ExactlyBorder)
+                        total.Importance -= MagicConst.ExactlyBorderDangerCoeff;
+                    total.ExactlyBorder = true;
+                    res = true;
+                }
 
-            if (!total.WayPoint)
-                total.WayPoint = MyStrategy.GetNextWayPoint(car.Original).Equals(MyStrategy.GetCell(car));
+                // проверка что можно проскользнуть по стене
+                if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 &&
+                    car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, -20)))
+                {
+                    if (!total.OutOfBoreder)
+                        total.Importance -= MagicConst.OutOfBorederDangerCoeff;
+                    total.OutOfBoreder = true;
+                    res = true;
+                }
 
-            if (!res && m.RangesMode)
-            {
-                res = true;
+                if (!total.WayPoint)
+                    total.WayPoint = MyStrategy.GetNextWayPoint(car.Original).Equals(MyStrategy.GetCell(car));
 
-                // HACK
-                car.X = prevStateX;
-                car.Y = prevStateY;
-                car.Angle = prevStateAngle;
-                car.Speed = Point.Zero;
-                car.AngularSpeed = 0;
+                if (!res && m.RangesMode)
+                {
+                    res = true;
+
+                    // HACK
+                    car.X = prevStateX;
+                    car.Y = prevStateY;
+                    car.Angle = prevStateAngle;
+                    car.Speed = Point.Zero;
+                    car.AngularSpeed = 0;
+                }
             }
             return res;
         }

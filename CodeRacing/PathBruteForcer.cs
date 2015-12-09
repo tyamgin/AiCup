@@ -128,7 +128,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                     if (!_modelMove(model, m, total))
                     {
-                        if (_useDist2 && m.EnginePower <= 1)
+                        if (_useDist2 && m.EnginePower <= 1 && !LastStageMove.IsUseNitro)
                         {
                             if (dst < _needDist2*_needDist2)
                             {
@@ -377,8 +377,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         || prevSlicks.Length != _slickCandidates.Length
                         || prevCars.Length != _carCandidates.Length
                         || prevProj.Length != _projCandidates.Length)
-                        ? (k == 0 ? 6 : 4)
-                        : (k == 0 ? 4 : 2);
+                        ? (k == 0 ? 8 : 4)
+                        : (k == 0 ? 6 : 2);
 
                     if (_bonusesCount05 != bonusesCount05)
                         range = 10;

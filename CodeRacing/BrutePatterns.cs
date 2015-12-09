@@ -12,7 +12,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (Brutes != null)
                 return;
 
-            const int subWayPointsCount = 70;
+            const int subWayPointsCount = 67;
 
             Brutes = new[]
             {
@@ -198,6 +198,58 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
+                                IsBrake = true
+                            }
+                    }
+                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true),
+
+                new PathBruteForcer(new[]
+                {
+                    new PathPattern
+                    {
+                        To = 30,
+                        Step = 4,
+                        Move =
+                            new AMove
+                            {
+                                EnginePower = 1.0,
+                                WheelTurn = 1.0,
+                            }
+                    },
+                    new PathPattern
+                    {
+                        To = 30,
+                        Step = 4,
+                        Move =
+                            new AMove
+                            {
+                                WheelTurn = -1.0,
+                                IsBrake = true
+                            }
+                    }
+                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true),
+
+                new PathBruteForcer(new[]
+                {
+                    new PathPattern
+                    {
+                        To = 30,
+                        Step = 4,
+                        Move =
+                            new AMove
+                            {
+                                EnginePower = 1.0,
+                                WheelTurn = -1.0,
+                            }
+                    },
+                    new PathPattern
+                    {
+                        To = 30,
+                        Step = 4,
+                        Move =
+                            new AMove
+                            {
+                                WheelTurn = 1.0,
                                 IsBrake = true
                             }
                     }
