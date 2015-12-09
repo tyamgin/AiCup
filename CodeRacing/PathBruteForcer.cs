@@ -68,6 +68,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private int _bestTime;
         private double _bestImportance;
         private Point[] _bruteWayPoints;
+        public bool Special;
 
         private delegate void CarCallback(ACar car, PassedInfo passed);
 
@@ -377,10 +378,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         || prevSlicks.Length != _slickCandidates.Length
                         || prevCars.Length != _carCandidates.Length
                         || prevProj.Length != _projCandidates.Length)
-                        ? (k == 0 ? 8 : 4)
+                        ? (k == 0 ? 6 : 4)
                         : (k == 0 ? 6 : 2);
 
-                    if (_bonusesCount05 != bonusesCount05)
+                    if (_bonusesCount05 != bonusesCount05 || Special && k == 0)
                         range = 10;
                     
                     _patterns[k].From = Math.Max(0, _cache[k].Times - range);

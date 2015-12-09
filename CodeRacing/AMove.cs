@@ -85,8 +85,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 isBreak = true;
             }
 
-            var simpleMode = total.Time > 50;
-            var checking = !simpleMode || (MyStrategy.world.Tick + total.Time) % 3 == 0;
+            var simpleMode = total.Time > 45;
+            var checking = !simpleMode || (MyStrategy.world.Tick + total.Time) % 4 == 0;
 
             car.Move(m.EnginePower, turn, isBreak, m.IsUseNitro, simpleMode);
 

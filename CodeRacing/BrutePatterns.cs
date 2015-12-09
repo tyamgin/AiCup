@@ -227,7 +227,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true),
+                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true) {Special = true},
 
                 new PathBruteForcer(new[]
                 {
@@ -253,7 +253,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true),
+                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true) {Special = true},
             };
 
             BackBrutes =
