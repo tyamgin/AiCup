@@ -121,8 +121,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 var penalty = 0.0;
 
-                for (var i = 0; i < 200; i++)
+                for (var i = 0; ; i++)
                 {
+                    if (i == 200)
+                        return;
+
                     var dst = _turnTo.GetDistanceTo2(model);
                     if (dst < _needDist*_needDist)
                         break;

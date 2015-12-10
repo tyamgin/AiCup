@@ -244,7 +244,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (ComputeTime() != total.Time)
                 throw new Exception("ComputeTime() != elapsedTime");
 #endif
-            return total.Time - total.Importance - Penalty;
+            return total.Time - total.Importance + Penalty;
         }
 
         private bool _modelMove(ACar car, AMove m, PassedInfo total)
