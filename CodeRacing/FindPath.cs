@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
@@ -271,7 +272,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 EnumeratePointsBetween(pts[idx - 1], pts[idx], delta, point =>
                 {
-                    res.Add(point);
+                    if (res.Count == 0 || !res[res.Count - 1].Equals(point))
+                        res.Add(point);
                     return true;
                 });
             }

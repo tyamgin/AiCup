@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
@@ -17,8 +19,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         ToNext,
         FromNext,
-        ToCenter,
-        FromCenter,
     }
 
     public class TurnPattern
@@ -116,7 +116,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 var m = LastStageMove.Clone();
                 m.WheelTurn = _turnTo.Clone();
 
-                if (m.IsUseNitro && (model.Speed.Length > 18 || m.EnginePower < 0))
+                if (m.IsUseNitro && (model.Speed.Length > 22 || m.EnginePower < 0))
                     return;
 
                 var penalty = 0.0;
@@ -131,7 +131,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     {
                         if (_useDist2 && m.EnginePower <= 1 && !LastStageMove.IsUseNitro)
                         {
-                            if (dst < _needDist2*_needDist2)
+                            if (dst < _needDist2 * _needDist2)
                             {
                                 penalty = MagicConst.SecondDistDangerCoeff;
                                 total.Importance -= penalty;
@@ -207,6 +207,17 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _selectThisTick = MyStrategy.world.Tick;
         }
 
+        private static int _turnsCount(IList<Point> pts)
+        {
+            var cnt = 0;
+            for (var i = 2; i < pts.Count; i++)
+            {
+                if (Math.Abs(Geom.VectorProduct(pts[i - 2], pts[i - 1], pts[i])) > MyStrategy.Eps)
+                    cnt++;
+            }
+            return cnt;
+        }
+
         public Moves Do(ACar car, Points pts)
         {
             // Проверка что данный путь был выбран
@@ -266,21 +277,23 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         MyStrategy.CellDistance(Self, proj[0]) <= 6)
                 .ToArray();
 
-            _turnCenter = pts[1];
-
             var extended = MyStrategy.ExtendWaySegments(pts, 50);
             _bruteWayPoints = extended.GetRange(0, Math.Min(_waypointsCount, extended.Count)).ToArray();
+            if (LastStageMove.IsUseNitro && _turnsCount(_bruteWayPoints) > 1)
+                return null;
 #if DEBUG
             var bruteWayPoints = new Points();
             bruteWayPoints.AddRange(_bruteWayPoints);
             Visualizer.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
 #endif
+            _turnCenter = pts[1];
             _needDist = Const.TileSize*0.5 - 3;
             _needDist2 = Const.TileSize - 3;
             _needDist3 = Const.TileSize*1.5 - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
             _turnTo23 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.83))];
 #if DEBUG
+            Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Crimson, new ACircularUnit { X = _turnCenter.X, Y = _turnCenter.Y, Radius = 20 }));
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Orange, new ACircularUnit { X = _turnTo23.X, Y = _turnTo23.Y, Radius = 20 }));
 #endif
@@ -297,17 +310,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (p.Move.WheelTurn is TurnPattern)
                 {
                     var turnPattern = p.Move.WheelTurn as TurnPattern;
-                    if (turnPattern.Pattern == TurnPatternType.ToCenter)
-                        p.Move.WheelTurn = _turnCenter;
-                    else if (turnPattern.Pattern == TurnPatternType.ToNext)
+                    if (turnPattern.Pattern == TurnPatternType.ToNext)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? -1 : 1;
-                    else if (turnPattern.Pattern == TurnPatternType.FromCenter)
-                        p.Move.WheelTurn = Self.GetAngleTo(_turnCenter) < 0 ? 1 : -1;
                     else if (turnPattern.Pattern == TurnPatternType.FromNext)
                         p.Move.WheelTurn = Self.GetAngleTo(_turnTo) < 0 ? 1 : -1;
-
-                    //if (!(p.Move.WheelTurn is Point) && p.Move.EnginePower < 0)
-                    //    p.Move.WheelTurn = -Convert.ToDouble(p.Move.WheelTurn);
                 }
             }
 

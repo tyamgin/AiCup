@@ -1,5 +1,4 @@
-﻿using System.IO;
-using System.Linq;
+﻿using System.Linq;
 
 namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
@@ -12,7 +11,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (Brutes != null)
                 return;
 
-            const int subWayPointsCount = 67;
+            const int subWayPointsCount = 70;
 
             Brutes = new[]
             {
@@ -31,7 +30,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 EnginePower = 1,
-                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter},
+                                WheelTurn = 1.0,
                             }
                     },
                     new PathPattern
@@ -53,6 +52,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
+                                EnginePower = 1.0,
                                 IsBrake = true
                             }
                     }
@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 EnginePower = 1,
-                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter},
+                                WheelTurn = 1.0,
                             }
                     },
                     new PathPattern
@@ -96,6 +96,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
+                                EnginePower = 1.0,
                                 IsBrake = true
                             }
                     }
@@ -126,6 +127,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
+                                EnginePower = 1.0, 
                                 IsBrake = true
                             }
                     }
@@ -145,6 +147,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromNext},
+                                EnginePower = 1.0,
                                 IsBrake = true
                             }
                     },
@@ -156,6 +159,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
+                                EnginePower = 1.0,
                                 IsBrake = true
                             }
                     }
@@ -170,13 +174,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 {
                     new PathPattern
                     {
-                        To = 20,
+                        To = 32,
                         Step = 4,
                         Move =
                             new AMove
                             {
                                 EnginePower = 0.5,
-                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromCenter},
+                                WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromNext},
                             }
                     },
                     new PathPattern
@@ -186,7 +190,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         Move =
                             new AMove
                             {
-                                EnginePower = 1,
+                                EnginePower = 0.5,
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
                             }
                     },
@@ -198,6 +202,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext},
+                                EnginePower = 1.0,
                                 IsBrake = true
                             }
                     }
@@ -224,6 +229,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = -1.0,
+                                EnginePower = 1.0,
                                 IsBrake = true
                             }
                     }
@@ -250,6 +256,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             new AMove
                             {
                                 WheelTurn = 1.0,
+                                EnginePower = 1.0,
                                 IsBrake = true
                             }
                     }
@@ -300,7 +307,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     Move = new AMove
                                     {
                                         EnginePower = -1.0,
-                                        WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToCenter}
+                                        WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext}
                                     }
                                 }
                             }, 8, new AMove {EnginePower = -1.0}, 1111, 40, useDist2: true

@@ -15,7 +15,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double InactiveCarDangerCoeff = 55;
         public const double InactiveCarNitroDangerCoeff = 80;
         public const double ExactlyBorderDangerCoeff = 50;
-        public const double SecondDistDangerCoeff = 70;
+        public const double SecondDistDangerCoeff = 80;
         public const double BackMoveDangerCoeff = 150;
         public const double OutOfBorederDangerCoeff = 80;
 
@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public static Car[] Opponents;
         public static ACar[][] OpponentsCars, Others, MyTeam, All;
 
-        public static Dictionary<long, ACar[]> TeammatePath = new Dictionary<long, ACar[]>();
+        public static Dictionary<long, ACar[]> ComputedPath = new Dictionary<long, ACar[]>();
         public static ACar[] TeammateCar;
         public static Car Teammate;
 
@@ -83,11 +83,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             Teammate = world.Cars.FirstOrDefault(car => car.IsTeammate && car.Id != self.Id);
 
-            TeammatePath.Remove(self.Id);
+            ComputedPath.Remove(self.Id);
             if (Teammate != null)
-                TeammateCar = TeammatePath.ContainsKey(Teammate.Id) ? TeammatePath[Teammate.Id] : null;
-
-            TeammatePath.Clear();
+                TeammateCar = ComputedPath.ContainsKey(Teammate.Id) ? ComputedPath[Teammate.Id] : null;
 
             if (Players == null) // check for first call
             {
@@ -175,6 +173,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Others = OpponentsCars
                     .Concat(TeammateCar == null ? new ACar[][] { } : new[] { TeammateCar })
                     .ToArray();
+
+            ComputedPath.Clear();
+            if (self.TeammateIndex == 1 && OpponentsCars != null)
+            {
+                foreach (var opp in OpponentsCars)
+                    ComputedPath[opp[0].Original.Id] = opp;
+            }
         }
 
         public void PrepareOpponentsPath()
@@ -191,15 +196,20 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             OpponentsCars = new ACar[Opponents.Length][];
             for (var i = 0; i < Opponents.Length; i++)
             {
-                OpponentsCars[i] = new ACar[MagicConst.OpponentsTicksPrediction];
-                OpponentsCars[i][0] = new ACar(Opponents[i]);
-                for (var t = 1; t < MagicConst.OpponentsTicksPrediction; t++)
+                if (ComputedPath.ContainsKey(Opponents[i].Id))
+                    OpponentsCars[i] = ComputedPath[Opponents[i].Id];
+                else
                 {
-                    OpponentsCars[i][t] = OpponentsCars[i][t - 1].Clone();
-                    _simulateOpponentMove(ways[i], OpponentsCars[i][t]);
+                    OpponentsCars[i] = new ACar[MagicConst.OpponentsTicksPrediction];
+                    OpponentsCars[i][0] = new ACar(Opponents[i]);
+                    for (var t = 1; t < MagicConst.OpponentsTicksPrediction; t++)
+                    {
+                        OpponentsCars[i][t] = OpponentsCars[i][t - 1].Clone();
+                        _simulateOpponentMove(ways[i], OpponentsCars[i][t]);
 #if DEBUG
-                    segs[i].Add(new Point(OpponentsCars[i][t]));
+                        segs[i].Add(new Point(OpponentsCars[i][t]));
 #endif
+                    }
                 }
             }
 
@@ -310,7 +320,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             {
                 Brutes[sel].SelectThis();
                 bestMoveStacks[sel][0].Apply(move, new ACar(self));
-                TeammatePath[self.Id] = GetCarPath(self, bestMoveStacks[sel]);
+                ComputedPath[self.Id] = GetCarPath(self, bestMoveStacks[sel]);
 #if DEBUG
                 Visualizer.DrawWays(self, bestMoveStacks, sel);
 #endif
@@ -368,8 +378,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (OpponentsCars != null)
                 {
                     var myTeam = new List<ACar[]>();
-                    if (TeammatePath.ContainsKey(self.Id))
-                        myTeam.Add(TeammatePath[self.Id]);
+                    if (ComputedPath.ContainsKey(self.Id))
+                        myTeam.Add(ComputedPath[self.Id]);
                     if (TeammateCar != null)
                         myTeam.Add(TeammateCar);
                     MyTeam = myTeam.ToArray();
