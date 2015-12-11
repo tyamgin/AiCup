@@ -123,6 +123,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (mv.Count > 0)
                 {
                     mv[0].Apply(move, new ACar(self));
+                    ComputedPath[self.Id] = GetCarPath(self, mv);
 #if DEBUG
                     Visualizer.DrawWays(self, backBruteRes.Item2, backBruteRes.Item1);
 #endif

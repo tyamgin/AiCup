@@ -375,8 +375,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 if (OpponentsCars != null)
                 {
                     var myTeam = new List<ACar[]>();
-                    if (ComputedPath.ContainsKey(self.Id))
-                        myTeam.Add(ComputedPath[self.Id]);
+                    if (!ComputedPath.ContainsKey(self.Id))
+                        ComputedPath[self.Id] = new int[MagicConst.OpponentsTicksPrediction].Select(x => new ACar(self)).ToArray();
+                    myTeam.Add(ComputedPath[self.Id]);
                     if (TeammateCar != null)
                         myTeam.Add(TeammateCar);
                     MyTeam = myTeam.ToArray();
