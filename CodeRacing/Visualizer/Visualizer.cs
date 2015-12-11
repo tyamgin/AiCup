@@ -299,6 +299,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (stacks.Length > 7)
                 DrawWay(self, stacks[7], Brushes.DarkGreen, sel == 7 ? 2 : 0);
             if (stacks.Length > 8)
+                DrawWay(self, stacks[8], Brushes.Black, sel == 8 ? 2 : 0);
+            if (stacks.Length > 9)
                 throw new NotImplementedException("Please select color for this path");
         }
 
