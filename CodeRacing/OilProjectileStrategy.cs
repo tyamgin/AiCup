@@ -74,7 +74,18 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     }
                 }
             }
-            return result;
+            if (!result)
+                return false;
+
+            foreach (var my in MyTeam)
+            {
+                if (my == null)
+                    continue;
+                foreach(var pos in my)
+                    if (pos.GetDistanceTo2(slick) < Geom.Sqr(slick.Radius))
+                        return false;
+            }
+            return true;
         }
 
         public bool CheckUseProjectile()
@@ -93,7 +104,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             var checkTicks = MagicConst.OpponentsTicksPrediction*(self.Type == CarType.Buggy ? 0.5 : 0.4);
 
-            for (var t = 1; t < MagicConst.OpponentsTicksPrediction * 0.5; t++)
+            for (var t = 1; t < checkTicks; t++)
             {
                 for(var prId = 0; prId < projectiles.Length; prId++)
                 {
@@ -114,7 +125,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                          * Чужие машинки считать меньшими по размеру
                          * Свои - большими
                          */
-                        if (pr.Intersect(car, car.Original.IsTeammate ? 5 : -(pr.Type == ProjectileType.Tire ? 35 : 5)))
+                        if (pr.Intersect(car, car.Original.IsTeammate ? 5 : -(pr.Type == ProjectileType.Tire ? 40 : 5)))
                         {
                             if (pr.Type == ProjectileType.Tire)
                             {
@@ -132,7 +143,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                             if (car.Original.IsTeammate) // попал в своего
                                 return false;
 
-                            if (DurabilityObserver.ReactivationTime(car.Original) + 2 < world.Tick + t)
+                            if (DurabilityObserver.ReactivationTime(car.Original) + 2 < world.Tick + t || DurabilityObserver.IsActive(car.Original))
                             {
                                 // если он не мертв
                                 shot[prId] = true;

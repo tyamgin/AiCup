@@ -133,7 +133,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                         if (proj.Intersect(car, 5))
                         {
                             total.Importance -= proj.GetDanger()*MagicConst.TireDangerCoeff;
-                                //TODO: обработать шину отдельно
                             total.Projectiles[i] = true;
                         }
                     }
@@ -182,11 +181,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 // проверка что можно проскользнуть по стене
                 if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 &&
-                    car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, -20)))
+                    car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, -30)))
                 {
                     if (!total.OutOfBoreder)
+                    {
                         total.Importance -= MagicConst.OutOfBorederDangerCoeff;
-                    total.OutOfBoreder = true;
+                        total.OutOfBoreder = true;
+                    }
                     res = true;
                 }
 

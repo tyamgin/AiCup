@@ -9,7 +9,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public static void Watch(Car car)
         {
-            if (car.Durability > MyStrategy.Eps)
+            if (IsActive(car))
             {
                 _remainTicks.Remove(car.Id);
                 return;

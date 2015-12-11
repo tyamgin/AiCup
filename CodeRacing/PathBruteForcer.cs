@@ -76,8 +76,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int LastSuccess; // Когда последний раз брут что-то находил
         private int _lastCall; // Когда последний раз вызывали. Если не вызывали - значит был success
 
-        private Point _turnCenter, _turnTo, _turnTo23;
-        private double _needDist, _needDist2, _needDist3;
+        private Point _turnTo, _turnTo23;
+        private double _needDist, _needDist2;
         private readonly int _interval;
         public AMove LastStageMove;
         private int _waypointsCount;
@@ -289,14 +289,11 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             bruteWayPoints.AddRange(_bruteWayPoints);
             Visualizer.SegmentsDrawQueue.Add(new object[]{ Brushes.Brown, bruteWayPoints, 0.0 });
 #endif
-            _turnCenter = pts[1];
             _needDist = Const.TileSize*0.5 - 3;
             _needDist2 = Const.TileSize - 3;
-            _needDist3 = Const.TileSize*1.5 - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
             _turnTo23 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.83))];
 #if DEBUG
-            Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Crimson, new ACircularUnit { X = _turnCenter.X, Y = _turnCenter.Y, Radius = 20 }));
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Orange, new ACircularUnit { X = _turnTo23.X, Y = _turnTo23.Y, Radius = 20 }));
 #endif

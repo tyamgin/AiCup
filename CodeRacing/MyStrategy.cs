@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double InactiveCarNitroDangerCoeff = 80;
         public const double ExactlyBorderDangerCoeff = 50;
         public const double SecondDistDangerCoeff = 80;
-        public const double BackMoveDangerCoeff = 150;
+        public const double BackMoveDangerCoeff = 120;
         public const double OutOfBorederDangerCoeff = 80;
 
         public const double SafeMargin = 10.0;
@@ -288,9 +288,6 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             if (CheckBackMove(pts[1]))
                 return;
 
-            if (CheckUseOil())
-                move.IsSpillOil = true;
-
             InitBrutes();
 
             if (world.Tick < Const.Game.InitialFreezeDurationTicks)
@@ -389,6 +386,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     TimerStart();
                     if (CheckUseProjectile())
                         move.IsThrowProjectile = true;
+                    if (CheckUseOil())
+                        move.IsSpillOil = true;
+
                     TimerEndLog("CheckUseProjectile", 2);
                 }
             }
