@@ -292,7 +292,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
             if (world.Tick < Const.Game.InitialFreezeDurationTicks)
             {
-                move.EnginePower = 1;
+                var nextCell = DijkstraNextCell(GetCell(self), GetNextWayPoint(self), new Cell[] {});
+                var nextCenter = GetCenter(nextCell);
+                move.EnginePower = self.GetAngleTo(nextCenter.X, nextCenter.Y) < Math.PI/2 ? 1 : -1;
                 return;
             }
 

@@ -182,7 +182,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
 
                 // проверка что можно проскользнуть по стене
-                if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && m.ExtraMargin < m.ExactlyMargin &&
+                if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && m.ExtraMargin < m.ExactlyMargin && total.Time > 20 &&
                     car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExtraMargin)))
                 {
                     if (!total.OutOfBoreder)
