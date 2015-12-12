@@ -76,34 +76,40 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
         public int BackModeRemainTicks;
         public double BackModeTurn;
+        public double BackModePower;
 
         bool CheckBackMove(Point turnCenter)
         {
-            const int ln = 40;
-            if (BackModeRemainTicks == 0 && PositionsHistory.Count > ln)
+            const int ticksToCheck = 40;
+
+            for (var power = -1; power <= 1; power += 2)
             {
-                if (
-                    PositionsHistory[PositionsHistory.Count - 1].GetDistanceTo(
-                        PositionsHistory[PositionsHistory.Count - ln]) < 20)
+                if (BackModeRemainTicks == 0 && PositionsHistory.Count > ticksToCheck)
                 {
-                    var md = new ACar(self);
-                    md.EnginePower = 1;
-                    var cn = 0;
-                    for (var i = 0; i < 80; i++)
-                        if (ModelMove(md, new AMove { EnginePower = 1, IsBrake = false, WheelTurn = 0 }, simpleMode: false, exactlyBorders: true))
-                            cn++;
-                    if (cn < 25 || IsSomeoneAhead(new ACar(self)))
+                    if (
+                        PositionsHistory[PositionsHistory.Count - 1].GetDistanceTo(
+                            PositionsHistory[PositionsHistory.Count - ticksToCheck]) < 20)
                     {
-                        BackModeRemainTicks = 50;
-                        BackModeTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y) < 0 ? 1 : -1;
+                        var model = new ACar(self) {EnginePower = -power};
+                        var cnt = 0;
+                        for (var i = 0; i < 80; i++)
+                            if (ModelMove(model, new AMove {EnginePower = -power, IsBrake = false, WheelTurn = 0},
+                                simpleMode: false, exactlyBorders: true))
+                                cnt++;
+                        if (cnt < 25 || IsSomeoneAhead(new ACar(self), -power))
+                        {
+                            BackModeRemainTicks = 50;
+                            BackModeTurn = self.GetAngleTo(turnCenter.X, turnCenter.Y) < 0 ? -power : power;
+                            BackModePower = power;
+                            break;
+                        }
                     }
                 }
             }
-
             if (BackModeRemainTicks > 0)
             {
                 BackModeRemainTicks--;
-                move.EnginePower = -1;
+                move.EnginePower = BackModePower;
                 move.WheelTurn = BackModeTurn;
                 return true;
             }

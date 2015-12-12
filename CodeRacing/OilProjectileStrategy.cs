@@ -6,17 +6,37 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        // Проверка что кто-то стоит впереди
-        public bool IsSomeoneAhead(ACar car)
+        /* 
+         * Проверка что кто-то стоит впереди
+         * p2   p5  p3  p4   p1
+         * |    |   |   |    |
+         * o-----------------o
+         * |                 |
+         * |                 |
+         */
+        public bool IsSomeoneAhead(ACar car, int direction)
         {
             var carRect = car.GetRect(0);
-            var p1 = carRect[0] + Point.ByAngle(car.Angle)*20;
-            var p2 = carRect[3] + Point.ByAngle(car.Angle)*20;
-            var p3 = car + Point.ByAngle(car.Angle) * (car.Original.Width / 2 + 20);
+            Point p1, p2;
+            if (direction > 0)
+            {
+                p1 = carRect[0] + Point.ByAngle(car.Angle)*20;
+                p2 = carRect[3] + Point.ByAngle(car.Angle)*20;
+            }
+            else
+            {
+                p1 = carRect[1] - Point.ByAngle(car.Angle) * 20;
+                p2 = carRect[2] - Point.ByAngle(car.Angle) * 20;
+            }
+            var p3 = (p1 + p2)/2;
+            var p4 = (p1 + p3)/2;
+            var p5 = (p2 + p3)/2;
             return world.Cars.Select(x => new ACar(x).GetRect(0)).Any(
                 rect => Geom.ContainPoint(rect, p1) ||
                         Geom.ContainPoint(rect, p2) ||
-                        Geom.ContainPoint(rect, p3)
+                        Geom.ContainPoint(rect, p3) ||
+                        Geom.ContainPoint(rect, p4) ||
+                        Geom.ContainPoint(rect, p5)
                 );
         }
 
