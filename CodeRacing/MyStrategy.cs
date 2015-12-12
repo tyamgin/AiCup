@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public const double InactiveCarNitroDangerCoeff = 80;
         public const double ExactlyBorderDangerCoeff = 50;
         public const double SecondDistDangerCoeff = 80;
-        public const double BackMoveDangerCoeff = 110;
+        public const double BackMoveDangerCoeff = 80;
         public const double OutOfBorederDangerCoeff = 80;
 
         public const double SafeMargin = 10.0;

@@ -323,8 +323,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     {
                                         EnginePower = 1.0,
                                         WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromNext},
-                                        RangesMode = true,
-                                        SafeMargin = -1,
+                                        ExtraMargin = 1,
                                     }
                                 }
                             }, 8, new AMove {EnginePower = -1.0}, 1111, 40, useDist2: true

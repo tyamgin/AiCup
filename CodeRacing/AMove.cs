@@ -16,6 +16,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         public int Times;
         public double SafeMargin = MagicConst.SafeMargin;
         public double ExactlyMargin = 1;
+        public double ExtraMargin = -30;
         public bool RangesMode;
 
         public AMove Clone()
@@ -28,6 +29,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 Times = Times,
                 SafeMargin = SafeMargin,
                 ExactlyMargin = ExactlyMargin,
+                ExtraMargin = ExtraMargin,
                 RangesMode = RangesMode,
             };
             if (WheelTurn is Point)
@@ -85,7 +87,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 isBreak = true;
             }
 
-            var simpleMode = total.Time > 45;
+            var simpleMode = total.Time > 41;
             var checking = !simpleMode || (MyStrategy.world.Tick + total.Time) % 4 == 0;
 
             car.Move(m.EnginePower, turn, isBreak, m.IsUseNitro, simpleMode);
@@ -170,7 +172,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 res = car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.SafeMargin));
 
                 // проверка что можно проехать точно возле стены
-                if (!res && car.RemainingNitroTicks == 0 &&
+                if (!res && car.RemainingNitroTicks == 0 && m.ExactlyMargin < m.SafeMargin &&
                     car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExactlyMargin)))
                 {
                     if (!total.ExactlyBorder)
@@ -180,8 +182,8 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
 
                 // проверка что можно проскользнуть по стене
-                if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 &&
-                    car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, -30)))
+                if (!m.RangesMode && !res && car.RemainingNitroTicks == 0 && m.ExtraMargin < m.ExactlyMargin &&
+                    car.GetRectEx().All(p => !MyStrategy.IntersectTail(p, m.ExtraMargin)))
                 {
                     if (!total.OutOfBoreder)
                     {
