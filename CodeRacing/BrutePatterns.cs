@@ -12,6 +12,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 return;
 
             const int subWayPointsCount = 70;
+            const int subWayPointsCount2 = 36;
 
             Brutes = new[]
             {
@@ -279,7 +280,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 SafeMargin = -1,
                             }
                     }
-                }, 8, new AMove {EnginePower = 1}, 40, useDist2: true))
+                }, 8, new AMove { EnginePower = 1 }, subWayPointsCount2, useDist2: false))
                     .Concat(
                         new[] {-1.0, 1.0}.Select(sign => new PathBruteForcer(new[]
                         {
@@ -293,25 +294,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     WheelTurn = sign
                                 }
                             }
-                        }, 8, new AMove {EnginePower = 1}, 40, useDist2: true)
+                        }, 8, new AMove { EnginePower = 1 }, subWayPointsCount2, useDist2: false)
                             ))
                     .Concat(new[]
                     {
-                        new PathBruteForcer(
-                            new[]
-                            {
-                                new PathPattern
-                                {
-                                    To = 48,
-                                    Step = 8,
-                                    Move = new AMove
-                                    {
-                                        EnginePower = -1.0,
-                                        WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext}
-                                    }
-                                }
-                            }, 8, new AMove {EnginePower = -1.0}, 40, useDist2: true
-                        ),
                         new PathBruteForcer(
                             new[]
                             {
@@ -321,12 +307,27 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     Step = 8,
                                     Move = new AMove
                                     {
+                                        EnginePower = -1,
+                                        WheelTurn = 0,
+                                    }
+                                }
+                            }, 8, new AMove {EnginePower = -1}, subWayPointsCount2, useDist2: false
+                        ),
+                        new PathBruteForcer(
+                            new[]
+                            {
+                                new PathPattern
+                                {
+                                    To = 48,
+                                    Step = 8,
+                                    Move = new AMove
+                                    {
                                         EnginePower = 1.0,
                                         WheelTurn = new TurnPattern {Pattern = TurnPatternType.FromNext},
                                         ExtraMargin = 1,
                                     }
                                 }
-                            }, 8, new AMove {EnginePower = -1.0}, 40, useDist2: true
+                            }, 8, new AMove {EnginePower = -1.0}, subWayPointsCount2, useDist2: false
                         ),
                     })
                     .ToArray();

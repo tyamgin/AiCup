@@ -117,7 +117,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
 
                 for (var i = 0; ; i++)
                 {
-                    if (i == 200)
+                    if (i == 200 && m.EnginePower >= 0 || i == 250 && m.EnginePower < 0)
                         return;
 
                     var dst = _turnTo.GetDistanceTo2(model);
