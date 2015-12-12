@@ -61,25 +61,25 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
     {
         public readonly PathPattern[] Patterns;
         public ACar Self;
-        public int Id;
+        public bool Special;
+        public AMove LastStageMove;
+        public int LastSuccess; // Когда последний раз что-то находил
 
         private PathPattern[] _patterns;
         private Moves _movesStack, _bestMovesStack;
         private int _bestTime;
         private double _bestImportance;
         private Point[] _bruteWayPoints;
-        public bool Special;
 
         private delegate void CarCallback(ACar car, PassedInfo passed);
 
+
         private Moves _cache;
-        public int LastSuccess; // Когда последний раз брут что-то находил
         private int _lastCall; // Когда последний раз вызывали. Если не вызывали - значит был success
 
-        private Point _turnTo, _turnTo23;
+        private Point _turnTo, _turnTo2;
         private double _needDist, _needDist2;
         private readonly int _interval;
-        public AMove LastStageMove;
         private int _waypointsCount;
         private bool _useDist2;
 
@@ -91,16 +91,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
         private int _bonusesCount05;
         private int _bonusesCount2;
 
-        private static bool _isBetterTime(int time1, double importance1, int time2, double importance2)
-        {
-            return time1 - importance1 < time2 - importance2;
-        }
-
-        public PathBruteForcer(PathPattern[] patterns, int interval, AMove lastStageMove, int id, int waypointsCount, bool useDist2)
+        public PathBruteForcer(PathPattern[] patterns, int interval, AMove lastStageMove, int waypointsCount, bool useDist2)
         {
             Patterns = patterns;
             _interval = interval;
-            Id = id;
             LastStageMove = lastStageMove;
             _waypointsCount = waypointsCount;
             _useDist2 = useDist2;
@@ -149,7 +143,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                 }
                 if (!total.WayPoint)
                     return;
-                if (!MyStrategy.CheckVisibility(Self.Original, model, penalty > 0 ? _turnTo23 : _turnTo, 20))
+                if (!MyStrategy.CheckVisibility(Self.Original, model, penalty > 0 ? _turnTo2 : _turnTo, 20))
                     return;
 
                 if (model.EnginePower < 0)
@@ -158,7 +152,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                     total.Importance -= MagicConst.BackMoveDangerCoeff;
                 }
 
-                if (_isBetterTime(total.Time, total.Importance, _bestTime, _bestImportance))
+                if (total.Time - total.Importance < _bestTime - _bestImportance)
                 {
                     _bestTime = total.Time;
                     _bestImportance = total.Importance;
@@ -292,10 +286,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             _needDist = Const.TileSize*0.5 - 3;
             _needDist2 = Const.TileSize - 3;
             _turnTo = _bruteWayPoints[_bruteWayPoints.Length - 1];
-            _turnTo23 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.83))];
+            _turnTo2 = _bruteWayPoints[Math.Min(_bruteWayPoints.Length - 1, (int)(_bruteWayPoints.Length * 0.83))];
 #if DEBUG
             Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.OrangeRed, new ACircularUnit { X = _turnTo.X, Y = _turnTo.Y, Radius = 20}));
-            Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Orange, new ACircularUnit { X = _turnTo23.X, Y = _turnTo23.Y, Radius = 20 }));
+            Visualizer.CircleFillQueue.Add(new Tuple<Brush, ACircularUnit>(Brushes.Orange, new ACircularUnit { X = _turnTo2.X, Y = _turnTo2.Y, Radius = 20 }));
 #endif
 
             _patterns = Patterns.Select(pt => new PathPattern

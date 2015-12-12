@@ -16,10 +16,10 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
             Brutes = new[]
             {
                 /*
-                     * - ехать в сторону поворота на полной можности
-                     * - поворачивать в сторону цели на пол-мощности
-                     * - тормозить
-                     */
+                 * - ехать в сторону поворота на полной можности
+                 * - поворачивать в сторону цели на пол-мощности
+                 * - тормозить
+                 */
                 new PathBruteForcer(new[]
                 {
                     new PathPattern
@@ -56,7 +56,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 0, subWayPointsCount, useDist2:true),
+                }, 8, new AMove{EnginePower = 1}, subWayPointsCount, useDist2:true),
 
                                 /*
                      * - ехать в сторону поворота на полной можности
@@ -100,12 +100,12 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove {IsUseNitro = true, EnginePower = 1}, 0, subWayPointsCount, useDist2:true),
+                }, 8, new AMove {IsUseNitro = true, EnginePower = 1}, subWayPointsCount, useDist2:true),
 
                 /*
-                     * - снизить мощность
-                     * - тормозить
-                     */
+                 * - снизить мощность
+                 * - тормозить
+                 */
                 new PathBruteForcer(new[]
                 {
                     new PathPattern
@@ -131,9 +131,9 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 1, subWayPointsCount, useDist2:true),
+                }, 8, new AMove{EnginePower = 1}, subWayPointsCount, useDist2:true),
 
-                               /*
+               /*
                 * - снизить мощность
                 * - тормозить
                 */
@@ -163,13 +163,13 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 121, subWayPointsCount, useDist2:true),
+                }, 8, new AMove{EnginePower = 1}, subWayPointsCount, useDist2:true),
 
-                /*
-                     * - ехать от поворота на пол-мощности
-                     * - поворачивать в сторону цели на полной мощности
-                     * - тормозить
-                     */
+               /*
+                * - ехать от поворота на пол-мощности
+                * - поворачивать в сторону цели на полной мощности
+                * - тормозить
+                */
                 new PathBruteForcer(new[]
                 {
                     new PathPattern
@@ -206,7 +206,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true),
+                }, 8, new AMove{EnginePower = 1}, subWayPointsCount, useDist2:true),
 
                 new PathBruteForcer(new[]
                 {
@@ -233,7 +233,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true) {Special = true},
+                }, 8, new AMove{EnginePower = 1}, subWayPointsCount, useDist2:true) {Special = true},
 
                 new PathBruteForcer(new[]
                 {
@@ -260,7 +260,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 IsBrake = true
                             }
                     }
-                }, 8, new AMove{EnginePower = 1}, 2, subWayPointsCount, useDist2:true) {Special = true},
+                }, 8, new AMove{EnginePower = 1}, subWayPointsCount, useDist2:true) {Special = true},
             };
 
             BackBrutes =
@@ -279,7 +279,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                 SafeMargin = -1,
                             }
                     }
-                }, 8, new AMove {EnginePower = 1}, 66, 40, useDist2: true))
+                }, 8, new AMove {EnginePower = 1}, 40, useDist2: true))
                     .Concat(
                         new[] {-1.0, 1.0}.Select(sign => new PathBruteForcer(new[]
                         {
@@ -293,7 +293,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                     WheelTurn = sign
                                 }
                             }
-                        }, 8, new AMove {EnginePower = 1}, 111, 40, useDist2: true)
+                        }, 8, new AMove {EnginePower = 1}, 40, useDist2: true)
                             ))
                     .Concat(new[]
                     {
@@ -310,7 +310,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                         WheelTurn = new TurnPattern {Pattern = TurnPatternType.ToNext}
                                     }
                                 }
-                            }, 8, new AMove {EnginePower = -1.0}, 1111, 40, useDist2: true
+                            }, 8, new AMove {EnginePower = -1.0}, 40, useDist2: true
                         ),
                         new PathBruteForcer(
                             new[]
@@ -326,7 +326,7 @@ namespace Com.CodeGame.CodeRacing2015.DevKit.CSharpCgdk
                                         ExtraMargin = 1,
                                     }
                                 }
-                            }, 8, new AMove {EnginePower = -1.0}, 1111, 40, useDist2: true
+                            }, 8, new AMove {EnginePower = -1.0}, 40, useDist2: true
                         ),
                     })
                     .ToArray();
