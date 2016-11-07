@@ -1,4 +1,6 @@
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+using System.Diagnostics;
+using System.Threading;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
     public sealed class Runner {
@@ -6,6 +8,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         private readonly string token;
 
         public static void Main(string[] args) {
+
+            Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
+            Thread.Sleep(2000);
+
             new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31001", "0000000000000000" }).Run();
         }
 

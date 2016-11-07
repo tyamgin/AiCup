@@ -1,1 +1,1 @@
-start javaw -Xms512m -Xmx1G -jar "local-runner.jar" local-runner-sync.properties local-runner-sync.default.properties
+start "C:\Program Files (x86)\Java\jre1.8.0_111\bin\javaw.exe -jar -Xms512m -Xmx1G" "G:\Projects\AiCup\CodeWizards\local_runner\local-runner.jar" "G:\Projects\AiCup\CodeWizards\local_runner\local-runner-sync.properties" "G:\Projects\AiCup\CodeWizards\local_runner\local-runner-sync.default.properties"
