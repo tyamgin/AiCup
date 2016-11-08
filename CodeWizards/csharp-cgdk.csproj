@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AUnit.cs" />
+    <Compile Include="Collections.cs" />
     <Compile Include="Const.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="Model\ActionType.cs" />
@@ -107,11 +108,15 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteProcessClient.cs" />
     <Compile Include="Runner.cs" />
+    <Compile Include="SearchPath.cs" />
     <Compile Include="TreesObserver.cs" />
-    <Compile Include="Visualizer\MapForm.cs">
+    <Compile Include="Utility.cs" />
+    <Compile Include="Visualizer\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Visualizer\MapForm.Designer.cs" />
+    <Compile Include="Visualizer\MainForm.Designer.cs">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Visualizer\Visualizer.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -140,7 +145,9 @@
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Visualizer\MapForm.resx" />
+    <EmbeddedResource Include="Visualizer\MainForm.resx">
+      <DependentUpon>MainForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
