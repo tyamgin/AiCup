@@ -2,19 +2,19 @@ using System;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model {
     public class Message {
-        private readonly LineType line;
+        private readonly LaneType lane;
         private readonly SkillType? skillToLearn;
         private readonly byte[] rawMessage;
 
-        public Message(LineType line, SkillType? skillToLearn, byte[] rawMessage) {
-            this.line = line;
+        public Message(LaneType lane, SkillType? skillToLearn, byte[] rawMessage) {
+            this.lane = lane;
             this.skillToLearn = skillToLearn;
 
             this.rawMessage = new byte[rawMessage.Length];
             Array.Copy(rawMessage, this.rawMessage, rawMessage.Length);
         }
 
-        public LineType Line => line;
+        public LaneType Lane => lane;
         public SkillType? SkillToLearn => skillToLearn;
 
         public byte[] RawMessage {

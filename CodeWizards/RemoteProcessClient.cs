@@ -373,7 +373,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
                 return null;
             }
 
-            return new Message((LineType) ReadEnum(), (SkillType?) ReadEnum(), ReadByteArray(false));
+            return new Message((LaneType) ReadEnum(), (SkillType?) ReadEnum(), ReadByteArray(false));
         }
 
         private void WriteMessage(Message message) {
@@ -384,7 +384,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
 
             WriteBoolean(true);
 
-            WriteEnum((sbyte?) message.Line);
+            WriteEnum((sbyte?) message.Lane);
             WriteEnum((sbyte?) message.SkillToLearn);
             WriteByteArray(message.RawMessage);
         }
