@@ -86,7 +86,7 @@
     <Compile Include="Model\CircularUnit.cs" />
     <Compile Include="Model\Faction.cs" />
     <Compile Include="Model\Game.cs" />
-    <Compile Include="Model\LineType.cs" />
+    <Compile Include="Model\LaneType.cs" />
     <Compile Include="Model\LivingUnit.cs" />
     <Compile Include="Model\Message.cs" />
     <Compile Include="Model\Minion.cs" />

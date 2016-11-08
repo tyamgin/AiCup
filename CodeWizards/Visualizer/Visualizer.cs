@@ -165,7 +165,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
             foreach (var pt in MyStrategy.GetFreePoints())
             {
-                FillCircle(Color.Aqua, pt.X, pt.Y, 2);
+                FillCircle(Color.Aqua, pt.X, pt.Y, 4);
             }
 
             foreach (var seg in SegmentsDrawQueue)
