@@ -14,6 +14,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             // TODO
         }
 
-        public new bool IsOpponent => !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);
+        public override bool IsOpponent => !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);
     }
 }

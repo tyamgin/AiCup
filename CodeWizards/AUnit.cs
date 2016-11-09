@@ -7,6 +7,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     public class AUnit : Point
     {
         public double Angle;
+        public long Id;
 
         public double GetAngleTo(double x, double y)
         {
@@ -29,7 +30,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public AUnit(Unit unit) : base(unit)
         {
+            Id = unit.Id;
             Angle = unit.Angle;
+        }
+
+        public AUnit()
+        {
         }
     }
 
@@ -37,9 +43,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public double Radius;
 
+        public bool IntersectsWith(ACircularUnit unit)
+        {
+            // если касаются, то false
+            return GetDistanceTo2(unit) < Geom.Sqr(Radius + unit.Radius);
+        }
+
         public ACircularUnit(CircularUnit unit) : base(unit)
         {
             Radius = unit.Radius;
+        }
+
+        public ACircularUnit()
+        {
         }
     }
 }

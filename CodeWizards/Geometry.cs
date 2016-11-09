@@ -346,17 +346,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Math.Sqrt(x*x + y*y);
         }
 
-        private static bool _between(double a, double b, double c)
+        public static bool Between(double left, double right, double middle)
         {
-            if (a > b)
-                _swap(ref a, ref b);
-            return a - Const.Eps <= c && c <= b + Const.Eps;
+            if (left > right)
+                _swap(ref left, ref right);
+            return left - Const.Eps <= middle && middle <= right + Const.Eps;
         }
 
         public static Point[] SegmentCircleIntersect(Point a, Point b, Point c, double r)
         {
             return LineCircleIntersect(a, b, c, r)
-                .Where(pt => _between(a.X, b.X, pt.X) && _between(a.Y, b.Y, pt.Y))
+                .Where(pt => Between(a.X, b.X, pt.X) && Between(a.Y, b.Y, pt.Y))
                 .ToArray();
         }
 

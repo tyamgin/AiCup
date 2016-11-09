@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -172,8 +173,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             {
                 var points = seg[0] as List<Point>;
                 var pen = seg[1] as Pen;
+                float width = seg.Length > 2 ? Convert.ToSingle(seg[2]) : 0F;
                 for(var i = 1; i < points.Count; i++)
-                    DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y);
+                    DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y, width);
             }
 
             SegmentsDrawQueue.Clear();
