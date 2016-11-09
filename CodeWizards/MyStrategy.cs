@@ -5,6 +5,14 @@ using System.Linq;
 using System.Threading;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
+/**
+ * TODO:
+ * - стрелять минуя своих (устанавливать в move minDist & maxDist)
+ * - моделирование снаряда, моделирование уворота соперника
+ * - - пересечание отрезка и окружности?
+ * - - проверять деревья
+ */
+
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -14,9 +22,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static Wizard self;
         public static Move move;
 
-        public Wizard[] Opponents;
-        public Minion[] OpponentMinions;
-        public Building[] OpponentBuildings;
+        public AWizard[] Opponents;
+        public AMinion[] OpponentMinions;
+        public ABuilding[] OpponentBuildings;
+        public ACombatUnit[] OpponentCombats;
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
@@ -29,15 +38,27 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Const.Height = world.Height;
 
             TreesObserver.Update(world);
+            BuildingsObserver.Update(world);
 
             Opponents = world.Wizards
-                .Where(w => w.Faction != self.Faction && !w.IsMe)
+                .Select(x => new AWizard(x))
+                .Where(x => x.IsOpponent)
                 .ToArray();
+
             OpponentMinions = world.Minions
-                .Where(m => (m.Faction != self.Faction && (m.Faction == Faction.Academy || m.Faction == Faction.Renegades)))
+                .Select(x => new AMinion(x))
+                .Where(x => x.IsOpponent)
                 .ToArray();
+
             OpponentBuildings = world.Buildings
-                .Where(b => b.Faction != self.Faction)
+                .Select(x => new ABuilding(x))
+                .Where(x => x.IsOpponent)
+                .ToArray();
+
+            OpponentCombats = 
+                OpponentMinions.Cast<ACombatUnit>()
+                .Concat(Opponents)
+                .Concat(OpponentBuildings)
                 .ToArray();
 
             InitializeDijkstra();
@@ -106,14 +127,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         Point FindTarget()
         {
             double minDist = int.MaxValue;
-            var opponents = Opponents.Cast<Unit>().ToList();
-            opponents.AddRange(OpponentBuildings.Cast<Unit>());
-            opponents.AddRange(OpponentMinions.Cast<Unit>());
             Point sel = null;
 
-            foreach (var x in opponents)
+            foreach (var x in OpponentCombats)
             {
-                var dst = self.GetDistanceTo(x);
+                var dst = x.GetDistanceTo(self);
                 if (dst < minDist)
                 {
                     minDist = dst;

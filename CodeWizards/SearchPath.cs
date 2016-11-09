@@ -20,7 +20,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static int GridSize = 40;
         public static double CellLength;
         public static double CellDiagLength;
+
         private static int _prevTreesSize = 0;
+        private static int _prevBuildingsSize = 0;
 
         public static List<Point> GetFreePoints()
         {
@@ -81,15 +83,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
 
-                foreach (var building in world.Buildings)
+
+                for (var k = _prevBuildingsSize; k < BuildingsObserver.Buildings.Count; k++)
                 {
-                    var bld = new ACircularUnit(building);
-                    if (point.GetDistanceTo2(bld) < Geom.Sqr(building.Radius + self.Radius))
+                    var building = BuildingsObserver.Buildings[k];
+
+                    if (point.GetDistanceTo2(building) < Geom.Sqr(building.Radius + self.Radius))
                     {
                         _isLocked[I, J] = true;
                         return;
                     }
-                    if (Geom.SegmentCircleIntersect(point, pt, bld, bld.Radius + self.Radius).Length > 0)
+                    if (Geom.SegmentCircleIntersect(point, pt, building, building.Radius + self.Radius).Length > 0)
                     {
                         remove = true;
                         break;

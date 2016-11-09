@@ -74,7 +74,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ABuilding.cs" />
+    <Compile Include="ACombatUnit.cs" />
+    <Compile Include="AMinion.cs" />
     <Compile Include="AUnit.cs" />
+    <Compile Include="AWizard.cs" />
     <Compile Include="Collections.cs" />
     <Compile Include="Const.cs" />
     <Compile Include="Geometry.cs" />
@@ -109,6 +113,7 @@
     <Compile Include="RemoteProcessClient.cs" />
     <Compile Include="Runner.cs" />
     <Compile Include="SearchPath.cs" />
+    <Compile Include="BuildingsObserver.cs" />
     <Compile Include="TreesObserver.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Visualizer\MainForm.cs">
