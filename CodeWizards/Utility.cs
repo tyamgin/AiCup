@@ -44,7 +44,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #if DEBUG
             var time = TimerStop();
             if (time > limit)
-                Log(world.TickIndex + "> " + caption + ":" + time);
+                Log(World.TickIndex + "> " + caption + ":" + time);
 #endif
         }
 

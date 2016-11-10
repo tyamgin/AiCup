@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     public class TreesObserver
     {
         public readonly static List<ACircularUnit> Trees = new List<ACircularUnit>();
-        private static HashSet<long> _ids = new HashSet<long>();
+        private static readonly HashSet<long> _ids = new HashSet<long>();
 
         public static void Update(World world)
         {

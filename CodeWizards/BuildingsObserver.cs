@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     class BuildingsObserver
     {
         public readonly static List<ACircularUnit> Buildings = new List<ACircularUnit>();
-        private static HashSet<long> _ids = new HashSet<long>();
+        private static readonly HashSet<long> _ids = new HashSet<long>();
 
         public static void Update(World world)
         {

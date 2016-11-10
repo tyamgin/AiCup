@@ -9,6 +9,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public double Angle;
         public long Id;
 
+        public AUnit(Unit unit) : base(unit)
+        {
+            Id = unit.Id;
+            Angle = unit.Angle;
+        }
+
+        public AUnit(AUnit unit) : base(unit)
+        {
+            Id = unit.Id;
+            Angle = unit.Angle;
+        }
+
+        public AUnit()
+        {
+        }
+
         public double GetAngleTo(double x, double y)
         {
             var absoluteAngleTo = Math.Atan2(y - Y, x - X);
@@ -27,21 +43,25 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             return GetAngleTo(unit.X, unit.Y);
         }
-
-        public AUnit(Unit unit) : base(unit)
-        {
-            Id = unit.Id;
-            Angle = unit.Angle;
-        }
-
-        public AUnit()
-        {
-        }
     }
 
     public class ACircularUnit : AUnit
     {
         public double Radius;
+
+        public ACircularUnit(CircularUnit unit) : base(unit)
+        {
+            Radius = unit.Radius;
+        }
+
+        public ACircularUnit(ACircularUnit unit) : base(unit)
+        {
+            Radius = unit.Radius;
+        }
+
+        public ACircularUnit()
+        {
+        }
 
         public bool IntersectsWith(ACircularUnit unit)
         {
@@ -49,13 +69,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return GetDistanceTo2(unit) < Geom.Sqr(Radius + unit.Radius);
         }
 
-        public ACircularUnit(CircularUnit unit) : base(unit)
+        public ACircularUnit CheckIntersections(ACircularUnit[] units)
         {
-            Radius = unit.Radius;
-        }
-
-        public ACircularUnit()
-        {
+            foreach (var unit in units)
+            {
+                if (IntersectsWith(unit))
+                    return unit;
+            }
+            return null;
         }
     }
 }

@@ -14,18 +14,44 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public Faction Faction;
         public double Life;
-
+        public double VisionRange;
+        public double CastRange;
 
         public ACombatUnit(CircularUnit unit) : base(unit)
         {
-            IsTeammate = unit.Faction == MyStrategy.self.Faction;
+            IsTeammate = unit.Faction == MyStrategy.Self.Faction;
             Faction = unit.Faction;
-            if (unit is Wizard)
-                Life = ((Wizard) unit).Life;
-            if (unit is Building)
-                Life = ((Building)unit).Life;
-            if (unit is Minion)
-                Life = ((Minion)unit).Life;
+            var wizard = unit as Wizard;
+            if (wizard != null)
+            {
+                Life = wizard.Life;
+                VisionRange = wizard.VisionRange;
+                CastRange = wizard.CastRange;
+            }
+            var building = unit as Building;
+            if (building != null)
+            {
+                Life = building.Life;
+                VisionRange = building.VisionRange;
+                CastRange = building.AttackRange;
+            }
+            var minion = unit as Minion;
+            if (minion != null)
+            {
+                Life = minion.Life;
+                VisionRange = minion.VisionRange;
+                if (minion.Type == MinionType.FetishBlowdart)
+                    CastRange = MyStrategy.Game.FetishBlowdartAttackRange;
+            }
+        }
+
+        public ACombatUnit(ACombatUnit unit) : base(unit)
+        {
+            IsTeammate = unit.IsTeammate;
+            Faction = unit.Faction;
+            Life = unit.Life;
+            VisionRange = unit.VisionRange;
+            CastRange = unit.CastRange;
         }
 
         public ACombatUnit()

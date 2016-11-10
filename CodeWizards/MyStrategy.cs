@@ -2,43 +2,50 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * - стрелять минуя своих (устанавливать в move minDist & maxDist)
- * - моделирование снаряда, моделирование уворота соперника
- * - - пересечание отрезка и окружности?
- * - - проверять деревья
+ * - моделирование уворота соперника
+ * - - для этого нужно определять сколько осталось лететь снаряду
+ * - - проверять деревья???
+ * 
+ * - бить посохом
+ * - учитывать препятствия-юниты в дейкстре
+ * - отдельная дейкстра для зоны боя
+ * 
+ * - бить посохом башни
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
-        public static World world;
-        public static Game game;
-        public static Wizard self;
-        public static Move move;
+        public static World World;
+        public static Game Game;
+        public static Wizard Self;
+        public static Move FinalMove;
+
+        public static long[] FriendsIds;
 
         public AWizard[] Wizards, OpponentWizards;
         public AMinion[] Minions, OpponentMinions;
         public ABuilding[] Buildings, OpponentBuildings;
         public ACombatUnit[] Combats, OpponentCombats;
 
+        public static AProjectile[][] ProjectilesPaths; 
+
         public void Move(Wizard self, World world, Game game, Move move)
         {
-            MyStrategy.world = world;
-            MyStrategy.game = game;
-            MyStrategy.self = self;
-            MyStrategy.move = move;
+            MyStrategy.World = world;
+            MyStrategy.Game = game;
+            MyStrategy.Self = self;
+            MyStrategy.FinalMove = move;
 
             Const.Width = world.Width;
             Const.Height = world.Height;
-
-            TreesObserver.Update(world);
-            BuildingsObserver.Update(world);
 
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
@@ -74,6 +81,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .Where(x => x.IsOpponent)
                 .ToArray();
 
+            FriendsIds = Combats
+                .Where(x => x.IsTeammate)
+                .Select(x => x.Id)
+                .ToArray();
+
+
+            TreesObserver.Update(world);
+            BuildingsObserver.Update(world);
+            ProjectilesObserver.Update(world);
+
+            InitializeProjectiles();
             InitializeDijkstra();
 
 #if DEBUG
@@ -84,6 +102,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Visualizer.Visualizer.CreateForm();
 #endif
             //_testMagicMissile();
+            Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
 
             var goTo = new Point(Const.Width - 120, 120);
 
@@ -100,7 +119,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
 
-            var target = FindTarget();
+            var target = FindTarget(new AWizard(self));
             if (target != null)
             {
                 move.Turn = self.GetAngleTo(nearest.X, nearest.Y);
@@ -109,48 +128,69 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 GoAround(nearest ?? goTo);
             }
+
+            if (!TryDodge())
+            {
+                TryDodge2();
+            }
 #if DEBUG
             Visualizer.Visualizer.LookUp(new Point(self.X, self.Y));
             Visualizer.Visualizer.Draw();
-            Thread.Sleep(10);
+            Thread.Sleep(15);
 #endif
         }
 
         void GoAround(Point to)
         {
-            var path = DijkstraFindPath(new Point(self), to);
-            while (path.Count > 0 && path[0].GetDistanceTo(self) <= CellLength)
+            var path = DijkstraFindPath(new Point(Self), to);
+            while (path.Count > 0 && path[0].GetDistanceTo(Self) <= CellLength)
                 path.RemoveAt(0);
             if (path.Count == 0)
                 return;
             var pt = path[0];
 
-            var angle = self.GetAngleTo(pt.X, pt.Y);
-            var forwardSpeed = Math.Cos(angle)*game.WizardForwardSpeed;
-            var strafeSpeed = Math.Sin(angle)*game.WizardStrafeSpeed;
-            move.Speed = forwardSpeed;
-            move.StrafeSpeed = strafeSpeed;
-            move.Turn = angle;
+            var angle = Self.GetAngleTo(pt.X, pt.Y);
+            var forwardSpeed = Math.Cos(angle)*Game.WizardForwardSpeed;
+            var strafeSpeed = Math.Sin(angle)*Game.WizardStrafeSpeed;
+            FinalMove.Speed = forwardSpeed;
+            FinalMove.StrafeSpeed = strafeSpeed;
+            FinalMove.Turn = angle;
 
 #if DEBUG
-            var tmp = Geom.Hypot(forwardSpeed / game.WizardForwardSpeed, strafeSpeed / game.WizardStrafeSpeed);
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Aqua });
 #endif
         }
 
-        Point FindTarget()
+        private bool HasAnyTarget(AWizard self)
+        {
+            foreach (var x in OpponentCombats)
+            {
+                var angle = self.GetAngleTo(x);
+                var dist = self.GetDistanceTo(x);
+
+                if (dist > self.CastRange + x.Radius)
+                    continue;
+                if (Math.Abs(angle) > Game.StaffSector/2)
+                    continue;
+
+                return true;
+            }
+            return false;
+        }
+
+        Point FindTarget(AWizard self)
         {
             var angles = new List<double>();
             foreach (var x in OpponentCombats)
             {
-                var angle = self.GetAngleTo(x.X, x.Y);
-                var dist = self.GetDistanceTo(x.X, x.Y);
+                var angle = self.GetAngleTo(x);
+                var dist = self.GetDistanceTo(x);
 
-                if (dist > self.CastRange*1.2 || Math.Abs(angle) > game.StaffSector / 2)
+                if (dist > self.CastRange*1.2 || Math.Abs(angle) > Game.StaffSector / 2)
                     continue;
 
                 const int grid = 20;
-                double left = -game.StaffSector/2, right = -left;
+                double left = -Game.StaffSector/2, right = -left;
                 for (var i = 0; i <= grid; i++)
                 {
                     var castAngle = angle + (right - left)/grid*i + left;
@@ -160,7 +200,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             double selCastAngle = 0;
             ACombatUnit selTarget = null;
-            double selMinDist = 0, selMaxDist = self.CastRange;
+            double selMinDist = 0, selMaxDist = self.CastRange, selAngleTo = 0;
 
             foreach (var angle in angles)
             {
@@ -171,10 +211,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (path[i].State == ProjectilePathState.Fire && path[i].Target is ACombatUnit)
                     {
                         var combat = (ACombatUnit) path[i].Target;
-                        if (combat.IsOpponent && (selTarget == null || combat.Life < selTarget.Life))
+                        var angleTo = self.GetAngleTo(combat) - angle;
+                        Geom.AngleNormalize(ref angleTo);
+                        angleTo = Math.Abs(angleTo);
+                        if (combat.IsOpponent && (selTarget == null || combat.Life < selTarget.Life || Math.Abs(combat.Life - selTarget.Life) < Const.Eps && angleTo < selAngleTo))
                         {
                             selTarget = combat;
                             selCastAngle = angle;
+                            selAngleTo = angleTo;
                             selMinDist = i == 0 ? 0 : (path[i - 1].StartDistance + path[i].StartDistance)/2;
                             selMaxDist = i == path.Count - 1 ? self.CastRange : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
                         }
@@ -183,20 +227,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             if (selTarget == null)
                 return null;
-            move.Action = ActionType.MagicMissile;
-            move.MinCastDistance = selMinDist;
-            move.MaxCastDistance = selMaxDist;
-            move.CastAngle = selCastAngle;
+            FinalMove.Action = ActionType.MagicMissile;
+            FinalMove.MinCastDistance = selMinDist;
+            FinalMove.MaxCastDistance = selMaxDist;
+            FinalMove.CastAngle = selCastAngle;
 #if DEBUG
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[]
             {
                 new List<Point>
                 {
-                    new Point(self) + Point.ByAngle(self.Angle) * selMinDist,
-                    new Point(self) + Point.ByAngle(self.Angle) * selMaxDist
+                    new Point(self) + Point.ByAngle(self.Angle + selCastAngle) * selMinDist,
+                    new Point(self) + Point.ByAngle(self.Angle + selCastAngle) * selMaxDist
                 },
                 Pens.DarkOrchid,
-                5
+                2
             });
 #endif
             return selTarget;
@@ -217,7 +261,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         List<ProjectilePathSegment> EmulateMagicMissile(AProjectile proj)
         {
-            var units = Combats.Where(x => x.Id != self.Id).ToArray();
+            var units = Combats.Where(x => x.Id != Self.Id).ToArray();//TODO: деревья
             var list = new List<ProjectilePathSegment>();
             while (proj.Exists)
             {

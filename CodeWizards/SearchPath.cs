@@ -71,12 +71,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var tree = TreesObserver.Trees[k];
                     
-                    if (point.GetDistanceTo2(tree) < Geom.Sqr(tree.Radius + self.Radius))
+                    if (point.GetDistanceTo2(tree) < Geom.Sqr(tree.Radius + Self.Radius))
                     {
                         _isLocked[I, J] = true;
                         return;
                     }
-                    if (Geom.SegmentCircleIntersect(point, pt, tree, tree.Radius + self.Radius).Length > 0)
+                    if (Geom.SegmentCircleIntersect(point, pt, tree, tree.Radius + Self.Radius).Length > 0)
                     {
                         remove = true;
                         break;
@@ -88,12 +88,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var building = BuildingsObserver.Buildings[k];
 
-                    if (point.GetDistanceTo2(building) < Geom.Sqr(building.Radius + self.Radius))
+                    if (point.GetDistanceTo2(building) < Geom.Sqr(building.Radius + Self.Radius))
                     {
                         _isLocked[I, J] = true;
                         return;
                     }
-                    if (Geom.SegmentCircleIntersect(point, pt, building, building.Radius + self.Radius).Length > 0)
+                    if (Geom.SegmentCircleIntersect(point, pt, building, building.Radius + Self.Radius).Length > 0)
                     {
                         remove = true;
                         break;

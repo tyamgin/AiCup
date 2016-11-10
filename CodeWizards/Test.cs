@@ -13,16 +13,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         void _testMagicMissile()
         {
-            if (world.TickIndex < 10)
+            if (World.TickIndex < 10)
             {
-                move.Turn = 10;
+                FinalMove.Turn = 10;
                 return;
             }
 
             if (_proj == null)
             {
-                move.Action = ActionType.MagicMissile;
-                _proj = new AProjectile(new AWizard(self), 0, ProjectileType.MagicMissile);
+                FinalMove.Action = ActionType.MagicMissile;
+                _proj = new AProjectile(new AWizard(Self), 0, ProjectileType.MagicMissile);
                 var path = EmulateMagicMissile(_proj);
                 return;
             }

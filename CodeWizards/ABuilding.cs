@@ -9,9 +9,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class ABuilding : ACombatUnit
     {
+        public double Damage;
+
         public ABuilding(Building unit) : base(unit)
         {
-            // TODO
+            Damage = unit.Damage;
         }
     }
 }

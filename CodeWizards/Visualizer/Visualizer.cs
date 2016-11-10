@@ -87,6 +87,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         }
 
         public static List<object[]> SegmentsDrawQueue = new List<object[]>();
+        public static List<Tuple<Point, double>> DangerPoints;
 
         public static void Draw()
         {
@@ -98,33 +99,54 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
             var panel = _form.panel;
 
-            _form.tickLabel.Text = MyStrategy.world.TickIndex + "";
+            _form.tickLabel.Text = MyStrategy.World.TickIndex + "";
             
             var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
-            // wizards
-            foreach(var wizard in MyStrategy.world.Wizards)
+            var maxDanger = DangerPoints.Max(x => x.Item2);
+
+            if (maxDanger > Const.Eps)
             {
-                var color = wizard.IsMe ? Color.Red : (wizard.Faction == MyStrategy.self.Faction ? Color.Blue : Color.DarkOrange);
+
+                foreach (var t in DangerPoints)
+                {
+                    var pt = t.Item1;
+                    var danger = t.Item2;
+                    var color = Color.FromArgb(200, Color.FromArgb(
+                        255,
+                        255 - (int)(danger * 255 / maxDanger),
+                        255 - 255 * (int)Math.Sqrt(danger / maxDanger)
+                    ))
+                    ;
+                    FillCircle(color, pt.X, pt.Y, 4);
+                }
+            }
+
+            // wizards
+            foreach(var wizard in MyStrategy.World.Wizards)
+            {
+                var color = wizard.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange);
 
                 DrawCircle(color, wizard.X, wizard.Y, wizard.Radius);
 
                 var to = Point.ByAngle(wizard.Angle) * wizard.Radius + new Point(wizard);
                 DrawLine(color, wizard.X, wizard.Y, to.X, to.Y, 2);
 
-                DrawText(wizard.Life + "", 15, Brushes.Red, wizard.X - 10, wizard.Y - 30);
-                DrawText(wizard.Mana + "", 15, Brushes.Blue, wizard.X - 10, wizard.Y - 10);
+                DrawText(wizard.Life + "", 15, Brushes.Red, wizard.X - 20, wizard.Y - 35);
+                DrawText(wizard.Mana + "", 15, Brushes.Blue, wizard.X - 20, wizard.Y - 15);
+                DrawText(wizard.Xp + "", 15, Brushes.Green, wizard.X - 20, wizard.Y + 5);
 
-                DrawPie(color, wizard.X, wizard.Y, MyStrategy.game.StaffRange, -MyStrategy.game.StaffSector / 2.0 + wizard.Angle, MyStrategy.game.StaffSector / 2.0 + wizard.Angle);
-                DrawPie(color, wizard.X, wizard.Y, wizard.CastRange, -MyStrategy.game.StaffSector / 2.0 + wizard.Angle, MyStrategy.game.StaffSector / 2.0 + wizard.Angle);
+                DrawPie(color, wizard.X, wizard.Y, MyStrategy.Game.StaffRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
+                DrawPie(color, wizard.X, wizard.Y, wizard.CastRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
+
             }
 
             // minions
-            foreach (var minion in MyStrategy.world.Minions)
+            foreach (var minion in MyStrategy.World.Minions)
             {
-                var color = minion.Faction == MyStrategy.self.Faction ? Color.Blue : (minion.Faction == Faction.Neutral ? Color.Fuchsia : Color.DarkOrange);
+                var color = minion.Faction == MyStrategy.Self.Faction ? Color.Blue : (minion.Faction == Faction.Neutral ? Color.Fuchsia : Color.DarkOrange);
 
                 DrawCircle(color, minion.X, minion.Y, minion.Radius);
 
@@ -136,7 +158,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             }
 
             // projectiles
-            foreach (var projectile in MyStrategy.world.Projectiles)
+            foreach (var projectile in MyStrategy.World.Projectiles)
             {
                 var color = projectile.Type == ProjectileType.MagicMissile
                     ? Color.Blue
@@ -152,9 +174,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 FillCircle(Color.Chartreuse, tree.X, tree.Y, tree.Radius);
             }
 
-            foreach (var building in MyStrategy.world.Buildings)
+            foreach (var building in MyStrategy.World.Buildings)
             {
-                FillCircle(building.Faction == MyStrategy.self.Faction ? Color.Blue : Color.DarkOrange, building.X, building.Y, building.Radius);
+                FillCircle(building.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange, building.X, building.Y, building.Radius);
                 DrawText(building.Life + "", 15, Brushes.Red, building.X - 10, building.Y - 30);
             }
 

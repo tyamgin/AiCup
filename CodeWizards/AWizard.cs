@@ -11,7 +11,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public AWizard(Wizard unit) : base(unit)
         {
-            //TODO
+        }
+
+        public AWizard(AWizard unit) : base(unit)
+        {
+        }
+
+        public void Move(double forwardSpeed, double strafeSpeed)
+        {
+            Y += Math.Sin(Angle)*forwardSpeed + Math.Cos(Angle)*strafeSpeed;
+            X += Math.Cos(Angle)*forwardSpeed + Math.Sin(Angle)*strafeSpeed;
         }
     }
 }

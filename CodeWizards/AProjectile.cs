@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
@@ -15,6 +16,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public double SpeedX, SpeedY, Speed;
         public ProjectileType Type;
         public double RemainingDistance;
+        public long OwnerUnitId;
 
 
         public AProjectile(Projectile unit) : base(unit)
@@ -23,7 +25,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             SpeedY = unit.SpeedY;
             Speed = Geom.Hypot(SpeedX, SpeedY);
             Type = unit.Type;
-            RemainingDistance = MyStrategy.game.WizardCastRange;
+            OwnerUnitId = unit.OwnerUnitId;
+            RemainingDistance = MyStrategy.Game.WizardCastRange;
+        }
+
+        public AProjectile(AProjectile unit) : base(unit)
+        {
+            SpeedX = unit.SpeedX;
+            SpeedY = unit.SpeedY;
+            Speed = Geom.Hypot(SpeedX, SpeedY);
+            Type = unit.Type;
+            OwnerUnitId = unit.OwnerUnitId;
+            RemainingDistance = MyStrategy.Game.WizardCastRange;
         }
 
         public AProjectile(ACombatUnit self, double castAngle, ProjectileType type)
@@ -32,8 +45,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             switch (type)
             {
                 case ProjectileType.MagicMissile:
-                    Speed = MyStrategy.game.MagicMissileSpeed;
-                    Radius = MyStrategy.game.MagicMissileRadius;
+                    Speed = MyStrategy.Game.MagicMissileSpeed;
+                    Radius = MyStrategy.Game.MagicMissileRadius;
                     break;
                 default:
                     throw new NotImplementedException(type.ToString());
@@ -42,31 +55,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Y = self.Y;
             SpeedX = Math.Cos(self.Angle + castAngle) *Speed;
             SpeedY = Math.Sin(self.Angle + castAngle) *Speed;
-            RemainingDistance = MyStrategy.game.WizardCastRange;
+            RemainingDistance = MyStrategy.Game.WizardCastRange;
+            OwnerUnitId = self.Id;
         }
 
         public bool Exists
         {
             get
             {
-                if (RemainingDistance < Speed)
-                    return false;///TODO TODO TODO
+                if (RemainingDistance < Speed/ MicroTicks)
+                    return false;
 
                 if (X < 0 || Y < 0 || X > Const.Width || Y > Const.Height)
                     return false;
                 return true;
             }
-        } 
-
-        public bool Move()
-        {
-            if (!Exists)
-                return false;
-
-            RemainingDistance -= Speed;
-            X += SpeedX;
-            Y += SpeedY;
-            return true;
         }
 
         public bool MicroMove()
@@ -80,14 +83,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return true;
         }
 
-        public ACircularUnit CheckIntersections(ACircularUnit[] units)
+        public void Move()
         {
-            foreach (var unit in units)
-            {
-                if (IntersectsWith(unit))
-                    return unit;
-            }
-            return null;
+            for (var i = 0; i < MicroTicks; i++)
+                MicroMove();
         }
+
+        public bool IsFriendly => MyStrategy.FriendsIds.Contains(OwnerUnitId);
     }
 }
