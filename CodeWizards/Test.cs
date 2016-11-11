@@ -29,5 +29,24 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //_proj.Move();
             return;
         }
+
+        private AWizard _wz;
+
+        bool _testWizardMove()
+        {
+            if (World.TickIndex < 200)
+                return false;
+
+            if (_wz == null)
+            {
+                _wz = new AWizard(Self);
+                _wz.Move(1.5, -0.7);
+                FinalMove.Speed = 1.5;
+                FinalMove.StrafeSpeed = -0.7;
+                return true;
+            }
+            var nw = new AWizard(Self);
+            return true;
+        }
     }
 }

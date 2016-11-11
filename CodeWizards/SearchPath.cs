@@ -21,9 +21,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static double CellLength;
         public static double CellDiagLength;
 
-        private static int _prevTreesSize = 0;
-        private static int _prevBuildingsSize = 0;
-
         public static List<Point> GetFreePoints()
         {
             var res = new List<Point>();
@@ -55,57 +52,45 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        private void _filterNeighbours(int I, int J)
+        private List<ACircularUnit> _getNewStaticUnits()
         {
-            if (_isLocked[I, J])
-                return;
+            return TreesObserver.NewTrees.Cast<ACircularUnit>()
+                .Concat(BuildingsObserver.NewBuildings)
+                .ToList();
+        }
 
+        private List<ACircularUnit> _getDisappearedStaticUnits()
+        {
+            return TreesObserver.DisappearedTrees.Cast<ACircularUnit>()
+                .Concat(BuildingsObserver.DisappearedBuildings)
+                .ToList();
+        }
+
+        private void _filterNeighbours(int I, int J, ACircularUnit unit)
+        {
             var list = _neighbours[I, J];
             var point = _points[I, J];
 
-            for (var idx = 0; idx < list.Count; idx++)
+            if (point.GetDistanceTo2(unit) < Geom.Sqr(unit.Radius + Self.Radius))
+                _isLocked[I, J] = true;//TODO maybe return
+
+            for (var idx = list.Count - 1; idx >= 0; idx--)
             {
                 var pt = _points[list[idx].I, list[idx].J];
-                var remove = false;
-                for (var k = _prevTreesSize; k < TreesObserver.Trees.Count; k++)
-                {
-                    var tree = TreesObserver.Trees[k];
-                    
-                    if (point.GetDistanceTo2(tree) < Geom.Sqr(tree.Radius + Self.Radius))
-                    {
-                        _isLocked[I, J] = true;
-                        return;
-                    }
-                    if (Geom.SegmentCircleIntersect(point, pt, tree, tree.Radius + Self.Radius).Length > 0)
-                    {
-                        remove = true;
-                        break;
-                    }
-                }
-
-
-                for (var k = _prevBuildingsSize; k < BuildingsObserver.Buildings.Count; k++)
-                {
-                    var building = BuildingsObserver.Buildings[k];
-
-                    if (point.GetDistanceTo2(building) < Geom.Sqr(building.Radius + Self.Radius))
-                    {
-                        _isLocked[I, J] = true;
-                        return;
-                    }
-                    if (Geom.SegmentCircleIntersect(point, pt, building, building.Radius + Self.Radius).Length > 0)
-                    {
-                        remove = true;
-                        break;
-                    }
-                }
-                if (remove)
+                
+                if (Geom.SegmentCircleIntersect(point, pt, unit, unit.Radius + Self.Radius).Length > 0)
                 {
                     list.RemoveAt(idx);
-                    idx--;
                 }
             }
+        }
 
+        /**
+         * Может-ли исчезновение unit повлиять на появление соседей у p
+         */
+        private bool _canAffect(ACircularUnit unit, Point p)
+        {
+            return unit.GetDistanceTo2(p) < Geom.Sqr(2*CellDiagLength + unit.Radius);
         }
 
         private void InitializeDijkstra()
@@ -131,15 +116,34 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
 
-            for (var i = 0; i <= GridSize; i++)
+            foreach (var newUnit in _getNewStaticUnits())
             {
-                for (var j = 0; j <= GridSize; j++)
+                for (var i = 0; i <= GridSize; i++)
                 {
-                    _filterNeighbours(i, j);
+                    for (var j = 0; j <= GridSize; j++)
+                    {
+                        if (!_canAffect(newUnit, _points[i, j]))
+                            continue;
+
+                        _filterNeighbours(i, j, newUnit);
+                    }
                 }
             }
 
-            _prevTreesSize = TreesObserver.Trees.Count;
+            foreach (var oldUnit in _getDisappearedStaticUnits())
+            {
+                for (var i = 0; i <= GridSize; i++)
+                {
+                    for (var j = 0; j <= GridSize; j++)
+                    {
+                        if (!_canAffect(oldUnit, _points[i, j]))
+                            continue;
+
+                        _calculateNeighbours(i, j);
+                        _filterNeighbours(i, j, oldUnit);
+                    }
+                }
+            }
 
         }
 
@@ -222,8 +226,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             if (_distPrev[end.I, end.J] == null)
-                throw new Exception("path not found");
-            
+            {
+                // path not found
+                return null;
+            }
+
             var res = new List<Cell>();
             var c = end.Clone();
             do
@@ -245,11 +252,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var startCell = FindNearestCell(start);
             var endCell = FindNearestCell(end);
             var cellsPath = DijkstraFindPath(startCell, endCell);
+            if (cellsPath == null)
+                return null;
+
             var res = new List<Point> {start};
-            foreach (var cell in cellsPath)
-            {
-                res.Add(_points[cell.I, cell.J]);
-            }
+            res.AddRange(cellsPath.Select(cell => _points[cell.I, cell.J]));
             res.Add(end);
             return res;
         }

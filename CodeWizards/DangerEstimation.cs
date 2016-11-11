@@ -9,8 +9,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     partial class MyStrategy
     {
-        //public static double EstimationStaffFactor;
-
         double EstimatePoint(AWizard my)
         {
             double res = 0;
@@ -77,11 +75,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool TryDodge2()
         {
-            var obstacles = Combats.Where(x => x.Id != Self.Id).ToArray(); //TODO деревья
             var my = new AWizard(Self);
+
+            var obstacles = 
+                Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
+                .Concat(TreesObserver.Trees)
+                .Where(x => my.GetDistanceTo2(x) < Geom.Sqr(my.VisionRange))
+                .ToArray();
+
             var danger = EstimatePoint(my);
             var minDanger = danger;
-            double selS = 0, selSS = 0;
+            double selSpeed = 0, selStrafeSpeed = 0;
 
             const int grid = 40;
             for (var i = 0; i < grid; i++)
@@ -90,20 +94,29 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var forwardSpeed = Math.Cos(angle - Self.Angle)*Game.WizardForwardSpeed;
                 var strafeSpeed = Math.Sin(angle - Self.Angle)*Game.WizardStrafeSpeed;
 
-                var a = new AWizard(Self);
-                a.Move(forwardSpeed, strafeSpeed);
-                var dg = EstimatePoint(a);
-                if (dg < minDanger && HasAnyTarget(a))
+                var self = new AWizard(Self);
+                self.Move(forwardSpeed, strafeSpeed);
+                var newDanlge = EstimatePoint(self);
+                if (newDanlge < minDanger && HasAnyTarget(self))
                 {
-                    minDanger = dg;
-                    selS = forwardSpeed;
-                    selSS = strafeSpeed;
+                    var oldCond = self.CheckIntersections(obstacles) == null;
+                    var newCond = obstacles.All(ob => Geom.SegmentCircleIntersect(my, self, ob, ob.Radius + my.Radius).Length == 0);
+                    if (newCond != oldCond)
+                    {
+                        var t = 0;
+                    }
+                    if (newCond)
+                    {
+                        minDanger = newDanlge;
+                        selSpeed = forwardSpeed;
+                        selStrafeSpeed = strafeSpeed;
+                    }
                 }
             }
             if (minDanger < danger)
             {
-                FinalMove.Speed = selS;
-                FinalMove.StrafeSpeed = selSS;
+                FinalMove.Speed = selSpeed;
+                FinalMove.StrafeSpeed = selStrafeSpeed;
                 return true;
             }
             return false;
@@ -202,5 +215,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }).ToArray();
             }
         }
+
+        
     }
 }

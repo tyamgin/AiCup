@@ -10,19 +10,43 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class TreesObserver
     {
-        public readonly static List<ACircularUnit> Trees = new List<ACircularUnit>();
-        private static readonly HashSet<long> _ids = new HashSet<long>();
+        private static Dictionary<long, ATree> _prevState = new Dictionary<long, ATree>();
+        public static List<ATree> NewTrees = new List<ATree>(), DisappearedTrees = new List<ATree>();
 
         public static void Update(World world)
         {
-            foreach(var tree in world.Trees)
-            {
-                if (_ids.Contains(tree.Id))
-                    continue;
+            var newState = new Dictionary<long, ATree>();
+            NewTrees.Clear();
+            DisappearedTrees.Clear();
 
-                _ids.Add(tree.Id);
-                Trees.Add(new ACircularUnit(tree));
+            foreach (var tree in world.Trees)
+            {
+                var a = new ATree(tree);
+                if (!_prevState.ContainsKey(tree.Id))
+                {
+                    // новое дерево
+                    NewTrees.Add(a);
+                }
+                newState[tree.Id] = a;
             }
+
+            foreach (var it in _prevState)
+            {
+                if (!MyStrategy.IsPointVisible(it.Value))
+                {
+                    // его не видно, считаем что осталось
+                    newState[it.Key] = it.Value;
+                }
+                else if (!newState.ContainsKey(it.Key))
+                {
+                    // видно, но исчезло
+                    DisappearedTrees.Add(it.Value);
+                }
+            }
+
+            _prevState = newState;
         }
+
+        public static IEnumerable<ATree> Trees => _prevState.Values;
     }
 }

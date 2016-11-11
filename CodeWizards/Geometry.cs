@@ -111,16 +111,31 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return (X - x) * (X - x) + (Y - y) * (Y - y);
         }
 
+        /// <summary>
+        /// Расстояние до юнита 
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public double GetDistanceTo(Unit unit)
         {
             return GetDistanceTo(unit.X, unit.Y);
         }
 
+        /// <summary>
+        /// Расстояние до точки 
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public double GetDistanceTo(Point point)
         {
             return GetDistanceTo(point.X, point.Y);
         }
 
+        /// <summary>
+        /// Расстояние до точки в квадрате
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
         public double GetDistanceTo2(Point point)
         {
             return GetDistanceTo2(point.X, point.Y);
@@ -153,21 +168,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return X.CompareTo(other.X);
         }
 
-        public void Set(double x, double y)
-        {
-            X = x;
-            Y = y;
-        }
+        public static Point Zero => new Point(0, 0);
 
-        public static Point Zero
-        {
-            get { return new Point(0, 0); }
-        }
-
-        public static Point One
-        {
-            get { return new Point(1, 1).Normalized(); }
-        }
+        public static Point One => new Point(1, 1).Normalized();
 
         public Point Clone()
         {
@@ -331,11 +334,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        public static double Gypot(double x, double y)
-        {
-            return Math.Sqrt(x * x + y * y);
-        }
-
         public static double Sqr(double x)
         {
             return x * x;
@@ -353,58 +351,67 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return left - Const.Eps <= middle && middle <= right + Const.Eps;
         }
 
-        public static Point[] SegmentCircleIntersect(Point a, Point b, Point c, double r)
+        /// <summary>
+        /// Точки пересечения отрезка ab с окружностью с центром circleCenter и радиусом radius 
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="circleCenter"></param>
+        /// <param name="radius"></param>
+        /// <returns></returns>
+        public static Point[] SegmentCircleIntersect(Point a, Point b, Point circleCenter, double radius)
         {
-            return LineCircleIntersect(a, b, c, r)
+            return LineCircleIntersect(a, b, circleCenter, radius)
                 .Where(pt => Between(a.X, b.X, pt.X) && Between(a.Y, b.Y, pt.Y))
                 .ToArray();
         }
 
         /// <summary>
-        /// Точки пересечения прямой ab с окружностью с центром c и радиусом r 
+        /// Точки пересечения прямой ab с окружностью с центром circleCenter и радиусом radius 
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
-        /// <param name="c"></param>
-        /// <param name="r"></param>
+        /// <param name="circleCenter"></param>
+        /// <param name="radius"></param>
         /// <returns></returns>
-        public static Point[] LineCircleIntersect(Point a, Point b, Point c, double r)
+        public static Point[] LineCircleIntersect(Point a, Point b, Point circleCenter, double radius)
         {
-            a = a - c;
-            b = b - c;
-            double A = a.Y - b.Y,
+            a = a - circleCenter;
+            b = b - circleCenter;
+            double 
+                A = a.Y - b.Y,
                 B = b.X - a.X,
                 C = -a.X * A - a.Y * B;
 
-            var res = LineCircleIntersect(A, B, C, r);
+            var res = LineCircleIntersect(A, B, C, radius);
             foreach (var p in res)
             {
-                p.X += c.X;
-                p.Y += c.Y;
+                p.X += circleCenter.X;
+                p.Y += circleCenter.Y;
             }
             return res;
         }
 
         /// <summary>
-        /// Точки пересечения прямой a*x + b*y + c с окружностью с центром (0, 0) и радиусом r 
+        /// Точки пересечения прямой a*x + b*y + c с окружностью с центром (0, 0) и радиусом radius 
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
         /// <param name="c"></param>
-        /// <param name="r"></param>
+        /// <param name="radius"></param>
         /// <returns></returns>
-        public static Point[] LineCircleIntersect(double a, double b, double c, double r)
+        public static Point[] LineCircleIntersect(double a, double b, double c, double radius)
         {
             double x0 = -a * c / (a * a + b * b),
                 y0 = -b * c / (a * a + b * b);
 
-            if (c * c > r * r * (a * a + b * b) + Const.Eps)
+            if (c * c > radius * radius * (a * a + b * b) + Const.Eps)
                 return new Point[] { };
 
-            if (Math.Abs(c * c - r * r * (a * a + b * b)) < Const.Eps)
+            if (Math.Abs(c * c - radius * radius * (a * a + b * b)) < Const.Eps)
                 return new[] { new Point(x0, y0) };
 
-            double d = r * r - c * c / (a * a + b * b),
+            double d = radius * radius - c * c / (a * a + b * b),
                 mult = Math.Sqrt(d / (a * a + b * b)),
                 ax = x0 + b * mult,
                 bx = x0 - b * mult,

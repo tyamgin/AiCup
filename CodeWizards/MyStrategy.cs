@@ -8,15 +8,12 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * - моделирование уворота соперника
- * - - для этого нужно определять сколько осталось лететь снаряду
- * - - проверять деревья???
- * 
  * - бить посохом
  * - учитывать препятствия-юниты в дейкстре
  * - отдельная дейкстра для зоны боя
  * 
  * - бить посохом башни
+ * - наблюдение за агрессивными (двигающимися) нейтралами
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -30,19 +27,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static long[] FriendsIds;
 
-        public AWizard[] Wizards, OpponentWizards;
-        public AMinion[] Minions, OpponentMinions;
-        public ABuilding[] Buildings, OpponentBuildings;
-        public ACombatUnit[] Combats, OpponentCombats;
+        public static AWizard[] Wizards, OpponentWizards;
+        public static AMinion[] Minions, OpponentMinions;
+        public static ABuilding[] Buildings, OpponentBuildings;
+        public static ACombatUnit[] Combats, OpponentCombats;
 
         public static AProjectile[][] ProjectilesPaths; 
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
-            MyStrategy.World = world;
-            MyStrategy.Game = game;
-            MyStrategy.Self = self;
-            MyStrategy.FinalMove = move;
+            World = world;
+            Game = game;
+            Self = self;
+            FinalMove = move;
 
             Const.Width = world.Width;
             Const.Height = world.Height;
@@ -100,9 +97,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 // pause here
             }
             Visualizer.Visualizer.CreateForm();
-#endif
-            //_testMagicMissile();
             Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
+#endif
+
 
             var goTo = new Point(Const.Width - 120, 120);
 
@@ -126,13 +123,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             else
             {
-                GoAround(nearest ?? goTo);
+                if (nearest == null || !GoAround(nearest))
+                    GoAround(goTo);
             }
 
             if (!TryDodge())
             {
                 TryDodge2();
             }
+            
 #if DEBUG
             Visualizer.Visualizer.LookUp(new Point(self.X, self.Y));
             Visualizer.Visualizer.Draw();
@@ -140,13 +139,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #endif
         }
 
-        void GoAround(Point to)
+        bool GoAround(Point to)
         {
             var path = DijkstraFindPath(new Point(Self), to);
+            if (path == null)
+                return false;
+
             while (path.Count > 0 && path[0].GetDistanceTo(Self) <= CellLength)
                 path.RemoveAt(0);
             if (path.Count == 0)
-                return;
+                return true;
             var pt = path[0];
 
             var angle = Self.GetAngleTo(pt.X, pt.Y);
@@ -159,6 +161,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #if DEBUG
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Aqua });
 #endif
+            return true;
         }
 
         private bool HasAnyTarget(AWizard self)

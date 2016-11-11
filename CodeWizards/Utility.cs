@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -10,11 +11,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public const int Infinity = 0x3f3f3f3f;
         public const double Eps = 1e-9;
 
-        public double GetSpeed(Unit u)
+        public static bool IsPointVisible(Point point)
         {
-            return Math.Sqrt(u.SpeedX * u.SpeedX + u.SpeedY * u.SpeedY);
+            return Combats.Any(x => x.IsTeammate && point.GetDistanceTo2(x) <= x.VisionRange*x.VisionRange);
         }
-
 
         private readonly List<Stopwatch> _timers = new List<Stopwatch>();
 

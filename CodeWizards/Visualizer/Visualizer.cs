@@ -89,6 +89,54 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         public static List<object[]> SegmentsDrawQueue = new List<object[]>();
         public static List<Tuple<Point, double>> DangerPoints;
 
+        class Color01
+        {
+            public double R, G, B;
+
+            public Color01(double r, double g, double b)
+            {
+                R = r;
+                G = g;
+                B = b;
+            }
+
+            public Color ToColor()
+            {
+                return Color.FromArgb((int)(255 * R), (int)(255 * G), (int)(255 * B));
+            }
+        }
+
+        static private Color01 _grad2(Color01 col1, Color01 col2, double x)
+        {
+            return new Color01(
+                (col2.R - col1.R) * x + col1.R,
+                (col2.G - col1.G) * x + col1.G,
+                (col2.B - col1.B) * x + col1.B
+            );
+        }
+
+        static Color01 _grad(double x)
+        {
+            var colors = new[] {
+                new Color01(0x8B / 255.0, 0, 0),// red!!
+                new Color01(1, 0, 0),// red
+                new Color01(1, 69 / 255.0, 0),// orange
+                new Color01(1, 1, 0),// yellow
+                new Color01(1, 1, 1),// white
+            };
+            var delta = 1.0 / (colors.Length - 1);
+            for (var i = 0; i < colors.Length - 1; i++)
+            {
+                var left = delta*i;
+                var right = delta * (i + 1);
+                if (left <= x && x <= right)
+                {
+                    return _grad2(colors[i], colors[i + 1], (x - left) * (colors.Length - 1));
+                }
+            }
+            throw new Exception("wrong x ranges");
+        }
+
         public static void Draw()
         {
             if (_form.InvokeRequired)
@@ -114,12 +162,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 {
                     var pt = t.Item1;
                     var danger = t.Item2;
-                    var color = Color.FromArgb(200, Color.FromArgb(
-                        255,
-                        255 - (int)(danger * 255 / maxDanger),
-                        255 - 255 * (int)Math.Sqrt(danger / maxDanger)
-                    ))
-                    ;
+                    var color = Color.FromArgb(230, _grad(1 - danger/maxDanger).ToColor());
                     FillCircle(color, pt.X, pt.Y, 4);
                 }
             }
@@ -131,8 +174,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
                 DrawCircle(color, wizard.X, wizard.Y, wizard.Radius);
 
-                var to = Point.ByAngle(wizard.Angle) * wizard.Radius + new Point(wizard);
-                DrawLine(color, wizard.X, wizard.Y, to.X, to.Y, 2);
+                //var to = Point.ByAngle(wizard.Angle) * wizard.Radius + new Point(wizard);
+                //DrawLine(color, wizard.X, wizard.Y, to.X, to.Y, 2);
 
                 DrawText(wizard.Life + "", 15, Brushes.Red, wizard.X - 20, wizard.Y - 35);
                 DrawText(wizard.Mana + "", 15, Brushes.Blue, wizard.X - 20, wizard.Y - 15);
@@ -174,7 +217,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 FillCircle(Color.Chartreuse, tree.X, tree.Y, tree.Radius);
             }
 
-            foreach (var building in MyStrategy.World.Buildings)
+            foreach (var building in BuildingsObserver.Buildings)
             {
                 FillCircle(building.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange, building.X, building.Y, building.Radius);
                 DrawText(building.Life + "", 15, Brushes.Red, building.X - 10, building.Y - 30);
