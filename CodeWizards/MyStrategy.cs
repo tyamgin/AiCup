@@ -30,7 +30,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static AWizard[] Wizards, OpponentWizards;
         public static AMinion[] Minions, OpponentMinions;
-        public static ABuilding[] Buildings, OpponentBuildings;
+        public static ABuilding[] OpponentBuildings;
         public static ACombatUnit[] Combats, OpponentCombats;
 
         public static AProjectile[][] ProjectilesPaths;
@@ -73,19 +73,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             OpponentMinions = Minions
                 .Where(x => x.IsOpponent)
                 .ToArray();
-
-            Buildings = world.Buildings
-                .Select(x => new ABuilding(x))
-                .ToArray();
-
-            OpponentBuildings = Buildings
+            
+            OpponentBuildings = BuildingsObserver.Buildings
                 .Where(x => x.IsOpponent)
                 .ToArray();
 
             Combats =
                 Minions.Cast<ACombatUnit>()
                 .Concat(Wizards)
-                .Concat(Buildings)
+                .Concat(BuildingsObserver.Buildings)
                 .ToArray();
 
             OpponentCombats = Combats
@@ -255,7 +251,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             double selCastAngle = 0;
             ACombatUnit selTarget = null;
-            double selMinDist = 0, selMaxDist = self.CastRange, selAngleTo = 0;
+            double selMinDist = 0, selMaxDist = self.CastRange + 20, selAngleTo = 0;
 
             foreach (var angle in angles)
             {
@@ -275,18 +271,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             selCastAngle = angle;
                             selAngleTo = angleTo;
                             selMinDist = i == 0 ? 0 : (path[i - 1].StartDistance + path[i].StartDistance)/2;
-                            selMaxDist = i == path.Count - 1 ? self.CastRange : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
+                            selMaxDist = i == path.Count - 1 ? (self.CastRange + 20) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
                         }
                     }
                 }
             }
-            //if (World.TickIndex == 754)
-            //{
-            //    selTarget = OpponentBuildings[0];
-            //    selMinDist = 0;
-            //    selMaxDist = 100500;
-            //    selCastAngle = self.GetAngleTo(selTarget);
-            //}
             if (selTarget == null)
                 return null;
 

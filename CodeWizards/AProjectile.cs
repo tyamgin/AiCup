@@ -56,6 +56,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             SpeedX = Math.Cos(self.Angle + castAngle) *Speed;
             SpeedY = Math.Sin(self.Angle + castAngle) *Speed;
             RemainingDistance = MyStrategy.Game.WizardCastRange;
+            if (self.Id == MyStrategy.Self.Id)
+                RemainingDistance -= 20; //TODO HACK 
             OwnerUnitId = self.Id;
         }
 

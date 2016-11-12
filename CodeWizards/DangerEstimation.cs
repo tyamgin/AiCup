@@ -12,7 +12,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         double EstimatePoint(AWizard my)
         {
             double res = 0;
-            foreach (var opp in OpponentCombats)
+            foreach (var opp in OpponentCombats)////////////////////////////////////
             {
                 var dist = opp.GetDistanceTo(my);
                 if (dist > 2*my.VisionRange)

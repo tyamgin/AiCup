@@ -27,6 +27,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Life = wizard.Life;
                 VisionRange = wizard.VisionRange;
                 CastRange = wizard.CastRange;
+                if (wizard.Id == MyStrategy.Self.Id)
+                    CastRange -= 20; //TODO HACK 
             }
             var building = unit as Building;
             if (building != null)
