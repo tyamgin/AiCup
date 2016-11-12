@@ -1,6 +1,7 @@
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
     public sealed class Runner {
@@ -8,11 +9,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         private readonly string token;
 
         public static void Main(string[] args) {
-
+#if DEBUG
             Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(2000);
+#endif
 
-            new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31001", "0000000000000000" }).Run();
+            //(new Thread(() => {
+                new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31002", "0000000000000000" }).Run();
+            //})).Start();
+            //Thread.Sleep(500);
+
+#if DEBUG
+            //var oldStrategy = new Process
+            //{
+            //    StartInfo =
+            //    {
+            //        FileName = "G:\\Projects\\AiCup\\CodeWizards\\local_runner\\bin\\5.exe",
+            //        Arguments = "127.0.0.1 " + (31002 + 0) + " 0000000000000000",
+            //        //CreateNoWindow = true
+            //    }
+            //};
+            //oldStrategy.Start();
+#endif
         }
 
         private Runner(string[] args) {

@@ -103,6 +103,27 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             InitializeProjectiles();
             InitializeDijkstra();
 
+            if (Self.IsMaster && World.TickIndex == 0)
+            {
+                MasterSendMessages();
+                //FinalMove.Messages = new[]
+                //{
+                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
+                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
+                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
+                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
+                //};
+                return;
+            }
+
+#if DEBUG
+            var masterId = Wizards.FirstOrDefault(x => x.IsTeammate && x.IsMaster).Id;
+            var masterName = World.Players.FirstOrDefault(x => x.Id == masterId).Name;
+#endif
+            if (self.Messages.Length > 0)
+            {
+                var tmp = 1;
+            }
 #if DEBUG
             while (Visualizer.Visualizer.Pause)
             {
