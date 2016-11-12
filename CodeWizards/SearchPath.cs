@@ -52,6 +52,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
+        private IEnumerable<ACircularUnit> _getStaticUnits()
+        {
+            return TreesObserver.Trees.Cast<ACircularUnit>()
+                .Concat(BuildingsObserver.Buildings);
+        }
+
         private List<ACircularUnit> _getNewStaticUnits()
         {
             return TreesObserver.NewTrees.Cast<ACircularUnit>()
@@ -132,6 +138,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             foreach (var oldUnit in _getDisappearedStaticUnits())
             {
+                var nearest = _getStaticUnits()
+                    .Where(x => x.GetDistanceTo2(oldUnit) < Geom.Sqr(CellDiagLength*2))
+                    .ToArray();
+
                 for (var i = 0; i <= GridSize; i++)
                 {
                     for (var j = 0; j <= GridSize; j++)
@@ -140,7 +150,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             continue;
 
                         _calculateNeighbours(i, j);
-                        _filterNeighbours(i, j, oldUnit);
+                        foreach (var n in nearest)
+                            _filterNeighbours(i, j, n);
                     }
                 }
             }
@@ -175,9 +186,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new Cell(I + seldI, J + seldJ);
         }
 
+        private static ACombatUnit[] _obstacles;
+        private static double _selfRadius;
+
         static bool CanPassToCell(Cell from, Cell cell)
         {
-            return !_isLocked[cell.I, cell.J];
+            if (_isLocked[cell.I, cell.J])
+                return false;
+            return
+                _obstacles.All(
+                    ob =>
+                        Geom.SegmentCircleIntersect(_points[from.I, from.J], _points[cell.I, cell.J], ob,
+                            ob.Radius + _selfRadius).Length == 0);
         }
 
         static double GetDist(Cell from, Cell to)
@@ -212,11 +232,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 foreach(var to in _neighbours[cur.I, cur.J])
                 {
-                    if (!CanPassToCell(cur, to))
-                        continue;
-
                     var distTo = _distMap[cur.I, cur.J] + GetDist(cur, to);
-                    if (distTo < _distMap[to.I, to.J])
+                    if (distTo < _distMap[to.I, to.J] && CanPassToCell(cur, to))
                     {
                         _distMap[to.I, to.J] = distTo;
                         _distPrev[to.I, to.J] = cur;
@@ -247,8 +264,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static List<Point> DijkstraFindPath(Point start, Point end)
+        public static List<Point> DijkstraFindPath(ACombatUnit start, Point end)
         {
+            _selfRadius = start.Radius;
+            _obstacles = Combats
+                .Where(x => x.IsTeammate && x.Id != start.Id && x.GetDistanceTo2(start) < Geom.Sqr(start.VisionRange))
+                .ToArray();
+
             var startCell = FindNearestCell(start);
             var endCell = FindNearestCell(end);
             var cellsPath = DijkstraFindPath(startCell, endCell);

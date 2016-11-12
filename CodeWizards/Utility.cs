@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Combats.Any(x => x.IsTeammate && point.GetDistanceTo2(x) <= x.VisionRange*x.VisionRange);
         }
 
-        private readonly List<Stopwatch> _timers = new List<Stopwatch>();
+        private static readonly List<Stopwatch> _timers = new List<Stopwatch>();
 
         public void TimerStart()
         {
@@ -27,7 +27,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #endif
         }
 
-        public long TimerStop()
+        public static long TimerStop()
         {
 #if DEBUG
             var res = _timers[_timers.Count - 1];
@@ -39,7 +39,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #endif
         }
 
-        public void TimerEndLog(string caption, long limit = 30)
+        public static void TimerEndLog(string caption, long limit = 30)
         {
 #if DEBUG
             var time = TimerStop();
@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #endif
         }
 
-        public void Log(object msg)
+        public static void Log(object msg)
         {
 #if DEBUG
             Console.WriteLine(msg);

@@ -63,7 +63,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             get
             {
-                if (RemainingDistance < Speed/ MicroTicks)
+                if (RemainingDistance < Speed / MicroTicks)
                     return false;
 
                 if (X < 0 || Y < 0 || X > Const.Width || Y > Const.Height)
@@ -72,21 +72,47 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        public bool MicroMove()
+        public void MicroMove()
         {
             if (!Exists)
-                return false;
+                return;
 
             RemainingDistance -= Speed / MicroTicks;
             X += SpeedX / MicroTicks;
             Y += SpeedY / MicroTicks;
-            return true;
         }
 
-        public void Move()
+        public delegate bool CheckProjectile(AProjectile proj);
+
+        public bool Move(CheckProjectile check = null)
         {
+            var prev = new Point(this);
+            var nearestTree = TreesObserver.GetNearestTree(this);
             for (var i = 0; i < MicroTicks; i++)
+            {
+                if (!Exists)
+                    return false;
+
                 MicroMove();
+                if (nearestTree != null && GetDistanceTo2(nearestTree) <= Math.Sqrt(Radius + nearestTree.Radius))
+                {
+                    // снаряд ударился об дерево
+                    RemainingDistance = 0;
+                    return false;
+                }
+
+                if (check != null && !check(this))
+                    return false;
+            }
+            if (nearestTree != null &&
+                    Geom.SegmentCircleIntersect(prev, this, nearestTree, nearestTree.Radius + Radius).Length > 0)
+            {
+                // снаряд ударился об дерево (это более точная проверка)
+                RemainingDistance = 0;
+                return false;
+            }
+
+            return true;
         }
 
         public bool IsFriendly => MyStrategy.FriendsIds.Contains(OwnerUnitId);

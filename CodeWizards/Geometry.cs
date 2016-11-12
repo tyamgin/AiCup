@@ -188,6 +188,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var sin = Math.Sin(angle);
             return new Point(cos * X + sin * Y, -sin * X + cos * Y);
         }
+
+        public double GetDistanceToCircle(ACircularUnit circle)
+        {
+            var distToCenter = GetDistanceTo(circle);
+            if (distToCenter <= circle.Radius)
+                return 0;
+            return distToCenter - circle.Radius;
+        }
     }
 
     public class Points : List<Point>
@@ -353,6 +361,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         /// <summary>
         /// Точки пересечения отрезка ab с окружностью с центром circleCenter и радиусом radius 
+        /// NOTE: если отрезок полностью находится в окружности, то считается пересечением
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
@@ -361,9 +370,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         /// <returns></returns>
         public static Point[] SegmentCircleIntersect(Point a, Point b, Point circleCenter, double radius)
         {
-            return LineCircleIntersect(a, b, circleCenter, radius)
+            var result = LineCircleIntersect(a, b, circleCenter, radius)
                 .Where(pt => Between(a.X, b.X, pt.X) && Between(a.Y, b.Y, pt.Y))
-                .ToArray();
+                .ToList();
+
+            if (circleCenter.GetDistanceTo2(a) <= radius*radius)
+                result.Add(a);
+            if (circleCenter.GetDistanceTo2(b) <= radius * radius)
+                result.Add(b);
+            return result.ToArray();
+            // maybe optimize
         }
 
         /// <summary>

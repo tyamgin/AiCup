@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
+using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
@@ -32,9 +33,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static ABuilding[] Buildings, OpponentBuildings;
         public static ACombatUnit[] Combats, OpponentCombats;
 
-        public static AProjectile[][] ProjectilesPaths; 
+        public static AProjectile[][] ProjectilesPaths;
 
         public void Move(Wizard self, World world, Game game, Move move)
+        {
+            TimerStart();
+            _move(self, world, game, move);
+            TimerEndLog("All", 0);
+
+#if DEBUG
+            Visualizer.Visualizer.LookUp(new Point(self));
+            Visualizer.Visualizer.Draw();
+            Thread.Sleep(20);
+#endif
+        }
+
+        private void _move(Wizard self, World world, Game game, Move move)
         {
             World = world;
             Game = game;
@@ -88,6 +102,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             BuildingsObserver.Update(world);
             ProjectilesObserver.Update(world);
 
+            //TreesObserver.RecheckAll();
+
             InitializeProjectiles();
             InitializeDijkstra();
 
@@ -131,25 +147,52 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 TryDodge2();
             }
-            
-#if DEBUG
-            Visualizer.Visualizer.LookUp(new Point(self.X, self.Y));
-            Visualizer.Visualizer.Draw();
-            Thread.Sleep(15);
-#endif
+        }
+
+        void SimplifyPath(AWizard self, ACircularUnit[] obstacles, List<Point> path)
+        {
+            for (var i = 2; i < path.Count; i++)
+            {
+                var a = path[i - 2];
+                var c = path[i];
+                if (obstacles.All(ob =>
+                {
+                    return Geom.SegmentCircleIntersect(a, c, ob, self.Radius + ob.Radius).Length == 0;
+                }))
+                {
+                    path.RemoveAt(i - 1);
+                    i--;
+                }
+            }
         }
 
         bool GoAround(Point to)
         {
-            var path = DijkstraFindPath(new Point(Self), to);
+            TimerStart();
+            var ret = _goAround(to);
+            TimerEndLog("Dijkstra", 1);
+            return ret;
+        }
+
+        bool _goAround(Point to)
+        {
+            var path = DijkstraFindPath(new AWizard(Self), to);
             if (path == null)
                 return false;
 
-            while (path.Count > 0 && path[0].GetDistanceTo(Self) <= CellLength)
-                path.RemoveAt(0);
-            if (path.Count == 0)
+            if (path.Count < 2)
                 return true;
-            var pt = path[0];
+
+            var my = new AWizard(Self);
+            var obstacles =
+                Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
+                .Concat(TreesObserver.Trees)
+                .Where(x => my.GetDistanceTo2(x) < Geom.Sqr(my.VisionRange)) //???
+                .ToArray();
+
+            SimplifyPath(my, obstacles, path);
+
+            var pt = path[1];
 
             var angle = Self.GetAngleTo(pt.X, pt.Y);
             var forwardSpeed = Math.Cos(angle)*Game.WizardForwardSpeed;
@@ -166,17 +209,26 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool HasAnyTarget(AWizard self)
         {
-            foreach (var x in OpponentCombats)
+            foreach (var opp in OpponentCombats)
             {
-                var angle = self.GetAngleTo(x);
-                var dist = self.GetDistanceTo(x);
-
-                if (dist > self.CastRange + x.Radius)
-                    continue;
-                if (Math.Abs(angle) > Game.StaffSector/2)
+                var dist = self.GetDistanceTo(opp);
+                if (dist > self.VisionRange)
                     continue;
 
-                return true;
+                var angleTo = self.GetAngleTo(opp);
+                var deltaAngle = Math.Atan2(opp.Radius, dist);
+                var angles = new[] { angleTo, angleTo + deltaAngle, angleTo - deltaAngle };
+
+                foreach (var angle in angles)
+                {
+                    if (Math.Abs(angle) > Game.StaffSector / 2)
+                        continue;
+
+                    var proj = new AProjectile(self, angle, ProjectileType.MagicMissile);
+                    var path = EmulateMagicMissile(proj);
+                    if (path.Any(x => x.State == ProjectilePathState.Fire && x.Target.IsOpponent))
+                        return true;
+                }
             }
             return false;
         }
@@ -211,9 +263,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var path = EmulateMagicMissile(proj);
                 for (var i = 0; i < path.Count; i++)
                 {
-                    if (path[i].State == ProjectilePathState.Fire && path[i].Target is ACombatUnit)
+                    if (path[i].State == ProjectilePathState.Fire)
                     {
-                        var combat = (ACombatUnit) path[i].Target;
+                        var combat = path[i].Target;
                         var angleTo = self.GetAngleTo(combat) - angle;
                         Geom.AngleNormalize(ref angleTo);
                         angleTo = Math.Abs(angleTo);
@@ -228,8 +280,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
             }
+            //if (World.TickIndex == 754)
+            //{
+            //    selTarget = OpponentBuildings[0];
+            //    selMinDist = 0;
+            //    selMaxDist = 100500;
+            //    selCastAngle = self.GetAngleTo(selTarget);
+            //}
             if (selTarget == null)
                 return null;
+
             FinalMove.Action = ActionType.MagicMissile;
             FinalMove.MinCastDistance = selMinDist;
             FinalMove.MaxCastDistance = selMaxDist;
@@ -258,46 +318,51 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         class ProjectilePathSegment
         {
             public ProjectilePathState State;
-            public ACircularUnit Target;
+            public ACombatUnit Target;
             public double StartDistance, EndDistance;
         }
 
-        List<ProjectilePathSegment> EmulateMagicMissile(AProjectile proj)
+        List<ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
         {
-            var units = Combats.Where(x => x.Id != Self.Id).ToArray();//TODO: деревья
+            var units = Combats.Where(x => x.Id != Self.Id).ToArray();
             var list = new List<ProjectilePathSegment>();
-            while (proj.Exists)
+            while (projectile.Exists)
             {
-                proj.MicroMove();
-                var inter = proj.CheckIntersections(units);
+                projectile.Move(proj =>
+                {
+                    var inter = proj.CheckIntersections(units);
 
-                if (inter != null)
-                {
-                    if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Fire)
+                    if (inter != null)
                     {
-                        list.Add(new ProjectilePathSegment
+                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Fire)
                         {
-                            StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                            EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                            State = ProjectilePathState.Fire,
-                            Target = inter,
-                        });
+                            list.Add(new ProjectilePathSegment
+                            {
+                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                State = ProjectilePathState.Fire,
+                                Target = inter as ACombatUnit,
+                            });
+                        }
                     }
-                }
-                else
-                {
-                    if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Free)
+                    else
                     {
-                        list.Add(new ProjectilePathSegment
+                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Free)
                         {
-                            StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                            EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                            State = ProjectilePathState.Free,
-                        });
+                            list.Add(new ProjectilePathSegment
+                            {
+                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                State = ProjectilePathState.Free,
+                            });
+                        }
                     }
-                }
-                var last = list[list.Count - 1];
-                last.EndDistance += proj.Speed / AProjectile.MicroTicks;
+                    var last = list[list.Count - 1];
+                    last.EndDistance += proj.Speed / AProjectile.MicroTicks;
+
+                    return true;
+                });
+
             }
             return list;
         }

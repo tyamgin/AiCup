@@ -215,6 +215,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             foreach (var tree in TreesObserver.Trees)
             {
                 FillCircle(Color.Chartreuse, tree.X, tree.Y, tree.Radius);
+                if (tree.Id == 72)
+                    FillCircle(Color.Green, tree.X, tree.Y, tree.Radius);
+
             }
 
             foreach (var building in BuildingsObserver.Buildings)
@@ -242,6 +245,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 for(var i = 1; i < points.Count; i++)
                     DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y, width);
             }
+
+            DrawCircle(Color.Red, 19 * MyStrategy.CellLength, 15 * MyStrategy.CellLength, 6);
 
             SegmentsDrawQueue.Clear();
         }
