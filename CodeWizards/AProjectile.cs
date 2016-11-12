@@ -107,7 +107,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return false;
             }
             if (nearestTree != null &&
-                    Geom.SegmentCircleIntersect(prev, this, nearestTree, nearestTree.Radius + Radius).Length > 0)
+                Geom.SegmentCircleIntersects(prev, this, nearestTree, nearestTree.Radius + Radius))
             {
                 // снаряд ударился об дерево (это более точная проверка)
                 RemainingDistance = 0;

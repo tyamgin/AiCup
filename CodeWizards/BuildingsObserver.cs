@@ -44,6 +44,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     opposit.Y = Const.Height - opposit.Y;
                     opposit.Faction = opposit.Faction == Faction.Academy ? Faction.Renegades : Faction.Academy;
                     opposit.Id *= -1;
+                    opposit.IsTeammate = false;
                     var oppositKey = _getCoordinatesKey(opposit);
                     if (!_prevState.ContainsKey(oppositKey))
                     {

@@ -368,9 +368,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         /// <param name="circleCenter"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public static Point[] SegmentCircleIntersect(Point a, Point b, Point circleCenter, double radius)
+        public static Point[] SegmentCircleIntersection(Point a, Point b, Point circleCenter, double radius)
         {
-            var result = LineCircleIntersect(a, b, circleCenter, radius)
+            var result = LineCircleIntersection(a, b, circleCenter, radius)
                 .Where(pt => Between(a.X, b.X, pt.X) && Between(a.Y, b.Y, pt.Y))
                 .ToList();
 
@@ -382,6 +382,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             // maybe optimize
         }
 
+        public static bool SegmentCircleIntersects(Point a, Point b, Point circleCenter, double radius)
+        {
+            if (circleCenter.GetDistanceTo2(a) <= radius*radius)
+                return true;
+            if (circleCenter.GetDistanceTo2(b) <= radius*radius)
+                return true;
+
+            return LineCircleIntersection(a, b, circleCenter, radius)
+                .Any(pt => Between(a.X, b.X, pt.X) && Between(a.Y, b.Y, pt.Y));
+        }
+
         /// <summary>
         /// Точки пересечения прямой ab с окружностью с центром circleCenter и радиусом radius 
         /// </summary>
@@ -390,7 +401,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         /// <param name="circleCenter"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public static Point[] LineCircleIntersect(Point a, Point b, Point circleCenter, double radius)
+        public static Point[] LineCircleIntersection(Point a, Point b, Point circleCenter, double radius)
         {
             a = a - circleCenter;
             b = b - circleCenter;
@@ -399,7 +410,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 B = b.X - a.X,
                 C = -a.X * A - a.Y * B;
 
-            var res = LineCircleIntersect(A, B, C, radius);
+            var res = LineCircleIntersection(A, B, C, radius);
             foreach (var p in res)
             {
                 p.X += circleCenter.X;
@@ -416,19 +427,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         /// <param name="c"></param>
         /// <param name="radius"></param>
         /// <returns></returns>
-        public static Point[] LineCircleIntersect(double a, double b, double c, double radius)
+        public static Point[] LineCircleIntersection(double a, double b, double c, double radius)
         {
-            double x0 = -a * c / (a * a + b * b),
-                y0 = -b * c / (a * a + b * b);
+            double
+                aabb = a*a + b*b,
+                x0 = -a * c / aabb,
+                y0 = -b * c / aabb;
 
-            if (c * c > radius * radius * (a * a + b * b) + Const.Eps)
+            if (c * c > radius * radius * aabb + Const.Eps)
                 return new Point[] { };
 
-            if (Math.Abs(c * c - radius * radius * (a * a + b * b)) < Const.Eps)
+            if (Math.Abs(c * c - radius * radius * aabb) < Const.Eps)
                 return new[] { new Point(x0, y0) };
 
-            double d = radius * radius - c * c / (a * a + b * b),
-                mult = Math.Sqrt(d / (a * a + b * b)),
+            double d = radius * radius - c * c / aabb,
+                mult = Math.Sqrt(d / aabb),
                 ax = x0 + b * mult,
                 bx = x0 - b * mult,
                 ay = y0 - a * mult,

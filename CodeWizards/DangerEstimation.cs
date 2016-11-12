@@ -100,7 +100,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (newDanlge < minDanger && HasAnyTarget(self))
                 {
                     var oldCond = self.CheckIntersections(obstacles) == null;
-                    var newCond = obstacles.All(ob => Geom.SegmentCircleIntersect(my, self, ob, ob.Radius + my.Radius).Length == 0);
+                    var newCond = obstacles.All(ob => !Geom.SegmentCircleIntersects(my, self, ob, ob.Radius + my.Radius));
                     if (newCond != oldCond)
                     {
                         var t = 0;

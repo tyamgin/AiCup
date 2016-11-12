@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
@@ -17,7 +18,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         private static Cell[,] _distPrev;
         private static Point[,] _points;
         private static List<Cell>[,] _neighbours; 
-        public static int GridSize = 40;
+        public static int GridSize = 60;
         public static double CellLength;
         public static double CellDiagLength;
 
@@ -84,7 +85,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var pt = _points[list[idx].I, list[idx].J];
                 
-                if (Geom.SegmentCircleIntersect(point, pt, unit, unit.Radius + Self.Radius).Length > 0)
+                if (Geom.SegmentCircleIntersects(point, pt, unit, unit.Radius + Self.Radius))
                 {
                     list.RemoveAt(idx);
                 }
@@ -189,15 +190,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         private static ACombatUnit[] _obstacles;
         private static double _selfRadius;
 
-        static bool CanPassToCell(Cell from, Cell cell)
+        private static bool CanPassToCell(Cell from, Cell cell)
         {
             if (_isLocked[cell.I, cell.J])
                 return false;
             return
                 _obstacles.All(
                     ob =>
-                        Geom.SegmentCircleIntersect(_points[from.I, from.J], _points[cell.I, cell.J], ob,
-                            ob.Radius + _selfRadius).Length == 0);
+                        !Geom.SegmentCircleIntersects(_points[from.I, from.J], _points[cell.I, cell.J], ob,
+                            ob.Radius + _selfRadius));
         }
 
         static double GetDist(Cell from, Cell to)
@@ -207,7 +208,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 : CellDiagLength;
         }
 
-        public static List<Cell> DijkstraFindPath(Cell start, Cell end)
+        public delegate bool DijkstraStopFunc(Cell pos);
+
+        public static void DijkstraStart(Cell start, DijkstraStopFunc condition)
         {
             var q = new PriorityQueue<Pair<double, Cell>>();
             q.Push(new Pair<double, Cell>(0.0, start));
@@ -230,6 +233,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (minDist > _distMap[cur.I, cur.J])
                     continue;
 
+                if (condition(cur))
+                {
+                    break;
+                }
+
                 foreach(var to in _neighbours[cur.I, cur.J])
                 {
                     var distTo = _distMap[cur.I, cur.J] + GetDist(cur, to);
@@ -241,6 +249,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 };
             }
+        }
+
+        public static List<Cell> DijkstraGeneratePath(Cell start, Cell end)
+        {
+            if (start.Equals(end))
+                return new List<Cell>();
 
             if (_distPrev[end.I, end.J] == null)
             {
@@ -264,7 +278,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static List<Point> DijkstraFindPath(ACombatUnit start, Point end)
+        public static List<Point> DijkstraFindPath(ACombatUnit start, ACircularUnit target)
         {
             _selfRadius = start.Radius;
             _obstacles = Combats
@@ -272,16 +286,25 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             var startCell = FindNearestCell(start);
-            var endCell = FindNearestCell(end);
-            var cellsPath = DijkstraFindPath(startCell, endCell);
-            if (cellsPath == null)
+            Cell endCell = null;
+            DijkstraStart(startCell, cell =>
+            {
+                var pos = _points[cell.I, cell.J];
+                //if (pos.GetDistanceTo(target) /*- target.Radius*/ < start.CastRange)
+                if (pos.GetDistanceTo2(target) < Geom.Sqr(start.CastRange /*+ target.Radius*/))
+                {
+                    endCell = cell;
+                    return true;
+                }
+                return false;
+            });
+            if (endCell == null)
                 return null;
+            var cellsPath = DijkstraGeneratePath(startCell, endCell);
 
             var res = new List<Point> {start};
             res.AddRange(cellsPath.Select(cell => _points[cell.I, cell.J]));
-            res.Add(end);
             return res;
         }
-
     }
 }

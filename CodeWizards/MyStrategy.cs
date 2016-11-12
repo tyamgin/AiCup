@@ -10,7 +10,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  * - бить посохом
- * - учитывать препятствия-юниты в дейкстре
  * - отдельная дейкстра для зоны боя
  * 
  * - бить посохом башни
@@ -42,6 +41,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 
 #if DEBUG
+            Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
             Visualizer.Visualizer.LookUp(new Point(self));
             Visualizer.Visualizer.Draw();
             Thread.Sleep(20);
@@ -109,11 +109,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 // pause here
             }
             Visualizer.Visualizer.CreateForm();
-            Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
 #endif
-
-
-            var goTo = new Point(Const.Width - 120, 120);
 
             double minDist = int.MaxValue;
             ACombatUnit nearest = null;
@@ -135,8 +131,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             else
             {
-                if (nearest == null || !GoAround(nearest))
-                    GoAround(goTo);
+                if (nearest != null)
+                    GoAround(nearest);
             }
 
             if (!TryDodge())
@@ -151,10 +147,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var a = path[i - 2];
                 var c = path[i];
-                if (obstacles.All(ob =>
-                {
-                    return Geom.SegmentCircleIntersect(a, c, ob, self.Radius + ob.Radius).Length == 0;
-                }))
+                if (obstacles.All(ob => !Geom.SegmentCircleIntersects(a, c, ob, self.Radius + ob.Radius)))
                 {
                     path.RemoveAt(i - 1);
                     i--;
@@ -162,7 +155,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        bool GoAround(Point to)
+        bool GoAround(ACircularUnit to)
         {
             TimerStart();
             var ret = _goAround(to);
@@ -170,16 +163,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        bool _goAround(Point to)
+        bool _goAround(ACircularUnit target)
         {
-            var path = DijkstraFindPath(new AWizard(Self), to);
+            var path = DijkstraFindPath(new AWizard(Self), target);
             if (path == null)
                 return false;
 
-            if (path.Count < 2)
+            if (path.Count == 0)
                 return true;
 
             var my = new AWizard(Self);
+            if (path.Count == 1)
+            {
+                FinalMove.Turn = my.GetAngleTo(target);
+                return true;
+            }
+
             var obstacles =
                 Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
                 .Concat(TreesObserver.Trees)
