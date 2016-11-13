@@ -9,7 +9,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * TODO:
  * 
  * - наблюдение за агрессивными (двигающимися) нейтралами
- * 
+ * - не атаковать одинокие башни
  * - если застрял, рубить деревья http://russianaicup.ru/game/view/7490
  * - разбивать деревья, если противник спрятался за ними ???
  * - идти по уже разбитой ветке, если убили ???
@@ -155,8 +155,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             if (!TryDodge())
             {
-                if (target == null || FinalMove.Action == ActionType.Staff)
+                if (target == null || 
+                    FinalMove.Action == ActionType.Staff ||
+                    FinalMove.Action == ActionType.MagicMissile || 
+                    FinalMove.Action == ActionType.Fireball ||
+                    FinalMove.Action == ActionType.FrostBolt)
+                {
                     TryDodge2();
+                }
             }
         }
 
@@ -204,7 +210,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             SimplifyPath(my, obstacles, path);
 
             var nextPoint = path[1];
-            FinalMove.MoveTo(nextPoint, path.Count > 2 && my.GetDistanceTo(path[2]) < Self.VisionRange ? path[2] : nextPoint);
+            var nextNextPoint = path.Count > 2 ? path[2] : target;
+            FinalMove.MoveTo(nextPoint, my.GetDistanceTo(nextNextPoint) < Self.VisionRange * 1.2 ? nextNextPoint : nextPoint);
 #if DEBUG
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Blue, 3 });
 #endif
@@ -272,11 +279,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             his.Move();
                             if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
                                 break;
-                            timer++;
-                        }
-                        while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector / 2)
-                        {
-                            my.MoveTo(null, his);
                             timer++;
                         }
 

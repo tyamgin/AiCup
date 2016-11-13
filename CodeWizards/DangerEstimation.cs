@@ -64,8 +64,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     else
                     {
                         var inner = minion.CastRange + my.Radius + Game.DartRadius + 1;
+                        var delta = 1;
                         if (dist < inner)
-                            res += Game.DartDirectDamage;
+                            res += delta - dist / inner * delta + Game.DartDirectDamage;
                     }
                 }
                 else
