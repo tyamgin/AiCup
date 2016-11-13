@@ -7,7 +7,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     partial class MyStrategy
     {
-        double EstimatePoint(AWizard my)
+        double EstimateDanger(AWizard my)
         {
             double res = 0;
             foreach (var opp in OpponentCombats)
@@ -98,13 +98,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     my.X = pt.X;
                     my.Y = pt.Y;
-                    res.Add(new Tuple<Point, double>(pt, EstimatePoint(my)));
+                    res.Add(new Tuple<Point, double>(pt, EstimateDanger(my)));
                 }
             }
             return res;
         }
 
-        private bool TryDodge2()
+        public delegate double PositionCostFunction(AWizard wizard);
+        public delegate bool PositionCondition(AWizard wizard);
+
+
+        private bool TryDodgeDanger()
+        {
+            return TryGoByGradient(EstimateDanger, HasAnyTarget);
+        }
+
+        private bool TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition = null)
         {
             var my = new AWizard(Self);
 
@@ -114,7 +123,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .Where(x => my.GetDistanceTo2(x) < Geom.Sqr(my.VisionRange))
                 .ToArray();
 
-            var danger = EstimatePoint(my);
+            var danger = costFunction(my);
             var minDanger = danger;
             Point selMoveTo = null;
 
@@ -129,8 +138,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         w => obstacles.All(ob => !Geom.SegmentCircleIntersects(my, w, ob, ob.Radius + my.Radius)))
                     )
                 {
-                    var newDanger = EstimatePoint(self);
-                    if (newDanger < minDanger && HasAnyTarget(self))
+                    var newDanger = costFunction(self);
+                    if (newDanger < minDanger && (condition == null || condition(self)))
                     {
                         minDanger = newDanger;
                         selMoveTo = moveTo;
@@ -145,7 +154,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        bool TryDodge()
+        bool TryDodgeProjectile()
         {
             var obstacles = Combats.Where(x => x.Id != Self.Id).ToArray();//TODO деревья
 

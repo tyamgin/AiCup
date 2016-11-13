@@ -149,11 +149,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     .ToArray();
                 if (nearest.Length > 0 && nearest.FirstOrDefault(GoAround) == null)
                 {
-                    FinalMove.MoveTo(nearest[0], nearest[0]);
+                    var goTo = nearest[0];
+                    TryGoByGradient(w => w.GetDistanceTo2(goTo));
+                    // TODO: рубить деревья
                 }
             }
 
-            if (!TryDodge())
+            if (!TryDodgeProjectile())
             {
                 if (target == null || 
                     FinalMove.Action == ActionType.Staff ||
@@ -161,7 +163,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     FinalMove.Action == ActionType.Fireball ||
                     FinalMove.Action == ActionType.FrostBolt)
                 {
-                    TryDodge2();
+                    TryDodgeDanger();
                 }
             }
         }
@@ -208,6 +210,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             SimplifyPath(my, obstacles, path);
+            SimplifyPath(my, obstacles, path);//HACK
 
             var nextPoint = path[1];
             var nextNextPoint = path.Count > 2 ? path[2] : target;
