@@ -8,12 +8,12 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  * 
- * - бить посохом башни
  * - наблюдение за агрессивными (двигающимися) нейтралами
  * 
  * - если застрял, рубить деревья http://russianaicup.ru/game/view/7490
- * - разбивать деревья, если противник спрятался за ними
- * - учитывать WizardBackwardSpeed
+ * - разбивать деревья, если противник спрятался за ними ???
+ * - идти по уже разбитой ветке, если убили ???
+ * 
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -51,7 +51,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private void _move(Wizard self, World world, Game game, Move move)
         {
-
             World = world;
             Game = game;
             Self = self;
@@ -156,7 +155,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             if (!TryDodge())
             {
-                if (target == null)
+                if (target == null || FinalMove.Action == ActionType.Staff)
                     TryDodge2();
             }
         }
@@ -167,7 +166,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var a = path[i - 2];
                 var c = path[i];
-                if (obstacles.All(ob => !Geom.SegmentCircleIntersects(a, c, ob, self.Radius + ob.Radius)))
+                if (obstacles.All(ob => !Geom.SegmentCircleIntersects(a, c, ob, self.Radius + ob.Radius + 1/*(epsilon)*/)))
                 {
                     path.RemoveAt(i - 1);
                     i--;
@@ -204,15 +203,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             SimplifyPath(my, obstacles, path);
 
-            var pt = path[1];
-
-            var angle = Self.GetAngleTo(pt.X, pt.Y);
-            var forwardSpeed = Math.Cos(angle)*Game.WizardForwardSpeed;
-            var strafeSpeed = Math.Sin(angle)*Game.WizardStrafeSpeed;
-            FinalMove.Speed = forwardSpeed;
-            FinalMove.StrafeSpeed = strafeSpeed;
-            FinalMove.Turn = path.Count > 2 && my.GetDistanceTo(path[2]) < Self.VisionRange ? my.GetAngleTo(path[2]) : angle;
-
+            var nextPoint = path[1];
+            FinalMove.MoveTo(nextPoint, path.Count > 2 && my.GetDistanceTo(path[2]) < Self.VisionRange ? path[2] : nextPoint);
 #if DEBUG
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Blue, 3 });
 #endif
@@ -324,7 +316,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         Math.Abs(my.GetAngleTo(his)) <= Game.StaffSector / 2 &&
                         my.RemainingStaffCooldownTicks == 0 &&
                         my.RemainingActionCooldownTicks == 0 &&
-                        his.IsBesieded || timer == 0)
+                        (his.IsBesieded || timer == 0))
                     {
                         if (selTarget == null || timer < minTime)
                         {

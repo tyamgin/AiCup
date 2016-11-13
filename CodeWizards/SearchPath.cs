@@ -81,7 +81,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var pt = _points[list[idx].I, list[idx].J];
                 
-                if (Geom.SegmentCircleIntersects(point, pt, unit, unit.Radius + Self.Radius))
+                if (Geom.SegmentCircleIntersects(point, pt, unit, unit.Radius + Self.Radius + 1/*(epsilon)*/))
                 {
                     list.RemoveAt(idx);
                 }
@@ -194,7 +194,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 _obstacles.All(
                     ob =>
                         !Geom.SegmentCircleIntersects(_points[from.I, from.J], _points[cell.I, cell.J], ob,
-                            ob.Radius + _selfRadius));
+                            ob.Radius + _selfRadius + 1/*(epsilon)*/));
         }
 
         static double GetDist(Cell from, Cell to)

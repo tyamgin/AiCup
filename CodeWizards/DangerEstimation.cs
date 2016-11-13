@@ -115,33 +115,30 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var danger = EstimatePoint(my);
             var minDanger = danger;
-            double selSpeed = 0, selStrafeSpeed = 0;
+            Point selMoveTo = null;
 
             const int grid = 40;
             for (var i = 0; i < grid; i++)
             {
                 var angle = Math.PI*2/grid*i;
-                var forwardSpeed = Math.Cos(angle - Self.Angle)*Game.WizardForwardSpeed;
-                var strafeSpeed = Math.Sin(angle - Self.Angle)*Game.WizardStrafeSpeed;
-
+                var moveTo = my + Point.ByAngle(angle);
+                
                 var self = new AWizard(Self);
-                if (self.Move(forwardSpeed, strafeSpeed, 
+                if (self.MoveTo(moveTo, null, 
                         w => obstacles.All(ob => !Geom.SegmentCircleIntersects(my, w, ob, ob.Radius + my.Radius)))
                     )
                 {
-                    var newDanlge = EstimatePoint(self);
-                    if (newDanlge < minDanger && HasAnyTarget(self))
+                    var newDanger = EstimatePoint(self);
+                    if (newDanger < minDanger && HasAnyTarget(self))
                     {
-                        minDanger = newDanlge;
-                        selSpeed = forwardSpeed;
-                        selStrafeSpeed = strafeSpeed;
+                        minDanger = newDanger;
+                        selMoveTo = moveTo;
                     }
                 }
             }
             if (minDanger < danger)
             {
-                FinalMove.Speed = selSpeed;
-                FinalMove.StrafeSpeed = selStrafeSpeed;
+                FinalMove.MoveTo(selMoveTo, null);
                 return true;
             }
             return false;
@@ -155,11 +152,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             for (var i = 0; i < grid; i++)
             {
                 var angle = Math.PI*2/grid*i;
-                var forwardSpeed = Math.Cos(angle - Self.Angle) * Game.WizardForwardSpeed;
-                var strafeSpeed = Math.Sin(angle - Self.Angle) * Game.WizardStrafeSpeed;
-
                 var ticks = 0;
                 var my = new AWizard(Self);
+                var moveTo = my + Point.ByAngle(angle);
 
                 while (ticks < ProjectilesCheckTicks)
                 {
@@ -187,12 +182,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (ticks == 0)
                             return false;
 
-                        FinalMove.Speed = forwardSpeed;
-                        FinalMove.StrafeSpeed = strafeSpeed;
+                        FinalMove.MoveTo(moveTo, null);
                         return true;
                     }
 
-                    my.Move(forwardSpeed, strafeSpeed, w => my.CheckIntersections(obstacles) == null);
+                    my.MoveTo(moveTo, null, w => my.CheckIntersections(obstacles) == null);
 
                     for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
                     {
