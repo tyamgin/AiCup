@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
-using Microsoft.Win32.SafeHandles;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -15,7 +10,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         double EstimatePoint(AWizard my)
         {
             double res = 0;
-            foreach (var opp in OpponentCombats)////////////////////////////////////
+            foreach (var opp in OpponentCombats)
             {
                 var dist = opp.GetDistanceTo(my);
                 if (dist > 2*my.VisionRange)
@@ -25,7 +20,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var inner = Game.StaffRange + my.Radius;
                     var outer = opp.CastRange + my.Radius;
-                    var delta = 5;
+                    var delta = 4;
                     if (dist < inner)
                         res += Game.StaffDamage + Game.MagicMissileDirectDamage;// TODO: обработать его навыки
                     else if (dist < outer)
@@ -34,47 +29,49 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else if (opp is ABuilding)
                 {
                     var building = opp as ABuilding;
-                    var inner = Game.StaffRange + building.Radius;
-                    var outer = building.CastRange + my.Radius;
-                    const double delta = -1;//2
-                    if (dist < inner)
-                        res += building.Damage - delta;
-                    else if (dist < outer)
-                        res += (dist - inner) / (outer - inner) * delta + building.Damage - delta;
-
+                    
+                    if (building.IsBesieded)
+                    {
+                        var outer = building.VisionRange*1.2;
+                        double delta = 2;
+                        if (dist < outer)
+                            res -= delta - dist/outer*delta;
+                    }
+                    else
+                    {
+                        var inner = Game.StaffRange + building.Radius;
+                        var outer = building.CastRange + my.Radius;
+                        double delta = -10;
+                        if (dist < inner)
+                            res += building.Damage - delta;
+                        else if (dist < outer)
+                            res += (dist - inner)/(outer - inner)*delta + building.Damage - delta;
+                    }
                 }
                 else if (opp is AMinion)
                 {
                     var minion = opp as AMinion;
                     if (minion.Type == MinionType.OrcWoodcutter)
                     {
-                        var inner = Game.OrcWoodcutterAttackRange + my.Radius + 2;
+                        var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 1;
                         var outer = 2*my.VisionRange;
-                        const double delta = 4;
+                        const double delta = 3;
                         if (dist < inner)
-                            res += Game.OrcWoodcutterDamage;
+                            res += Game.OrcWoodcutterDamage + delta-dist/inner*delta;
                         else if (dist < outer)
                             res -= delta - (dist - inner)/(outer - inner)*delta;
                     }
                     else
                     {
-                        var inner = minion.CastRange + my.Radius + Game.DartRadius;
-                        var outer = my.CastRange + minion.Radius + Game.MagicMissileRadius; //??
-                        const double delta = 2;
+                        var inner = minion.CastRange + my.Radius + Game.DartRadius + 1;
                         if (dist < inner)
                             res += Game.DartDirectDamage;
                     }
-
-                    //if ((opp as AMinion).Type == MinionType.FetishBlowdart && dist < opp.CastRange + my.Radius)
-                    //    res += Game.DartDirectDamage;
-                    //if ((opp as AMinion).Type == MinionType.OrcWoodcutter && dist < Game.OrcWoodcutterAttackRange + my.Radius)
-                    //    res += Game.OrcWoodcutterDamage;
                 }
                 else
                 {
                     throw new Exception("Unknown type of combat");
                 }
-                //res += 1 / my.GetDistanceTo(opp);//TODO
             }
             return res;
         }
@@ -128,17 +125,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var strafeSpeed = Math.Sin(angle - Self.Angle)*Game.WizardStrafeSpeed;
 
                 var self = new AWizard(Self);
-                self.Move(forwardSpeed, strafeSpeed);
-                var newDanlge = EstimatePoint(self);
-                if (newDanlge < minDanger && HasAnyTarget(self))
+                if (self.Move(forwardSpeed, strafeSpeed, 
+                        w => obstacles.All(ob => !Geom.SegmentCircleIntersects(my, w, ob, ob.Radius + my.Radius)))
+                    )
                 {
-                    var oldCond = self.CheckIntersections(obstacles) == null;
-                    var newCond = obstacles.All(ob => !Geom.SegmentCircleIntersects(my, self, ob, ob.Radius + my.Radius));
-                    if (newCond != oldCond)
-                    {
-                        var t = 0;
-                    }
-                    if (newCond)
+                    var newDanlge = EstimatePoint(self);
+                    if (newDanlge < minDanger && HasAnyTarget(self))
                     {
                         minDanger = newDanlge;
                         selSpeed = forwardSpeed;
@@ -200,13 +192,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         return true;
                     }
 
-                    double prevX = my.X, prevY = my.Y;
-                    my.Move(forwardSpeed, strafeSpeed);
-                    if (my.CheckIntersections(obstacles) != null)
-                    {
-                        my.X = prevX;
-                        my.Y = prevY;
-                    }
+                    my.Move(forwardSpeed, strafeSpeed, w => my.CheckIntersections(obstacles) == null);
 
                     for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
                     {

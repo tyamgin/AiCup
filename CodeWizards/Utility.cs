@@ -16,6 +16,24 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Combats.Any(x => x.IsTeammate && point.GetDistanceTo2(x) <= x.VisionRange*x.VisionRange);
         }
 
+        public static double EnsureInterval(double x, double left, double right)
+        {
+            if (x < left)
+                x = left;
+            if (x > right)
+                x = right;
+            return x;
+        }
+
+        public static double EnsureInterval(double x, double right)
+        {
+            if (x < -right)
+                x = -right;
+            if (x > right)
+                x = right;
+            return x;
+        }
+
         private static readonly List<Stopwatch> _timers = new List<Stopwatch>();
 
         public void TimerStart()

@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Text;
-using System.Threading.Tasks;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -68,7 +63,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (RemainingDistance < Speed / MicroTicks)
                     return false;
 
-                if (X < 0 || Y < 0 || X > Const.Width || Y > Const.Height)
+                if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.Width || Y + Radius > Const.Height)
                     return false;
                 return true;
             }

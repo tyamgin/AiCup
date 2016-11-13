@@ -2,20 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * - бить посохом
- * - отдельная дейкстра для зоны боя
  * 
  * - бить посохом башни
  * - наблюдение за агрессивными (двигающимися) нейтралами
  * 
  * - если застрял, рубить деревья http://russianaicup.ru/game/view/7490
+ * - разбивать деревья, если противник спрятался за ними
+ * - учитывать WizardBackwardSpeed
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -25,7 +23,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static World World;
         public static Game Game;
         public static Wizard Self;
-        public static Move FinalMove;
+        public static FinalMove FinalMove;
 
         public static long[] FriendsIds;
 
@@ -47,7 +45,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
             Visualizer.Visualizer.LookUp(new Point(self));
             Visualizer.Visualizer.Draw();
-            Thread.Sleep(20);
+            Thread.Sleep(20); // чтобы успело отрисоваться
 #endif
         }
 
@@ -57,10 +55,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             World = world;
             Game = game;
             Self = self;
-            FinalMove = move;
+            FinalMove = new FinalMove(move);
 
             Const.Width = world.Width;
             Const.Height = world.Height;
+
+            BuildingsObserver.Update(world);
 
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
@@ -97,15 +97,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .Select(x => x.Id)
                 .ToArray();
 
-
             TreesObserver.Update(world);
-            BuildingsObserver.Update(world);
             ProjectilesObserver.Update(world);
 
             //TreesObserver.RecheckAll();
 
             InitializeProjectiles();
             InitializeDijkstra();
+
+            foreach (var bld in OpponentBuildings)
+            {
+                var his = OpponentCombats.Count(x => x.Id != bld.Id && bld.GetDistanceTo(x) < Self.VisionRange*1.1);
+                var mines = Combats.Count(x => x.IsTeammate && bld.GetDistanceTo(x) < Self.VisionRange * 1.1);
+                if (his == 0 && mines > 2 || his == 1 && mines > 3 || his == 2 && mines > 5)
+                    bld.IsBesieded = true;
+            }
 
             if (Self.IsMaster && World.TickIndex == 0)
             {
@@ -124,44 +130,34 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var master = Wizards.FirstOrDefault(x => x.IsTeammate && x.IsMaster);
             var masterName = master == null ? "" : World.Players.FirstOrDefault(x => x.Id == master.Id).Name;
 #endif
-            if (self.Messages.Length > 0)
-            {
-                var tmp = 1;
-            }
+
 #if DEBUG
             while (Visualizer.Visualizer.Pause)
             {
                 // pause here
             }
 #endif
-
-            double minDist = int.MaxValue;
-            ACombatUnit nearest = null;
-
-            foreach (var x in OpponentCombats)
-            {
-                var dst = x.GetDistanceTo(self);
-                if (dst < minDist)
-                {
-                    minDist = dst;
-                    nearest = x;
-                }
-            }
-
             var target = FindTarget(new AWizard(self));
             if (target != null)
             {
-                move.Turn = self.GetAngleTo(nearest.X, nearest.Y);
+                move.Turn = self.GetAngleTo(target.X, target.Y);
             }
             else
             {
-                if (nearest != null)
-                    GoAround(nearest);
+                var nearest = OpponentCombats
+                    .OrderBy(x => x.GetDistanceTo(self) + (x is AWizard ? -20 : (x is ABuilding && ((ABuilding) x).IsBesieded) ? 20 : 0))
+                    .Where((x, i) => i == 0 || x.GetDistanceTo(self) < self.VisionRange * 1.7)// чтобы не переходить на другую линию
+                    .ToArray();
+                if (nearest.Length > 0 && nearest.FirstOrDefault(GoAround) == null)
+                {
+                    FinalMove.MoveTo(nearest[0], nearest[0]);
+                }
             }
 
             if (!TryDodge())
             {
-                TryDodge2();
+                if (target == null)
+                    TryDodge2();
             }
         }
 
@@ -190,13 +186,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         bool _goAround(ACircularUnit target)
         {
             var path = DijkstraFindPath(new AWizard(Self), target);
-            if (path == null)
+            var my = new AWizard(Self);
+            if (path == null || path.Count == 0)
                 return false;
 
-            if (path.Count == 0)
-                return true;
-
-            var my = new AWizard(Self);
             if (path.Count == 1)
             {
                 FinalMove.Turn = my.GetAngleTo(target);
@@ -218,7 +211,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var strafeSpeed = Math.Sin(angle)*Game.WizardStrafeSpeed;
             FinalMove.Speed = forwardSpeed;
             FinalMove.StrafeSpeed = strafeSpeed;
-            FinalMove.Turn = angle;
+            FinalMove.Turn = path.Count > 2 && my.GetDistanceTo(path[2]) < Self.VisionRange ? my.GetAngleTo(path[2]) : angle;
 
 #if DEBUG
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Blue, 3 });
@@ -254,6 +247,118 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         Point FindTarget(AWizard self)
         {
+            var castTarget = FindCastTarget(self);
+            if (castTarget != null)
+                return castTarget;
+
+            var staffTarget = FindStaffTarget(self);
+            return staffTarget;
+        }
+
+        Point FindStaffTarget(AWizard self)
+        {
+            var nearest = Combats
+                .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*3))
+                .ToArray();
+            ACircularUnit selTarget = null;
+            int minTime = int.MaxValue;
+
+            foreach (var opp in OpponentCombats)
+            {
+                if (self.GetDistanceTo2(opp) > Geom.Sqr(Game.StaffRange*3))
+                    continue;
+
+                var my = new AWizard(self);
+                if (opp is AMinion)
+                {
+                    var his = new AMinion((AMinion) opp);
+                    if (his.Type == MinionType.OrcWoodcutter)
+                    {
+                        int timer = 0;
+                        while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
+                        {
+                            his.Move();
+                            if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
+                                break;
+                            timer++;
+                        }
+                        while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector / 2)
+                        {
+                            my.MoveTo(null, his);
+                            timer++;
+                        }
+
+                        if (my.GetDistanceTo2(his) <= Geom.Sqr(Game.StaffRange + his.Radius) &&
+                            Math.Abs(my.GetAngleTo(his)) <= Game.StaffSector / 2 &&
+                            my.RemainingStaffCooldownTicks == 0 &&
+                            my.RemainingActionCooldownTicks == 0
+                            //&&his.RemainingActionCooldownTicks > 0
+                            )
+                        {
+                            if (selTarget == null || timer < minTime)
+                            {
+                                selTarget = opp;
+                                minTime = timer;
+                            }
+                        }
+                    }
+                }
+                else if (opp is ABuilding)
+                {
+                    var his = new ABuilding((ABuilding) opp);
+                   
+                    int timer = 0;
+                    while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
+                    {
+                        if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
+                            break;
+                        timer++;
+                    }
+                    while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector / 2)
+                    {
+                        my.MoveTo(null, his);
+                        timer++;
+                    }
+
+                    if (my.GetDistanceTo2(his) <= Geom.Sqr(Game.StaffRange + his.Radius) &&
+                        Math.Abs(my.GetAngleTo(his)) <= Game.StaffSector / 2 &&
+                        my.RemainingStaffCooldownTicks == 0 &&
+                        my.RemainingActionCooldownTicks == 0 &&
+                        his.IsBesieded || timer == 0)
+                    {
+                        if (selTarget == null || timer < minTime)
+                        {
+                            selTarget = opp;
+                            minTime = timer;
+                        }
+                    }
+                }
+            }
+            if (selTarget != null)
+            {
+                bool angleOk = Math.Abs(self.GetAngleTo(selTarget)) <= Game.StaffSector / 2,
+                    distOk = self.GetDistanceTo2(selTarget) <= Geom.Sqr(Game.StaffRange + selTarget.Radius);
+                if (angleOk && distOk)
+                {
+                    FinalMove.Action = ActionType.Staff;
+                }
+                if (!distOk)
+                {
+                    FinalMove.MoveTo(selTarget, selTarget);
+                }
+                else if (!angleOk)
+                {
+                    FinalMove.MoveTo(null, selTarget);
+                }
+            }
+            return selTarget;
+        }
+
+        Point FindCastTarget(AWizard self)
+        {
+            if (self.RemainingMagicMissileCooldownTicks > 0 || self.RemainingActionCooldownTicks > 0)
+                return null;
+
             var angles = new List<double>();
             foreach (var x in OpponentCombats)
             {
@@ -311,8 +416,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 new List<Point>
                 {
-                    new Point(self) + Point.ByAngle(self.Angle + selCastAngle) * selMinDist,
-                    new Point(self) + Point.ByAngle(self.Angle + selCastAngle) * selMaxDist
+                    self + Point.ByAngle(self.Angle + selCastAngle) * selMinDist,
+                    self + Point.ByAngle(self.Angle + selCastAngle) * selMaxDist
                 },
                 Pens.DarkOrchid,
                 2

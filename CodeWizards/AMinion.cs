@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -14,6 +9,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public AMinion(Minion unit) : base(unit)
         {
             Type = unit.Type;
+        }
+
+        public AMinion(AMinion unit) : base(unit)
+        {
+            Type = unit.Type;
+        }
+
+        public void Move()
+        {
+            if (RemainingActionCooldownTicks > 0)
+                RemainingActionCooldownTicks--;
         }
 
         public override bool IsOpponent => !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);

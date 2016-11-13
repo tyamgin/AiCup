@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -16,6 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public double Life;
         public double VisionRange;
         public double CastRange;
+        public int RemainingActionCooldownTicks;
 
         public ACombatUnit(CircularUnit unit) : base(unit)
         {
@@ -27,6 +23,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Life = wizard.Life;
                 VisionRange = wizard.VisionRange;
                 CastRange = wizard.CastRange;
+                RemainingActionCooldownTicks = wizard.RemainingActionCooldownTicks;
                 if (wizard.Id == MyStrategy.Self.Id)
                     CastRange -= 20; //TODO HACK 
             }
@@ -36,6 +33,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Life = building.Life;
                 VisionRange = building.VisionRange;
                 CastRange = building.AttackRange;
+                RemainingActionCooldownTicks = building.RemainingActionCooldownTicks;
             }
             var minion = unit as Minion;
             if (minion != null)
@@ -44,6 +42,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 VisionRange = minion.VisionRange;
                 if (minion.Type == MinionType.FetishBlowdart)
                     CastRange = MyStrategy.Game.FetishBlowdartAttackRange;
+                RemainingActionCooldownTicks = minion.RemainingActionCooldownTicks;
             }
         }
 
@@ -54,6 +53,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Life = unit.Life;
             VisionRange = unit.VisionRange;
             CastRange = unit.CastRange;
+            RemainingActionCooldownTicks = unit.RemainingActionCooldownTicks;
         }
 
         public ACombatUnit()

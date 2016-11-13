@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms.VisualStyles;
-using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -91,7 +86,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (i >= 0 && j >= 0 && i <= GridSize && j <= GridSize)
                     {
                         var pt = new Point(i * CellLength, j * CellLength);
-                        if (_nearest[i, j] == null || pt.GetDistanceToCircle(_nearest[i, j]) > pt.GetDistanceToCircle(tree))
+                        if (value == null || _nearest[i, j] == null || pt.GetDistanceToCircle(_nearest[i, j]) > pt.GetDistanceToCircle(tree))
                             _nearest[i, j] = value;
                     }
                 }

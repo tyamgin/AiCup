@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
@@ -36,9 +32,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
         private delegate void DrawDelegate();
 
-        private static void DrawCircle(Color color, double x, double y, double radius)
+        private static void DrawCircle(Color color, double x, double y, double radius, float width = 0)
         {
-            _graphics.DrawEllipse(new Pen(color), _X(x - radius), _Y(y - radius), _S(radius * 2), _S(radius * 2));
+            var pen = width > 0 ? new Pen(color, width) : new Pen(color);
+            _graphics.DrawEllipse(pen, _X(x - radius), _Y(y - radius), _S(radius * 2), _S(radius * 2));
         }
 
         private static void FillCircle(Color color, double x, double y, double radius)
@@ -174,21 +171,24 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             }
 
             // wizards
-            foreach(var wizard in MyStrategy.World.Wizards)
+            foreach(var wizard in MyStrategy.Wizards)
             {
-                var color = wizard.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange);
+                var w = MyStrategy.World.Wizards.FirstOrDefault(x => x.Id == wizard.Id);
+                var color = w.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange);
 
-                DrawCircle(color, wizard.X, wizard.Y, wizard.Radius);
+                DrawCircle(color, w.X, w.Y, wizard.Radius);
+                var d = 7;
+                for(var i = 0; i < d; i++)
+                    if (wizard.RemainingStaffCooldownTicks >= MyStrategy.Game.StaffCooldownTicks - d)
+                        DrawCircle(color, w.X, w.Y, wizard.Radius - (d - i));
 
-                //var to = Point.ByAngle(wizard.Angle) * wizard.Radius + new Point(wizard);
-                //DrawLine(color, wizard.X, wizard.Y, to.X, to.Y, 2);
-
-                DrawText(wizard.Life + "", 15, Brushes.Red, wizard.X - 20, wizard.Y - 35);
-                DrawText(wizard.Mana + "", 15, Brushes.Blue, wizard.X - 20, wizard.Y - 15);
-                DrawText(wizard.Xp + "", 15, Brushes.Green, wizard.X - 20, wizard.Y + 5);
+                DrawText(w.Life + "", 15, Brushes.Red, wizard.X - 20, wizard.Y - 35);
+                DrawText(w.Mana + "", 15, Brushes.Blue, wizard.X - 20, wizard.Y - 15);
+                DrawText(w.Xp + "", 15, Brushes.Green, wizard.X - 20, wizard.Y + 5);
 
                 DrawPie(color, wizard.X, wizard.Y, MyStrategy.Game.StaffRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
                 DrawPie(color, wizard.X, wizard.Y, wizard.CastRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
+
 
             }
 
@@ -203,7 +203,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 DrawLine(color, minion.X, minion.Y, to.X, to.Y, 2);
 
                 if (minion.Type == MinionType.OrcWoodcutter)
-                    DrawCircle(Color.Black, minion.X, minion.Y, 4);
+                {
+                    DrawCircle(Color.Black, minion.X, minion.Y, MyStrategy.Game.OrcWoodcutterAttackRange);
+                }
 
                 DrawText(minion.Life + "", 15, Brushes.Red, minion.X - 10, minion.Y - 30);
 
@@ -227,10 +229,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
             }
 
+            // buildings
             foreach (var building in BuildingsObserver.Buildings)
             {
                 FillCircle(building.IsTeammate ? Color.Blue : Color.DarkOrange, building.X, building.Y, building.Radius);
                 DrawText(building.Life + "", 15, Brushes.Red, building.X - 10, building.Y - 30);
+                if (building.IsBesieded)
+                    DrawText("rush", 13, Brushes.Black, building.X - 10, building.Y);
             }
 
             // map ranges
@@ -255,9 +260,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                         DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y, width);
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                
+                // TODO: Падает если не успевает отрисоваться. Необходима синхронизация потоков.
             }
 
             SegmentsDrawQueue.Clear();

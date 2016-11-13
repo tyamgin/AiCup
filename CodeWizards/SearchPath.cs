@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Windows.Forms;
-using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -290,11 +286,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             DijkstraStart(startCell, cell =>
             {
                 var pos = _points[cell.I, cell.J];
-                //if (pos.GetDistanceTo(target) /*- target.Radius*/ < start.CastRange)
                 if (pos.GetDistanceTo2(target) < Geom.Sqr(start.CastRange /*+ target.Radius*/))
                 {
-                    endCell = cell;
-                    return true;
+                    if (TreesObserver.Trees
+                        .Where(x => x.GetDistanceTo2(pos) < Geom.Sqr(start.CastRange))
+                        .All(x => !Geom.SegmentCircleIntersects(pos, target, x, x.Radius + Game.MagicMissileRadius))
+                        )
+                    {
+                        endCell = cell;
+                        return true;
+                    }
                 }
                 return false;
             });

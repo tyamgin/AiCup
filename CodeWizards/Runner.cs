@@ -1,9 +1,9 @@
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
 using System.Threading;
-using System.Windows.Forms;
 
-namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
+namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
+{
     public sealed class Runner {
         private readonly RemoteProcessClient remoteProcessClient;
         private readonly string token;

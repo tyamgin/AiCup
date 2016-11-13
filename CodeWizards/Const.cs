@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
+﻿namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class Const
     {

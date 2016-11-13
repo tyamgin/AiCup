@@ -1,5 +1,4 @@
 ﻿using System;
-using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
