@@ -14,6 +14,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * 
  * - бить посохом башни
  * - наблюдение за агрессивными (двигающимися) нейтралами
+ * 
+ * - если застрял, рубить деревья http://russianaicup.ru/game/view/7490
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -41,6 +43,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 
 #if DEBUG
+            Visualizer.Visualizer.CreateForm();
             Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
             Visualizer.Visualizer.LookUp(new Point(self));
             Visualizer.Visualizer.Draw();
@@ -50,6 +53,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private void _move(Wizard self, World world, Game game, Move move)
         {
+
             World = world;
             Game = game;
             Self = self;
@@ -117,8 +121,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
 #if DEBUG
-            var masterId = Wizards.FirstOrDefault(x => x.IsTeammate && x.IsMaster).Id;
-            var masterName = World.Players.FirstOrDefault(x => x.Id == masterId).Name;
+            var master = Wizards.FirstOrDefault(x => x.IsTeammate && x.IsMaster);
+            var masterName = master == null ? "" : World.Players.FirstOrDefault(x => x.Id == master.Id).Name;
 #endif
             if (self.Messages.Length > 0)
             {
@@ -129,7 +133,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 // pause here
             }
-            Visualizer.Visualizer.CreateForm();
 #endif
 
             double minDist = int.MaxValue;
@@ -218,7 +221,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             FinalMove.Turn = angle;
 
 #if DEBUG
-            Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Aqua });
+            Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Blue, 3 });
 #endif
             return true;
         }

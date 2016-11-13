@@ -58,7 +58,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static int GridSize = 130;
         public static double CellLength;
-        private static ATree[,] _nearest = new ATree[GridSize, GridSize];
+        private static ATree[,] _nearest = new ATree[GridSize + 1, GridSize + 1];
 
 
         private static Cell _findNearestCell(Point point)
@@ -88,7 +88,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var i = di + center.I;
                     var j = dj + center.J;
-                    if (i >= 0 && j >= 0 && i < GridSize && j < GridSize)
+                    if (i >= 0 && j >= 0 && i <= GridSize && j <= GridSize)
                     {
                         var pt = new Point(i * CellLength, j * CellLength);
                         if (_nearest[i, j] == null || pt.GetDistanceToCircle(_nearest[i, j]) > pt.GetDistanceToCircle(tree))

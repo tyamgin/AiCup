@@ -18,7 +18,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         private static Cell[,] _distPrev;
         private static Point[,] _points;
         private static List<Cell>[,] _neighbours; 
-        public static int GridSize = 60;
+        public static int GridSize = 80;
         public static double CellLength;
         public static double CellDiagLength;
 

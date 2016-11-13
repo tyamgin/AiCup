@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+using Microsoft.Win32.SafeHandles;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -20,28 +23,58 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 if (opp is AWizard)
                 {
-                    if (dist < Game.StaffRange + my.Radius)
-                        res += Game.StaffDamage;// TODO: обработать его навыки
-                    if (dist < opp.CastRange + my.Radius)
-                        res += Game.MagicMissileDirectDamage; // TODO: обработать его навыки
+                    var inner = Game.StaffRange + my.Radius;
+                    var outer = opp.CastRange + my.Radius;
+                    var delta = 5;
+                    if (dist < inner)
+                        res += Game.StaffDamage + Game.MagicMissileDirectDamage;// TODO: обработать его навыки
+                    else if (dist < outer)
+                        res += Game.MagicMissileDirectDamage - (dist - inner)/(outer - inner)*delta;
                 }
                 else if (opp is ABuilding)
                 {
-                    if (dist < opp.CastRange + my.Radius)
-                        res += (opp as ABuilding).Damage;
+                    var building = opp as ABuilding;
+                    var inner = Game.StaffRange + building.Radius;
+                    var outer = building.CastRange + my.Radius;
+                    const double delta = -1;//2
+                    if (dist < inner)
+                        res += building.Damage - delta;
+                    else if (dist < outer)
+                        res += (dist - inner) / (outer - inner) * delta + building.Damage - delta;
+
                 }
                 else if (opp is AMinion)
                 {
-                    if ((opp as AMinion).Type == MinionType.FetishBlowdart && dist < opp.CastRange + my.Radius)
-                        res += Game.DartDirectDamage;
-                    if ((opp as AMinion).Type == MinionType.OrcWoodcutter && dist < Game.OrcWoodcutterAttackRange + my.Radius)
-                        res += Game.OrcWoodcutterDamage;
+                    var minion = opp as AMinion;
+                    if (minion.Type == MinionType.OrcWoodcutter)
+                    {
+                        var inner = Game.OrcWoodcutterAttackRange + my.Radius + 2;
+                        var outer = 2*my.VisionRange;
+                        const double delta = 4;
+                        if (dist < inner)
+                            res += Game.OrcWoodcutterDamage;
+                        else if (dist < outer)
+                            res -= delta - (dist - inner)/(outer - inner)*delta;
+                    }
+                    else
+                    {
+                        var inner = minion.CastRange + my.Radius + Game.DartRadius;
+                        var outer = my.CastRange + minion.Radius + Game.MagicMissileRadius; //??
+                        const double delta = 2;
+                        if (dist < inner)
+                            res += Game.DartDirectDamage;
+                    }
+
+                    //if ((opp as AMinion).Type == MinionType.FetishBlowdart && dist < opp.CastRange + my.Radius)
+                    //    res += Game.DartDirectDamage;
+                    //if ((opp as AMinion).Type == MinionType.OrcWoodcutter && dist < Game.OrcWoodcutterAttackRange + my.Radius)
+                    //    res += Game.OrcWoodcutterDamage;
                 }
                 else
                 {
                     throw new Exception("Unknown type of combat");
                 }
-                res += 1 / my.GetDistanceTo(opp);//TODO
+                //res += 1 / my.GetDistanceTo(opp);//TODO
             }
             return res;
         }

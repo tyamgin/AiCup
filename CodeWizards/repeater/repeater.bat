@@ -1,0 +1,1 @@
+java -cp ".;*;%~dp0/*" -jar -Xmx800M repeater.jar %1

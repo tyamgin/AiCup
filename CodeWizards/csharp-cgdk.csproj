@@ -87,6 +87,7 @@
     <Compile Include="DangerEstimation.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="MasterStrategy.cs" />
+    <Compile Include="MessagesObserver.cs" />
     <Compile Include="Model\ActionType.cs" />
     <Compile Include="Model\Bonus.cs" />
     <Compile Include="Model\BonusType.cs" />

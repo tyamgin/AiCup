@@ -15,7 +15,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
 #endif
 
             //(new Thread(() => {
-                new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31002", "0000000000000000" }).Run();
+            new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31001", "0000000000000000" }).Run();
             //})).Start();
             //Thread.Sleep(500);
 

@@ -89,7 +89,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         public static List<object[]> SegmentsDrawQueue = new List<object[]>();
         public static List<Tuple<Point, double>> DangerPoints;
 
-        class Color01
+        public class Color01
         {
             public double R, G, B;
 
@@ -115,15 +115,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             );
         }
 
-        static Color01 _grad(double x)
+        public static Color01[] BadColors = new[] {
+            new Color01(0x8B / 255.0, 0, 0),// red!!
+            new Color01(1, 0, 0),// red
+            new Color01(1, 69 / 255.0, 0),// orange
+            new Color01(1, 1, 0),// yellow
+            new Color01(1, 1, 1),// white
+        };
+
+        public static Color01[] GoodColors = new[] {
+            new Color01(0, 1, 0),// green
+            new Color01(1, 1, 1),// white
+        };
+
+        static Color01 _grad(Color01[] colors, double x)
         {
-            var colors = new[] {
-                new Color01(0x8B / 255.0, 0, 0),// red!!
-                new Color01(1, 0, 0),// red
-                new Color01(1, 69 / 255.0, 0),// orange
-                new Color01(1, 1, 0),// yellow
-                new Color01(1, 1, 1),// white
-            };
             var delta = 1.0 / (colors.Length - 1);
             for (var i = 0; i < colors.Length - 1; i++)
             {
@@ -154,15 +160,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             _graphics = Graphics.FromImage(drawArea);
 
             var maxDanger = DangerPoints.Max(x => x.Item2);
+            var minDanger = DangerPoints.Min(x => x.Item2);
 
             if (maxDanger > Const.Eps)
             {
-
                 foreach (var t in DangerPoints)
                 {
                     var pt = t.Item1;
                     var danger = t.Item2;
-                    var color = _grad(1 - danger/maxDanger).ToColor();
+                    var color = (danger >= 0 ? _grad(BadColors, 1 - danger/maxDanger) : _grad(GoodColors, danger / minDanger)).ToColor();
                     FillCircle(color, pt.X, pt.Y, 4);
                 }
             }
@@ -187,14 +193,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             }
 
             // minions
-            foreach (var minion in MyStrategy.World.Minions)
+            foreach (var minion in MyStrategy.Minions)
             {
-                var color = minion.Faction == MyStrategy.Self.Faction ? Color.Blue : (minion.Faction == Faction.Neutral ? Color.Fuchsia : Color.DarkOrange);
+                var color = minion.IsTeammate ? Color.Blue : (minion.Faction == Faction.Neutral ? Color.Fuchsia : Color.DarkOrange);
 
                 DrawCircle(color, minion.X, minion.Y, minion.Radius);
 
-                var to = Point.ByAngle(minion.Angle) * minion.Radius + new Point(minion);
+                var to = Point.ByAngle(minion.Angle) * minion.Radius + minion;
                 DrawLine(color, minion.X, minion.Y, to.X, to.Y, 2);
+
+                if (minion.Type == MinionType.OrcWoodcutter)
+                    DrawCircle(Color.Black, minion.X, minion.Y, 4);
 
                 DrawText(minion.Life + "", 15, Brushes.Red, minion.X - 10, minion.Y - 30);
 
@@ -232,16 +241,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
             foreach (var pt in MyStrategy.GetFreePoints())
             {
-                FillCircle(Color.Aqua, pt.X, pt.Y, 4);
+                FillCircle(Color.Bisque, pt.X, pt.Y, 2);
             }
 
-            foreach (var seg in SegmentsDrawQueue)
+            try
             {
-                var points = seg[0] as List<Point>;
-                var pen = seg[1] as Pen;
-                float width = seg.Length > 2 ? Convert.ToSingle(seg[2]) : 0F;
-                for(var i = 1; i < points.Count; i++)
-                    DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y, width);
+                foreach (var seg in SegmentsDrawQueue)
+                {
+                    var points = seg[0] as List<Point>;
+                    var pen = seg[1] as Pen;
+                    float width = seg.Length > 2 ? Convert.ToSingle(seg[2]) : 0F;
+                    for (var i = 1; i < points.Count; i++)
+                        DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y, width);
+                }
+            }
+            catch (Exception e)
+            {
+                
             }
 
             SegmentsDrawQueue.Clear();
