@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -309,7 +310,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             _selfRadius = start.Radius;
             _obstacles = Combats
-                .Where(x => x.IsTeammate && x.Id != start.Id && x.GetDistanceTo2(start) < Geom.Sqr(start.VisionRange))
+                .Where(x => !x.IsOpponent && x.Id != start.Id && x.GetDistanceTo2(start) < Geom.Sqr(start.VisionRange)) // (нейтральные включительно)
                 .ToArray();
 
             var startCell = FindNearestCell(start);

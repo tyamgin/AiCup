@@ -11,10 +11,9 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * - наблюдение за агрессивными (двигающимися) нейтралами
  * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
- * - нейтральных тоже пиать в obstacles
  * - сейчас визардов и фетишей невозможно ударить посохом
- * - идти ЗА главную башню - там минионы не трогают
  * - орк и фетиш загородили проход http://russianaicup.ru/game/view/12211
+ * - когда 2 орка нападают - не идти на них
  * 
  */
 
@@ -30,7 +29,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static long[] FriendsIds;
 
         public static AWizard[] Wizards, OpponentWizards;
-        public static AMinion[] Minions, OpponentMinions;
+        public static AMinion[] Minions, OpponentMinions, NeutralMinions;
         public static ABuilding[] OpponentBuildings;
         public static ACombatUnit[] Combats, OpponentCombats;
 
@@ -86,6 +85,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             OpponentMinions = Minions
                 .Where(x => x.IsOpponent)
+                .ToArray();
+
+            NeutralMinions = Minions
+                .Where(x => x.Faction == Faction.Neutral)
                 .ToArray();
             
             OpponentBuildings = BuildingsObserver.Buildings
