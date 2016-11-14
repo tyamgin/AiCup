@@ -39,7 +39,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Y += dx;
             X += dy;
 
-            if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.Width || Y + Radius > Const.Height)
+            if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize)
             {
                 Y -= dx;
                 X -= dy;

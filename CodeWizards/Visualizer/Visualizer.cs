@@ -247,10 +247,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             }
 
             // map ranges
-            DrawLine(Color.Black, 1, 1, 1, Const.Height - 1);
-            DrawLine(Color.Black, 1, Const.Height - 1, Const.Width - 1, Const.Height - 1);
-            DrawLine(Color.Black, Const.Width - 1, 1, Const.Width - 1, Const.Height - 1);
-            DrawLine(Color.Black, Const.Width - 1, 1, 1, 1);
+            DrawLine(Color.Black, 1, 1, 1, Const.MapSize - 1);
+            DrawLine(Color.Black, 1, Const.MapSize - 1, Const.MapSize - 1, Const.MapSize - 1);
+            DrawLine(Color.Black, Const.MapSize - 1, 1, Const.MapSize - 1, Const.MapSize - 1);
+            DrawLine(Color.Black, Const.MapSize - 1, 1, 1, 1);
 
             foreach (var pt in MyStrategy.GetFreePoints())
             {
@@ -298,14 +298,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             _lookY = p.Y - _scale*_form.panel.Height/2;
             if (_lookY < 0)
                 _lookY = 0;
-            if (_lookY > Const.Height - _scale * _form.panel.Height)
-                _lookY = Const.Height - _scale * _form.panel.Height;
+            if (_lookY > Const.MapSize - _scale * _form.panel.Height)
+                _lookY = Const.MapSize - _scale * _form.panel.Height;
 
             _lookX = p.X - _scale*_form.panel.Width/2;
             if (_lookX < 0)
                 _lookX = 0;
-            if (_lookX > Const.Width - _scale * _form.panel.Width)
-                _lookX = Const.Width - _scale * _form.panel.Width;
+            if (_lookX > Const.MapSize - _scale * _form.panel.Width)
+                _lookX = Const.MapSize - _scale * _form.panel.Width;
         }
     }
 }

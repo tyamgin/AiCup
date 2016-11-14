@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static void Update(World world)
         {
-            CellLength = Const.Width/GridSize;
+            CellLength = Const.MapSize / GridSize;
 
             var newState = new Dictionary<long, ATree>();
             NewTrees.Clear();

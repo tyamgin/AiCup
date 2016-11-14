@@ -2,7 +2,7 @@
 {
     public class Const
     {
-        public static double Width, Height;
+        public static double MapSize;
         public static double Eps = 1e-9;
         public static double TreeMaxRadius = 50;
     }

@@ -94,7 +94,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var myMainBuilding = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && Math.Abs(x.Radius - Game.FactionBaseRadius) < 1);
                 var dx = myMainBuilding.X / 2;
-                var s = Const.Width;
+                var s = Const.MapSize;
                 var a = new Point(dx, s - dx);
                 var b = new Point(dx, dx);
                 var c = new Point(s - dx, dx);
@@ -127,7 +127,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 for (int j = 0; j <= grid; j++)
                 {
                     var pt = new Point((right - left) / grid * i + left, (bottom - top) / grid * j + top);
-                    if (pt.X < 0 || pt.Y < 0 || pt.X > Const.Width || pt.Y > Const.Height)
+                    if (pt.X < 0 || pt.Y < 0 || pt.X > Const.MapSize || pt.Y > Const.MapSize)
                         continue;
 
                     my.X = pt.X;

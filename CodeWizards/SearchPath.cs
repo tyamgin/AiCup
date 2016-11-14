@@ -132,7 +132,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             if (_distMap == null)
             {
-                CellLength = Const.Width/GridSize;
+                CellLength = Const.MapSize / GridSize;
                 CellDiagLength = CellLength*Math.Sqrt(2);
 
                 _neighbours = new List<Cell>[GridSize + 1, GridSize + 1];
@@ -144,7 +144,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     for (var j = 0; j <= GridSize; j++)
                     {
-                        _points[i, j] = new Point(Const.Width/GridSize*i, Const.Height/GridSize*j);
+                        _points[i, j] = new Point(Const.MapSize / GridSize*i, Const.MapSize / GridSize*j);
 
                         _calculateNeighbours(i, j);
                     }
@@ -189,13 +189,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         static Cell FindNearestCell(Point point)
         {
-            double 
-                dx = Const.Width/GridSize,
-                dy = Const.Height/GridSize;
+            double ds = Const.MapSize/GridSize;
 
-            var I = (int) (point.X/dx + Const.Eps);
-            var J = (int) (point.Y/dy + Const.Eps);
-            int seldI = -1, seldJ = -1;
+            var I = (int) (point.X/ds + Const.Eps);
+            var J = (int) (point.Y/ds + Const.Eps);
+            int seldI = int.MaxValue, seldJ = int.MaxValue;
             double minDist = int.MaxValue;
 
             for (var di = 0; di < 2; di++)
@@ -211,7 +209,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
             }
-
+            if (seldI == int.MaxValue)
+                return null;
             return new Cell(I + seldI, J + seldJ);
         }
 
@@ -314,6 +313,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             var startCell = FindNearestCell(start);
+            if (startCell == null)
+                return null;
+
             Cell endCell = null;
             DijkstraStart(startCell, cell =>
             {

@@ -39,13 +39,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
-            Visualizer.Visualizer.DrawSince = 6000;
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);
-            //if (world.TickIndex % 1000 == 999 || world.TickIndex == 7800)
+            //if (world.TickIndex % 1000 == 999)
             //    _recheckNeighbours();
 #if DEBUG
+            //Visualizer.Visualizer.DrawSince = 16400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -65,8 +65,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Self = self;
             FinalMove = new FinalMove(move);
 
-            Const.Width = world.Width;
-            Const.Height = world.Height;
+            if (Math.Abs(world.Width - world.Height) > Const.Eps)
+                throw new Exception("map width != map height");
+
+            Const.MapSize = world.Width;
 
             BuildingsObserver.Update(world);
 

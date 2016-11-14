@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private static long _getCoordinatesKey(Point p)
         {
-            var mx = (long) (Const.Width + Const.Eps);
+            var mx = (long) (Const.MapSize + Const.Eps);
             var x = (long) p.X;
             var y = (long) p.Y;
             return x*mx + y;
@@ -36,8 +36,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (world.TickIndex == 0)
                 {
                     var opposit = new ABuilding(bld);
-                    opposit.X = Const.Width - opposit.X;
-                    opposit.Y = Const.Height - opposit.Y;
+                    opposit.X = Const.MapSize - opposit.X;
+                    opposit.Y = Const.MapSize - opposit.Y;
                     opposit.Faction = opposit.Faction == Faction.Academy ? Faction.Renegades : Faction.Academy;
                     opposit.Id *= -1;
                     opposit.IsTeammate = false;
