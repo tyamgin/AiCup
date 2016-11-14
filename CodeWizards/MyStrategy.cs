@@ -10,8 +10,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * 
  * - наблюдение за агрессивными (двигающимися) нейтралами
  * - не атаковать одинокие башни
- * - если застрял, рубить деревья http://russianaicup.ru/game/view/7490
- * - разбивать деревья, если противник спрятался за ними ???
  * - идти по уже разбитой ветке, если убили ???
  * - нейтральных тоже пиать в obstacles
  * - сейчас визардов и фетишей невозможно ударить посохом
@@ -40,11 +38,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
-            //Visualizer.Visualizer.DrawSince = 3950;
+            //Visualizer.Visualizer.DrawSince = 7700;
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);
-            //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3960)
+            //if (world.TickIndex % 1000 == 999 || world.TickIndex == 7800)
             //    _recheckNeighbours();
 #if DEBUG
             Visualizer.Visualizer.CreateForm();
@@ -161,8 +159,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (nearest.Length > 0 && nearest.FirstOrDefault(GoAround) == null)
                 {
                     var goTo = nearest[0];
-                    TryGoByGradient(w => w.GetDistanceTo2(goTo));
-                    // TODO: рубить деревья
+                    FinalMove.MoveTo(null, goTo);
+                    var canGo = TryGoByGradient(w => w.GetDistanceTo2(goTo));
+                    TryCutTrees(!canGo);
                 }
             }
 
@@ -177,6 +176,44 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     TryDodgeDanger();
                 }
             }
+        }
+
+        bool TryCutTrees(bool cutNearest)
+        {
+            var self = new AWizard(Self);
+            var nearestTrees = TreesObserver.Trees.Where(
+                t => self.GetDistanceTo(t) < self.CastRange + t.Radius + Game.MagicMissileRadius
+                ).ToArray();
+
+            if (nearestTrees.Length == 0)
+                return false;
+
+            if (self.RemainingActionCooldownTicks == 0)
+            {
+                if (self.RemainingStaffCooldownTicks == 0 && self.GetStaffAttacked(nearestTrees).Length > 0)
+                {
+                    FinalMove.Action = ActionType.Staff;
+                    return true;
+                }
+                if (self.RemainingMagicMissileCooldownTicks == 0)
+                {
+                    var proj = new AProjectile(self, 0, ProjectileType.MagicMissile);
+                    var path = EmulateMagicMissile(proj);
+                    if (path.Count == 0 || path[path.Count - 1].EndDistance < self.CastRange - Const.Eps)
+                    {
+                        FinalMove.MinCastDistance = path[path.Count - 1].EndDistance;
+                        FinalMove.Action = ActionType.MagicMissile;
+                        return true;
+                    }
+                }
+            }
+            if (cutNearest)
+            {
+                var nearest = nearestTrees.OrderBy(t => self.GetDistanceTo2(t)).FirstOrDefault();
+                FinalMove.MoveTo(null, nearest);
+            }
+
+            return false;
         }
 
         void SimplifyPath(AWizard self, ACircularUnit[] obstacles, List<Point> path)
@@ -268,7 +305,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return staffTarget;
         }
 
-        Point FindStaffTarget(AWizard self)
+        private Point FindStaffTarget(AWizard self)
         {
             var nearest = Combats
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*3))
@@ -296,8 +333,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             timer++;
                         }
 
-                        if (my.GetDistanceTo2(his) <= Geom.Sqr(Game.StaffRange + his.Radius) &&
-                            Math.Abs(my.GetAngleTo(his)) <= Game.StaffSector / 2 &&
+                        if (my.CanStaffAttack(his) &&
                             my.RemainingStaffCooldownTicks == 0 &&
                             my.RemainingActionCooldownTicks == 0
                             //&&his.RemainingActionCooldownTicks > 0
@@ -314,7 +350,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else if (opp is ABuilding)
                 {
                     var his = new ABuilding((ABuilding) opp);
-                   
+
                     int timer = 0;
                     while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
                     {
@@ -322,14 +358,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             break;
                         timer++;
                     }
-                    while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector / 2)
+                    while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector/2)
                     {
                         my.MoveTo(null, his);
                         timer++;
                     }
 
-                    if (my.GetDistanceTo2(his) <= Geom.Sqr(Game.StaffRange + his.Radius) &&
-                        Math.Abs(my.GetAngleTo(his)) <= Game.StaffSector / 2 &&
+                    if (my.CanStaffAttack(his) &&
                         my.RemainingStaffCooldownTicks == 0 &&
                         my.RemainingActionCooldownTicks == 0 &&
                         (his.IsBesieded || timer == 0))
@@ -344,7 +379,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             if (selTarget != null)
             {
-                bool angleOk = Math.Abs(self.GetAngleTo(selTarget)) <= Game.StaffSector / 2,
+                bool angleOk = Math.Abs(self.GetAngleTo(selTarget)) <= Game.StaffSector/2,
                     distOk = self.GetDistanceTo2(selTarget) <= Geom.Sqr(Game.StaffRange + selTarget.Radius);
                 if (angleOk && distOk)
                 {

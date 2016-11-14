@@ -146,6 +146,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var obstacles = 
                 Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
                 .Concat(TreesObserver.Trees)
+                .Concat(BuildingsObserver.Buildings)
                 .Where(x => my.GetDistanceTo2(x) < Geom.Sqr(my.VisionRange))
                 .ToArray();
 

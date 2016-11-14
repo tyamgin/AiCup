@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
@@ -68,6 +70,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //TODO can be optimized
         }
 
+        public bool CanStaffAttack(ACircularUnit unit)
+        {
+            // пока без учета cooldown
+            if (GetDistanceTo2(unit) > Geom.Sqr(MyStrategy.Game.StaffRange + unit.Radius))
+                return false;
+            if (Math.Abs(GetAngleTo(unit)) > MyStrategy.Game.StaffSector/2)
+                return false;
+            return true;
+        }
+
+        public ACircularUnit[] GetStaffAttacked(IEnumerable<ACircularUnit> candidates)
+        {
+            return candidates
+                .Where(CanStaffAttack)
+                .ToArray();
+        }
 
         public int RemainingStaffCooldownTicks => RemainingCooldownTicksByAction[(int) ActionType.Staff];
         public int RemainingMagicMissileCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.MagicMissile];

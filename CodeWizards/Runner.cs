@@ -13,12 +13,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(2000);
 #endif
-
-            //(new Thread(() => {
             new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31001", "0000000000000000" }).Run();
-            //})).Start();
-            //Thread.Sleep(500);
-
 #if DEBUG
             //var oldStrategy = new Process
             //{
