@@ -74,7 +74,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     throw new Exception("Unknown type of combat");
                 }
             }
+            var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
+            var maxDist = 500.0;
+            res -= 1 - (distToLine/maxDist)*1;
             return res;
+        }
+
+        public static void InitializeRoads()
+        {
+            if (Roads == null)
+            {
+                var myMainBuilding = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && Math.Abs(x.Radius - Game.FactionBaseRadius) < 1);
+                var dx = myMainBuilding.X / 2;
+                var s = Const.Width;
+                var a = new Point(dx, s - dx);
+                var b = new Point(dx, dx);
+                var c = new Point(s - dx, dx);
+                var d = new Point(s - dx, s - dx);
+                Roads = new[]
+                {
+                    new Segment(a, b),
+                    new Segment(b, c),
+                    new Segment(c, d),
+                    new Segment(d, a),
+                    new Segment(a, c),
+                    new Segment(b, d),
+                };
+            }
         }
 
         List<Tuple<Point, double>> CalculateDangerMap()

@@ -121,8 +121,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         };
 
         public static Color01[] GoodColors = new[] {
-            new Color01(0, 1, 0),// green
             new Color01(1, 1, 1),// white
+            new Color01(0, 1, 0),// green
         };
 
         static Color01 _grad(Color01[] colors, double x)
@@ -160,6 +160,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             var drawArea = new Bitmap(panel.Size.Width, panel.Size.Height);
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
+
+            foreach(var seg in MyStrategy.Roads)
+                DrawLine(Color.Khaki, seg.A.X, seg.A.Y, seg.B.X, seg.B.Y);
 
             var maxDanger = DangerPoints.Max(x => x.Item2);
             var minDanger = DangerPoints.Min(x => x.Item2);

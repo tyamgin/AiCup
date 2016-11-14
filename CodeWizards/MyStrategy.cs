@@ -13,6 +13,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * - если застрял, рубить деревья http://russianaicup.ru/game/view/7490
  * - разбивать деревья, если противник спрятался за ними ???
  * - идти по уже разбитой ветке, если убили ???
+ * - нейтральных тоже пиать в obstacles
+ * - сейчас визардов и фетишей невозможно ударить посохом
  * 
  */
 
@@ -33,6 +35,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static ACombatUnit[] Combats, OpponentCombats;
 
         public static AProjectile[][] ProjectilesPaths;
+        public static Segment[] Roads;
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
@@ -104,6 +107,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             TreesObserver.Update(world);
             ProjectilesObserver.Update(world);
+            InitializeRoads();
 
             //TreesObserver.RecheckAll();
 

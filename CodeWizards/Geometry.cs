@@ -197,6 +197,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
     }
 
+    public class Segment
+    {
+        public Point A, B;
+
+        public Segment(Point a, Point b)
+        {
+            A = a;
+            B = b;
+        }
+
+        public double GetDistanceTo(Point point)
+        {
+            if (A.Equals(B))
+                return A.GetDistanceTo(point);
+
+            var a = A - point;
+            var b = B - point;
+
+            double aa, bb, cc;
+            Geom.GetABC(a, b, out aa, out bb, out cc);
+
+            if (Geom.Sign((a.Y + bb) * aa - (a.X + aa) * bb) * Geom.Sign((b.Y + bb) * aa - (b.X + aa) * bb) <= 0)
+                return Math.Abs(cc / Math.Sqrt(aa * aa + bb * bb));
+            return Math.Min(a.Length, b.Length);
+        }
+    }
+
     public class Points : List<Point>
     {
         public void Pop()
@@ -285,6 +312,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (c > d)
                 _swap(ref c, ref d);
             return Math.Max(a, c) <= Math.Min(b, d);
+        }
+
+        public static void GetABC(Point a, Point b, out double A, out double B, out double C)
+        {
+            A = a.Y - b.Y;
+            B = b.X - a.X;
+            C = -a.X*A - a.Y*B;
         }
 
         /// <summary>
