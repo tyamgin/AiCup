@@ -140,6 +140,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             throw new Exception("wrong x ranges");
         }
 
+        public static int DrawSince = 0;
+
         public static void Draw()
         {
             if (_form.InvokeRequired)
@@ -147,6 +149,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 _form.BeginInvoke(new DrawDelegate(Draw), new object[] { });
                 return;
             }
+
+            if (MyStrategy.World.TickIndex < DrawSince)
+                return;
 
             var panel = _form.panel;
 

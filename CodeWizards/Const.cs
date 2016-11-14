@@ -4,5 +4,6 @@
     {
         public static double Width, Height;
         public static double Eps = 1e-9;
+        public static double TreeMaxRadius = 50;
     }
 }

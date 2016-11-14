@@ -36,16 +36,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
+            //Visualizer.Visualizer.DrawSince = 3950;
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);
-
+            //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3960)
+            //    _recheckNeighbours();
 #if DEBUG
             Visualizer.Visualizer.CreateForm();
-            Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
+            if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
+                Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
+            else
+                Visualizer.Visualizer.DangerPoints = null;
             Visualizer.Visualizer.LookUp(new Point(self));
             Visualizer.Visualizer.Draw();
-            Thread.Sleep(20); // чтобы успело отрисоваться
+            if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
+                Thread.Sleep(20); // чтобы успело отрисоваться
 #endif
         }
 

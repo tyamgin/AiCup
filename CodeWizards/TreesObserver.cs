@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -116,9 +117,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return _nearest[cell.I, cell.J];
         }
 
-        private static List<object[]> _prevSegments = new List<object[]>(); 
+        private static List<object[]> _prevSegments = new List<object[]>();
 
-        public static void RecheckAll()
+        public static void RecheckNearestTrees()
         {
 #if DEBUG
             if (MyStrategy.World.TickIndex % 1000 == 999)

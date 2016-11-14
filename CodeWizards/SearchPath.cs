@@ -22,15 +22,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var res = new List<Point>();
             for (var i = 0; i <= GridSize; i++)
-            {
                 for (var j = 0; j <= GridSize; j++)
-                {
                     if (!_isLocked[i, j])
-                    {
                         res.Add(_points[i, j]);
-                    }
-                }
-            }
             return res;
         }
 
@@ -69,12 +63,50 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToList();
         }
 
+        private void _recheckNeighbours()
+        {
+#if !DEBUG
+            throw new Exception("for DEBUG porposes only");
+#else
+            Log("Neighbours test start");
+            var tmpNeighbours = _neighbours;
+            var tmpIsLocked = _isLocked;
+            _neighbours = new List<Cell>[GridSize + 1, GridSize + 1];
+            _isLocked = new bool[GridSize + 1, GridSize + 1];
+            for (var i = 0; i <= GridSize; i++)
+            {
+                for (var j = 0; j <= GridSize; j++)
+                {
+                    _calculateNeighbours(i, j);
+                    foreach(var ob in _getStaticUnits())
+                        _filterNeighbours(i, j, ob);
+                }
+            }
+            for (var i = 0; i <= GridSize; i++)
+            {
+                for (var j = 0; j <= GridSize; j++)
+                {
+                    if (_isLocked[i, j] != tmpIsLocked[i, j])
+                        throw new Exception("test failed");
+                    if (_neighbours[i, j].Count != tmpNeighbours[i, j].Count)
+                        throw new Exception("test failed");
+                    for(var k = 0; k < _neighbours[i, j].Count; k++)
+                        if (!_neighbours[i, j][k].Equals(tmpNeighbours[i, j][k]))
+                            throw new Exception("test failed");
+                }
+            }
+            _neighbours = tmpNeighbours;
+            _isLocked = tmpIsLocked;
+            Log("Neighbours test end");
+#endif
+        }
+
         private void _filterNeighbours(int I, int J, ACircularUnit unit)
         {
             var list = _neighbours[I, J];
             var point = _points[I, J];
 
-            if (point.GetDistanceTo2(unit) < Geom.Sqr(unit.Radius + Self.Radius))
+            if (point.GetDistanceTo2(unit) < Geom.Sqr(unit.Radius + Self.Radius + 1/*epsilon*/))
                 _isLocked[I, J] = true;//TODO maybe return
 
             for (var idx = list.Count - 1; idx >= 0; idx--)
@@ -93,7 +125,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
          */
         private bool _canAffect(ACircularUnit unit, Point p)
         {
-            return unit.GetDistanceTo2(p) < Geom.Sqr(2*CellDiagLength + unit.Radius);
+            return unit.GetDistanceTo2(p) < Geom.Sqr(unit.Radius + Self.Radius + 1 + CellDiagLength);
         }
 
         private void InitializeDijkstra()
@@ -136,7 +168,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var oldUnit in _getDisappearedStaticUnits())
             {
                 var nearest = _getStaticUnits()
-                    .Where(x => x.GetDistanceTo2(oldUnit) < Geom.Sqr(CellDiagLength*2))
+                    .Where(x => x is ABuilding || x.GetDistanceTo2(oldUnit) < Geom.Sqr(2*(Const.TreeMaxRadius + Self.Radius + 1 + CellDiagLength)))
                     .ToArray();
 
                 for (var i = 0; i <= GridSize; i++)
