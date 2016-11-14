@@ -14,6 +14,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * - нейтральных тоже пиать в obstacles
  * - сейчас визардов и фетишей невозможно ударить посохом
  * - идти ЗА главную башню - там минионы не трогают
+ * - орк и фетиш загородили проход http://russianaicup.ru/game/view/12211
  * 
  */
 
@@ -38,7 +39,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
-            //Visualizer.Visualizer.DrawSince = 7700;
+            Visualizer.Visualizer.DrawSince = 6000;
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);

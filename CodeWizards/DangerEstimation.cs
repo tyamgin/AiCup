@@ -74,9 +74,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     throw new Exception("Unknown type of combat");
                 }
             }
+            // прижиматься к центру дорожки
             var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
             var maxDist = 500.0;
             res -= 1 - (distToLine/maxDist)*1;
+
+            // прижиматься за главную башню
+            var corner = new Point(World.Width - 150, 150);
+            var cornerMaxDist = 400;
+            var distToCorner = my.GetDistanceTo(corner);
+            if (distToCorner < cornerMaxDist)
+                res -= 7 - (distToCorner/cornerMaxDist)*7;
             return res;
         }
 
