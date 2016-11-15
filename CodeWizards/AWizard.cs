@@ -72,7 +72,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public bool CanStaffAttack(ACircularUnit unit)
         {
-            // пока без учета cooldown
+            if (RemainingActionCooldownTicks > 0 || RemainingStaffCooldownTicks > 0)
+                return false;
             if (GetDistanceTo2(unit) > Geom.Sqr(MyStrategy.Game.StaffRange + unit.Radius))
                 return false;
             if (Math.Abs(GetAngleTo(unit)) > MyStrategy.Game.StaffSector/2)

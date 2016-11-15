@@ -12,7 +12,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * 
  * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
- * - сейчас визардов и фетишей невозможно ударить посохом
  * - когда 2 орка нападают - не идти на них
  * 
  */
@@ -54,7 +53,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            //Visualizer.Visualizer.DrawSince = 1600;
+            Visualizer.Visualizer.DrawSince = 1600;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -160,29 +159,29 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 // pause here
             }
 #endif
-            //if (World.TickIndex <= 1000)
-            //    return;
-            //if (World.TickIndex >= 1700 && World.TickIndex <= 1750)
-            //{
-            //    var my = new AWizard(Self);
-            //    var minion = Minions.Where(m => m.IsNeutral).OrderBy(m => my.GetDistanceTo(m)).ToArray()[0];
-            //    if (Math.Abs(my.GetAngleTo(minion)) <= Game.StaffSector/2)
-            //    {
-            //        FinalMove.Action = ActionType.MagicMissile;
-            //        FinalMove.CastAngle = -100;
-            //    }
-            //    else
-            //        FinalMove.Turn = my.GetAngleTo(minion);
-            //    return;
-            //}
-            //if (World.TickIndex >= 1200 && World.TickIndex < 1750)
-            //{
-            //    var goTo = new Point(200, 100);
-            //    FinalMove.MoveTo(null, goTo);
-            //    var canGo = TryGoByGradient(w => w.GetDistanceTo2(goTo));
-            //    TryCutTrees(!canGo);
-            //    return;
-            //}
+            if (World.TickIndex <= 1000)
+                return;
+            if (World.TickIndex >= 1700 && World.TickIndex <= 1750)
+            {
+                var my = new AWizard(Self);
+                var minion = Minions.Where(m => m.IsNeutral).OrderBy(m => my.GetDistanceTo(m)).ToArray()[0];
+                if (Math.Abs(my.GetAngleTo(minion)) <= Game.StaffSector / 2)
+                {
+                    FinalMove.Action = ActionType.MagicMissile;
+                    FinalMove.CastAngle = -100;
+                }
+                else
+                    FinalMove.Turn = my.GetAngleTo(minion);
+                return;
+            }
+            if (World.TickIndex >= 1200 && World.TickIndex < 1750)
+            {
+                var goTo = new Point(200, 100);
+                FinalMove.MoveTo(null, goTo);
+                var canGo = TryGoByGradient(w => w.GetDistanceTo2(goTo));
+                TryCutTrees(!canGo);
+                return;
+            }
 
             var target = FindTarget(new AWizard(self));
             if (target != null)
@@ -229,7 +228,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             if (self.RemainingActionCooldownTicks == 0)
             {
-                if (self.RemainingStaffCooldownTicks == 0 && self.GetStaffAttacked(nearestTrees).Length > 0)
+                if (self.GetStaffAttacked(nearestTrees).Length > 0)
                 {
                     FinalMove.Action = ActionType.Staff;
                     return true;
@@ -349,8 +348,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var nearest = Combats
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*3))
                 .ToArray();
-            ACircularUnit selTarget = null;
             int minTime = int.MaxValue;
+
+            ACircularUnit selTarget = self.GetStaffAttacked(nearest).Cast<ACombatUnit>().FirstOrDefault(x => x.IsOpponent);
+            if (selTarget != null)
+            {
+                FinalMove.Action = ActionType.Staff;
+                return selTarget;
+            }
 
             foreach (var opp in OpponentCombats)
             {
@@ -371,10 +376,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         timer++;
                     }
 
-                    if (my.CanStaffAttack(his) &&
-                        my.RemainingStaffCooldownTicks == 0 &&
-                        my.RemainingActionCooldownTicks == 0
-                        )
+                    if (my.CanStaffAttack(his))
                     {
                         if (selTarget == null || timer < minTime)
                         {
@@ -400,10 +402,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         timer++;
                     }
 
-                    if (my.CanStaffAttack(his) &&
-                        my.RemainingStaffCooldownTicks == 0 &&
-                        my.RemainingActionCooldownTicks == 0 &&
-                        (his.IsBesieded || timer == 0))
+                    if (my.CanStaffAttack(his) && his.IsBesieded)
                     {
                         if (selTarget == null || timer < minTime)
                         {
