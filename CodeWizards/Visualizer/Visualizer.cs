@@ -214,7 +214,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 var to = Point.ByAngle(minion.Angle) * minion.Radius + minion;
                 DrawLine(color, minion.X, minion.Y, to.X, to.Y, 2);
 
-                if (minion.Type == MinionType.OrcWoodcutter)
+                if (minion is AOrc)
                 {
                     DrawCircle(Color.Black, minion.X, minion.Y, MyStrategy.Game.OrcWoodcutterAttackRange);
                 }

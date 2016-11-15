@@ -88,7 +88,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             Minions = world.Minions
-                .Select(x => new AMinion(x))
+                .Select(AMinion.New)
                 .ToArray();
 
             NeutralMinions = Minions
@@ -358,30 +358,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     continue;
 
                 var my = new AWizard(self);
-                if (opp is AMinion)
+                if (opp is AOrc)
                 {
-                    var his = new AMinion((AMinion) opp);
-                    if (his.Type == MinionType.OrcWoodcutter)
+                    var his = new AOrc((AOrc)opp);
+                    
+                    int timer = 0;
+                    while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
                     {
-                        int timer = 0;
-                        while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
-                        {
-                            his.Move();
-                            if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
-                                break;
-                            timer++;
-                        }
+                        his.Move();
+                        if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
+                            break;
+                        timer++;
+                    }
 
-                        if (my.CanStaffAttack(his) &&
-                            my.RemainingStaffCooldownTicks == 0 &&
-                            my.RemainingActionCooldownTicks == 0
-                            )
+                    if (my.CanStaffAttack(his) &&
+                        my.RemainingStaffCooldownTicks == 0 &&
+                        my.RemainingActionCooldownTicks == 0
+                        )
+                    {
+                        if (selTarget == null || timer < minTime)
                         {
-                            if (selTarget == null || timer < minTime)
-                            {
-                                selTarget = opp;
-                                minTime = timer;
-                            }
+                            selTarget = opp;
+                            minTime = timer;
                         }
                     }
                 }

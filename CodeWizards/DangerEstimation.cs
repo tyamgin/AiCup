@@ -48,26 +48,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             res += (dist - inner)/(outer - inner)*delta + building.Damage - delta;
                     }
                 }
-                else if (opp is AMinion)
+                else if (opp is AOrc)
                 {
-                    var minion = opp as AMinion;
-                    if (minion.Type == MinionType.OrcWoodcutter)
-                    {
-                        var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 1;
-                        var outer = 2*my.VisionRange;
-                        const double delta = 3;
-                        if (dist < inner)
-                            res += Game.OrcWoodcutterDamage + delta-dist/inner*delta;
-                        else if (dist < outer)
-                            res -= delta - (dist - inner)/(outer - inner)*delta;
-                    }
-                    else
-                    {
-                        var inner = minion.CastRange + my.Radius + Game.DartRadius + 1;
-                        var delta = 1;
-                        if (dist < inner)
-                            res += delta - dist / inner * delta + Game.DartDirectDamage;
-                    }
+                    var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 1;
+                    var outer = 2*my.VisionRange;
+                    const double delta = 3;
+                    if (dist < inner)
+                        res += Game.OrcWoodcutterDamage + delta-dist/inner*delta;
+                    else if (dist < outer)
+                        res -= delta - (dist - inner)/(outer - inner)*delta;
+                }
+                else if (opp is AFetish)
+                {
+                    var inner = opp.CastRange + my.Radius + Game.DartRadius + 1;
+                    var delta = 1;
+                    if (dist < inner)
+                        res += delta - dist/inner*delta + Game.DartDirectDamage;
                 }
                 else
                 {
