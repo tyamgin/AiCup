@@ -5,6 +5,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     public class AMinion : ACombatUnit
     {
         public MinionType Type;
+        public bool IsAggressiveNeutral;
 
         public AMinion(Minion unit) : base(unit)
         {
@@ -13,6 +14,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public AMinion(AMinion unit) : base(unit)
         {
+            IsAggressiveNeutral = unit.IsAggressiveNeutral;
             Type = unit.Type;
         }
 
@@ -22,6 +24,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 RemainingActionCooldownTicks--;
         }
 
-        public override bool IsOpponent => !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);
+        public override bool IsOpponent => IsAggressiveNeutral || !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);
+        public bool IsNeutral => Faction == Faction.Neutral;
     }
 }

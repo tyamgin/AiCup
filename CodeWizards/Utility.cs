@@ -8,30 +8,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        public const int Infinity = 0x3f3f3f3f;
-        public const double Eps = 1e-9;
-
         public static bool IsPointVisible(Point point)
         {
             return Combats.Any(x => x.IsTeammate && point.GetDistanceTo2(x) <= x.VisionRange*x.VisionRange);
-        }
-
-        public static double EnsureInterval(double x, double left, double right)
-        {
-            if (x < left)
-                x = left;
-            if (x > right)
-                x = right;
-            return x;
-        }
-
-        public static double EnsureInterval(double x, double right)
-        {
-            if (x < -right)
-                x = -right;
-            if (x > right)
-                x = right;
-            return x;
         }
 
         private static readonly List<Stopwatch> _timers = new List<Stopwatch>();
@@ -71,6 +50,32 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #if DEBUG
             Console.WriteLine(msg);
 #endif
+        }
+    }
+
+    public class Utility
+    {
+        public static double EnsureInterval(double x, double left, double right)
+        {
+            if (x < left)
+                x = left;
+            if (x > right)
+                x = right;
+            return x;
+        }
+
+        public static double EnsureInterval(double x, double right)
+        {
+            if (x < -right)
+                x = -right;
+            if (x > right)
+                x = right;
+            return x;
+        }
+
+        public static bool Equals(double x, double y)
+        {
+            return Math.Abs(x - y) < Const.Eps;
         }
     }
 }

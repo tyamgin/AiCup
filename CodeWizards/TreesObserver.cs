@@ -14,7 +14,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static IEnumerable<ATree> Trees => _prevState.Values;
 
-        public static void Update(World world)
+        public static void Update()
         {
             CellLength = Const.MapSize / GridSize;
 
@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             NewTrees.Clear();
             DisappearedTrees.Clear();
 
-            foreach (var tree in world.Trees)
+            foreach (var tree in MyStrategy.World.Trees)
             {
                 var a = new ATree(tree);
                 if (!_prevState.ContainsKey(tree.Id))

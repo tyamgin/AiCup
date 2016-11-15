@@ -254,7 +254,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 for (var j = 0; j <= GridSize; j++)
                 {
-                    _distMap[i, j] = Infinity;
+                    _distMap[i, j] = Const.Infinity;
                     _distPrev[i, j] = null;
                 }
             }

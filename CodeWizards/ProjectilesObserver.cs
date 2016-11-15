@@ -8,9 +8,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         private static Dictionary<long, AProjectile> _projectiles = new Dictionary<long, AProjectile>(); 
 
-        public static void Update(World world)
+        public static void Update()
         {
-            var projectiles = world.Projectiles
+            var projectiles = MyStrategy.World.Projectiles
                 .Select(x => new AProjectile(x))
                 .Where(x => !x.IsFriendly)
                 .ToArray();
@@ -29,7 +29,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else
                 {
                     // только появился
-                    var owner = world.Wizards.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
+                    var owner = MyStrategy.World.Wizards.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
                     if (owner != null && proj.GetDistanceTo(owner) < proj.Speed * 1.2)
                     {
                         newDict[proj.Id] = proj;

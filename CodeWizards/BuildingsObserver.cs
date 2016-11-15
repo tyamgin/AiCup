@@ -16,13 +16,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return x*mx + y;
         }
 
-        public static void Update(World world)
+        public static void Update()
         {
             var newState = new Dictionary<long, ABuilding>();
             NewBuildings.Clear();
             DisappearedBuildings.Clear();
 
-            foreach (var bld in world.Buildings)
+            foreach (var bld in MyStrategy.World.Buildings)
             {
                 var a = new ABuilding(bld);
                 var key = _getCoordinatesKey(a);
@@ -33,7 +33,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
                 newState[key] = a;
 
-                if (world.TickIndex == 0)
+                if (MyStrategy.World.TickIndex == 0)
                 {
                     var opposit = new ABuilding(bld);
                     opposit.X = Const.MapSize - opposit.X;

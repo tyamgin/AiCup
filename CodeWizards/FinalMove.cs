@@ -64,7 +64,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             if (turnTo != null)
             {
-                _move.Turn = MyStrategy.EnsureInterval(MyStrategy.Self.GetAngleTo(turnTo.X, turnTo.Y), MyStrategy.Game.WizardMaxTurnAngle);
+                _move.Turn = Utility.EnsureInterval(MyStrategy.Self.GetAngleTo(turnTo.X, turnTo.Y), MyStrategy.Game.WizardMaxTurnAngle);
             }
 
             if (to != null)

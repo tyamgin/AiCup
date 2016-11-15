@@ -146,13 +146,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         {
             if (_form.InvokeRequired)
             {
-                _form.BeginInvoke(new DrawDelegate(Draw), new object[] { });
+                _form.BeginInvoke(new DrawDelegate(Draw), new object[] {});
                 return;
             }
 
-            if (MyStrategy.World.TickIndex < DrawSince)
-                return;
+            if (MyStrategy.World.TickIndex >= DrawSince)
+                _draw();
+            SegmentsDrawQueue.Clear();
+        }
 
+        private static void _draw()
+        {
             var panel = _form.panel;
 
             _form.tickLabel.Text = MyStrategy.World.TickIndex + "";
@@ -272,8 +276,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             {
                 // TODO: Падает если не успевает отрисоваться. Необходима синхронизация потоков.
             }
-
-            SegmentsDrawQueue.Clear();
         }
 
         public static double Zoom

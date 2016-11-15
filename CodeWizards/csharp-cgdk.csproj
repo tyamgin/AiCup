@@ -116,6 +116,7 @@
     <Compile Include="Model\World.cs" />
     <Compile Include="IStrategy.cs" />
     <Compile Include="MyStrategy.cs" />
+    <Compile Include="NeutralMinionsObserver.cs" />
     <Compile Include="ProjectilesObserver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteProcessClient.cs" />
