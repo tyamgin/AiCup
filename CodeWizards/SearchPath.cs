@@ -188,21 +188,29 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         }
 
-        static Cell FindNearestCell(Point point)
+        static Cell FindNearestCell(ACircularUnit my)
         {
             double ds = Const.MapSize/GridSize;
 
-            var I = (int) (point.X/ds + Const.Eps);
-            var J = (int) (point.Y/ds + Const.Eps);
+            var I = (int) (my.X/ds + Const.Eps);
+            var J = (int) (my.Y/ds + Const.Eps);
             int seldI = int.MaxValue, seldJ = int.MaxValue;
             double minDist = int.MaxValue;
+            var obstacles =
+                _obstacles.Cast<ACircularUnit>()
+                    .Concat(BuildingsObserver.Buildings)
+                    .Concat(TreesObserver.Trees)
+                    .ToArray();
 
             for (var di = 0; di < 2; di++)
             {
                 for (var dj = 0; dj < 2; dj++)
                 {
-                    var dst = _points[I + di, J + dj].GetDistanceTo2(point);
-                    if (dst < minDist && !_isLocked[I + di, J + dj])
+                    var dst = _points[I + di, J + dj].GetDistanceTo2(my);
+                    if (dst < minDist && !_isLocked[I + di, J + dj] &&
+                        obstacles.All(ob =>
+                            !Geom.SegmentCircleIntersects(my, _points[I + di, J + dj], ob, ob.Radius + my.Radius + 1))
+                        )
                     {
                         minDist = dst;
                         seldI = di;

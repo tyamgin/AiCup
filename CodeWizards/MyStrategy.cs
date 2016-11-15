@@ -12,7 +12,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
  * - сейчас визардов и фетишей невозможно ударить посохом
- * - орк и фетиш загородили проход http://russianaicup.ru/game/view/12211
  * - когда 2 орка нападают - не идти на них
  * 
  */
@@ -41,10 +40,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);
-            //if (world.TickIndex % 1000 == 999)
+            //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            //Visualizer.Visualizer.DrawSince = 16400;
+            //Visualizer.Visualizer.DrawSince = 3520;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
