@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static void Main(string[] args) {
 #if DEBUG
             Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
-            Thread.Sleep(2000);
+            Thread.Sleep(5000);
 #endif
             new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31001", "0000000000000000" }).Run();
 #if DEBUG

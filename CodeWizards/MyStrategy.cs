@@ -9,6 +9,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * TODO:
  * 
  * !!-прикрываться деревьями (особенно от визардов)
+ * !!-сбегать от кучи орков
+ * - не идти на своих когда убегаю от орков
  * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
  * 
@@ -28,7 +30,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static AWizard[] Wizards, OpponentWizards;
         public static AMinion[] Minions, OpponentMinions, NeutralMinions;
         public static ABuilding[] OpponentBuildings;
-        public static ACombatUnit[] Combats, OpponentCombats;
+        public static ACombatUnit[] Combats, OpponentCombats, MyCombats;
 
         public static AProjectile[][] ProjectilesPaths;
         public static Segment[] Roads;
@@ -44,6 +46,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             OpponentBuildings = null;
             Combats = null;
             OpponentCombats = null;
+            MyCombats = null;
 
             TimerStart();
             _move(self, world, game, move);
@@ -51,7 +54,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 400;
+            //Visualizer.Visualizer.DrawSince = 2100;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -91,15 +94,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             NeutralMinions = Minions
                 .Where(x => x.Faction == Faction.Neutral)
                 .ToArray();
-            
-            OpponentBuildings = BuildingsObserver.Buildings
-                .Where(x => x.IsOpponent)
-                .ToArray();
 
             Combats =
                 Minions.Cast<ACombatUnit>()
                 .Concat(Wizards)
                 .Concat(BuildingsObserver.Buildings)
+                .ToArray();
+
+            MyCombats = Combats
+                .Where(x => x.IsTeammate)
                 .ToArray();
 
             FriendsIds = Combats
@@ -118,6 +121,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             BuildingsObserver.Update();
 
+            OpponentBuildings = BuildingsObserver.Buildings
+                .Where(x => x.IsOpponent)
+                .ToArray();
+
             TreesObserver.Update();
             ProjectilesObserver.Update();
 
@@ -128,21 +135,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var bld in OpponentBuildings)
             {
                 var his = OpponentCombats.Count(x => x.Id != bld.Id && bld.GetDistanceTo(x) < Self.VisionRange*1.1);
+                var hisWizards = OpponentWizards.Count(x => bld.GetDistanceTo(x) < Self.VisionRange * 1.1);
                 var mines = Combats.Count(x => x.IsTeammate && bld.GetDistanceTo(x) < Self.VisionRange * 1.1);
-                if (his == 0 && mines > 2 || his == 1 && mines > 3 || his == 2 && mines > 5)
+                if (bld.IsBase || hisWizards == 0 && (his == 0 && mines > 2 || his == 1 && mines > 3 || his == 2 && mines > 5))
                     bld.IsBesieded = true;
             }
 
             if (Self.IsMaster && World.TickIndex == 0)
             {
-                MasterSendMessages();
-                //FinalMove.Messages = new[]
-                //{
-                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
-                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
-                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
-                //    new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] {}),
-                //};
+                //MasterSendMessages();
+                FinalMove.Messages = new[]
+                {
+                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                };
                 return;
             }
 

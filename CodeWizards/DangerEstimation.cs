@@ -70,16 +70,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
             // прижиматься к центру дорожки
-            var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
-            var maxDist = 500.0;
-            res -= 1 - (distToLine/maxDist)*1;
+            //var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
+            //var maxDist = 500.0;
+            //res -= 1 - (distToLine/maxDist)*1;
+
+            // не прижиматься к деревьям
+            var nearestTree = TreesObserver.GetNearestTree(my);
+            if (nearestTree != null)
+            {
+                var dist = my.GetDistanceTo(nearestTree) - nearestTree.Radius;
+                if (dist < 60)
+                    res += 1.5-dist/60*1.5;
+            }
+
+            // не прижиматься к своим
+            foreach (var co in MyCombats)
+            {
+                var dist = my.GetDistanceTo(co) - co.Radius - my.Radius;
+                if (my.Id != co.Id && dist < 15)
+                    res += 1 - dist/15*1;
+            }
 
             // прижиматься за главную башню
             var corner = new Point(World.Width - 150, 150);
-            var cornerMaxDist = 400;
+            var cornerMaxDist = 600;
             var distToCorner = my.GetDistanceTo(corner);
             if (distToCorner < cornerMaxDist)
-                res -= 7 - (distToCorner/cornerMaxDist)*7;
+                res -= 10 - (distToCorner/cornerMaxDist)*10;
             return res;
         }
 

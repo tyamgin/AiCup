@@ -10,6 +10,6 @@
 
     public class MagicConst
     {
-        public static double RadiusAdditionalEpsilon = 0.0;
+        public static double RadiusAdditionalEpsilon = 0.1;
     }
 }
