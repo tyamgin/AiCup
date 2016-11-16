@@ -77,5 +77,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 _move.StrafeSpeed = ss;
             }
         }
+
+        public void Apply(FinalMove move)
+        {
+            Turn = move.Turn;
+            Speed = move.Speed;
+            StrafeSpeed = move.StrafeSpeed;
+            Action = move.Action;
+            CastAngle = move.CastAngle;
+            MinCastDistance = move.MinCastDistance;
+            MaxCastDistance = move.MaxCastDistance;
+            Messages = move.Messages;
+        }
     }
 }

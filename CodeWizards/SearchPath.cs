@@ -107,14 +107,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var list = _neighbours[I, J];
             var point = _points[I, J];
 
-            if (point.GetDistanceTo2(unit) < Geom.Sqr(unit.Radius + Self.Radius + 1/*epsilon*/))
-                _isLocked[I, J] = true;//TODO maybe return
+            if (point.GetDistanceTo2(unit) < Geom.Sqr(unit.Radius + Self.Radius + MagicConst.RadiusAdditionalEpsilon) ||
+                point.X < Self.Radius || point.Y < Self.Radius ||
+                point.X > Const.MapSize - Self.Radius || point.Y > Const.MapSize - Self.Radius
+                )
+            {
+                _isLocked[I, J] = true; //TODO maybe return
+            }
 
             for (var idx = list.Count - 1; idx >= 0; idx--)
             {
                 var pt = _points[list[idx].I, list[idx].J];
                 
-                if (Geom.SegmentCircleIntersects(point, pt, unit, unit.Radius + Self.Radius + 1/*(epsilon)*/))
+                if (Geom.SegmentCircleIntersects(point, pt, unit, unit.Radius + Self.Radius + MagicConst.RadiusAdditionalEpsilon))
                 {
                     list.RemoveAt(idx);
                 }
@@ -207,9 +212,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 for (var dj = 0; dj < 2; dj++)
                 {
                     var dst = _points[I + di, J + dj].GetDistanceTo2(my);
-                    if (dst < minDist && !_isLocked[I + di, J + dj] &&
+                    if (dst < minDist && 
+                        !_isLocked[I + di, J + dj] &&
                         obstacles.All(ob =>
-                            !Geom.SegmentCircleIntersects(my, _points[I + di, J + dj], ob, ob.Radius + my.Radius + 1))
+                            !Geom.SegmentCircleIntersects(my, _points[I + di, J + dj], ob, ob.Radius + my.Radius + MagicConst.RadiusAdditionalEpsilon))
                         )
                     {
                         minDist = dst;
@@ -234,7 +240,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 _obstacles.All(
                     ob =>
                         !Geom.SegmentCircleIntersects(_points[from.I, from.J], _points[cell.I, cell.J], ob,
-                            ob.Radius + _selfRadius + 1/*(epsilon)*/));
+                            ob.Radius + _selfRadius + MagicConst.RadiusAdditionalEpsilon));
         }
 
         static double GetDist(Cell from, Cell to)
@@ -299,15 +305,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             var res = new List<Cell>();
-            var c = end.Clone();
+            var cur = end.Clone();
             do
             {
-                res.Add(c.Clone());
+                res.Add(cur.Clone());
 
-                if (c.Equals(start))
+                if (cur.Equals(start))
                     break;
 
-                c = _distPrev[c.I, c.J];
+                cur = _distPrev[cur.I, cur.J];
             } while (true);
 
             res.Reverse();
@@ -349,6 +355,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var res = new List<Point> {start};
             res.AddRange(cellsPath.Select(cell => _points[cell.I, cell.J]));
             return res;
+        }
+
+        public void SimplifyPath(AWizard self, ACircularUnit[] obstacles, List<Point> path)
+        {
+            for (var i = 2; i < path.Count; i++)
+            {
+                var a = path[i - 2];
+                var c = path[i];
+                if (obstacles.All(ob => !Geom.SegmentCircleIntersects(a, c, ob, self.Radius + ob.Radius + MagicConst.RadiusAdditionalEpsilon)))
+                {
+                    path.RemoveAt(i - 1);
+                    i--;
+                }
+            }
         }
     }
 }

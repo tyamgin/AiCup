@@ -1,4 +1,5 @@
-﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+﻿using System;
+using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 using Microsoft.Win32.SafeHandles;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -16,21 +17,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             IsAggressiveNeutral = unit.IsAggressiveNeutral;
         }
 
-        public static AMinion New(Minion minion)
-        {
-            return minion.Type == MinionType.FetishBlowdart
-                ? (AMinion) new AFetish(minion)
-                : (AMinion) new AOrc(minion);
-        }
-
-        public static AMinion New(AMinion minion)
-        {
-            return minion is AFetish
-                ? (AMinion)new AFetish(minion)
-                : (AMinion)new AOrc(minion);
-        }
-
-        public void Move()
+        public override void EthalonMove(ACircularUnit target)
         {
             if (RemainingActionCooldownTicks > 0)
                 RemainingActionCooldownTicks--;
@@ -51,6 +38,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
 
         }
+
+        public override bool EthalonCanHit(ACircularUnit target)
+        {
+            var angleTo = GetAngleTo(target);
+            if (Math.Abs(angleTo) > MyStrategy.Game.OrcWoodcutterAttackSector/2)
+                return false;
+            return GetDistanceTo2(target) <= Geom.Sqr(MyStrategy.Game.OrcWoodcutterAttackRange + target.Radius);
+        }
     }
 
     public class AFetish : AMinion
@@ -63,6 +58,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public AFetish(AMinion minion) : base(minion)
         {
 
+        }
+
+        public override bool EthalonCanHit(ACircularUnit target)
+        {
+            var angleTo = GetAngleTo(target);
+            if (Math.Abs(angleTo) > MyStrategy.Game.FetishBlowdartAttackSector / 2)
+                return false;
+            return GetDistanceTo2(target) <= Geom.Sqr(MyStrategy.Game.FetishBlowdartAttackRange + target.Radius + MyStrategy.Game.DartRadius);
         }
     }
 }

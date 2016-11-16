@@ -77,5 +77,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             return Math.Abs(x - y) < Const.Eps;
         }
+
+        public static ACombatUnit CloneCombat(ACombatUnit combat)
+        {
+            if (combat is AWizard)
+                return new AWizard(combat as AWizard);
+            if (combat is ABuilding)
+                return new ABuilding(combat as ABuilding);
+            if (combat is AOrc)
+                return new AOrc(combat as AOrc);
+            if (combat is AFetish)
+                return new AFetish(combat as AFetish);
+            throw new Exception("unknown combat type");
+        }
     }
 }

@@ -58,16 +58,58 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             if (to == null)
-                return Move(0, 0);// check не нужен
-            
-            
+                return Move(0, 0); // check не нужен
+
+
             var angle = GetAngleTo(to);
             var cos = Math.Cos(angle);
-            var fs = cos * (cos >= 0 ? MyStrategy.Game.WizardForwardSpeed : MyStrategy.Game.WizardBackwardSpeed);
-            var ss = Math.Sin(angle) * MyStrategy.Game.WizardStrafeSpeed;
+            var fs = cos*(cos >= 0 ? MyStrategy.Game.WizardForwardSpeed : MyStrategy.Game.WizardBackwardSpeed);
+            var ss = Math.Sin(angle)*MyStrategy.Game.WizardStrafeSpeed;
             //MyStrategy.Game.WizardBackwardSpeed TODO!!!!
             return Move(fs, ss, check);
             //TODO can be optimized
+        }
+
+        public override void EthalonMove(ACircularUnit target)
+        {
+            MoveTo(target, target);
+        }
+
+        public bool EthalonCanCastMagicMissile(ACircularUnit opp, bool checkCooldown = true)
+        {
+            if (checkCooldown)
+            {
+                if (RemainingMagicMissileCooldownTicks > 0 || RemainingActionCooldownTicks > 0)
+                    return false;
+            }
+
+            var distTo = GetDistanceTo(opp);
+            if (distTo > CastRange + opp.Radius + MyStrategy.Game.MagicMissileRadius)
+                return false;
+
+            var angleTo = GetAngleTo(opp);
+            var deltaAngle = Math.Atan2(opp.Radius, distTo);
+            var angles = new[] {angleTo, angleTo + deltaAngle, angleTo - deltaAngle};
+
+            foreach (var angle in angles)
+            {
+                if (Math.Abs(angle) > MyStrategy.Game.StaffSector/2)
+                    continue;
+
+                var proj = new AProjectile(this, angle, ProjectileType.MagicMissile);
+                var path = proj.Emulate(new[] {opp});
+                if (path.Any(x => x.State == AProjectile.ProjectilePathState.Fire && x.Target.IsOpponent)) //IsOpponent?
+                    return true;
+            }
+            return false;
+        }
+
+        public override bool EthalonCanHit(ACircularUnit target)
+        {
+            if (CanStaffAttack(target))
+                return true;
+
+            return EthalonCanCastMagicMissile(target);
         }
 
         public bool CanStaffAttack(ACircularUnit unit)
@@ -88,7 +130,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
         }
 
-        public int RemainingStaffCooldownTicks => RemainingCooldownTicksByAction[(int) ActionType.Staff];
-        public int RemainingMagicMissileCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.MagicMissile];
+        public int RemainingStaffCooldownTicks
+        {
+            get { return RemainingCooldownTicksByAction[(int)ActionType.Staff]; }
+            set { RemainingCooldownTicksByAction[(int)ActionType.Staff] = value; }
+        }
+
+        public int RemainingMagicMissileCooldownTicks
+        {
+            get { return RemainingCooldownTicksByAction[(int) ActionType.MagicMissile]; }
+            set { RemainingCooldownTicksByAction[(int) ActionType.MagicMissile] = value; }
+        }
     }
 }

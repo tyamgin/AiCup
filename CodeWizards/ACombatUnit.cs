@@ -1,4 +1,5 @@
-﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+﻿using System;
+using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -57,6 +58,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public ACombatUnit()
         {
             
+        }
+
+        public virtual void EthalonMove(ACircularUnit target)
+        {
+            throw new NotImplementedException();
+        }
+
+        public virtual bool EthalonCanHit(ACircularUnit target)
+        {
+            throw new NotImplementedException();
         }
     }
 }

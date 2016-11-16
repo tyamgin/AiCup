@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
@@ -111,5 +112,67 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
 
         public bool IsFriendly => MyStrategy.FriendsIds.Contains(OwnerUnitId);
+
+
+        public enum ProjectilePathState
+        {
+            Free,
+            Fire,
+        }
+
+        public class ProjectilePathSegment
+        {
+            public ProjectilePathState State;
+            public ACombatUnit Target;
+            public double StartDistance, EndDistance;
+        }
+
+        public List<ProjectilePathSegment> Emulate(IEnumerable<ACircularUnit> units)
+        {
+            if (Type != ProjectileType.MagicMissile)
+                throw new NotImplementedException();
+
+            var list = new List<ProjectilePathSegment>();
+            var projectile = new AProjectile(this);
+            while (projectile.Exists)
+            {
+                projectile.Move(proj =>
+                {
+                    var inter = proj.CheckIntersections(units);
+
+                    if (inter != null)
+                    {
+                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Fire)
+                        {
+                            list.Add(new ProjectilePathSegment
+                            {
+                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                State = ProjectilePathState.Fire,
+                                Target = inter as ACombatUnit,
+                            });
+                        }
+                    }
+                    else
+                    {
+                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Free)
+                        {
+                            list.Add(new ProjectilePathSegment
+                            {
+                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
+                                State = ProjectilePathState.Free,
+                            });
+                        }
+                    }
+                    var last = list[list.Count - 1];
+                    last.EndDistance += proj.Speed / AProjectile.MicroTicks;
+
+                    return true;
+                });
+
+            }
+            return list;
+        }
     }
 }

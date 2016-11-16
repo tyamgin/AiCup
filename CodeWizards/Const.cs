@@ -7,4 +7,9 @@
         public static int Infinity = 0x3f3f3f3f;
         public static double TreeMaxRadius = 50;
     }
+
+    public class MagicConst
+    {
+        public static double RadiusAdditionalEpsilon = 0.0;
+    }
 }

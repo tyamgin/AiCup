@@ -9,10 +9,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * TODO:
  * 
  * !!-прикрываться деревьями (особенно от визардов)
- * 
  * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
- * - когда 2 орка нападают - не идти на них
  * 
  */
 
@@ -53,7 +51,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 1600;
+            Visualizer.Visualizer.DrawSince = 400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -87,7 +85,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             Minions = world.Minions
-                .Select(AMinion.New)
+                .Select(x => x.Type == MinionType.OrcWoodcutter ? (AMinion) new AOrc(x) : new AFetish(x))
                 .ToArray();
 
             NeutralMinions = Minions
@@ -159,29 +157,29 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 // pause here
             }
 #endif
-            if (World.TickIndex <= 1000)
-                return;
-            if (World.TickIndex >= 1700 && World.TickIndex <= 1750)
-            {
-                var my = new AWizard(Self);
-                var minion = Minions.Where(m => m.IsNeutral).OrderBy(m => my.GetDistanceTo(m)).ToArray()[0];
-                if (Math.Abs(my.GetAngleTo(minion)) <= Game.StaffSector / 2)
-                {
-                    FinalMove.Action = ActionType.MagicMissile;
-                    FinalMove.CastAngle = -100;
-                }
-                else
-                    FinalMove.Turn = my.GetAngleTo(minion);
-                return;
-            }
-            if (World.TickIndex >= 1200 && World.TickIndex < 1750)
-            {
-                var goTo = new Point(200, 100);
-                FinalMove.MoveTo(null, goTo);
-                var canGo = TryGoByGradient(w => w.GetDistanceTo2(goTo));
-                TryCutTrees(!canGo);
-                return;
-            }
+            //if (World.TickIndex <= 1000)
+            //    return;
+            //if (World.TickIndex >= 1700 && World.TickIndex <= 1750)
+            //{
+            //    var my = new AWizard(Self);
+            //    var minion = Minions.Where(m => m.IsNeutral).OrderBy(m => my.GetDistanceTo(m)).ToArray()[0];
+            //    if (Math.Abs(my.GetAngleTo(minion)) <= Game.StaffSector / 2)
+            //    {
+            //        FinalMove.Action = ActionType.MagicMissile;
+            //        FinalMove.CastAngle = -100;
+            //    }
+            //    else
+            //        FinalMove.Turn = my.GetAngleTo(minion);
+            //    return;
+            //}
+            //if (World.TickIndex >= 1200 && World.TickIndex < 1750)
+            //{
+            //    var goTo = new Point(200, 100);
+            //    FinalMove.MoveTo(null, goTo);
+            //    var canGo = TryGoByGradient(w => w.GetDistanceTo2(goTo));
+            //    TryCutTrees(!canGo);
+            //    return;
+            //}
 
             var target = FindTarget(new AWizard(self));
             if (target != null)
@@ -191,7 +189,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             else
             {
                 var nearest = OpponentCombats
-                    .OrderBy(x => x.GetDistanceTo(self) + (x is AWizard ? -20 : (x is ABuilding && ((ABuilding) x).IsBesieded) ? 20 : 0))
+                    .OrderBy(x => x.GetDistanceTo(self) + (x is AWizard ? -40 : (x is ABuilding && ((ABuilding) x).IsBesieded) ? 20 : 0))
                     .Where((x, i) => i == 0 || x.GetDistanceTo(self) < self.VisionRange * 1.7)// чтобы не переходить на другую линию
                     .ToArray();
                 if (nearest.Length > 0 && nearest.FirstOrDefault(GoAround) == null)
@@ -254,20 +252,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        void SimplifyPath(AWizard self, ACircularUnit[] obstacles, List<Point> path)
-        {
-            for (var i = 2; i < path.Count; i++)
-            {
-                var a = path[i - 2];
-                var c = path[i];
-                if (obstacles.All(ob => !Geom.SegmentCircleIntersects(a, c, ob, self.Radius + ob.Radius + 1/*(epsilon)*/)))
-                {
-                    path.RemoveAt(i - 1);
-                    i--;
-                }
-            }
-        }
-
         bool GoAround(ACircularUnit to)
         {
             TimerStart();
@@ -280,6 +264,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var path = DijkstraFindPath(new AWizard(Self), target);
             var my = new AWizard(Self);
+            if (path == null && my.GetDistanceTo(target) - my.Radius - target.Radius <= 1)
+                path = new List<Point> { my }; // из-за эпсилон=1, если стою близко у цели, то он как бы с ней пересекается, но это не так
             if (path == null || path.Count == 0)
                 return false;
 
@@ -309,106 +295,115 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool HasAnyTarget(AWizard self)
         {
+            var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
             {
-                var dist = self.GetDistanceTo(opp);
-                if (dist > self.VisionRange)
-                    continue;
-
-                var angleTo = self.GetAngleTo(opp);
-                var deltaAngle = Math.Atan2(opp.Radius, dist);
-                var angles = new[] { angleTo, angleTo + deltaAngle, angleTo - deltaAngle };
-
-                foreach (var angle in angles)
-                {
-                    if (Math.Abs(angle) > Game.StaffSector / 2)
-                        continue;
-
-                    var proj = new AProjectile(self, angle, ProjectileType.MagicMissile);
-                    var path = EmulateMagicMissile(proj);
-                    if (path.Any(x => x.State == ProjectilePathState.Fire && x.Target.IsOpponent))
-                        return true;
-                }
+                if (my.EthalonCanCastMagicMissile(opp, false))
+                    return true;
             }
             return false;
         }
 
         Point FindTarget(AWizard self)
         {
-            var castTarget = FindCastTarget(self);
-            if (castTarget != null)
-                return castTarget;
+            var t1 = FindCastTarget(self);
+            var t2 = FindStaffTarget(self);
+            var t3 = FindCastTarget2(self);
 
-            var staffTarget = FindStaffTarget(self);
-            return staffTarget;
+            if (t1.Target != null && t1.Time <= Math.Min(t2.Time, t3.Time))
+            {
+                FinalMove.Apply(t1.Move);
+                return t1.Target;
+            }
+            if (t2.Target != null && t2.Time <= Math.Min(t1.Time, t3.Time))
+            {
+                FinalMove.Apply(t2.Move);
+                return t2.Target;
+            }
+            if (t3.Target != null && t3.Time <= Math.Min(t1.Time, t2.Time))
+            {
+                FinalMove.Apply(t3.Move);
+                return t3.Target;
+            }
+            return null;
         }
 
-        private Point FindStaffTarget(AWizard self)
+        class MovingInfo
+        {
+            public Point Target;
+            public int Time;
+            public FinalMove Move;
+
+            public MovingInfo(Point target, int time, FinalMove move)
+            {
+                Target = target;
+                Time = time;
+                Move = move;
+            }
+        }
+
+        MovingInfo FindStaffTarget(AWizard self)
         {
             var nearest = Combats
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*3))
                 .ToArray();
-            int minTime = int.MaxValue;
+            int minTicks = int.MaxValue;
+            var move = new FinalMove(new Move());
 
             ACircularUnit selTarget = self.GetStaffAttacked(nearest).Cast<ACombatUnit>().FirstOrDefault(x => x.IsOpponent);
             if (selTarget != null)
             {
-                FinalMove.Action = ActionType.Staff;
-                return selTarget;
+                move.Action = ActionType.Staff;
+                return new MovingInfo(selTarget, 0, move);
             }
 
+            // TODO: check IsBesieded?
             foreach (var opp in OpponentCombats)
             {
                 if (self.GetDistanceTo2(opp) > Geom.Sqr(Game.StaffRange*3))
                     continue;
 
+                var nearstCombats = nearest
+                    .Where(x => x.IsOpponent)
+                    .Select(Utility.CloneCombat)
+                    .ToArray();
+
+                var ticks = 0;
                 var my = new AWizard(self);
-                if (opp is AOrc)
-                {
-                    var his = new AOrc((AOrc)opp);
-                    
-                    int timer = 0;
-                    while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
-                    {
-                        his.Move();
-                        if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
-                            break;
-                        timer++;
-                    }
+                var his = Utility.CloneCombat(opp);
+                var ok = true;
 
-                    if (my.CanStaffAttack(his))
+                while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
+                {
+                    his.EthalonMove(my);
+                    if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
                     {
-                        if (selTarget == null || timer < minTime)
-                        {
-                            selTarget = opp;
-                            minTime = timer;
-                        }
+                        ok = false;
+                        break;
                     }
+                    foreach (var x in nearstCombats)
+                        x.EthalonMove(my);
+                    ticks++;
                 }
-                else if (opp is ABuilding)
-                {
-                    var his = new ABuilding((ABuilding) opp);
 
-                    int timer = 0;
-                    while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
-                    {
-                        if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
-                            break;
-                        timer++;
-                    }
+                if (ok && !(opp is AOrc))
+                {
                     while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector/2)
                     {
                         my.MoveTo(null, his);
-                        timer++;
+                        foreach (var x in nearstCombats)
+                            x.EthalonMove(my);
+                        his.EthalonMove(my);
+                        ticks++;
                     }
+                }
 
-                    if (my.CanStaffAttack(his) && his.IsBesieded)
+                if (ok && ticks < minTicks)
+                {
+                    if (my.CanStaffAttack(his) && !nearstCombats.Any(x => x.EthalonCanHit(my)))
                     {
-                        if (selTarget == null || timer < minTime)
-                        {
-                            selTarget = opp;
-                            minTime = timer;
-                        }
+                        selTarget = his;
+                        minTicks = ticks;
                     }
                 }
             }
@@ -416,26 +411,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 bool angleOk = Math.Abs(self.GetAngleTo(selTarget)) <= Game.StaffSector/2,
                     distOk = self.GetDistanceTo2(selTarget) <= Geom.Sqr(Game.StaffRange + selTarget.Radius);
-                if (angleOk && distOk)
-                {
-                    FinalMove.Action = ActionType.Staff;
-                }
+                
                 if (!distOk)
                 {
-                    FinalMove.MoveTo(selTarget, selTarget);
+                    move.MoveTo(selTarget, selTarget);
                 }
                 else if (!angleOk)
                 {
-                    FinalMove.MoveTo(null, selTarget);
+                    move.MoveTo(null, selTarget);
                 }
             }
-            return selTarget;
+            return new MovingInfo(selTarget, minTicks, move);
         }
 
-        Point FindCastTarget(AWizard self)
+        static double GetCombatPriority(ACombatUnit unit)
         {
+            // чем меньше - тем важнее стрелять в него первого
+            var res = unit.Life;
+            if (unit is AWizard)
+                res /= 4;
+            return res;
+        }
+
+        MovingInfo FindCastTarget(AWizard self)
+        {
+            var move = new FinalMove(new Move());
             if (self.RemainingMagicMissileCooldownTicks > 0 || self.RemainingActionCooldownTicks > 0)
-                return null;
+                return new MovingInfo(null, int.MaxValue, move);
 
             var angles = new List<double>();
             foreach (var x in OpponentCombats)
@@ -455,9 +457,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
 
-            double selCastAngle = 0;
             ACombatUnit selTarget = null;
-            double selMinDist = 0, selMaxDist = self.CastRange + 20, selAngleTo = 0;
+            double
+                selMinDist = 0,
+                selMaxDist = self.CastRange + 20,
+                selAngleTo = 0,
+                selCastAngle = 0,
+                selPriority = int.MaxValue;
 
             foreach (var angle in angles)
             {
@@ -465,101 +471,100 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var path = EmulateMagicMissile(proj);
                 for (var i = 0; i < path.Count; i++)
                 {
-                    if (path[i].State == ProjectilePathState.Fire)
+                    if (path[i].State == AProjectile.ProjectilePathState.Fire)
                     {
                         var combat = path[i].Target;
                         var angleTo = self.GetAngleTo(combat) - angle;
                         Geom.AngleNormalize(ref angleTo);
                         angleTo = Math.Abs(angleTo);
-                        if (combat.IsOpponent && (selTarget == null || combat.Life < selTarget.Life || Math.Abs(combat.Life - selTarget.Life) < Const.Eps && angleTo < selAngleTo))
+                        var priority = GetCombatPriority(combat);
+                        if (combat.IsOpponent && (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo))
                         {
                             selTarget = combat;
                             selCastAngle = angle;
                             selAngleTo = angleTo;
                             selMinDist = i == 0 ? 0 : (path[i - 1].StartDistance + path[i].StartDistance)/2;
                             selMaxDist = i == path.Count - 1 ? (self.CastRange + 20) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
+                            selPriority = priority;
                         }
                     }
                 }
             }
             if (selTarget == null)
-                return null;
+                return new MovingInfo(null, int.MaxValue, move);
 
-            FinalMove.Action = ActionType.MagicMissile;
-            FinalMove.MinCastDistance = selMinDist;
-            FinalMove.MaxCastDistance = selMaxDist;
-            FinalMove.CastAngle = selCastAngle;
-#if DEBUG
-            Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[]
+            move.Action = ActionType.MagicMissile;
+            move.MinCastDistance = selMinDist;
+            move.MaxCastDistance = selMaxDist;
+            move.CastAngle = selCastAngle;
+
+            return new MovingInfo(selTarget, 0, move);
+        }
+
+        MovingInfo FindCastTarget2(AWizard self)
+        {
+            var move = new FinalMove(new Move());
+            var nearest = Combats
+                .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange * 1.3))
+                .ToArray();
+
+            ACircularUnit selTarget = null;
+            var minTicks = int.MaxValue;
+            double minPriority = int.MaxValue;
+
+            foreach (var opp in OpponentWizards)
             {
-                new List<Point>
+                if (self.GetDistanceTo(opp) > self.VisionRange)
+                    continue;
+
+                var nearstCombats = nearest
+                    .Where(x => x.IsOpponent)
+                    .Select(Utility.CloneCombat)
+                    .ToArray();
+
+                var ticks = 0;
+                var my = new AWizard(self);
+                var his = new AWizard(opp);
+                var ok = true;
+
+                while (!my.EthalonCanCastMagicMissile(his, false))
                 {
-                    self + Point.ByAngle(self.Angle + selCastAngle) * selMinDist,
-                    self + Point.ByAngle(self.Angle + selCastAngle) * selMaxDist
-                },
-                Pens.DarkOrchid,
-                2
-            });
-#endif
-            return selTarget;
+                    if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
+                    {
+                        ok = false;
+                        break;
+                    }
+                    foreach (var x in nearstCombats)
+                        x.EthalonMove(my);
+                    ticks++;
+                }
+
+                var priority = GetCombatPriority(his);
+                if (ok && (ticks < minTicks || ticks == minTicks && priority < minPriority))
+                {
+                    if (my.EthalonCanCastMagicMissile(his))
+                    {
+                        if (!nearstCombats.Any(x => x.EthalonCanHit(my)))
+                        {
+                            minTicks = ticks;
+                            minPriority = priority;
+                            selTarget = opp;
+                        }
+                    }
+                } 
+            }
+
+            if (selTarget == null)
+                return new MovingInfo(null, int.MaxValue, move);
+
+            move.MoveTo(selTarget, selTarget);
+            return new MovingInfo(selTarget, minTicks, move);
         }
 
-        enum ProjectilePathState
-        {
-            Free,
-            Fire,
-        }
-
-        class ProjectilePathSegment
-        {
-            public ProjectilePathState State;
-            public ACombatUnit Target;
-            public double StartDistance, EndDistance;
-        }
-
-        List<ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
+        List<AProjectile.ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
         {
             var units = Combats.Where(x => x.Id != Self.Id).ToArray();
-            var list = new List<ProjectilePathSegment>();
-            while (projectile.Exists)
-            {
-                projectile.Move(proj =>
-                {
-                    var inter = proj.CheckIntersections(units);
-
-                    if (inter != null)
-                    {
-                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Fire)
-                        {
-                            list.Add(new ProjectilePathSegment
-                            {
-                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                State = ProjectilePathState.Fire,
-                                Target = inter as ACombatUnit,
-                            });
-                        }
-                    }
-                    else
-                    {
-                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Free)
-                        {
-                            list.Add(new ProjectilePathSegment
-                            {
-                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                State = ProjectilePathState.Free,
-                            });
-                        }
-                    }
-                    var last = list[list.Count - 1];
-                    last.EndDistance += proj.Speed / AProjectile.MicroTicks;
-
-                    return true;
-                });
-
-            }
-            return list;
+            return projectile.Emulate(units);
         }
     }
 }

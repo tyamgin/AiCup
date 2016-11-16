@@ -50,13 +50,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
                 else if (opp is AOrc)
                 {
-                    var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 1;
+                    var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 7/*запас*/;
                     var outer = 2*my.VisionRange;
-                    const double delta = 3;
                     if (dist < inner)
-                        res += Game.OrcWoodcutterDamage + delta-dist/inner*delta;
+                        res += Game.OrcWoodcutterDamage + 10-dist/inner*10;
                     else if (dist < outer)
-                        res -= delta - (dist - inner)/(outer - inner)*delta;
+                        res -= 3 - (dist - inner)/(outer - inner)*3;
                 }
                 else if (opp is AFetish)
                 {
@@ -161,7 +160,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             const int grid = 40;
             for (var i = 0; i < grid; i++)
             {
-                var angle = Math.PI*2/grid*i;
+                var angle = Math.PI*2/grid*i + my.Angle;
                 var moveTo = my + Point.ByAngle(angle);
                 
                 var self = new AWizard(Self);
