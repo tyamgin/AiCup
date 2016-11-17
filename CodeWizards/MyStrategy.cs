@@ -12,6 +12,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * http://russianaicup.ru/game/view/17856 тупит
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
+ * !!!-стрелять на опережение минионов
  * - опастность дерева "треугольником"
  * - не идти на своих когда убегаю от орков
  * - не атаковать одинокие башни
@@ -57,7 +58,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 500;
+            Visualizer.Visualizer.DrawSince = 20000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -130,6 +131,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             TreesObserver.Update();
             ProjectilesObserver.Update();
+            BonusesObserver.Update();
 
             InitializeRoads();
             InitializeProjectiles();

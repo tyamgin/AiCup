@@ -74,6 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ABonus.cs" />
     <Compile Include="ABuilding.cs" />
     <Compile Include="ACircularUnit.cs" />
     <Compile Include="ACombatUnit.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="ATree.cs" />
     <Compile Include="AUnit.cs" />
     <Compile Include="AWizard.cs" />
+    <Compile Include="BonusesObserver.cs" />
     <Compile Include="Collections.cs" />
     <Compile Include="Const.cs" />
     <Compile Include="DangerEstimation.cs" />

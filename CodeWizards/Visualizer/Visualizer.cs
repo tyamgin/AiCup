@@ -250,6 +250,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                     DrawText("rush", 13, Brushes.Black, building.X - 10, building.Y);
             }
 
+            // bonuses
+            foreach (var bonus in BonusesObserver.Bonuses)
+            {
+                var color = bonus.Type == BonusType.Empower
+                    ? Color.Blue
+                    : bonus.Type == BonusType.Haste 
+                        ? Color.Aquamarine 
+                        : Color.MidnightBlue;
+                FillCircle(color, bonus.X, bonus.Y, bonus.Radius);
+            }
+
             // map ranges
             DrawLine(Color.Black, 1, 1, 1, Const.MapSize - 1);
             DrawLine(Color.Black, 1, Const.MapSize - 1, Const.MapSize - 1, Const.MapSize - 1);
