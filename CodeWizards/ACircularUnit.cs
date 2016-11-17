@@ -32,5 +32,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             return units.FirstOrDefault(IntersectsWith);
         }
+
+        public override string ToString()
+        {
+            return "(" + X.ToString().Replace(',', '.') + ", " + Y.ToString().Replace(',', '.') + "; " + Radius.ToString().Replace(',', '.') + ")";
+        }
     }
 }

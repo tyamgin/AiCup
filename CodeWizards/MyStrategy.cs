@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
+using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
@@ -10,6 +12,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * http://russianaicup.ru/game/view/17856 тупит
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
+ * - опастность дерева "треугольником"
  * - не идти на своих когда убегаю от орков
  * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
@@ -54,7 +57,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            //Visualizer.Visualizer.DrawSince = 2500;
+            Visualizer.Visualizer.DrawSince = 500;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -165,34 +168,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 // pause here
             }
 #endif
-            //if (World.TickIndex <= 1000)
-            //    return;
-            //if (World.TickIndex >= 1700 && World.TickIndex <= 1750)
-            //{
-            //    var my = new AWizard(Self);
-            //    var minion = Minions.Where(m => m.IsNeutral).OrderBy(m => my.GetDistanceTo(m)).ToArray()[0];
-            //    if (Math.Abs(my.GetAngleTo(minion)) <= Game.StaffSector / 2)
-            //    {
-            //        FinalMove.Action = ActionType.MagicMissile;
-            //        FinalMove.CastAngle = -100;
-            //    }
-            //    else
-            //        FinalMove.Turn = my.GetAngleTo(minion);
-            //    return;
-            //}
-            //if (World.TickIndex >= 1200 && World.TickIndex < 1750)
-            //{
-            //    var goTo = new Point(200, 100);
-            //    FinalMove.MoveTo(null, goTo);
-            //    var canGo = TryGoByGradient(w => w.GetDistanceTo2(goTo));
-            //    TryCutTrees(!canGo);
-            //    return;
-            //}
-
             var target = FindTarget(new AWizard(self));
             if (target != null)
             {
-                move.Turn = self.GetAngleTo(target.X, target.Y);
+                //move.Turn = self.GetAngleTo(target.X, target.Y);
             }
             else
             {
@@ -319,7 +298,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         Point FindTarget(AWizard self)
         {
             var t1 = FindCastTarget(self);
+            TimerStart();
             var t2 = FindStaffTarget(self);
+            TimerEndLog("FindStaffTarget", 2);
             var t3 = FindCastTarget2(self);
 
             if (t1.Target != null && t1.Time <= Math.Min(t2.Time, t3.Time))
@@ -354,6 +335,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
+        bool CheckIntersectionsAndTress(AWizard self, IEnumerable<ACircularUnit> units)
+        {
+            if (self.CheckIntersections(units) != null)
+                return true;
+            var nearestTree = TreesObserver.GetNearestTree(self);
+            return nearestTree != null && self.IntersectsWith(nearestTree);
+        }
+
         MovingInfo FindStaffTarget(AWizard self)
         {
             var nearest = Combats
@@ -363,59 +352,84 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var move = new FinalMove(new Move());
 
             ACircularUnit selTarget = self.GetStaffAttacked(nearest).Cast<ACombatUnit>().FirstOrDefault(x => x.IsOpponent);
-            if (selTarget != null)
+            if (selTarget != null) // если уже можно бить
             {
                 move.Action = ActionType.Staff;
                 return new MovingInfo(selTarget, 0, move);
             }
+            Point selMoveTo = null;
 
             // TODO: check IsBesieded?
             foreach (var opp in OpponentCombats)
             {
-                if (self.GetDistanceTo2(opp) > Geom.Sqr(Game.StaffRange*3))
+                var dist = self.GetDistanceTo(opp);
+                if (dist > Game.StaffRange*3)
                     continue;
 
-                var nearstCombats = nearest
-                    .Where(x => x.IsOpponent)
-                    .Select(Utility.CloneCombat)
-                    .ToArray();
-
-                var ticks = 0;
-                var my = new AWizard(self);
-                var his = Utility.CloneCombat(opp);
-                var ok = true;
-
-                while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
+                var range = opp.Radius + Game.StaffRange;
+                foreach (var delta in new [] { -range, -range / 2, 0, range / 2, range })
                 {
-                    his.EthalonMove(my);
-                    if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
-                    {
-                        ok = false;
-                        break;
-                    }
-                    foreach (var x in nearstCombats)
-                        x.EthalonMove(my);
-                    ticks++;
-                }
+                    var angle = Math.Atan2(delta, dist);
+                    var moveTo = self + (opp - self).Normalized().RotateClockwise(angle)*self.VisionRange;
 
-                if (ok && !(opp is AOrc))
-                {
-                    while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector/2)
+                    var nearstCombats = OpponentCombats
+                        .Where(x => /*x.Id != opp.Id &&*/ x.GetDistanceTo(self) <= x.VisionRange)
+                        .Select(Utility.CloneCombat)
+                        .ToArray();
+
+                    var canHitNow = opp.EthalonCanHit(self);
+
+                    var ticks = 0;
+                    var my = new AWizard(self);
+                    var his = Utility.CloneCombat(opp);
+                    var ok = true;
+
+                    while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
                     {
-                        my.MoveTo(null, his);
+                        his.EthalonMove(my);
+                        if (!my.MoveTo(moveTo, his, w => !CheckIntersectionsAndTress(w, nearest)))
+                        {
+                            ok = false;
+                            break;
+                        }
                         foreach (var x in nearstCombats)
                             x.EthalonMove(my);
-                        his.EthalonMove(my);
                         ticks++;
                     }
-                }
 
-                if (ok && ticks < minTicks)
-                {
-                    if (my.CanStaffAttack(his) && !nearstCombats.Any(x => x.EthalonCanHit(my)))
+                    if (ok && !(opp is AOrc))
                     {
-                        selTarget = his;
-                        minTicks = ticks;
+                        while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector/2)
+                        {
+                            my.MoveTo(null, his);
+                            foreach (var x in nearstCombats)
+                                x.EthalonMove(my);
+                            his.EthalonMove(my);
+                            ticks++;
+                        }
+                    }
+
+                    if (ok && ticks < minTicks)
+                    {
+                        if (my.CanStaffAttack(his))
+                        {
+                            if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
+                            {
+                                // успею-ли я вернуться обратно
+                                while (my.GetDistanceTo(self) > Game.WizardForwardSpeed)//TODO:HACK
+                                {
+                                    my.MoveTo(self, null);
+                                    foreach (var x in nearstCombats)
+                                        x.SkipTick();
+                                }
+                                if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
+                                {
+                                    selTarget = his;
+                                    selMoveTo = moveTo;
+                                    minTicks = ticks;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -426,7 +440,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 
                 if (!distOk)
                 {
-                    move.MoveTo(selTarget, selTarget);
+                    move.MoveTo(selMoveTo, selTarget);
                 }
                 else if (!angleOk)
                 {
@@ -460,17 +474,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var angles = new List<double>();
             foreach (var x in OpponentCombats)
             {
-                var angle = self.GetAngleTo(x);
                 var dist = self.GetDistanceTo(x);
 
-                if (dist > self.CastRange*1.2 || Math.Abs(angle) > Game.StaffSector / 2)
+                if (dist > self.CastRange + x.Radius + Game.MagicMissileRadius + 3) // TODO: возможно ограничить перебор, если угол слишком большой
                     continue;
 
                 const int grid = 20;
                 double left = -Game.StaffSector/2, right = -left;
                 for (var i = 0; i <= grid; i++)
                 {
-                    var castAngle = angle + (right - left)/grid*i + left;
+                    var castAngle = (right - left)/grid*i + left;
                     angles.Add(castAngle);
                 }
             }
@@ -540,6 +553,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     .Select(Utility.CloneCombat)
                     .ToArray();
 
+                var canHitNow = opp.EthalonCanHit(self);
+
                 var ticks = 0;
                 var my = new AWizard(self);
                 var his = Utility.CloneCombat(opp);
@@ -547,7 +562,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 while (!my.EthalonCanCastMagicMissile(his, false))
                 {
-                    if (!my.MoveTo(his, his, w => my.CheckIntersections(nearest) == null))
+                    if (!my.MoveTo(his, his, w => !CheckIntersectionsAndTress(w, nearest)))
                     {
                         ok = false;
                         break;
@@ -562,7 +577,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     if (my.EthalonCanCastMagicMissile(his))
                     {
-                        if (!nearstCombats.Any(x => x.EthalonCanHit(my)))
+                        if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
                         {
                             minTicks = ticks;
                             minPriority = priority;

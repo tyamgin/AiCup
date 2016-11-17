@@ -60,6 +60,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             
         }
 
+        public virtual void SkipTick()
+        {
+            throw new NotImplementedException();
+        }
+
         public virtual void EthalonMove(ACircularUnit target)
         {
             throw new NotImplementedException();

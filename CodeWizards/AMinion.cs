@@ -17,10 +17,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             IsAggressiveNeutral = unit.IsAggressiveNeutral;
         }
 
-        public override void EthalonMove(ACircularUnit target)
+        public override void SkipTick()
         {
             if (RemainingActionCooldownTicks > 0)
                 RemainingActionCooldownTicks--;
+        }
+
+        public override void EthalonMove(ACircularUnit target)
+        {
+            SkipTick();
         }
 
         public override bool IsOpponent => IsAggressiveNeutral || !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);

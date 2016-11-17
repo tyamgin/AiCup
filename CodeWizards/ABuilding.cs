@@ -18,10 +18,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             IsBesieded = unit.IsBesieded;
         }
 
-        public override void EthalonMove(ACircularUnit target)
+        public override void SkipTick()
         {
             if (RemainingActionCooldownTicks > 0)
                 RemainingActionCooldownTicks--;
+        }
+
+        public override void EthalonMove(ACircularUnit target)
+        {
+            SkipTick();
         }
 
         public override bool EthalonCanHit(ACircularUnit target)

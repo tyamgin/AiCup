@@ -25,13 +25,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public delegate bool CheckWizard(AWizard wizard);
 
-        public bool Move(double forwardSpeed, double strafeSpeed, CheckWizard check = null)
+        public override void SkipTick()
         {
             if (RemainingActionCooldownTicks > 0)
                 RemainingActionCooldownTicks--;
             for (var i = 0; i < RemainingCooldownTicksByAction.Length; i++)
                 if (RemainingCooldownTicksByAction[i] > 0)
                     RemainingCooldownTicksByAction[i]--;
+        }
+
+        public bool Move(double forwardSpeed, double strafeSpeed, CheckWizard check = null)
+        {
+            SkipTick();
 
             var dx = Math.Sin(Angle)*forwardSpeed + Math.Cos(Angle)*strafeSpeed;
             var dy = Math.Cos(Angle)*forwardSpeed - Math.Sin(Angle)*strafeSpeed;
@@ -98,7 +103,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 var proj = new AProjectile(this, angle, ProjectileType.MagicMissile);
                 var path = proj.Emulate(new[] {opp});
-                if (path.Any(x => x.State == AProjectile.ProjectilePathState.Fire && x.Target.IsOpponent)) //IsOpponent?
+                if (path.Any(x => x.State == AProjectile.ProjectilePathState.Fire && x.Target.Faction != Faction)) //IsOpponent?
                     return true;
             }
             return false;

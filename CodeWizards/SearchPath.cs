@@ -296,7 +296,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static List<Cell> DijkstraGeneratePath(Cell start, Cell end)
         {
             if (start.Equals(end))
-                return new List<Cell>();
+                return new List<Cell> {start};
 
             if (_distPrev[end.I, end.J] == null)
             {
