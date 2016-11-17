@@ -356,6 +356,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
 
         /// <summary>
+        /// Проверка пренадлежности точки треугольнику
+        /// </summary>
+        /// <param name="a">Вершина треугольника</param>
+        /// <param name="b">Вершина треугольника</param>
+        /// <param name="c">Вершина треугольника</param>
+        /// <param name="point">Точка</param>
+        /// <returns></returns>
+        public static bool ContainPoint(Point a, Point b, Point c, Point point)
+        {
+            return ContainPoint(new[] {a, b, c}, point);
+        }
+
+        /// <summary>
         /// Проверка двух выпуклых полигона на пересечение
         /// </summary>
         /// <param name="a">Полигон 1</param>
@@ -514,6 +527,50 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static double ToDegrees(double angle)
         {
             return angle*180/Math.PI;
+        }
+
+        
+        private static Point[] _findTangentPoints(double CenterX, double CenterY, double R, double XX, double YY)
+        {
+            // see http://stackoverflow.com/questions/21087065/tangent-to-circle-from-external-point-p
+
+            var nx = (XX - CenterX)/R; //shift and scale
+            var ny = (YY - CenterY)/R;
+            var xy = nx*nx + ny*ny;
+            if (Utility.Equals(xy, 1.0)) //point lies at circumference, one tangent
+            {
+                return new[] {new Point(XX, YY)};
+            }
+
+            if (xy < 1.0) //point lies inside the circle, no tangents
+            {
+                return new Point[] {};
+            }
+
+            double D, XT0, YT0, XT1, YT1;
+            //common case, two tangents
+            D = ny*Math.Sqrt(xy - 1);
+            var tx0 = (nx - D)/xy;
+            var tx1 = (nx + D)/xy;
+            if (!Utility.Equals(ny, 0)) //common case
+            {
+                YT0 = CenterY + R*(1 - tx0*nx)/ny;
+                YT1 = CenterY + R*(1 - tx1*nx)/ny;
+            }
+            else //point at the center horizontal, Y=0 
+            {
+                D = R*Math.Sqrt(1 - tx0*tx0);
+                YT0 = CenterY + D;
+                YT1 = CenterY - D;
+            }
+            XT0 = CenterX + R*tx0; //restore scale and position
+            XT1 = CenterX + R*tx1;
+            return new[] {new Point(XT0, YT0), new Point(XT1, YT1)};
+        }
+
+        public static Point[] GetTangentPoints(Point center, double Radius, Point external)
+        {
+            return _findTangentPoints(center.X, center.Y, Radius, external.X, external.Y);
         }
     }
 }

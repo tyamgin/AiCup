@@ -70,9 +70,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
             // прижиматься к центру дорожки
-            //var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
-            //var maxDist = 500.0;
-            //res -= 1 - (distToLine/maxDist)*1;
+            var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
+            var linePadding = 150.0;
+            var outerPadding = 500;
+            if (distToLine > linePadding && distToLine < outerPadding)
+            {
+                res += (distToLine - linePadding)/(outerPadding/linePadding)*2;
+            }
 
             // не прижиматься к деревьям
             var nearestTree = TreesObserver.GetNearestTree(my);
