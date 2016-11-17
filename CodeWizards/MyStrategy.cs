@@ -7,7 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * 
+ * http://russianaicup.ru/game/view/17856 тупит
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
  * - не идти на своих когда убегаю от орков
@@ -54,7 +54,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            //Visualizer.Visualizer.DrawSince = 2100;
+            //Visualizer.Visualizer.DrawSince = 2500;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -306,8 +306,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
             {
+                if (opp is AWizard)
+                    my.CastRange += 10; // чтобы держаться на расстоянии от визардов
                 if (my.EthalonCanCastMagicMissile(opp, false))
                     return true;
+                if (opp is AWizard)
+                    my.CastRange -= 10;
             }
             return false;
         }
@@ -432,12 +436,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new MovingInfo(selTarget, minTicks, move);
         }
 
-        static double GetCombatPriority(ACombatUnit unit)
+        static double GetCombatPriority(AWizard self, ACombatUnit unit)
         {
             // чем меньше - тем важнее стрелять в него первого
             var res = unit.Life;
             if (unit is AWizard)
                 res /= 4;
+            var dist = self.GetDistanceTo(unit);
+            if (dist <= Game.StaffRange + unit.Radius + 10)
+            {
+                res -= 60;
+                res += Math.Log(dist);
+            }
             return res;
         }
 
@@ -485,7 +495,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         var angleTo = self.GetAngleTo(combat) - angle;
                         Geom.AngleNormalize(ref angleTo);
                         angleTo = Math.Abs(angleTo);
-                        var priority = GetCombatPriority(combat);
+                        var priority = GetCombatPriority(self, combat);
                         if (combat.IsOpponent && (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo))
                         {
                             selTarget = combat;
@@ -520,7 +530,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var minTicks = int.MaxValue;
             double minPriority = int.MaxValue;
 
-            foreach (var opp in OpponentWizards)
+            foreach (var opp in OpponentCombats)
             {
                 if (self.GetDistanceTo(opp) > self.VisionRange)
                     continue;
@@ -532,7 +542,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 var ticks = 0;
                 var my = new AWizard(self);
-                var his = new AWizard(opp);
+                var his = Utility.CloneCombat(opp);
                 var ok = true;
 
                 while (!my.EthalonCanCastMagicMissile(his, false))
@@ -547,7 +557,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     ticks++;
                 }
 
-                var priority = GetCombatPriority(his);
+                var priority = GetCombatPriority(self, his);
                 if (ok && (ticks < minTicks || ticks == minTicks && priority < minPriority))
                 {
                     if (my.EthalonCanCastMagicMissile(his))

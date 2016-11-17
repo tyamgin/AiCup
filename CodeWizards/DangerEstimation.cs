@@ -18,13 +18,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 if (opp is AWizard)
                 {
-                    var inner = Game.StaffRange + my.Radius;
-                    var outer = opp.CastRange + my.Radius;
-                    var delta = 4;
+                    var inner = (Game.StaffRange + my.Radius) + 1; // (куда достаёт посохом) + запас
+                    var outer = (opp.CastRange + my.Radius + Game.MagicMissileRadius) + 1; // (куда достанет MagicMissile) + запас
+                    var coeff = 4;
                     if (dist < inner)
                         res += Game.StaffDamage + Game.MagicMissileDirectDamage;// TODO: обработать его навыки
                     else if (dist < outer)
-                        res += Game.MagicMissileDirectDamage - (dist - inner)/(outer - inner)*delta;
+                        res += Game.MagicMissileDirectDamage - (dist - inner)/(outer - inner)*coeff;
                 }
                 else if (opp is ABuilding)
                 {
@@ -39,8 +39,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        var inner = Game.StaffRange + building.Radius;
-                        var outer = building.CastRange + my.Radius;
+                        var inner = Game.StaffRange + building.Radius; // откуда можно достать посохом
+                        var outer = building.CastRange + my.Radius; // куда достреливает башня
                         double delta = -10;
                         if (dist < inner)
                             res += building.Damage - delta;
