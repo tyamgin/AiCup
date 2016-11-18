@@ -6,10 +6,13 @@
         public static double Eps = 1e-9;
         public static int Infinity = 0x3f3f3f3f;
         public static double TreeMaxRadius = 50;
+
+        public static double BaseBuildingDistance = 400;
     }
 
     public class MagicConst
     {
         public static double RadiusAdditionalEpsilon = 0.5;
+        public static Point[] MinionAppearencePoints;
     }
 }

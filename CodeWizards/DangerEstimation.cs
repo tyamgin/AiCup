@@ -96,11 +96,24 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             // прижиматься за главную башню
-            var corner = new Point(World.Width - 150, 150);
-            var cornerMaxDist = 600;
+            var corner = new Point(World.Width - 70, 70);
+            var cornerMaxDist = 400;
             var distToCorner = my.GetDistanceTo(corner);
             if (distToCorner < cornerMaxDist)
-                res -= 10 - (distToCorner/cornerMaxDist)*10;
+                res -= 4 - (distToCorner/cornerMaxDist)*4;
+
+            var spawnDelta = Game.FactionMinionAppearanceIntervalTicks*0.33;
+            var spawnRemains = World.TickIndex%Game.FactionMinionAppearanceIntervalTicks;
+            if (spawnRemains < spawnDelta)
+            {
+                foreach (var pt in MagicConst.MinionAppearencePoints)
+                {
+                    var dist = pt.GetDistanceTo(my);
+                    var inner = 400;
+                    if (dist < inner)
+                        res += 14 - dist/inner*14;
+                }
+            }
             return res;
         }
 
@@ -108,8 +121,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             if (Roads == null)
             {
-                var myMainBuilding = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && Math.Abs(x.Radius - Game.FactionBaseRadius) < 1);
-                var dx = myMainBuilding.X / 2;
+                var dx = Const.BaseBuildingDistance / 2;
                 var s = Const.MapSize;
                 var a = new Point(dx, s - dx);
                 var b = new Point(dx, dx);
@@ -124,6 +136,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     new Segment(a, c),
                     new Segment(b, d),
                 };
+
+                MagicConst.MinionAppearencePoints = new []
+                {
+                    new Point(Const.BaseBuildingDistance * 2.5, Const.MapSize - Const.BaseBuildingDistance * 0.5),
+                    new Point(Const.BaseBuildingDistance * 0.5, Const.MapSize - Const.BaseBuildingDistance * 2.5),
+                    new Point(Const.BaseBuildingDistance * 2.0, Const.MapSize - Const.BaseBuildingDistance * 2.0),
+                };
+                foreach (var appPt in MagicConst.MinionAppearencePoints)
+                {
+                    appPt.X = Const.MapSize - appPt.X;
+                    appPt.Y = Const.MapSize - appPt.Y;
+                }
             }
         }
 

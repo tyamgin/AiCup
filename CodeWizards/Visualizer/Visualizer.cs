@@ -267,6 +267,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             DrawLine(Color.Black, Const.MapSize - 1, 1, Const.MapSize - 1, Const.MapSize - 1);
             DrawLine(Color.Black, Const.MapSize - 1, 1, 1, 1);
 
+            // minions spawns
+            foreach (var pt in MagicConst.MinionAppearencePoints)
+            {
+                FillCircle(Color.Khaki, pt.X, pt.Y, 20);
+                FillCircle(Color.Khaki, Const.MapSize - pt.X, Const.MapSize - pt.Y, 20);
+            }
+
             foreach (var pt in MyStrategy.GetFreePoints())
             {
                 FillCircle(Color.Bisque, pt.X, pt.Y, 2);

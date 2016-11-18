@@ -9,7 +9,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * http://russianaicup.ru/game/view/17856 тупит
+ *
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
  * !!!-стрелять на опережение минионов
@@ -17,6 +17,9 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * - не идти на своих когда убегаю от орков
  * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
+ * 
+ * - место появления минионов считать опасным
+ * - перед базой тоже опасно
  * 
  */
 
@@ -58,7 +61,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            //Visualizer.Visualizer.DrawSince = 5540;
+            Visualizer.Visualizer.DrawSince = 4000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -139,10 +142,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             foreach (var bld in OpponentBuildings)
             {
-                var his = OpponentCombats.Count(x => x.Id != bld.Id && bld.GetDistanceTo(x) < Self.VisionRange*1.1);
-                var hisWizards = OpponentWizards.Count(x => bld.GetDistanceTo(x) < Self.VisionRange * 1.1);
-                var mines = Combats.Count(x => x.IsTeammate && bld.GetDistanceTo(x) < Self.VisionRange * 1.1);
-                if (bld.IsBase || hisWizards == 0 && (his == 0 && mines > 2 || his == 1 && mines > 3 || his == 2 && mines > 5))
+                var mines = MyCombats.Count(x => x.GetDistanceTo(bld) <= bld.VisionRange);
+                if (bld.IsBase && mines >= 7 || !bld.IsBase && mines >= 5)
                     bld.IsBesieded = true;
             }
 
@@ -284,15 +285,24 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool HasAnyTarget(AWizard self)
         {
+            double wizardDangerRange = 40;
+            double baseDangerRange = Game.FactionBaseAttackRange - self.CastRange; 
+
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
             {
                 if (opp is AWizard)
-                    my.CastRange += 40; // чтобы держаться на расстоянии от визардов
+                    my.CastRange += wizardDangerRange; // чтобы держаться на расстоянии от визардов
+                //if (opp is ABuilding && (opp as ABuilding).IsBase)
+                //    my.CastRange += baseDangerRange;
+
                 if (my.EthalonCanCastMagicMissile(opp, false))
                     return true;
+
+                //if (opp is ABuilding && (opp as ABuilding).IsBase)
+                //    my.CastRange -= baseDangerRange;
                 if (opp is AWizard)
-                    my.CastRange -= 40;
+                    my.CastRange -= wizardDangerRange;
             }
             return false;
         }
@@ -517,7 +527,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             selCastAngle = angle;
                             selAngleTo = angleTo;
                             selMinDist = i == 0 ? 0 : (path[i - 1].StartDistance + path[i].StartDistance)/2;
-                            selMaxDist = i == path.Count - 1 ? (self.CastRange + 20) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
+                            selMaxDist = i >= path.Count - 2 ? (self.CastRange + 500) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
                             selPriority = priority;
                         }
                     }
