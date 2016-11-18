@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Speed = Geom.Hypot(SpeedX, SpeedY);
             Type = unit.Type;
             OwnerUnitId = unit.OwnerUnitId;
-            RemainingDistance = MyStrategy.Game.WizardCastRange;
+            RemainingDistance = MyStrategy.Game.WizardCastRange;  // TODO: его навыки
         }
 
         public AProjectile(AProjectile unit) : base(unit)
@@ -32,7 +32,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Speed = Geom.Hypot(SpeedX, SpeedY);
             Type = unit.Type;
             OwnerUnitId = unit.OwnerUnitId;
-            RemainingDistance = MyStrategy.Game.WizardCastRange;
+            RemainingDistance = unit.RemainingDistance;
         }
 
         public AProjectile(ACombatUnit self, double castAngle, ProjectileType type)
@@ -51,7 +51,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Y = self.Y;
             SpeedX = Math.Cos(self.Angle + castAngle) *Speed;
             SpeedY = Math.Sin(self.Angle + castAngle) *Speed;
-            RemainingDistance = MyStrategy.Game.WizardCastRange;
+            RemainingDistance = self.CastRange;
             OwnerUnitId = self.Id;
         }
 
@@ -127,13 +127,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             public double StartDistance, EndDistance;
         }
 
-        public List<ProjectilePathSegment> Emulate(IEnumerable<ACircularUnit> units)
+        public List<ProjectilePathSegment> Emulate(IEnumerable<ACombatUnit> _units)
         {
             if (Type != ProjectileType.MagicMissile)
                 throw new NotImplementedException();
 
             var list = new List<ProjectilePathSegment>();
             var projectile = new AProjectile(this);
+            var units = _units.Select(Utility.CloneCombat).ToArray();
             while (projectile.Exists)
             {
                 projectile.Move(proj =>
@@ -142,7 +143,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     if (inter != null)
                     {
-                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Fire)
+                        if (list.Count == 0 || list.Last().State != ProjectilePathState.Fire)
                         {
                             list.Add(new ProjectilePathSegment
                             {
@@ -155,7 +156,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        if (list.Count == 0 || list[list.Count - 1].State != ProjectilePathState.Free)
+                        if (list.Count == 0 || list.Last().State != ProjectilePathState.Free)
                         {
                             list.Add(new ProjectilePathSegment
                             {
@@ -165,12 +166,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             });
                         }
                     }
-                    var last = list[list.Count - 1];
-                    last.EndDistance += proj.Speed / AProjectile.MicroTicks;
+                    list.Last().EndDistance += proj.Speed / AProjectile.MicroTicks;
 
                     return true;
                 });
-
+                foreach (var unit in units)
+                {
+                    if (unit is AWizard)
+                    {
+                        // TODO: он может убежать боком
+                        var wizard = unit as AWizard;
+                        var dir = wizard - this + wizard; // вдоль снаряда
+                        wizard.MoveTo(dir, null, null); // TODO: может упереться в дерево
+                    }
+                }
             }
             return list;
         }

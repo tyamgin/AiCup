@@ -91,4 +91,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             throw new Exception("unknown combat type");
         }
     }
+
+    public static class ListExtension
+    {
+        public static T Last<T>(this List<T> list)
+        {
+            return list[list.Count - 1];
+        }
+    }
 }

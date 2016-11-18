@@ -58,7 +58,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 20000;
+            //Visualizer.Visualizer.DrawSince = 5540;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -288,11 +288,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var opp in OpponentCombats)
             {
                 if (opp is AWizard)
-                    my.CastRange += 10; // чтобы держаться на расстоянии от визардов
+                    my.CastRange += 40; // чтобы держаться на расстоянии от визардов
                 if (my.EthalonCanCastMagicMissile(opp, false))
                     return true;
                 if (opp is AWizard)
-                    my.CastRange -= 10;
+                    my.CastRange -= 40;
             }
             return false;
         }

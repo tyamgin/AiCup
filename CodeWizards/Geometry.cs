@@ -224,19 +224,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
     }
 
-    public class Points : List<Point>
-    {
-        public void Pop()
-        {
-            RemoveAt(Count - 1);
-        }
-
-        public Point Last()
-        {
-            return this[Count - 1];
-        }
-    }
-
     public class Cell : IComparable<Cell>
     {
         public int I, J;

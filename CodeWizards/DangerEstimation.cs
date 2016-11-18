@@ -20,11 +20,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var inner = (Game.StaffRange + my.Radius) + 1; // (куда достаёт посохом) + запас
                     var outer = (opp.CastRange + my.Radius + Game.MagicMissileRadius) + 1; // (куда достанет MagicMissile) + запас
-                    var coeff = 4;
+                    var coeff = 15;
                     if (dist < inner)
-                        res += Game.StaffDamage + Game.MagicMissileDirectDamage;// TODO: обработать его навыки
+                        res += (Game.StaffDamage + Game.MagicMissileDirectDamage) * 2;// TODO: обработать его навыки
                     else if (dist < outer)
-                        res += Game.MagicMissileDirectDamage - (dist - inner)/(outer - inner)*coeff;
+                        res += (Game.MagicMissileDirectDamage + coeff - (dist - inner)/(outer - inner)*coeff) * 2;
                 }
                 else if (opp is ABuilding)
                 {
