@@ -41,7 +41,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var dx = Math.Sin(Angle)*forwardSpeed + Math.Cos(Angle)*strafeSpeed;
             var dy = Math.Cos(Angle)*forwardSpeed - Math.Sin(Angle)*strafeSpeed;
 
-            Y += dx;
+            Y += dx;// TODO: WTF? перепутаны имена переменных?
             X += dy;
 
             if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize)

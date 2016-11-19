@@ -270,10 +270,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var angle = Math.PI*2/grid*i;
                 var ticks = 0;
                 var my = new AWizard(Self);
-                var moveTo = my + Point.ByAngle(angle);
 
                 while (ticks < ProjectilesCheckTicks)
                 {
+                    var moveTo = my + Point.ByAngle(angle);
                     var shot = false;
                     for (var futureTick = ticks; futureTick < ProjectilesCheckTicks && !shot; futureTick++)
                     {
