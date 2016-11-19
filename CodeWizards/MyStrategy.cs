@@ -55,13 +55,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             OpponentCombats = null;
             MyCombats = null;
 
+            if (world.TickIndex == 7245)
+            {
+                move.Action = ActionType.MagicMissile;
+                return;
+            }
+
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 4000;
+            Visualizer.Visualizer.DrawSince = 7200;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -142,21 +148,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             foreach (var bld in OpponentBuildings)
             {
-                var mines = MyCombats.Count(x => x.GetDistanceTo(bld) <= bld.VisionRange);
-                if (bld.IsBase && mines >= 7 || !bld.IsBase && mines >= 5)
+                bld.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(bld) <= bld.VisionRange);
+                var hisWizards = OpponentWizards.Count(x => x.GetDistanceTo(bld) <= bld.VisionRange);
+                if (bld.IsBase && bld.OpponentsCount >= 7 || !bld.IsBase && bld.OpponentsCount >= 5 && hisWizards == 0)
                     bld.IsBesieded = true;
             }
 
             if (Self.IsMaster && World.TickIndex == 0)
             {
-                //MasterSendMessages();
-                FinalMove.Messages = new[]
-                {
-                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                };
+                MasterSendMessages();
+                //FinalMove.Messages = new[]
+                //{
+                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
+                //};
                 return;
             }
 
@@ -285,24 +292,27 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool HasAnyTarget(AWizard self)
         {
-            double wizardDangerRange = 40;
-            double baseDangerRange = Game.FactionBaseAttackRange - self.CastRange; 
+            double wizardDangerRange = 40; 
 
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
             {
+                var prevCastRange = my.CastRange;
+
+                var bld = opp as ABuilding;
                 if (opp is AWizard)
                     my.CastRange += wizardDangerRange; // чтобы держаться на расстоянии от визардов
-                //if (opp is ABuilding && (opp as ABuilding).IsBase)
-                //    my.CastRange += baseDangerRange;
+                if (bld != null)
+                {
+                    var opps = bld.OpponentsCount - (bld.GetDistanceTo(Self) <= bld.CastRange ? 1 : 0);
+                    if (bld.IsBase || opps < 1)
+                        my.CastRange = bld.CastRange + 5;
+                }
 
                 if (my.EthalonCanCastMagicMissile(opp, false))
                     return true;
 
-                //if (opp is ABuilding && (opp as ABuilding).IsBase)
-                //    my.CastRange -= baseDangerRange;
-                if (opp is AWizard)
-                    my.CastRange -= wizardDangerRange;
+                my.CastRange = prevCastRange;
             }
             return false;
         }

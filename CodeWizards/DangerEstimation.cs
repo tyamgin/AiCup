@@ -29,8 +29,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else if (opp is ABuilding)
                 {
                     var building = opp as ABuilding;
-                    
-                    if (building.IsBesieded)
+
+                    if (building.IsBase)
+                    {
+                        var outer = building.CastRange;
+                        if (dist <= outer)
+                            res += 30 - dist/outer*30 + building.Damage;
+                    }
+                    else if (building.IsBesieded)
                     {
                         var outer = building.VisionRange*1.2;
                         double delta = 2;
@@ -97,7 +103,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             // прижиматься за главную башню
             var corner = new Point(World.Width - 70, 70);
-            var cornerMaxDist = 400;
+            var cornerMaxDist = 500;
             var distToCorner = my.GetDistanceTo(corner);
             if (distToCorner < cornerMaxDist)
                 res -= 4 - (distToCorner/cornerMaxDist)*4;

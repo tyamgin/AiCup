@@ -6,6 +6,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public double Damage;
         public bool IsBesieded;
+        public int OpponentsCount;
 
         public ABuilding(Building unit) : base(unit)
         {
@@ -16,6 +17,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             Damage = unit.Damage;
             IsBesieded = unit.IsBesieded;
+            OpponentsCount = unit.OpponentsCount;
         }
 
         public override void SkipTick()
