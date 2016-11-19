@@ -10,6 +10,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  *
+ * 
+ * !!!!- http://russianaicup.ru/game/view/26859 - тупо стоит у башни, к которой никто не приходит
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
  * !!!-стрелять на опережение минионов
@@ -60,7 +62,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 1000;
+            Visualizer.Visualizer.DrawSince = 3400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -171,6 +173,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 // pause here
             }
 #endif
+
             var target = FindTarget(new AWizard(self));
             if (target == null)
             {

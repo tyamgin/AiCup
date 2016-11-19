@@ -23,6 +23,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     // был и сейчас есть
                     var p = _projectiles[proj.Id];
+                    newDict[p.Id] = p;
                     p.Move();
                     // check: p.X == proj.X, p.Y = proj.Y
                 }

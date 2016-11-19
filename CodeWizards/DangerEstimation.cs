@@ -270,6 +270,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var angle = Math.PI*2/grid*i;
                 var ticks = 0;
                 var my = new AWizard(Self);
+                Point firstMoveTo = null;
 
                 while (ticks < ProjectilesCheckTicks)
                 {
@@ -298,10 +299,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (ticks == 0) // если нет потребности уворачиваться
                             return false;
 
-                        FinalMove.MoveTo(moveTo, null);
+                        FinalMove.MoveTo(firstMoveTo, null);
                         return true;
                     }
 
+                    if (firstMoveTo == null)
+                        firstMoveTo = moveTo;
                     my.MoveTo(moveTo, null, w => my.CheckIntersections(obstacles) == null);
 
                     for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
