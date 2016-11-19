@@ -1,20 +1,27 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
+
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
     public sealed class RemoteProcessClient {
         private const int BufferSizeBytes = 1 << 20;
 
-        private static readonly byte[] EmptyByteArray = { };
+        private static readonly byte[] EmptyByteArray = {};
 
         private readonly TcpClient client;
         private readonly BinaryReader reader;
         private readonly BinaryWriter writer;
 
+        private Player[] previousPlayers;
+        private Building[] previousBuildings;
         private Tree[] previousTrees;
+
+        private readonly IDictionary<long, Player> playerById = new Dictionary<long, Player>();
+        private readonly IDictionary<long, Unit> unitById = new Dictionary<long, Unit>();
 
         public RemoteProcessClient(string host, int port) {
             client = new TcpClient(host, port) {
@@ -33,7 +40,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
 
         public void WriteProtocolVersionMessage() {
             WriteEnum((sbyte?) MessageType.ProtocolVersion);
-            WriteInt(1);
+            WriteInt(3);
             writer.Flush();
         }
 
@@ -127,15 +134,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         }
 
         private Building ReadBuilding() {
-            if (!ReadBoolean()) {
+            sbyte flag = ReadSByte();
+
+            if (flag == 0) {
                 return null;
             }
 
-            return new Building(
-                    ReadLong(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(),
-                    (Faction) ReadEnum(), ReadDouble(), ReadInt(), ReadInt(), ReadStatuses(), (BuildingType) ReadEnum(),
-                    ReadDouble(), ReadDouble(), ReadInt(), ReadInt(), ReadInt()
+            if (flag == 100) {
+                return (Building) unitById[ReadLong()];
+            }
+
+            Building building = new Building(
+                ReadLong(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(),
+                (Faction) ReadEnum(), ReadDouble(), ReadInt(), ReadInt(), ReadStatuses(), (BuildingType) ReadEnum(),
+                ReadDouble(), ReadDouble(), ReadInt(), ReadInt(), ReadInt()
             );
+            unitById[building.Id] = building;
+            return building;
         }
 
         private void WriteBuilding(Building building) {
@@ -168,7 +183,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         private Building[] ReadBuildings() {
             int buildingCount = ReadInt();
             if (buildingCount < 0) {
-                return null;
+                return previousBuildings;
             }
 
             Building[] buildings = new Building[buildingCount];
@@ -177,7 +192,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
                 buildings[buildingIndex] = ReadBuilding();
             }
 
-            return buildings;
+            return previousBuildings = buildings;
         }
 
         private void WriteBuildings(Building[] buildings) {
@@ -419,15 +434,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         }
 
         private Minion ReadMinion() {
-            if (!ReadBoolean()) {
+            sbyte flag = ReadSByte();
+
+            if (flag == 0) {
                 return null;
             }
 
-            return new Minion(
-                    ReadLong(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(),
-                    (Faction) ReadEnum(), ReadDouble(), ReadInt(), ReadInt(), ReadStatuses(), (MinionType) ReadEnum(),
-                    ReadDouble(), ReadInt(), ReadInt(), ReadInt()
+            if (flag == 100) {
+                return (Minion) unitById[ReadLong()];
+            }
+
+            Minion minion = new Minion(
+                ReadLong(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(),
+                (Faction) ReadEnum(), ReadDouble(), ReadInt(), ReadInt(), ReadStatuses(), (MinionType) ReadEnum(),
+                ReadDouble(), ReadInt(), ReadInt(), ReadInt()
             );
+            unitById[minion.Id] = minion;
+            return minion;
         }
 
         private void WriteMinion(Minion minion) {
@@ -520,11 +543,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         }
 
         private Player ReadPlayer() {
-            if (!ReadBoolean()) {
+            sbyte flag = ReadSByte();
+
+            if (flag == 0) {
                 return null;
             }
 
-            return new Player(ReadLong(), ReadBoolean(), ReadString(), ReadBoolean(), ReadInt(), (Faction) ReadEnum());
+            if (flag == 100) {
+                return playerById[ReadLong()];
+            }
+
+            Player player = new Player(ReadLong(), ReadBoolean(), ReadString(), ReadBoolean(), ReadInt(), (Faction) ReadEnum());
+            playerById[player.Id] = player;
+            return player;
         }
 
         private void WritePlayer(Player player) {
@@ -546,7 +577,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         private Player[] ReadPlayers() {
             int playerCount = ReadInt();
             if (playerCount < 0) {
-                return null;
+                return previousPlayers;
             }
 
             Player[] players = new Player[playerCount];
@@ -555,7 +586,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
                 players[playerIndex] = ReadPlayer();
             }
 
-            return players;
+            return previousPlayers = players;
         }
 
         private void WritePlayers(Player[] players) {
@@ -735,14 +766,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
         }
 
         private Tree ReadTree() {
-            if (!ReadBoolean()) {
+            sbyte flag = ReadSByte();
+
+            if (flag == 0) {
                 return null;
             }
 
-            return new Tree(
-                    ReadLong(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(),
-                    (Faction) ReadEnum(), ReadDouble(), ReadInt(), ReadInt(), ReadStatuses()
+            if (flag == 100) {
+                return (Tree) unitById[ReadLong()];
+            }
+
+            Tree tree = new Tree(
+                ReadLong(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(), ReadDouble(),
+                (Faction) ReadEnum(), ReadDouble(), ReadInt(), ReadInt(), ReadStatuses()
             );
+            unitById[tree.Id] = tree;
+            return tree;
         }
 
         private void WriteTree(Tree tree) {
@@ -1108,6 +1147,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk {
 
             WriteInt(bytes.Length);
             WriteBytes(bytes);
+        }
+
+        private sbyte ReadSByte() {
+            return reader.ReadSByte();
         }
 
         private bool ReadBoolean() {

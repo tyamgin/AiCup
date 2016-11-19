@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             get
             {
-                if (RemainingDistance + Const.Eps < Speed / MicroTicks)
+                if (RemainingDistance < -Const.Eps)
                     return false;
 
                 if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize)

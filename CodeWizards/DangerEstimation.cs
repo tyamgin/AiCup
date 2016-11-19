@@ -295,7 +295,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     if (!shot)
                     {
-                        if (ticks == 0)
+                        if (ticks == 0) // если нет потребности уворачиваться
                             return false;
 
                         FinalMove.MoveTo(moveTo, null);
