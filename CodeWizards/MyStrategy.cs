@@ -60,7 +60,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 3000;
+            Visualizer.Visualizer.DrawSince = 1000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -528,8 +528,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             selTarget = combat;
                             selCastAngle = angle;
                             selAngleTo = angleTo;
-                            selMinDist = i == 0 ? 0 : (path[i - 1].StartDistance + path[i].StartDistance)/2;
-                            //selMinDist = path[i].StartDistance;//TODO: may be add projectile radus?
+                            //selMinDist = i == 0 ? 0 : (path[i - 1].StartDistance + path[i].StartDistance)/2;
+                            selMinDist = path[i].StartDistance - 1; // projectile.Radius?
                             selMaxDist = i >= path.Count - 2 ? (self.CastRange + 500) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
                             selPriority = priority;
                         }
@@ -548,7 +548,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             _lastProjectilePoints = new []
             {
                 self + Point.ByAngle(self.Angle + selCastAngle) * selMinDist,
-                self + Point.ByAngle(self.Angle + selCastAngle) * selMaxDist,
+                self + Point.ByAngle(self.Angle + selCastAngle) * Math.Min(Self.CastRange, selMaxDist),
             };
 #endif
             return new MovingInfo(selTarget, 0, move);
