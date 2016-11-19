@@ -40,6 +40,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             // которые были и пропали не попадут в newDict
 
             _projectiles = newDict;
+
+#if DEBUG
+            if (MyStrategy.World.TickIndex == MyStrategy._lastProjectileTick + 1)
+            {
+                foreach (var pr in MyStrategy.World.Projectiles)
+                {
+                    if (pr.OwnerUnitId == MyStrategy.Self.Id)
+                    {
+                        Visualizer.Visualizer.Projectiles[pr.Id] = MyStrategy._lastProjectilePoints;
+                    }
+                }
+            }
+#endif
         }
 
         public static AProjectile[] Projectiles => _projectiles.Values.ToArray();

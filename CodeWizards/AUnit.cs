@@ -28,9 +28,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var absoluteAngleTo = Math.Atan2(y - Y, x - X);
             var relativeAngleTo = absoluteAngleTo - Angle;
-
-            Geom.AngleNormalize(ref relativeAngleTo);
-            return relativeAngleTo;
+            return Geom.AngleNormalize(relativeAngleTo);
         }
 
         public double GetAngleTo(Unit unit)

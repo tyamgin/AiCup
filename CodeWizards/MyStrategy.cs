@@ -15,11 +15,10 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * !!!-стрелять на опережение минионов
  * - опастность дерева "треугольником"
  * - не идти на своих когда убегаю от орков
- * - не атаковать одинокие башни
  * - идти по уже разбитой ветке, если убили ???
  * 
- * - место появления минионов считать опасным
- * - перед базой тоже опасно
+ * - добивать визардов
+ * 
  * 
  */
 
@@ -61,7 +60,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 5000;
+            Visualizer.Visualizer.DrawSince = 3000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -522,9 +521,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (path[i].State == AProjectile.ProjectilePathState.Fire)
                     {
                         var combat = path[i].Target;
-                        var angleTo = self.GetAngleTo(combat) - angle;
-                        Geom.AngleNormalize(ref angleTo);
-                        angleTo = Math.Abs(angleTo);
+                        var angleTo = Math.Abs(Geom.AngleNormalize(self.GetAngleTo(combat) - angle));
                         var priority = GetCombatPriority(self, combat);
                         if (combat.IsOpponent && (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo))
                         {
@@ -532,6 +529,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             selCastAngle = angle;
                             selAngleTo = angleTo;
                             selMinDist = i == 0 ? 0 : (path[i - 1].StartDistance + path[i].StartDistance)/2;
+                            //selMinDist = path[i].StartDistance;//TODO: may be add projectile radus?
                             selMaxDist = i >= path.Count - 2 ? (self.CastRange + 500) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
                             selPriority = priority;
                         }
@@ -545,9 +543,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             move.MinCastDistance = selMinDist;
             move.MaxCastDistance = selMaxDist;
             move.CastAngle = selCastAngle;
-
+#if DEBUG
+            _lastProjectileTick = World.TickIndex;
+            _lastProjectilePoints = new []
+            {
+                self + Point.ByAngle(self.Angle + selCastAngle) * selMinDist,
+                self + Point.ByAngle(self.Angle + selCastAngle) * selMaxDist,
+            };
+#endif
             return new MovingInfo(selTarget, 0, move);
         }
+
+        public static int _lastProjectileTick;
+        public static Point[] _lastProjectilePoints;
 
         MovingInfo FindCastTarget2(AWizard self)
         {
@@ -613,8 +621,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         List<AProjectile.ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
         {
-            var units = Combats.Where(x => x.Id != Self.Id).ToArray();
-            return projectile.Emulate(units);
+            return projectile.Emulate(Combats);
         }
     }
 }

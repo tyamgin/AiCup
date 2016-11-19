@@ -127,14 +127,25 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             public double StartDistance, EndDistance;
         }
 
-        public List<ProjectilePathSegment> Emulate(IEnumerable<ACombatUnit> _units)
+        public List<ProjectilePathSegment> Emulate(ACombatUnit[] _units)
         {
             if (Type != ProjectileType.MagicMissile)
                 throw new NotImplementedException();
 
             var list = new List<ProjectilePathSegment>();
             var projectile = new AProjectile(this);
-            var units = _units.Select(Utility.CloneCombat).ToArray();
+            var units = _units.Select(Utility.CloneCombat).Where(x => x.Id != OwnerUnitId).ToArray();
+            var minionsTarget = new Dictionary<long, ACircularUnit>();
+
+            foreach (var unit in units)
+            {
+                var minion = unit as AMinion;
+                if (minion == null)
+                    continue;
+                
+                minionsTarget[minion.Id] = minion.SelectTarget(units);
+            }
+
             while (projectile.Exists)
             {
                 projectile.Move(proj =>
@@ -178,6 +189,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         var wizard = unit as AWizard;
                         var dir = wizard - this + wizard; // вдоль снаряда
                         wizard.MoveTo(dir, null, null); // TODO: может упереться в дерево
+                    }
+                    else if (unit is AMinion)
+                    {
+                        var minion = unit as AMinion;
+                        minion.EthalonMove(minionsTarget[minion.Id]);
                     }
                 }
             }

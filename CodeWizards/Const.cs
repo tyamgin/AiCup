@@ -8,6 +8,12 @@
         public static double TreeMaxRadius = 50;
 
         public static double BaseBuildingDistance = 400;
+
+        public static Point[] BonusAppearencePoints =
+        {
+            new Point(1200, 1200),
+            new Point(2800, 2800),
+        };
     }
 
     public class MagicConst

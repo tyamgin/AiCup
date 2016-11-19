@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 using Microsoft.Win32.SafeHandles;
 
@@ -26,6 +28,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public override void EthalonMove(ACircularUnit target)
         {
             SkipTick();
+            if (target == null)
+            {
+                X += Math.Cos(Angle)*MyStrategy.Game.MinionSpeed;
+                Y += Math.Sin(Angle)*MyStrategy.Game.MinionSpeed;
+            }
+            else
+            {
+                var angleTo = GetAngleTo(target);
+                if (GetDistanceTo2(target) >
+                    Geom.Sqr(this is AOrc
+                        ? MyStrategy.Game.OrcWoodcutterAttackRange
+                        : MyStrategy.Game.FetishBlowdartAttackRange + target.Radius + MyStrategy.Game.DartRadius))
+                {
+                    X += Math.Cos(Angle + angleTo)*MyStrategy.Game.MinionSpeed;
+                    Y += Math.Sin(Angle + angleTo)*MyStrategy.Game.MinionSpeed;
+                }
+                Angle += Utility.EnsureInterval(angleTo, MyStrategy.Game.MinionMaxTurnAngle);
+            }
+        }
+
+        public ACombatUnit SelectTarget(ACombatUnit[] candidates)
+        {
+            ACombatUnit sel = null;
+            var nearest = candidates
+                .Where(c => c.Id != Id && GetDistanceTo(c) < MyStrategy.Game.MinionVisionRange)
+                .ArgMin(x => Math.Abs(Geom.AngleNormalize(GetAngleTo(x))));
+            return nearest;
         }
 
         public override bool IsOpponent => IsAggressiveNeutral || !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);

@@ -56,7 +56,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
                 else if (opp is AOrc)
                 {
-                    var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 7/*запас*/;
+                    var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 20/*запас*/;
                     var outer = 2*my.VisionRange;
                     if (dist < inner)
                         res += Game.OrcWoodcutterDamage + 10-dist/inner*10;
@@ -108,6 +108,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (distToCorner < cornerMaxDist)
                 res -= 4 - (distToCorner/cornerMaxDist)*4;
 
+            // держаться подальше от места появления минионов
             var spawnDelta = Game.FactionMinionAppearanceIntervalTicks*0.33;
             var spawnRemains = World.TickIndex%Game.FactionMinionAppearanceIntervalTicks;
             if (spawnRemains < spawnDelta)
@@ -119,6 +120,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (dist < inner)
                         res += 14 - dist/inner*14;
                 }
+            }
+
+            // держаться ближе к бонусам
+            foreach (var pt in Const.BonusAppearencePoints)
+            {
+                var outer = 1000;
+                var dist = my.GetDistanceTo(pt);
+                if (dist < outer)
+                    res -= 7 - dist/outer*7;
             }
             return res;
         }

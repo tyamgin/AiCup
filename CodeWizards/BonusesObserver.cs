@@ -15,6 +15,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Bonuses = MyStrategy.World.Bonuses
                 .Select(b => new ABonus(b))
                 .ToArray();
+
+            
         }
     }
 }

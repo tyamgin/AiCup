@@ -85,6 +85,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
         public static List<object[]> SegmentsDrawQueue = new List<object[]>();
         public static List<Tuple<Point, double>> DangerPoints;
+        public static Dictionary<long, Point[]> Projectiles = new Dictionary<long, Point[]>();
 
         public class Color01
         {
@@ -232,6 +233,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                         ? Color.Black
                         : Color.DarkOrange;
                 FillCircle(color, projectile.X, projectile.Y, projectile.Radius);
+                if (Projectiles.ContainsKey(projectile.Id))
+                {
+                    var pts = Projectiles[projectile.Id];
+                    DrawLine(Color.BlueViolet, pts[0].X, pts[0].Y, pts[1].X, pts[1].Y, 3);
+                }
             }
 
             // trees

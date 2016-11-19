@@ -502,13 +502,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         /// Приводит угол в промежуток [-Pi, Pi]
         /// </summary>
         /// <param name="angle"></param>
-        public static void AngleNormalize(ref double angle)
+        public static double AngleNormalize(double angle)
         {
             while (angle > Math.PI)
                 angle -= 2.0D * Math.PI;
 
             while (angle < -Math.PI)
                 angle += 2.0D * Math.PI;
+
+            return angle;
         }
 
         public static double ToDegrees(double angle)
