@@ -98,5 +98,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             return list[list.Count - 1];
         }
+
+        public delegate double OrderFunc<in T>(T value);
+
+        public static T ArgMin<T>(this IEnumerable<T> ie, OrderFunc<T> func)
+        {
+            var minValue = double.MaxValue;
+            var res = default(T);
+            foreach (var x in ie)
+            {
+                var value = func(x);
+                if (value < minValue)
+                {
+                    minValue = value;
+                    res = x;
+                }
+            }
+            return res;
+        }
     }
 }

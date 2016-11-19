@@ -40,7 +40,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static ACombatUnit[] Combats, OpponentCombats, MyCombats;
 
         public static AProjectile[][] ProjectilesPaths;
-        public static Segment[] Roads;
+        public static LaneSegment[] Roads;
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
@@ -55,19 +55,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             OpponentCombats = null;
             MyCombats = null;
 
-            if (world.TickIndex == 7245)
-            {
-                move.Action = ActionType.MagicMissile;
-                return;
-            }
-
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 7200;
+            Visualizer.Visualizer.DrawSince = 5000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -179,11 +173,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 #endif
             var target = FindTarget(new AWizard(self));
-            if (target != null)
-            {
-                //move.Turn = self.GetAngleTo(target.X, target.Y);
-            }
-            else
+            if (target == null)
             {
                 var nearest = OpponentCombats
                     .OrderBy(x => x.GetDistanceTo(self) + (x is AWizard ? -40 : (x is ABuilding && ((ABuilding) x).IsBesieded) ? 20 : 0))
@@ -292,7 +282,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool HasAnyTarget(AWizard self)
         {
-            double wizardDangerRange = 40; 
+            double wizardDangerRange = 40;
+            var currentLane = GetLane(self);
 
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
@@ -305,8 +296,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (bld != null)
                 {
                     var opps = bld.OpponentsCount - (bld.GetDistanceTo(Self) <= bld.CastRange ? 1 : 0);
-                    if (bld.IsBase || opps < 1)
-                        my.CastRange = bld.CastRange + 5;
+                    var isLast = BuildingsObserver.OpponentBase.GetDistanceTo(bld) < Const.MapSize/2;
+                    if (bld.IsBase || opps < 1 || isLast && GetLane(bld) != currentLane)
+                    {
+                        if (my.GetDistanceTo(bld) < bld.CastRange + 6)
+                            return true;
+                    }
                 }
 
                 if (my.EthalonCanCastMagicMissile(opp, false))

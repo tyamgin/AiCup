@@ -248,6 +248,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 DrawText(building.Life + "", 15, Brushes.Red, building.X - 10, building.Y - 30);
                 if (building.IsBesieded)
                     DrawText("rush", 13, Brushes.Black, building.X - 10, building.Y);
+                if (building.IsOpponent)
+                    DrawCircle(Color.Red, building.X, building.Y, building.CastRange);
             }
 
             // bonuses

@@ -123,6 +123,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
+        public class LaneSegment : Segment
+        {
+            public LaneType LaneType;
+
+            public LaneSegment(Point a, Point b, LaneType laneType) : base(a, b)
+            {
+                LaneType = laneType;
+            }
+        }
+
         public static void InitializeRoads()
         {
             if (Roads == null)
@@ -135,12 +145,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var d = new Point(s - dx, s - dx);
                 Roads = new[]
                 {
-                    new Segment(a, b),
-                    new Segment(b, c),
-                    new Segment(c, d),
-                    new Segment(d, a),
-                    new Segment(a, c),
-                    new Segment(b, d),
+                    new LaneSegment(a, b, LaneType.Top),
+                    new LaneSegment(b, c, LaneType.Top),
+                    new LaneSegment(c, d, LaneType.Bottom),
+                    new LaneSegment(d, a, LaneType.Bottom),
+                    new LaneSegment(a, c, LaneType.Middle),
+                    new LaneSegment(b, d, LaneType.Middle),
                 };
 
                 MagicConst.MinionAppearencePoints = new []
@@ -157,9 +167,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
+        public LaneType GetLane(Point self)
+        {
+            return Roads.ArgMin(r => r.GetDistanceTo(self)).LaneType;
+        }
+
         List<Tuple<Point, double>> CalculateDangerMap()
         {
-            double range = Self.VisionRange * 1.3,
+            double range = Self.VisionRange * 1.1,
                 left = Self.X - range,
                 right = Self.X + range,
                 top = Self.Y - range,

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -7,6 +8,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         private static Dictionary<long, ABuilding> _prevState = new Dictionary<long, ABuilding>();
         public static List<ABuilding> NewBuildings = new List<ABuilding>(), DisappearedBuildings = new List<ABuilding>();
+        public static ABuilding OpponentBase;
 
         private static long _getCoordinatesKey(Point p)
         {
@@ -67,6 +69,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             _prevState = newState;
+
+            OpponentBase = Buildings.FirstOrDefault(x => x.IsBase && x.IsOpponent);
         }
 
         public static IEnumerable<ABuilding> Buildings => _prevState.Values;
