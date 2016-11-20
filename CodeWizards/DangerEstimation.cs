@@ -118,12 +118,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var bonus in BonusesObserver.Bonuses)
             {
                 var outer = 1000;
-                var inner = bonus.Radius + my.Radius + 5;
+                var inner = bonus.Radius + my.Radius;
                 var dist = my.GetDistanceTo(bonus);
-                if (dist < inner && !bonus.Exists) // не перекрывать бонус
+                if (dist <= inner && !bonus.Exists) // не перекрывать бонус
                 {
                     if (bonus.RemainingAppearanceTicks < 150)
-                        res += 30 - dist/inner*10;
+                        res += 20 + 20 - dist/inner*20;
                 }
                 if (dist < outer)
                 {

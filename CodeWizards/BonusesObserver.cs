@@ -12,13 +12,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         private static Dictionary<int, ABonus> _bonuses = new Dictionary<int, ABonus>();
 
         // этап, когда последний раз был виден бонус (или было видно что там его нет)
-        private static int[] _lastVisibleStage = {1, 1};
+        private static int[] _lastVisibleStage = {0, 0};
 
         public static void Update()
         {
             var interval = MyStrategy.Game.BonusAppearanceIntervalTicks;
             var newDict = new Dictionary<int, ABonus>();
-            var curStage = MyStrategy.World.TickIndex/interval;
+            var curStage = (MyStrategy.World.TickIndex-1)/interval;
             foreach (var b in MyStrategy.World.Bonuses)
             {
                 var visibleBonus = new ABonus(b);
@@ -34,13 +34,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (oldBonus.RemainingAppearanceTicks > 0)
                         oldBonus.RemainingAppearanceTicks--;
                     newDict[oldBonus.Order] = oldBonus;
-                    _lastVisibleStage[oldBonus.Order] = curStage;
                 }
-                else if (!oldBonus.Exists && !newDict.ContainsKey(oldBonus.Order))
+                else
                 {
-                    // вижу, но он ещё не появился
-                    oldBonus.RemainingAppearanceTicks--;
-                    newDict[oldBonus.Order] = oldBonus;
+                    _lastVisibleStage[oldBonus.Order] = curStage;
+                    if (!oldBonus.Exists && !newDict.ContainsKey(oldBonus.Order))
+                    {
+                        // вижу, но он ещё не появился
+                        oldBonus.RemainingAppearanceTicks--;
+                        if (!oldBonus.Exists) // если он не должен был появиться только что
+                            newDict[oldBonus.Order] = oldBonus;
+                    }
                 }
             }
 
@@ -50,7 +54,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var remains = curStage > _lastVisibleStage[i]
                         ? 0
-                        : (interval - MyStrategy.World.TickIndex%interval)/*%interval*/;
+                        : (MyStrategy.World.TickIndex == 0
+                            ? interval + 1
+                            : (interval - MyStrategy.World.TickIndex%interval)%interval + 1
+                            );
+                    if (MyStrategy.World.TickIndex + remains >= MyStrategy.Game.TickCount)
+                        remains = 100500;
 
                     newDict[i] = new ABonus
                     {

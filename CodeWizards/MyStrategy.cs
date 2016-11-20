@@ -11,11 +11,12 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  *
- * 
- * !!!!- http://russianaicup.ru/game/view/26859 - тупо стоит у башни, к которой никто не приходит
+ * !-не идти к бонусу на последнем тике
+ * !-типут в тесу у башни http://russianaicup.ru/game/view/30380
+ * !-добавить danger для углов
+ * !-стоять с бонусу близко как только возможно http://russianaicup.ru/game/view/30378
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
- * !!!-стрелять на опережение минионов
  * - опастность дерева "треугольником"
  * - не идти на своих когда убегаю от орков
  * - идти по уже разбитой ветке, если убили ???
@@ -64,7 +65,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 1500;
+            Visualizer.Visualizer.DrawSince = 2400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
