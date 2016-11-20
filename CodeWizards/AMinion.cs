@@ -38,7 +38,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var angleTo = GetAngleTo(target);
                 if (GetDistanceTo2(target) >
                     Geom.Sqr(this is AOrc
-                        ? MyStrategy.Game.OrcWoodcutterAttackRange
+                        ? MyStrategy.Game.OrcWoodcutterAttackRange + target.Radius
                         : MyStrategy.Game.FetishBlowdartAttackRange + target.Radius + MyStrategy.Game.DartRadius))
                 {
                     X += Math.Cos(Angle + angleTo)*MyStrategy.Game.MinionSpeed;
@@ -52,7 +52,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             ACombatUnit sel = null;
             var nearest = candidates
-                .Where(c => c.Id != Id && GetDistanceTo(c) < MyStrategy.Game.MinionVisionRange)
+                .Where(
+                    c =>
+                        c.Faction != Faction.Neutral && c.Faction != Faction && // с противоположной фракции
+                        GetDistanceTo(c) < MyStrategy.Game.MinionVisionRange)
                 .ArgMin(x => Math.Abs(Geom.AngleNormalize(GetAngleTo(x))));
             return nearest;
         }

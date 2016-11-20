@@ -250,9 +250,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 : CellDiagLength;
         }
 
-        public delegate bool DijkstraStopFunc(Cell pos);
+        public delegate bool DijkstraStopFuncCell(Cell pos);
+        public delegate bool DijkstraStopFuncPoint(Point pos);
 
-        public static void DijkstraStart(Cell start, DijkstraStopFunc condition)
+        public static void DijkstraStart(Cell start, DijkstraStopFuncCell condition)
         {
             var q = new PriorityQueue<Pair<double, Cell>>();
             q.Push(new Pair<double, Cell>(0.0, start));
@@ -320,7 +321,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static List<Point> DijkstraFindPath(ACombatUnit start, ACircularUnit target)
+        public static List<Point> DijkstraFindPath(ACombatUnit start, ACircularUnit target, DijkstraStopFuncPoint stopFunc)
         {
             _selfRadius = start.Radius;
             _obstacles = Combats
@@ -334,17 +335,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Cell endCell = null;
             DijkstraStart(startCell, cell =>
             {
-                var pos = _points[cell.I, cell.J];
-                if (pos.GetDistanceTo2(target) < Geom.Sqr(start.CastRange /*+ target.Radius*/))
+                var point = _points[cell.I, cell.J];
+                if (stopFunc(point))
                 {
-                    if (TreesObserver.Trees
-                        .Where(x => x.GetDistanceTo2(pos) < Geom.Sqr(start.CastRange))
-                        .All(x => !Geom.SegmentCircleIntersects(pos, target, x, x.Radius + Game.MagicMissileRadius))
-                        )
-                    {
-                        endCell = cell;
-                        return true;
-                    }
+                    endCell = cell;
+                    return true;
                 }
                 return false;
             });

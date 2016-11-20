@@ -498,6 +498,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Math.Acos(vec1 * vec2 / vec1.Length / vec2.Length);
         }
 
+        public static double GetAngleBetween(double alpha, double beta)
+        {
+            alpha = AngleNormalize(alpha);
+            beta = AngleNormalize(beta);
+            return Math.Abs(AngleNormalize(alpha - beta));
+        }
+
         /// <summary>
         /// Приводит угол в промежуток [-Pi, Pi]
         /// </summary>

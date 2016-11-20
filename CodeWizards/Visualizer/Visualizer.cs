@@ -142,6 +142,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         }
 
         public static int DrawSince = 0;
+        public static bool Done;
 
         public static void Draw()
         {
@@ -151,9 +152,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 return;
             }
 
+            Done = false;
             if (MyStrategy.World.TickIndex >= DrawSince)
                 _draw();
             SegmentsDrawQueue.Clear();
+            Done = true;
         }
 
         private static void _draw()
@@ -266,8 +269,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                     : bonus.Type == BonusType.Haste 
                         ? Color.Aquamarine 
                         : Color.MidnightBlue;
-                FillCircle(color, bonus.X, bonus.Y, bonus.Radius);
+                if (bonus.Exists)
+                    FillCircle(color, bonus.X, bonus.Y, bonus.Radius);
+                else
+                    DrawCircle(color, bonus.X, bonus.Y, bonus.Radius);
             }
+            if (MyStrategy.NextBonusWaypoint != null)
+                FillCircle(Color.Red, MyStrategy.NextBonusWaypoint.X, MyStrategy.NextBonusWaypoint.Y, 10);
 
             // map ranges
             DrawLine(Color.Black, 1, 1, 1, Const.MapSize - 1);

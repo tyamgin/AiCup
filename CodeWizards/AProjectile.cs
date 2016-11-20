@@ -81,6 +81,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public delegate bool CheckProjectile(AProjectile proj);
 
         public bool Move(CheckProjectile check = null)
+
         {
             var prev = new Point(this);
             var nearestTree = TreesObserver.GetNearestTree(this);
@@ -97,6 +98,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return false;
                 }
 
+                if (!Exists)
+                    return false;
                 if (check != null && !check(this))
                     return false;
             }
@@ -161,7 +164,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
                                 EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
                                 State = ProjectilePathState.Fire,
-                                Target = inter as ACombatUnit,
+                                Target = Utility.CloneCombat(inter as ACombatUnit),
                             });
                         }
                     }

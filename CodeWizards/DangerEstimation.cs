@@ -57,7 +57,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else if (opp is AOrc)
                 {
                     var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 20/*запас*/;
-                    var outer = 2*my.VisionRange;
+                    var outer = 800;
                     if (dist < inner)
                         res += Game.OrcWoodcutterDamage + 10-dist/inner*10;
                     else if (dist < outer)
@@ -74,14 +74,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     throw new Exception("Unknown type of combat");
                 }
-            }
-            // прижиматься к центру дорожки
-            var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
-            var linePadding = 150.0;
-            var outerPadding = 500;
-            if (distToLine > linePadding && distToLine < outerPadding)
-            {
-                res += (distToLine - linePadding)/(outerPadding/linePadding)*2;
             }
 
             // не прижиматься к деревьям
@@ -123,13 +115,37 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             // держаться ближе к бонусам
-            foreach (var pt in Const.BonusAppearencePoints)
+            foreach (var bonus in BonusesObserver.Bonuses)
             {
                 var outer = 1000;
-                var dist = my.GetDistanceTo(pt);
-                if (dist < outer)
-                    res -= 7 - dist/outer*7;
+                var inner = bonus.Radius + my.Radius + 5;
+                var dist = my.GetDistanceTo(bonus);
+                if (dist < inner && !bonus.Exists) // не перекрывать бонус
+                    res += 30 - dist/inner*10;
+                else if (dist < outer)
+                    res -= 5 - dist/outer*5;
             }
+
+            // двигаться по пути к бонусу
+            if (NextBonusWaypoint != null)
+            {
+                var dist = my.GetDistanceTo(NextBonusWaypoint);
+                var outer = 100.0;
+                if (dist < outer)
+                    res -= 12 - dist / outer * 12;
+            }
+            else
+            {
+                // прижиматься к центру дорожки
+                var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
+                var linePadding = 150.0;
+                var outerPadding = 500;
+                if (distToLine > linePadding && distToLine < outerPadding)
+                {
+                    res += (distToLine - linePadding) / (outerPadding / linePadding) * 2;
+                }
+            }
+
             return res;
         }
 
@@ -211,12 +227,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public delegate double PositionCostFunction(AWizard wizard);
         public delegate bool PositionCondition(AWizard wizard);
-
-
-        private bool TryDodgeDanger()
-        {
-            return TryGoByGradient(EstimateDanger, HasAnyTarget);
-        }
 
         private bool TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition = null)
         {
