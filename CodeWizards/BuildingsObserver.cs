@@ -8,7 +8,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         private static Dictionary<long, ABuilding> _prevState = new Dictionary<long, ABuilding>();
         public static List<ABuilding> NewBuildings = new List<ABuilding>(), DisappearedBuildings = new List<ABuilding>();
-        public static ABuilding OpponentBase;
+        public static ABuilding OpponentBase, MyBase;
 
         private static long _getCoordinatesKey(Point p)
         {
@@ -71,6 +71,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             _prevState = newState;
 
             OpponentBase = Buildings.FirstOrDefault(x => x.IsBase && x.IsOpponent);
+            MyBase = Buildings.FirstOrDefault(x => x.IsBase && x.IsTeammate);
+
+            foreach (var building in Buildings)
+            {
+                if (building.IsBase)
+                {
+                    building._isAssailable = Buildings.Count(x => x.Faction == building.Faction && x.Order == 1) < 3;
+                }
+                else
+                {
+                    building._isAssailable =
+                        Buildings.Count(
+                            x =>
+                                x.Faction == building.Faction && x.Order + 1 == building.Order &&
+                                x.Lane == building.Lane) == 0;
+                }
+            }
         }
 
         public static IEnumerable<ABuilding> Buildings => _prevState.Values;

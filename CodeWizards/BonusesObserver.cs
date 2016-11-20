@@ -46,7 +46,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             for (var i = 0; i < 2; i++)
             {
-                if (!_bonuses.ContainsKey(i))
+                if (!newDict.ContainsKey(i))
                 {
                     var remains = curStage > _lastVisibleStage[i]
                         ? 0

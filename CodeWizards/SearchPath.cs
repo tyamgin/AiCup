@@ -250,8 +250,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 : CellDiagLength;
         }
 
+        public enum DijkstraStopStatus
+        {
+            Continue,
+            Take,
+            Stop,
+            TakeAndStop,
+        }
+
         public delegate bool DijkstraStopFuncCell(Cell pos);
-        public delegate bool DijkstraStopFuncPoint(Point pos);
+        public delegate DijkstraStopStatus DijkstraStopFuncPoint(Point pos);
 
         public static void DijkstraStart(Cell start, DijkstraStopFuncCell condition)
         {
@@ -321,7 +329,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static List<Point> DijkstraFindPath(ACombatUnit start, ACircularUnit target, DijkstraStopFuncPoint stopFunc)
+        public static List<Point>[] DijkstraFindPath(ACombatUnit start, DijkstraStopFuncPoint stopFunc)
         {
             _selfRadius = start.Radius;
             _obstacles = Combats
@@ -330,26 +338,31 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var startCell = FindNearestCell(start);
             if (startCell == null)
-                return null;
+                return new List<Point>[] {};
 
-            Cell endCell = null;
+            var endCells = new List<Cell>();
+
             DijkstraStart(startCell, cell =>
             {
                 var point = _points[cell.I, cell.J];
-                if (stopFunc(point))
-                {
-                    endCell = cell;
+                var status = stopFunc(point);
+
+                if (status == DijkstraStopStatus.Take || status == DijkstraStopStatus.TakeAndStop)
+                    endCells.Add(cell);
+
+                if (status == DijkstraStopStatus.Stop || status == DijkstraStopStatus.TakeAndStop)
                     return true;
-                }
                 return false;
             });
-            if (endCell == null)
-                return null;
-            var cellsPath = DijkstraGeneratePath(startCell, endCell);
 
-            var res = new List<Point> {start};
-            res.AddRange(cellsPath.Select(cell => _points[cell.I, cell.J]));
-            return res;
+            return endCells.Select(endCell =>
+            {
+                var cellsPath = DijkstraGeneratePath(startCell, endCell);
+
+                var res = new List<Point> {start};
+                res.AddRange(cellsPath.Select(cell => _points[cell.I, cell.J]));
+                return res;
+            }).ToArray();
         }
 
         public void SimplifyPath(AWizard self, ACircularUnit[] obstacles, List<Point> path)

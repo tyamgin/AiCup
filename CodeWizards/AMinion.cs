@@ -50,7 +50,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public ACombatUnit SelectTarget(ACombatUnit[] candidates)
         {
-            ACombatUnit sel = null;
             var nearest = candidates
                 .Where(
                     c =>

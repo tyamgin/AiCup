@@ -20,7 +20,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var inner = (Game.StaffRange + my.Radius) + 1; // (куда достаёт посохом) + запас
                     var outer = (opp.CastRange + my.Radius + Game.MagicMissileRadius) + 1; // (куда достанет MagicMissile) + запас
-                    var coeff = 15;
+                    var coeff = 45;
                     if (dist < inner)
                         res += (Game.StaffDamage + Game.MagicMissileDirectDamage) * 2;// TODO: обработать его навыки
                     else if (dist < outer)
@@ -121,9 +121,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var inner = bonus.Radius + my.Radius + 5;
                 var dist = my.GetDistanceTo(bonus);
                 if (dist < inner && !bonus.Exists) // не перекрывать бонус
-                    res += 30 - dist/inner*10;
-                else if (dist < outer)
-                    res -= 5 - dist/outer*5;
+                {
+                    if (bonus.RemainingAppearanceTicks < 150)
+                        res += 30 - dist/inner*10;
+                }
+                if (dist < outer)
+                {
+                    if (bonus.Exists || BonusesObserver.Bonuses.All(b => !b.Exists))
+                        res -= 5 - dist/outer*5;
+                }
             }
 
             // двигаться по пути к бонусу
@@ -132,7 +138,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var dist = my.GetDistanceTo(NextBonusWaypoint);
                 var outer = 100.0;
                 if (dist < outer)
-                    res -= 12 - dist / outer * 12;
+                    res -= 7 - dist / outer * 7;
             }
             else
             {
@@ -193,7 +199,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        public LaneType GetLane(Point self)
+        public static LaneType GetLane(Point self)
         {
             return Roads.ArgMin(r => r.GetDistanceTo(self)).LaneType;
         }

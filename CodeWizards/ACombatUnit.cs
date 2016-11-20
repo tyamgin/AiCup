@@ -74,5 +74,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             throw new NotImplementedException();
         }
+
+        public virtual bool IsAssailable => true;
     }
 }
