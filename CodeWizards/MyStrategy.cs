@@ -62,7 +62,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 3400;
+            Visualizer.Visualizer.DrawSince = 900;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -370,7 +370,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             int minTicks = int.MaxValue;
             var move = new FinalMove(new Move());
 
-            ACircularUnit selTarget = self.GetStaffAttacked(nearest).Cast<ACombatUnit>().FirstOrDefault(x => x.IsOpponent);
+            var attacked = self.GetStaffAttacked(nearest).Cast<ACombatUnit>().ToArray();
+            if (attacked.Length > 1)
+                attacked = attacked;
+            ACircularUnit selTarget = attacked.FirstOrDefault(x => x.IsOpponent);
             if (selTarget != null) // если уже можно бить
             {
                 move.Action = ActionType.Staff;
@@ -443,7 +446,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 }
                                 if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
                                 {
-                                    selTarget = his;
+                                    selTarget = opp;
                                     selMoveTo = moveTo;
                                     minTicks = ticks;
                                 }
