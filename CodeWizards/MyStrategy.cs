@@ -158,7 +158,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     building.IsBesieded = true;
             }
 
-            if (Self.IsMaster)
+            if (Self.IsMaster && World.TickIndex == 0)
             {
                 MasterSendMessages();
                 return;
