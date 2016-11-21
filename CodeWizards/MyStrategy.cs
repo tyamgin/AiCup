@@ -53,6 +53,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             MyCombats = null;
             NextBonusWaypoint = null;
 
+#if DEBUG
+            while (Visualizer.Visualizer.Pause)
+            {
+                // pause here
+            }
+#endif
+
             TimerStart();
             _move(self, world, game, move);
             TimerEndLog("All", 0);
@@ -86,11 +93,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Game = game;
             Self = self;
             FinalMove = new FinalMove(move);
-
-            if (Math.Abs(world.Width - world.Height) > Const.Eps)
-                throw new Exception("map width != map height");
-
-            Const.MapSize = world.Width;
+            
+            Const.MapSize = Game.MapSize;
 
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
@@ -146,38 +150,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             InitializeProjectiles();
             InitializeDijkstra();
 
-            foreach (var bld in OpponentBuildings)
+            foreach (var building in OpponentBuildings)
             {
-                bld.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(bld) <= bld.VisionRange);
-                var hisWizards = OpponentWizards.Count(x => x.GetDistanceTo(bld) <= bld.VisionRange);
-                if (bld.IsBase && bld.OpponentsCount >= 7 || !bld.IsBase && bld.OpponentsCount >= 5 && hisWizards == 0)
-                    bld.IsBesieded = true;
+                building.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
+                var hisWizards = OpponentWizards.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
+                if (building.IsBase && building.OpponentsCount >= 7 || !building.IsBase && building.OpponentsCount >= 5 && hisWizards == 0)
+                    building.IsBesieded = true;
             }
 
-            if (Self.IsMaster && World.TickIndex == 0)
+            if (Self.IsMaster)
             {
                 MasterSendMessages();
-                //FinalMove.Messages = new[]
-                //{
-                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                //    new Model.Message(LaneType.Bottom, null, new byte[] {}),
-                //};
                 return;
             }
-
-#if DEBUG
-            var master = Wizards.FirstOrDefault(x => x.IsTeammate && x.IsMaster);
-            var masterName = master == null ? "" : World.Players.FirstOrDefault(x => x.Id == master.Id).Name;
-#endif
-
-#if DEBUG
-            while (Visualizer.Visualizer.Pause)
-            {
-                // pause here
-            }
-#endif
 
             var bonusMoving = GoToBonus();
             var target = FindTarget(new AWizard(self), bonusMoving.Target);
@@ -274,15 +259,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool _goAround(ACombatUnit target)
         {
-            ACircularUnit[] additionalObstacles = null;
             var building = target as ABuilding;
-            //additionalObstacles = new[] { new ACircularUnit {Radius = target.CastRange - Self.Radius, X = target.X, Y = target.Y} };
             var my = new AWizard(Self);
 
             var path = DijkstraFindPath(new AWizard(Self), pos =>
             {
                 // точка ОК, если с неё можно стрелять
-                if (pos.GetDistanceTo2(target) < Geom.Sqr(Self.CastRange /*+ target.Radius*/))
+                if (pos.GetDistanceTo2(target) < Geom.Sqr(Self.CastRange))
                 {
                     if (TreesObserver.Trees
                         .Where(x => x.GetDistanceTo2(pos) < Geom.Sqr(Self.CastRange))
@@ -431,6 +414,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var isLast = BuildingsObserver.OpponentBase.GetDistanceTo(bld) < Const.MapSize/2;
                     if (bld.IsBase || opps < 1 || isLast && GetLane(bld) != currentLane)
                     {
+                        // чтобы не подходить близко к одиноким башням
                         if (my.GetDistanceTo(bld) < bld.CastRange + 6)
                             return true;
                     }
@@ -447,9 +431,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         Point FindTarget(AWizard self, Point moveTo = null)
         {
             var t1 = FindCastTarget(self);
-            TimerStart();
             var t2 = FindStaffTarget(self);
-            TimerEndLog("FindStaffTarget", 2);
             var t3 = FindCastTarget2(self, moveTo);
 
             if (t1.Target != null && t1.Time <= Math.Min(t2.Time, t3.Time))
@@ -511,7 +493,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             Point selMoveTo = null;
 
-            // TODO: check IsBesieded?
             foreach (var opp in OpponentCombats)
             {
                 var dist = self.GetDistanceTo(opp);

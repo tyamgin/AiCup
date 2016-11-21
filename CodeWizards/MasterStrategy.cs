@@ -7,8 +7,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public void MasterSendMessages()
         {
+            // TODO: не пашет
             if (World.TickIndex == 0)
             {
+                //FinalMove.Messages = new[]
+                //{
+                //    new Message(LaneType.Bottom, null, new byte[] {}),
+                //    new Message(LaneType.Bottom, null, new byte[] {}),
+                //    new Message(LaneType.Bottom, null, new byte[] {}),
+                //    new Message(LaneType.Bottom, null, new byte[] {}),
+                //};
+
                 var self = new AWizard(Self);
                 AWizard
                     leftmost = self,
@@ -31,11 +40,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     .Select(x =>
                     {
                         if (x == leftmost)
-                            return new Model.Message(LaneType.Top, SkillType.Shield, new byte[] {});
+                            return new Message(LaneType.Top, SkillType.Shield, new byte[] {});
                         if (x == bottommost)
-                            return new Model.Message(LaneType.Bottom, SkillType.Shield, new byte[] { });
+                            return new Message(LaneType.Bottom, SkillType.Shield, new byte[] { });
 
-                        return new Model.Message(LaneType.Middle, SkillType.Shield, new byte[] { });
+                        return new Message(LaneType.Middle, SkillType.Shield, new byte[] { });
                     })
                     .ToArray();
             }
