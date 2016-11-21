@@ -18,13 +18,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 if (opp is AWizard)
                 {
+                    var wizard = opp as AWizard;
                     var inner = (Game.StaffRange + my.Radius) + 1; // (куда достаёт посохом) + запас
                     var outer = (opp.CastRange + my.Radius + Game.MagicMissileRadius) + 1; // (куда достанет MagicMissile) + запас
                     var coeff = 45;
                     if (dist < inner)
-                        res += (Game.StaffDamage + Game.MagicMissileDirectDamage) * 2;// TODO: обработать его навыки
+                        res += (wizard.StaffDamage + wizard.MagicMissileDamage) * 2;
                     else if (dist < outer)
-                        res += (Game.MagicMissileDirectDamage + coeff - (dist - inner)/(outer - inner)*coeff) * 2;
+                        res += (wizard.MagicMissileDamage + coeff - (dist - inner)/(outer - inner)*coeff) * 2;
                 }
                 else if (opp is ABuilding)
                 {

@@ -148,5 +148,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
 
         public int MagicMissileDamage => MyStrategy.Game.MagicMissileDirectDamage; // TODO: умения и статусы
+
+        public int StaffDamage => MyStrategy.Game.StaffDamage; // TODO: умения и статусы
     }
 }

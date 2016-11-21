@@ -11,16 +11,12 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  *
- * !-тупит в лесу у башни http://russianaicup.ru/game/view/30380
  * !-добавить danger для углов
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
  * - опастность дерева "треугольником"
  * - не идти на своих когда убегаю от орков
  * - идти по уже разбитой ветке, если убили ???
- * 
- * - добивать визардов
- * 
  * 
  */
 
@@ -63,7 +59,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 9500;
+            Visualizer.Visualizer.DrawSince = 2400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -701,10 +697,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static int _lastProjectileTick;
         public static Point[] _lastProjectilePoints;
 
-        //bool CanRush(AWizard self, AWizard opp)
-        //{
-        //    if (opp.Life <= Self.)
-        //}
+        bool CanRush(AWizard self, ACombatUnit opp)
+        {
+            var wizard = opp as AWizard;
+            var minion = opp as AMinion;
+
+            if (wizard != null)
+            {
+                if (wizard.Life <= self.MagicMissileDamage)
+                    return true;
+                if (self.Life <= wizard.MagicMissileDamage)
+                    return false;
+
+                if (self.Life >= wizard.Life + 3*self.MagicMissileDamage)
+                    return true;
+            }
+            else if (minion != null)
+            {
+                if (minion.Life <= self.MagicMissileDamage)
+                    return true;
+            }
+            return false;
+        }
 
         MovingInfo FindCastTarget2(AWizard self, Point moveTo = null)
         {
@@ -712,6 +726,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var nearest = Combats
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange * 1.3))
                 .ToArray();
+
+            var minionsTarget = new Dictionary<long, ACircularUnit>();
+            foreach (var unit in nearest)
+            {
+                var minion = unit as AMinion;
+                if (minion == null)
+                    continue;
+
+                minionsTarget[minion.Id] = minion.SelectTarget(nearest);
+            }
 
             ACircularUnit selTarget = null;
             var minTicks = int.MaxValue;
@@ -753,12 +777,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     ticks++;
                 }
 
+                if (his is AWizard && CanRush(my, his))
+                    ticks -= 10;//
+
                 var priority = GetCombatPriority(self, his);
                 if (ok && (ticks < minTicks || ticks == minTicks && priority < minPriority))
                 {
                     if (my.EthalonCanCastMagicMissile(his))
                     {
-                        if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
+                        if (nearstCombats.All(x => 
+                            canHitNow && x.Id == opp.Id || 
+                            !x.EthalonCanHit(my) || 
+                            his.Id == x.Id && CanRush(my, x) || 
+                            x is AMinion && minionsTarget[x.Id] != null && minionsTarget[x.Id].Id != my.Id)
+                            )
                         {
                             minTicks = ticks;
                             minPriority = priority;
@@ -771,6 +803,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (selTarget == null)
                 return new MovingInfo(null, int.MaxValue, move);
 
+            minTicks = Math.Max(0, minTicks);
             move.MoveTo(moveTo ?? (self.GetDistanceTo2(selTarget) < Geom.Sqr(self.CastRange) ? null : selTarget), selTarget);
             return new MovingInfo(selTarget, minTicks, move);
         }
