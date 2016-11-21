@@ -65,10 +65,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
                 else if (opp is AFetish)
                 {
-                    var inner = opp.CastRange + my.Radius + Game.DartRadius + 1;
-                    var delta = 1;
+                    var inner = opp.CastRange + my.Radius + Game.DartRadius + 10;
                     if (dist < inner)
-                        res += delta - dist/inner*delta + Game.DartDirectDamage;
+                        res += 10 - dist/inner*10 + Game.DartDirectDamage;
                 }
                 else
                 {
@@ -120,12 +119,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var outer = 1000;
                 var inner = bonus.Radius + my.Radius;
                 var dist = my.GetDistanceTo(bonus);
-                if (dist <= inner && !bonus.Exists) // не перекрывать бонус
+                if (dist <= inner && !bonus.Exists && bonus.RemainingAppearanceTicks < 150) // не перекрывать бонус
                 {
-                    if (bonus.RemainingAppearanceTicks < 150)
-                        res += 20 + 20 - dist/inner*20;
+                    res += 30 + 20 - dist/inner*20;
                 }
-                if (dist < outer)
+                else if (dist < outer)
                 {
                     if (bonus.Exists || BonusesObserver.Bonuses.All(b => !b.Exists))
                         res -= 5 - dist/outer*5;
