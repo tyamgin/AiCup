@@ -35,7 +35,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override bool EthalonCanHit(ACircularUnit target)
         {
-            return GetDistanceTo2(target) <= Geom.Sqr(CastRange + target.Radius);
+            return RemainingActionCooldownTicks == 0 && 
+                GetDistanceTo2(target) <= Geom.Sqr(CastRange + target.Radius);
         }
 
         public bool IsBase => Utility.Equals(MyStrategy.Game.FactionBaseRadius, Radius);

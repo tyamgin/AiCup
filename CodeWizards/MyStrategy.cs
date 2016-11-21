@@ -16,7 +16,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * !!-сбегать от кучи орков
  * - опастность дерева "треугольником"
  * - не идти на своих когда убегаю от орков
- * - идти по уже разбитой ветке, если убили ???
+ * - идти по уже разбитой ветке, если убили или взял бонус???
  * 
  */
 
@@ -59,7 +59,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 2400;
+            if (world.TickIndex == 0)
+                Visualizer.Visualizer.DrawSince = 10000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -386,7 +387,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 var time = (int) (length/Game.WizardForwardSpeed);
                 var bonus = bonuses.ArgMin(b => b.GetDistanceTo(path.Last()));
-                if (time < selMovingInfo.Time)
+                if (time < selMovingInfo.Time && time < 700)
                 {
                     selMovingInfo.Time = time;
                     selPath = path;

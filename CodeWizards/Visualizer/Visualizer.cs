@@ -141,7 +141,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             throw new Exception("wrong x ranges");
         }
 
-        public static int DrawSince = 0;
+        private static int _drawSince = 0;
+        public static int DrawSince
+        {
+            get { return _drawSince; }
+            set { _drawSince = value; }
+        }
+
         public static bool Done;
 
         public static void Draw()

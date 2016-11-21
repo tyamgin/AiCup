@@ -3,7 +3,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
-    public class ACombatUnit : ACircularUnit
+    public abstract class ACombatUnit : ACircularUnit
     {
         public bool IsTeammate;
         public virtual bool IsOpponent => !IsTeammate;
@@ -14,7 +14,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public double CastRange;
         public int RemainingActionCooldownTicks;
 
-        public ACombatUnit(CircularUnit unit) : base(unit)
+        protected ACombatUnit(CircularUnit unit) : base(unit)
         {
             IsTeammate = unit.Faction == MyStrategy.Self.Faction;
             Faction = unit.Faction;
@@ -45,7 +45,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        public ACombatUnit(ACombatUnit unit) : base(unit)
+        protected ACombatUnit(ACombatUnit unit) : base(unit)
         {
             IsTeammate = unit.IsTeammate;
             Faction = unit.Faction;
@@ -55,7 +55,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             RemainingActionCooldownTicks = unit.RemainingActionCooldownTicks;
         }
 
-        public ACombatUnit()
+        protected ACombatUnit()
         {
             
         }

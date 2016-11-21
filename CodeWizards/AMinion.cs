@@ -77,6 +77,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override bool EthalonCanHit(ACircularUnit target)
         {
+            if (RemainingActionCooldownTicks > 0)
+                return false;
+
             var angleTo = GetAngleTo(target);
             if (Math.Abs(angleTo) > MyStrategy.Game.OrcWoodcutterAttackSector/2)
                 return false;
@@ -98,6 +101,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override bool EthalonCanHit(ACircularUnit target)
         {
+            if (RemainingActionCooldownTicks > 0)
+                return false;
+
             var angleTo = GetAngleTo(target);
             if (Math.Abs(angleTo) > MyStrategy.Game.FetishBlowdartAttackSector / 2)
                 return false;

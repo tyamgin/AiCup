@@ -60,7 +60,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var inner = Game.OrcWoodcutterAttackRange + my.Radius + Game.MinionSpeed + 20/*запас*/;
                     var outer = 800;
                     if (dist < inner)
-                        res += Game.OrcWoodcutterDamage + 10-dist/inner*10;
+                        res += Game.OrcWoodcutterDamage + 15-dist/inner*15;
                     else if (dist < outer)
                         res -= 3 - (dist - inner)/(outer - inner)*3;
                 }
@@ -68,7 +68,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var inner = opp.CastRange + my.Radius + Game.DartRadius + 10;
                     if (dist < inner)
-                        res += 10 - dist/inner*10 + Game.DartDirectDamage;
+                        res += 15 - dist/inner*15 + Game.DartDirectDamage;
                 }
                 else
                 {
@@ -93,7 +93,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     res += 1 - dist/15*1;
             }
 
-            // прижиматься за главную башню
+            // прижиматься за главную башню (TODO: возможно, уже не нужно)
             var corner = new Point(World.Width - 70, 70);
             var cornerMaxDist = 500;
             var distToCorner = my.GetDistanceTo(corner);
@@ -137,19 +137,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var dist = my.GetDistanceTo(NextBonusWaypoint);
                 var outer = 100.0;
                 if (dist < outer)
-                    res -= 7 - dist / outer * 7;
+                    res -= 7 - dist/outer*7;
             }
-            else
-            {
-                // прижиматься к центру дорожки
-                var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
-                var linePadding = 150.0;
-                var outerPadding = 500;
-                if (distToLine > linePadding && distToLine < outerPadding)
-                {
-                    res += (distToLine - linePadding) / (outerPadding / linePadding) * 2;
-                }
-            }
+            
+            // прижиматься к центру дорожки
+            var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
+            var linePadding = 150.0;
+            var outerPadding = 500;
+            if (distToLine > linePadding && distToLine < outerPadding)
+                res += (distToLine - linePadding)/(outerPadding - linePadding)*15;
+            
+            // не прижиматься к стене
+            var distToBorders = Math.Min(Math.Min(my.X, my.Y), Math.Min(Const.MapSize - my.X, Const.MapSize - my.Y));
+            var bordersPadding = 45;
+            if (distToBorders < bordersPadding)
+                res += 4 - distToBorders/bordersPadding*4;
 
             return res;
         }

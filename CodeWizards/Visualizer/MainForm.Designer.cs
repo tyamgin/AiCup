@@ -33,6 +33,8 @@
             this.buttonZoom = new System.Windows.Forms.Button();
             this.buttonUnZoom = new System.Windows.Forms.Button();
             this.buttonPause = new System.Windows.Forms.Button();
+            this.renderButton = new System.Windows.Forms.Button();
+            this.stopRenderButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.panel)).BeginInit();
             this.SuspendLayout();
             // 
@@ -54,9 +56,9 @@
             this.tickLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 16F);
             this.tickLabel.Location = new System.Drawing.Point(743, 23);
             this.tickLabel.Name = "tickLabel";
-            this.tickLabel.Size = new System.Drawing.Size(70, 26);
+            this.tickLabel.Size = new System.Drawing.Size(104, 26);
             this.tickLabel.TabIndex = 1;
-            this.tickLabel.Text = "label1";
+            this.tickLabel.Text = "TickIndex";
             // 
             // buttonZoom
             // 
@@ -88,11 +90,33 @@
             this.buttonPause.UseVisualStyleBackColor = true;
             this.buttonPause.Click += new System.EventHandler(this.buttonPause_Click);
             // 
+            // renderButton
+            // 
+            this.renderButton.Location = new System.Drawing.Point(3, 97);
+            this.renderButton.Name = "renderButton";
+            this.renderButton.Size = new System.Drawing.Size(56, 40);
+            this.renderButton.TabIndex = 5;
+            this.renderButton.Text = "Render";
+            this.renderButton.UseVisualStyleBackColor = true;
+            this.renderButton.Click += new System.EventHandler(this.renderButton_Click);
+            // 
+            // stopRenderButton
+            // 
+            this.stopRenderButton.Location = new System.Drawing.Point(3, 143);
+            this.stopRenderButton.Name = "stopRenderButton";
+            this.stopRenderButton.Size = new System.Drawing.Size(56, 40);
+            this.stopRenderButton.TabIndex = 6;
+            this.stopRenderButton.Text = "Stop Render";
+            this.stopRenderButton.UseVisualStyleBackColor = true;
+            this.stopRenderButton.Click += new System.EventHandler(this.stopRenderButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1126, 879);
+            this.Controls.Add(this.stopRenderButton);
+            this.Controls.Add(this.renderButton);
             this.Controls.Add(this.buttonPause);
             this.Controls.Add(this.buttonUnZoom);
             this.Controls.Add(this.buttonZoom);
@@ -113,5 +137,7 @@
         private System.Windows.Forms.Button buttonZoom;
         private System.Windows.Forms.Button buttonUnZoom;
         private System.Windows.Forms.Button buttonPause;
+        private System.Windows.Forms.Button renderButton;
+        private System.Windows.Forms.Button stopRenderButton;
     }
 }

@@ -70,7 +70,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var cos = Math.Cos(angle);
             var fs = cos*(cos >= 0 ? MyStrategy.Game.WizardForwardSpeed : MyStrategy.Game.WizardBackwardSpeed);
             var ss = Math.Sin(angle)*MyStrategy.Game.WizardStrafeSpeed;
-            //MyStrategy.Game.WizardBackwardSpeed TODO!!!!
             return Move(fs, ss, check);
             //TODO can be optimized
         }

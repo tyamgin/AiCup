@@ -24,5 +24,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         {
             Visualizer.Pause ^= true;
         }
+
+        private void renderButton_Click(object sender, EventArgs e)
+        {
+            Visualizer.DrawSince = 0;
+        }
+
+        private void stopRenderButton_Click(object sender, EventArgs e)
+        {
+            Visualizer.DrawSince = 1000000;
+        }
     }
 }
