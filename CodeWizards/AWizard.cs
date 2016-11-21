@@ -146,5 +146,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             get { return RemainingCooldownTicksByAction[(int) ActionType.MagicMissile]; }
             set { RemainingCooldownTicksByAction[(int) ActionType.MagicMissile] = value; }
         }
+
+        public int MagicMissileDamage => MyStrategy.Game.MagicMissileDirectDamage; // TODO: умения и статусы
     }
 }

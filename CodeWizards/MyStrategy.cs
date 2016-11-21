@@ -63,7 +63,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
-            Visualizer.Visualizer.DrawSince = 7400;
+            Visualizer.Visualizer.DrawSince = 9500;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -211,6 +211,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (moving.Target != null)
                     {
                         NextBonusWaypoint = moving.Target;
+                        FinalMove.Turn = moving.Move.Turn;
 
                         var my = new AWizard(Self);
                         var dst = NextBonusWaypoint.GetDistanceTo(my);
@@ -266,7 +267,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        bool GoAround(ACircularUnit to)
+        bool GoAround(ACombatUnit to)
         {
             TimerStart();
             var ret = _goAround(to);
@@ -274,8 +275,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        bool _goAround(ACircularUnit target)
+        bool _goAround(ACombatUnit target)
         {
+            ACircularUnit[] additionalObstacles = null;
+            var building = target as ABuilding;
+            //additionalObstacles = new[] { new ACircularUnit {Radius = target.CastRange - Self.Radius, X = target.X, Y = target.Y} };
+            var my = new AWizard(Self);
+
             var path = DijkstraFindPath(new AWizard(Self), pos =>
             {
                 // точка ОК, если с неё можно стрелять
@@ -290,9 +296,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
                 return DijkstraStopStatus.Continue;
+            }, pos =>
+            {
+                if (building != null && building.GetDistanceTo2(pos) <= building.CastRange*building.CastRange)
+                {
+                    if (Roads.All(seg => seg.GetDistanceTo(pos) > 200))
+                        return DijkstraStopStatus.Stop;
+                }
+                return DijkstraStopStatus.Continue;
             }).FirstOrDefault();
 
-            var my = new AWizard(Self);
             if (path == null && my.GetDistanceTo(target) - my.Radius - target.Radius <= 1)
                 path = new List<Point> { my }; // из-за эпсилон=1, если стою близко у цели, то он как бы с ней пересекается, но это не так
             if (path == null || path.Count == 0)
@@ -687,6 +700,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static int _lastProjectileTick;
         public static Point[] _lastProjectilePoints;
+
+        //bool CanRush(AWizard self, AWizard opp)
+        //{
+        //    if (opp.Life <= Self.)
+        //}
 
         MovingInfo FindCastTarget2(AWizard self, Point moveTo = null)
         {

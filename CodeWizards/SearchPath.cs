@@ -201,11 +201,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var J = (int) (my.Y/ds + Const.Eps);
             int seldI = int.MaxValue, seldJ = int.MaxValue;
             double minDist = int.MaxValue;
-            var obstacles =
-                _obstacles.Cast<ACircularUnit>()
-                    .Concat(BuildingsObserver.Buildings)
-                    .Concat(TreesObserver.Trees)
-                    .ToArray();
+            var obstacles = _obstacles
+                .Concat(BuildingsObserver.Buildings)
+                .Concat(TreesObserver.Trees)
+                .ToArray();
 
             for (var di = 0; di < 2; di++)
             {
@@ -229,7 +228,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new Cell(I + seldI, J + seldJ);
         }
 
-        private static ACombatUnit[] _obstacles;
+        private static ACircularUnit[] _obstacles;
         private static double _selfRadius;
 
         private static bool CanPassToCell(Cell from, Cell cell)
@@ -261,7 +260,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public delegate bool DijkstraStopFuncCell(Cell pos);
         public delegate DijkstraStopStatus DijkstraStopFuncPoint(Point pos);
 
-        public static void DijkstraStart(Cell start, DijkstraStopFuncCell condition)
+        public static void DijkstraStart(Cell start, DijkstraStopFuncCell condition, DijkstraStopFuncPoint canPass)
         {
             var q = new PriorityQueue<Pair<double, Cell>>();
             q.Push(new Pair<double, Cell>(0.0, start));
@@ -292,7 +291,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 foreach(var to in _neighbours[cur.I, cur.J])
                 {
                     var distTo = _distMap[cur.I, cur.J] + GetDist(cur, to);
-                    if (distTo < _distMap[to.I, to.J] && CanPassToCell(cur, to))
+                    if (distTo < _distMap[to.I, to.J] && CanPassToCell(cur, to) && (canPass == null || canPass(_points[to.I, to.J]) == DijkstraStopStatus.Continue))
                     {
                         _distMap[to.I, to.J] = distTo;
                         _distPrev[to.I, to.J] = cur;
@@ -329,9 +328,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static List<Point>[] DijkstraFindPath(ACombatUnit start, DijkstraStopFuncPoint stopFunc)
+        public static List<Point>[] DijkstraFindPath(ACombatUnit start, DijkstraStopFuncPoint stopFunc, DijkstraStopFuncPoint canPass = null)
         {
             _selfRadius = start.Radius;
+            
             _obstacles = Combats
                 .Where(x => !x.IsOpponent && x.Id != start.Id && x.GetDistanceTo2(start) < Geom.Sqr(start.VisionRange)) // (нейтральные включительно)
                 .ToArray();
@@ -353,7 +353,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (status == DijkstraStopStatus.Stop || status == DijkstraStopStatus.TakeAndStop)
                     return true;
                 return false;
-            });
+            }, canPass);
 
             return endCells.Select(endCell =>
             {
