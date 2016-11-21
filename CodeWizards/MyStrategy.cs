@@ -10,7 +10,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- *
+ * !!-http://russianaicup.ru/game/view/34757 застрял в лесу из-за danger (17500)
  * !-добавить danger для углов
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
@@ -60,7 +60,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 10000;
+                Visualizer.Visualizer.DrawSince = 4900;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -179,9 +179,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 #endif
 
-            var moving = GoToBonus();
-            var target = FindTarget(new AWizard(self), moving.Target);
-            if (target == null)
+            var bonusMoving = GoToBonus();
+            var target = FindTarget(new AWizard(self), bonusMoving.Target);
+            if (target == null && bonusMoving.Target == null)
             {
                 var nearest = OpponentCombats
                     .OrderBy(x => x.GetDistanceTo(self) + (x is AWizard ? -40 : (x is ABuilding && ((ABuilding) x).IsBesieded) ? 20 : 0))
@@ -205,10 +205,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     FinalMove.Action == ActionType.Fireball ||
                     FinalMove.Action == ActionType.FrostBolt)
                 {
-                    if (moving.Target != null)
+                    if (bonusMoving.Target != null)
                     {
-                        NextBonusWaypoint = moving.Target;
-                        FinalMove.Turn = moving.Move.Turn;
+                        NextBonusWaypoint = bonusMoving.Target;
+                        FinalMove.Turn = bonusMoving.Move.Turn;
 
                         var my = new AWizard(Self);
                         var dst = NextBonusWaypoint.GetDistanceTo(my);
