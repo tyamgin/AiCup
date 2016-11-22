@@ -7,7 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * !!-учесть алгоритм башни
+ * !-если атакуем башню - не убегать за бонусом
  * !!-Simplify только часть пути, остальную оставлять как есть
  * !!-http://russianaicup.ru/game/view/34757 застрял в лесу из-за danger (17500)
  * !!-прикрываться деревьями (особенно от визардов)
@@ -750,18 +750,31 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
 
                 if (his is AWizard && CanRush(my, his))
-                    ticks -= 10;//
+                    ticks -= 10;// чтобы дать больше приоритета визарду
 
                 var priority = GetCombatPriority(self, his);
                 if (ok && (ticks < minTicks || ticks == minTicks && priority < minPriority))
                 {
                     if (my.EthalonCanCastMagicMissile(his))
                     {
-                        if (nearstCombats.All(x => 
-                            canHitNow && x.Id == opp.Id || 
-                            !x.EthalonCanHit(my) || 
-                            his.Id == x.Id && CanRush(my, x) || 
-                            x is AMinion && targetsSelector.Select(x) != null && targetsSelector.Select(x).Id != my.Id)
+                        if (nearstCombats.All(x =>
+                        {
+                            //TODO: возможно, скопировать эти условия и для staff
+                            if (canHitNow && x.Id == opp.Id) // он и так доставал
+                                return true;
+
+                            if (!x.EthalonCanHit(my))
+                                return true;
+
+                            if (his.Id == x.Id && CanRush(my, x))
+                                return true;
+
+                            var target = targetsSelector.Select(x);
+                            if (target != null && target.Id != my.Id)
+                                return true;
+
+                            return false;
+                        })
                             )
                         {
                             minTicks = ticks;

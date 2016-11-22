@@ -1,4 +1,5 @@
-﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+﻿using System.Linq;
+using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -37,6 +38,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             return RemainingActionCooldownTicks == 0 && 
                 GetDistanceTo2(target) <= Geom.Sqr(CastRange + target.Radius);
+        }
+
+        public override ACombatUnit SelectTarget(ACombatUnit[] candidates)
+        {
+            var accessible = candidates
+                .Where(x => x.Faction != Faction.Neutral && x.Faction != Faction && GetDistanceTo2(x) <= Geom.Sqr(CastRange))
+                .ToArray();
+
+            ACombatUnit sel = null;
+            foreach (var x in accessible)
+                if (x.Life <= Damage + Const.Eps)
+                    if (sel == null || x.Life < sel.Life - Const.Eps || Utility.Equals(x.Life, sel.Life) && x.Id == MyStrategy.Self.Id)
+                        sel = x;
+                    
+            if (sel != null)
+                return sel;
+
+            foreach (var x in accessible)
+                if (sel == null || x.Life > sel.Life + Const.Eps || Utility.Equals(x.Life, sel.Life) && x.Id == MyStrategy.Self.Id)
+                    sel = x;
+                
+            return sel;
         }
 
         public bool IsBase => Utility.Equals(MyStrategy.Game.FactionBaseRadius, Radius);
