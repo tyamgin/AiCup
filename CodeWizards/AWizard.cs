@@ -11,27 +11,56 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public bool IsMaster;
         public int[] RemainingCooldownTicksByAction;
 
+        public int RemainingHastened;
+        public int RemainingEmpowered;
+        public int RemainingFrozen;
+        public int RemainingShielded;
+
         public AWizard(Wizard unit) : base(unit)
         {
             IsMaster = unit.IsMaster;
             RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();
+            foreach (var status in unit.Statuses)
+            {
+                switch (status.Type)
+                {
+                    case StatusType.Empowered:
+                        RemainingEmpowered = Math.Max(RemainingEmpowered, status.RemainingDurationTicks);
+                        break;
+                    case StatusType.Frozen:
+                        RemainingFrozen = Math.Max(RemainingFrozen, status.RemainingDurationTicks);
+                        break;
+                    case StatusType.Shielded:
+                        RemainingShielded = Math.Max(RemainingShielded, status.RemainingDurationTicks);
+                        break;
+                    case StatusType.Hastened:
+                        RemainingHastened = Math.Max(RemainingHastened, status.RemainingDurationTicks);
+                        break;
+                }
+            }
         }
 
         public AWizard(AWizard unit) : base(unit)
         {
             IsMaster = unit.IsMaster;
             RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();
+            RemainingHastened = unit.RemainingHastened;
+            RemainingEmpowered = unit.RemainingEmpowered;
+            RemainingFrozen = unit.RemainingFrozen;
+            RemainingShielded = unit.RemainingShielded;
         }
 
         public delegate bool CheckWizard(AWizard wizard);
 
         public override void SkipTick()
         {
-            if (RemainingActionCooldownTicks > 0)
-                RemainingActionCooldownTicks--;
+            Utility.Dec(ref RemainingActionCooldownTicks);
             for (var i = 0; i < RemainingCooldownTicksByAction.Length; i++)
-                if (RemainingCooldownTicksByAction[i] > 0)
-                    RemainingCooldownTicksByAction[i]--;
+                Utility.Dec(ref RemainingCooldownTicksByAction[i]);
+            Utility.Dec(ref RemainingHastened);
+            Utility.Dec(ref RemainingEmpowered);
+            Utility.Dec(ref RemainingFrozen);
+            Utility.Dec(ref RemainingShielded);
         }
 
         public bool Move(double forwardSpeed, double strafeSpeed, CheckWizard check = null)
@@ -146,8 +175,38 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             set { RemainingCooldownTicksByAction[(int) ActionType.MagicMissile] = value; }
         }
 
-        public int MagicMissileDamage => MyStrategy.Game.MagicMissileDirectDamage; // TODO: умения и статусы
+        public double MagicMissileDamage
+        {
+            get
+            {
+                // TODO: умения и ауры
+                double damage = MyStrategy.Game.MagicMissileDirectDamage;
+                if (RemainingEmpowered > 0)
+                    damage *= MyStrategy.Game.EmpoweredDamageFactor;
+                return damage;
+            }
+        }
 
-        public int StaffDamage => MyStrategy.Game.StaffDamage; // TODO: умения и статусы
+        public double StaffDamage
+        {
+            get
+            {
+                // TODO: умения и ауры
+                double damage = MyStrategy.Game.StaffDamage;
+                if (RemainingEmpowered > 0)
+                    damage *= MyStrategy.Game.EmpoweredDamageFactor;
+                return damage;
+            }
+        }
+
+        //public double MaxForwardSpeed
+        //{
+        //    get
+        //    {
+        //        var speed = MyStrategy.Game.WizardForwardSpeed;
+        //        if (RemainingHastened > 0)
+        //            speed *= MyStrategy.Game.HastenedBonusDurationFactor
+        //    }
+        //}
     }
 }

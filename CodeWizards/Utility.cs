@@ -90,6 +90,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 return new AFetish(combat as AFetish);
             throw new Exception("unknown combat type");
         }
+
+        public static void Dec(ref int value)
+        {
+            if (value > 0)
+                value--;
+        }
     }
 
     public static class ListExtension
