@@ -55,16 +55,31 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             foreach (var it in _prevState)
             {
-                var key = _getCoordinatesKey(it.Value);
-                if (!MyStrategy.IsPointVisible(it.Value))
+                var bld = it.Value;
+                var key = _getCoordinatesKey(bld);
+                if (!MyStrategy.IsPointVisible(bld))
                 {
                     // его не видно, считаем что осталось
-                    newState[key] = it.Value;
+                    if (bld.RemainingActionCooldownTicks == 0)
+                    {
+                        // значит, если кто-то был поблизости, башня 100% выстрелила
+                        if (MyStrategy.Combats.Any(x => x.IsTeammate && bld.GetDistanceTo2(x) <= Geom.Sqr(bld.CastRange)))
+                        {
+                            bld.RemainingActionCooldownTicks = (bld.IsBase
+                                ? MyStrategy.Game.FactionBaseCooldownTicks
+                                : MyStrategy.Game.GuardianTowerCooldownTicks) - 1;
+                        }
+                    }
+                    else
+                    {
+                        bld.RemainingActionCooldownTicks--;
+                    }
+                    newState[key] = bld;
                 }
                 else if (!newState.ContainsKey(key))
                 {
                     // видно, но исчезло
-                    DisappearedBuildings.Add(it.Value);
+                    DisappearedBuildings.Add(bld);
                 }
             }
 

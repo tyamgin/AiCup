@@ -67,7 +67,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 0;
+                Visualizer.Visualizer.DrawSince = 6000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -115,7 +115,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Combats =
                 Minions.Cast<ACombatUnit>()
                 .Concat(Wizards)
-                .Concat(BuildingsObserver.Buildings)
+                .Concat(BuildingsObserver.Buildings)//TODO перед BuildingsObserver.Update????
                 .ToArray();
 
             MyCombats = Combats
@@ -368,7 +368,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 for (var i = 1; i < path.Count; i++)
                     length += path[i - 1].GetDistanceTo(path[i]);
 
-                var time = (int) (length/Game.WizardForwardSpeed);
+                var time = (int) (length/my.MaxForwardSpeed);
                 var bonus = bonuses.ArgMin(b => b.GetDistanceTo(path.Last()));
                 if (time < selMovingInfo.Time && time < 650)
                 {
@@ -549,7 +549,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
                             {
                                 // успею-ли я вернуться обратно
-                                while (my.GetDistanceTo(self) > Game.WizardForwardSpeed)//TODO:HACK
+                                while (my.GetDistanceTo(self) > my.MaxForwardSpeed)//TODO:HACK
                                 {
                                     my.MoveTo(self, null);
                                     foreach (var x in nearstCombats)

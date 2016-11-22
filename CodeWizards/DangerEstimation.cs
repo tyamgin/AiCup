@@ -268,7 +268,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var tergetsSelector = new TargetsSelector(nearest);
 
                 var vec = new List<double>();
-                const int steps = 10;
+                const int steps = 13;
 
                 var my = new AWizard(Self);
                 var ok = true;
@@ -301,7 +301,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var newDanger = 0.0;
                     for (var k = 0; k < steps; k++)
-                        newDanger += vec[k]*Math.Pow(0.85, k);
+                        newDanger += vec[k]*Math.Pow(0.88, k);
 
                     if (newDanger < minDanger)
                     {

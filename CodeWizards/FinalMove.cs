@@ -62,17 +62,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void MoveTo(Point to, Point turnTo)
         {
+            var self = new AWizard(MyStrategy.Self);
             if (turnTo != null)
             {
-                _move.Turn = Utility.EnsureInterval(MyStrategy.Self.GetAngleTo(turnTo.X, turnTo.Y), MyStrategy.Game.WizardMaxTurnAngle);
+                _move.Turn = Utility.EnsureInterval(MyStrategy.Self.GetAngleTo(turnTo.X, turnTo.Y), self.MaxTurnAngle);
             }
 
             if (to != null)
             {
-                var angle = MyStrategy.Self.GetAngleTo(to.X,  to.Y);
+                var angle = self.GetAngleTo(to);
                 var cos = Math.Cos(angle);
-                var fs = cos * (cos >= 0 ? MyStrategy.Game.WizardForwardSpeed : MyStrategy.Game.WizardBackwardSpeed);
-                var ss = Math.Sin(angle) * MyStrategy.Game.WizardStrafeSpeed;
+                var fs = cos * (cos >= 0 ? self.MaxForwardSpeed : self.MaxBackwardSpeed);
+                var ss = Math.Sin(angle) * self.MaxStrafeSpeed;
                 _move.Speed = fs;
                 _move.StrafeSpeed = ss;
             }

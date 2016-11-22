@@ -88,7 +88,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             if (turnTo != null)
             {
-                Angle += Utility.EnsureInterval(GetAngleTo(turnTo), MyStrategy.Game.WizardMaxTurnAngle);
+                Angle += Utility.EnsureInterval(GetAngleTo(turnTo), MaxTurnAngle);
             }
 
             if (to == null)
@@ -97,8 +97,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var angle = GetAngleTo(to);
             var cos = Math.Cos(angle);
-            var fs = cos*(cos >= 0 ? MyStrategy.Game.WizardForwardSpeed : MyStrategy.Game.WizardBackwardSpeed);
-            var ss = Math.Sin(angle)*MyStrategy.Game.WizardStrafeSpeed;
+            var fs = cos*(cos >= 0 ? MaxForwardSpeed : MaxBackwardSpeed);
+            var ss = Math.Sin(angle)*MaxStrafeSpeed;
             return Move(fs, ss, check);
             //TODO can be optimized
         }
@@ -199,14 +199,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        //public double MaxForwardSpeed
-        //{
-        //    get
-        //    {
-        //        var speed = MyStrategy.Game.WizardForwardSpeed;
-        //        if (RemainingHastened > 0)
-        //            speed *= MyStrategy.Game.HastenedBonusDurationFactor
-        //    }
-        //}
+        private double _getHastenedFactor()
+        {
+            // TODO: умения и ауры
+            if (RemainingHastened > 0)
+                return 1.0 + MyStrategy.Game.HastenedMovementBonusFactor;
+            return 1.0;
+        }
+
+        public double MaxForwardSpeed => MyStrategy.Game.WizardForwardSpeed*_getHastenedFactor();
+
+        public double MaxBackwardSpeed => MyStrategy.Game.WizardBackwardSpeed*_getHastenedFactor();
+
+        public double MaxStrafeSpeed => MyStrategy.Game.WizardStrafeSpeed*_getHastenedFactor();
+
+        public double MaxTurnAngle => MyStrategy.Game.WizardMaxTurnAngle*
+                                      (RemainingHastened > 0 ? 1.0 + MyStrategy.Game.HastenedRotationBonusFactor : 1.0);
+        // NOTE: Эффективное ограничение может быть выше в 1.0 + hastenedRotationBonusFactor раз в результате действия статуса HASTENED.
+        // т.е. ауры и умения никак не влияют на угол поворота
     }
 }
