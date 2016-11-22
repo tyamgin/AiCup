@@ -138,16 +138,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var list = new List<ProjectilePathSegment>();
             var projectile = new AProjectile(this);
             var units = _units.Select(Utility.CloneCombat).Where(x => x.Id != OwnerUnitId).ToArray();
-            var minionsTarget = new Dictionary<long, ACircularUnit>();
 
-            foreach (var unit in units)
-            {
-                var minion = unit as AMinion;
-                if (minion == null)
-                    continue;
-                
-                minionsTarget[minion.Id] = minion.SelectTarget(units);
-            }
+            var minionsTargetsSelector = new TargetsSelector(_units) { EnableMinionsCache = true };
 
             while (projectile.Exists)
             {
@@ -195,8 +187,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     else if (unit is AMinion)
                     {
-                        var minion = unit as AMinion;
-                        minion.EthalonMove(minionsTarget[minion.Id]);
+                        var target = minionsTargetsSelector.Select(unit);
+                        unit.EthalonMove(target);
                     }
                 }
             }

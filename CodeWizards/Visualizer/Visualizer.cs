@@ -211,7 +211,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 DrawPie(color, wizard.X, wizard.Y, MyStrategy.Game.StaffRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
                 DrawPie(color, wizard.X, wizard.Y, wizard.CastRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
 
-
             }
 
             // minions

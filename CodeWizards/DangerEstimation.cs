@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
@@ -7,6 +8,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     partial class MyStrategy
     {
+        public static double CantMoveDanger = 300;
+
         double EstimateDanger(AWizard my)
         {
             double res = 0;
@@ -237,39 +240,84 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition = null)
         {
-            var my = new AWizard(Self);
+            var self = new AWizard(Self);
 
             var obstacles = 
                 Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
                 .Concat(TreesObserver.Trees)
                 .Concat(BuildingsObserver.Buildings)
-                .Where(x => my.GetDistanceTo2(x) < Geom.Sqr(my.VisionRange))
+                .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange))
                 .ToArray();
 
-            var danger = costFunction(my);
-            var minDanger = danger;
+            var danger = costFunction(self);
+            double minDanger = int.MaxValue;
+            double selMindangerOld = danger;
+            Point selMoveToOld = null;
             Point selMoveTo = null;
+            List<double> selVec = null;
 
             const int grid = 40;
             for (var i = 0; i < grid; i++)
             {
-                var angle = Math.PI*2/grid*i + my.Angle;
-                var moveTo = my + Point.ByAngle(angle);
-                
-                var self = new AWizard(Self);
-                if (self.MoveTo(moveTo, null, 
-                        w => obstacles.All(ob => !Geom.SegmentCircleIntersects(my, w, ob, ob.Radius + my.Radius)))
+                var angle = Math.PI*2/grid*i + self.Angle;
+                var moveTo = self + Point.ByAngle(angle) * self.VisionRange;
+                var nearest = Combats
+                    .Where(x => x.GetDistanceTo(self) < self.VisionRange)
+                    .Select(Utility.CloneCombat)
+                    .ToArray();
+                var tergetsSelector = new TargetsSelector(nearest);
+
+                var vec = new List<double>();
+                const int steps = 10;
+
+                var my = new AWizard(Self);
+                var ok = true;
+
+                while (vec.Count < steps && my.MoveTo(moveTo, null,
+                    w => obstacles.All(ob => !Geom.SegmentCircleIntersects(self, w, ob, ob.Radius + self.Radius)))
                     )
                 {
-                    var newDanger = costFunction(self);
-                    if (newDanger < minDanger && (condition == null || condition(self)))
+                    vec.Add(costFunction(my));
+                    foreach (var x in nearest)
+                    {
+                        var tar = tergetsSelector.Select(x);
+                        if (tar != null || x is AWizard)
+                            x.EthalonMove(tar);
+                    }
+                    if (vec.Count == 1 && condition != null && !condition(my))
+                    {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (!ok || vec.Count == 0)
+                    continue;
+
+                while(vec.Count < steps)
+                    vec.Add(CantMoveDanger);
+
+                if (vec[0] < danger)
+                {
+                    var newDanger = 0.0;
+                    for (var k = 0; k < steps; k++)
+                        newDanger += vec[k]*Math.Pow(0.85, k);
+
+                    if (newDanger < minDanger)
                     {
                         minDanger = newDanger;
                         selMoveTo = moveTo;
+                        selVec = vec;
                     }
                 }
+
+                if (vec[0] < selMindangerOld)
+                {
+                    selMindangerOld = vec[0];
+                    selMoveToOld = moveTo;
+                }
             }
-            if (minDanger < danger)
+            if (selMoveTo != null)
             {
                 FinalMove.MoveTo(selMoveTo, null);
                 return true;

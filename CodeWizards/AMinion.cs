@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        public ACombatUnit SelectTarget(ACombatUnit[] candidates)
+        public override ACombatUnit SelectTarget(ACombatUnit[] candidates)
         {
             var nearest = candidates
                 .Where(

@@ -67,7 +67,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 4900;
+                Visualizer.Visualizer.DrawSince = 0;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -370,7 +370,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 var time = (int) (length/Game.WizardForwardSpeed);
                 var bonus = bonuses.ArgMin(b => b.GetDistanceTo(path.Last()));
-                if (time < selMovingInfo.Time && time < 700)
+                if (time < selMovingInfo.Time && time < 650)
                 {
                     selMovingInfo.Time = time;
                     selPath = path;
@@ -709,15 +709,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange * 1.3))
                 .ToArray();
 
-            var minionsTarget = new Dictionary<long, ACircularUnit>();
-            foreach (var unit in nearest)
-            {
-                var minion = unit as AMinion;
-                if (minion == null)
-                    continue;
-
-                minionsTarget[minion.Id] = minion.SelectTarget(nearest);
-            }
+            var targetsSelector = new TargetsSelector(nearest) { EnableMinionsCache = true };
 
             ACircularUnit selTarget = null;
             var minTicks = int.MaxValue;
@@ -771,7 +763,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             canHitNow && x.Id == opp.Id || 
                             !x.EthalonCanHit(my) || 
                             his.Id == x.Id && CanRush(my, x) || 
-                            x is AMinion && minionsTarget[x.Id] != null && minionsTarget[x.Id].Id != my.Id)
+                            x is AMinion && targetsSelector.Select(x) != null && targetsSelector.Select(x).Id != my.Id)
                             )
                         {
                             minTicks = ticks;
