@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
-using Microsoft.Win32.SafeHandles;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {

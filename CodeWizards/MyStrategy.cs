@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading;
-using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * !!-учесть алгоритм башни
+ * !!-Simplify только часть пути, остальную оставлять как есть
  * !!-http://russianaicup.ru/game/view/34757 застрял в лесу из-за danger (17500)
- * !-добавить danger для углов
  * !!-прикрываться деревьями (особенно от визардов)
  * !!-сбегать от кучи орков
  * - опастность дерева "треугольником"
@@ -67,7 +65,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 6000;
+                Visualizer.Visualizer.DrawSince = 500;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -79,7 +77,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var timer = new Stopwatch();
                 timer.Start();
-                while (!Visualizer.Visualizer.Done || timer.ElapsedMilliseconds < 15)
+                while (!Visualizer.Visualizer.Done || timer.ElapsedMilliseconds < 13)
                 {
                 }
                 timer.Stop();
