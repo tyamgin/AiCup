@@ -20,5 +20,7 @@
     {
         public static double RadiusAdditionalEpsilon = 0.5;
         public static Point[] MinionAppearencePoints;
+        public static int GoToBonusmaxTicks = 650;
+        public static double SimplifyMaxLength = 1000;
     }
 }

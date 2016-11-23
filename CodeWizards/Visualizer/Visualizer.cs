@@ -295,11 +295,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 FillCircle(Color.Khaki, Const.MapSize - pt.X, Const.MapSize - pt.Y, 20);
             }
 
-            foreach (var pt in MyStrategy.GetFreePoints())
-            {
-                FillCircle(Color.Bisque, pt.X, pt.Y, 2);
-            }
-
             try
             {
                 foreach (var seg in SegmentsDrawQueue)
