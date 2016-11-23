@@ -29,6 +29,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             
         }
 
+        public void SkipTick()
+        {
+            Utility.Dec(ref RemainingAppearanceTicks);
+        }
+
         public int Order
         {
             get

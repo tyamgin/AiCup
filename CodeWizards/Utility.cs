@@ -78,6 +78,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Math.Abs(x - y) < Const.Eps;
         }
 
+        public static bool PointsEqual(Point a, Point b)
+        {
+            return Equals(a.X, b.X) && Equals(a.Y, b.Y);
+        }
+
         public static ACombatUnit CloneCombat(ACombatUnit combat)
         {
             if (combat is AWizard)

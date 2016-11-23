@@ -91,7 +91,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Angle += Utility.EnsureInterval(GetAngleTo(turnTo), MaxTurnAngle);
             }
 
-            if (to == null)
+            if (to == null || Utility.PointsEqual(this, to))
                 return Move(0, 0); // check не нужен
 
 

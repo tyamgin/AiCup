@@ -31,8 +31,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     // он точно не прилетел в World, т.к. не виден
                     // остается на текущей тик
-                    if (oldBonus.RemainingAppearanceTicks > 0)
-                        oldBonus.RemainingAppearanceTicks--;
+                    oldBonus.SkipTick();
                     newDict[oldBonus.Order] = oldBonus;
                 }
                 else
@@ -41,7 +40,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (!oldBonus.Exists && !newDict.ContainsKey(oldBonus.Order))
                     {
                         // вижу, но он ещё не появился
-                        oldBonus.RemainingAppearanceTicks--;
+                        oldBonus.SkipTick();
                         if (!oldBonus.Exists) // если он не должен был появиться только что
                             newDict[oldBonus.Order] = oldBonus;
                     }

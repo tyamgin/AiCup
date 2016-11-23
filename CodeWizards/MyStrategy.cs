@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 9990;
+                Visualizer.Visualizer.DrawSince = 0;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -429,16 +429,27 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         Point FindTarget(AWizard self, Point moveTo = null)
         {
+            var t0 = FindBonusTarget(self);
             var t1 = FindCastTarget(self);
             var t2 = FindStaffTarget(self);
-            var t3 = FindCastTarget2(self, moveTo);
+            var t3 = FindCastTarget2(self, t0.Target ?? moveTo);
+
+            Point ret = null;
+            if (t0.Target != null)
+            {
+                FinalMove.Apply(t0.Move);
+                ret = t0.Target;
+            }
 
             if (t1.Target != null && t1.Time <= Math.Min(t2.Time, t3.Time))
             {
-                FinalMove.Apply(t1.Move);
+                FinalMove.Action = t1.Move.Action;
+                FinalMove.MinCastDistance = t1.Move.MinCastDistance;
+                FinalMove.MaxCastDistance = t1.Move.MaxCastDistance;
+                FinalMove.CastAngle = t1.Move.CastAngle;
                 return t1.Target;
             }
-            if (t2.Target != null && t2.Time <= Math.Min(t1.Time, t3.Time))
+            if (t0.Target == null && t2.Target != null && t2.Time <= Math.Min(t1.Time, t3.Time))
             {
                 FinalMove.Apply(t2.Move);
                 return t2.Target;
@@ -448,7 +459,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 FinalMove.Apply(t3.Move);
                 return t3.Target;
             }
-            return null;
+            return ret;
         }
 
         class MovingInfo
@@ -463,6 +474,75 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Time = time;
                 Move = move;
             }
+        }
+
+        MovingInfo FindBonusTarget(AWizard self)
+        {
+            const int grid = 40;
+            var minTime = int.MaxValue;
+            var selGo = 0;
+            Point selMoveTo = null;
+            foreach (var _bonus in BonusesObserver.Bonuses)
+            {
+                if (_bonus.GetDistanceTo(self) - self.Radius - _bonus.Radius > Game.StaffRange*3)
+                    continue;
+                if (_bonus.RemainingAppearanceTicks > 40)
+                    continue;
+
+                var nearest = Combats
+                    .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange))
+                    .ToArray();
+
+
+                for (var i = 0; i < grid; i++)
+                {
+                    var bonus = new ABonus(_bonus);
+                    var angle = Math.PI*2/grid*i + self.Angle;
+                    var my = new AWizard(self);
+                    var moveTo = my + Point.ByAngle(angle) * self.VisionRange;
+                    int time = 0;
+                    int go = 0;
+                    while (my.GetDistanceTo(bonus) > my.Radius + bonus.Radius && time < 40)
+                    {
+                        if (!my.MoveTo(moveTo, null, w => !CheckIntersectionsAndTress(w, nearest)))
+                        {
+                            break;
+                        }
+                        var wait = !bonus.Exists;
+                        bonus.SkipTick();
+                        time++;
+                        if (my.GetDistanceTo(bonus) <= my.Radius + bonus.Radius)
+                        {
+                            while (!bonus.Exists)
+                            {
+                                bonus.SkipTick();
+                                time++;
+                            }
+                            if (wait)
+                                time++;
+
+                            if (time < minTime)
+                            {
+                                minTime = time;
+                                selMoveTo = moveTo;
+                                selGo = go;
+                            }
+                            break;
+                        }
+                        go++;
+                    }
+
+                }
+            }
+            var moving = new MovingInfo(selMoveTo, minTime, new FinalMove(new Move()));
+            if (selMoveTo != null)
+            {
+                if (minTime == 1 || selGo > 0)
+                    moving.Move.MoveTo(selMoveTo, null);
+                else
+                    moving.Target = self;
+            }
+            return moving;
         }
 
         bool CheckIntersectionsAndTress(AWizard self, IEnumerable<ACircularUnit> units)
@@ -482,8 +562,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var move = new FinalMove(new Move());
 
             var attacked = self.GetStaffAttacked(nearest).Cast<ACombatUnit>().ToArray();
-            if (attacked.Length > 1)
-                attacked = attacked;
+
             ACircularUnit selTarget = attacked.FirstOrDefault(x => x.IsOpponent);
             if (selTarget != null) // если уже можно бить
             {
