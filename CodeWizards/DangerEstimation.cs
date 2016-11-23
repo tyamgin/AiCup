@@ -268,7 +268,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var tergetsSelector = new TargetsSelector(nearest);
 
                 var vec = new List<double>();
-                const int steps = 13;
+                const int steps = 1;//13;
 
                 var my = new AWizard(Self);
                 var ok = true;

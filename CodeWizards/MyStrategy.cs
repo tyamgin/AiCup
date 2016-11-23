@@ -7,6 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * !-http://russianaicup.ru/game/view/39131 тупит напротив башни
  * !-если атакуем башню - не убегать за бонусом
  * !!-Simplify только часть пути, остальную оставлять как есть
  * !!-http://russianaicup.ru/game/view/34757 застрял в лесу из-за danger (17500)
@@ -65,7 +66,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 500;
+                Visualizer.Visualizer.DrawSince = 9990;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -381,7 +382,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     selMovingInfo.Target = nextPoint;
                 }
             }
-            if (selBonus != null && selMovingInfo.Time <= selBonus.RemainingAppearanceTicks)
+            if (selBonus != null && selMovingInfo.Time <= selBonus.RemainingAppearanceTicks - 15/*запас*/)
                 selMovingInfo.Target = null;
 #if DEBUG
             if (selMovingInfo.Target != null)

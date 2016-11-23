@@ -260,7 +260,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public delegate bool DijkstraStopFuncCell(Cell pos);
         public delegate DijkstraStopStatus DijkstraStopFuncPoint(Point pos);
 
-        public static void DijkstraStart(Cell start, DijkstraStopFuncCell condition, DijkstraStopFuncPoint canPass)
+        public static void DijkstraStart(Cell start, DijkstraStopFuncCell stopCondition, DijkstraStopFuncPoint canPass)
         {
             var q = new PriorityQueue<Pair<double, Cell>>();
             q.Push(new Pair<double, Cell>(0.0, start));
@@ -283,7 +283,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (minDist > _distMap[cur.I, cur.J])
                     continue;
 
-                if (condition(cur))
+                if (stopCondition(cur))
                 {
                     break;
                 }
