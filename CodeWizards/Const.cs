@@ -22,5 +22,6 @@
         public static Point[] MinionAppearencePoints;
         public static int GoToBonusmaxTicks = 650;
         public static double SimplifyMaxLength = 1000;
+		public static double TreeObstacleWeight = 25;
     }
 }

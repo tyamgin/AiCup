@@ -194,11 +194,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     {
                         NextBonusWaypoint = bonusMoving.Target;
                         FinalMove.Turn = bonusMoving.Move.Turn;
+						if (bonusMoving.Move.Action != ActionType.None)
+							FinalMove.Action = bonusMoving.Move.Action;
+						//FinalMove.MinCastDistance = bonusMoving.Move.MinCastDistance;
+						//FinalMove.MaxCastDistance = bonusMoving.Move.MaxCastDistance;
+						FinalMove.CastAngle = bonusMoving.Move.CastAngle;
 
                         var my = new AWizard(Self);
-                        var dst = NextBonusWaypoint.GetDistanceTo(my);
-                        if (dst > Self.Radius + 30)
-                            NextBonusWaypoint = my + (NextBonusWaypoint - my).Normalized()*(Self.Radius + 30);
+                        
+						NextBonusWaypoint = my + (NextBonusWaypoint - my).Normalized() * (Self.Radius + 30);
                         TryGoByGradient(EstimateDanger);
                     }
                     else
@@ -211,6 +215,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static Point NextBonusWaypoint;
 
+		// TODO: remove
         bool TryCutTrees(bool cutNearest)
         {
             var self = new AWizard(Self);
@@ -310,22 +315,35 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             FinalMove.MoveTo(nextPoint, my.GetDistanceTo(nextNextPoint) < Self.VisionRange * 1.2 ? nextNextPoint : nextPoint);
 
             var nextTree = path.GetNearestTree();
-            if (nextTree != null)
-            {
-                if (my.GetDistanceTo(nextTree) < my.VisionRange && my.GetAngleTo(nextTree) > Game.StaffSector / 2)
-                    FinalMove.MoveTo(null, nextTree);
-
-                if (my.GetDistanceTo(nextTree) <= Game.StaffRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingStaffCooldownTicks == 0)
-                    FinalMove.Action = ActionType.Staff;
-                else if (my.GetDistanceTo(nextTree) <= my.CastRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingMagicMissileCooldownTicks == 0)
-                    FinalMove.Action = ActionType.MagicMissile; //TODO: не попасть в своих
-            }
+            CutTreesInPath(nextTree, FinalMove);
 #if DEBUG
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Blue, 3 });
 #endif
             return true;
         }
+		
+		void CutTreesInPath(ATree nextTree, FinalMove move) 
+		{
+			if (nextTree == null)
+				return;
+			var my = new AWizard(Self);
+			
+			var angleTo = my.GetAngleTo(nextTree);
+			if (my.GetDistanceTo(nextTree) < my.VisionRange && Math.Abs(angleTo) > Game.StaffSector / 2)
+				move.MoveTo(null, nextTree);
 
+			if (my.RemainingActionCooldownTicks == 0 && Math.Abs(angleTo) <= Game.StaffSector / 2)
+			{
+				if (my.GetDistanceTo(nextTree) <= Game.StaffRange + nextTree.Radius && my.RemainingStaffCooldownTicks == 0)
+					move.Action = ActionType.Staff;
+				else if (my.GetDistanceTo(nextTree) <= my.CastRange + nextTree.Radius && my.RemainingMagicMissileCooldownTicks == 0)
+				{
+					move.Action = ActionType.MagicMissile; //TODO: не попасть в своих
+					move.CastAngle = angleTo;
+				}
+			}
+		}
+		
         MovingInfo GoToBonus()
         {
             TimerStart();
@@ -396,16 +414,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
 
                     var nextTree = path.GetNearestTree();
-                    if (nextTree != null)
-                    {
-                        if (my.GetDistanceTo(nextTree) < my.VisionRange && my.GetAngleTo(nextTree) > Game.StaffSector / 2)
-                            FinalMove.MoveTo(null, nextTree);
-
-                        if (my.GetDistanceTo(nextTree) <= Game.StaffRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingStaffCooldownTicks == 0)
-                            FinalMove.Action = ActionType.Staff;
-                        else if (my.GetDistanceTo(nextTree) <= my.CastRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingMagicMissileCooldownTicks == 0)
-                            FinalMove.Action = ActionType.MagicMissile; //TODO: не попасть в своих
-                    }
+					CutTreesInPath(nextTree, selMovingInfo.Move);
                 }
             }
             if (selBonus != null && selMovingInfo.Time <= selBonus.RemainingAppearanceTicks - 15/*запас*/)

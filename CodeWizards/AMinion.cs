@@ -19,8 +19,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override void SkipTick()
         {
-            if (RemainingActionCooldownTicks > 0)
-                RemainingActionCooldownTicks--;
+			Utility.Dec(ref RemainingActionCooldownTicks);
         }
 
         public override void EthalonMove(ACircularUnit target)

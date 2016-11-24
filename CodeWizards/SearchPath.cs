@@ -125,7 +125,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (tree != null &&
                     Geom.SegmentCircleIntersects(a, b, tree,
                         tree.Radius + _selfRadius + MagicConst.RadiusAdditionalEpsilon))
-                    res += _allowTrees ? tree.Life : int.MaxValue; //TODO
+                    res += _allowTrees ? (Math.Ceiling(tree.Life / 12) * MagicConst.TreeObstacleWeight) : int.MaxValue; //TODO
             }
             return res;
         }

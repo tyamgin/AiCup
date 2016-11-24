@@ -25,8 +25,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override void SkipTick()
         {
-            if (RemainingActionCooldownTicks > 0)
-                RemainingActionCooldownTicks--;
+			Utility.Dec(ref RemainingActionCooldownTicks);
         }
 
         public override void EthalonMove(ACircularUnit target)
@@ -47,18 +46,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             ACombatUnit sel = null;
-            foreach (var x in accessible)
-                if (x.Life <= Damage + Const.Eps)
-                    if (sel == null || x.Life < sel.Life - Const.Eps || Utility.Equals(x.Life, sel.Life) && x.Id == MyStrategy.Self.Id)
+			
+			foreach (var x in accessible)
+                if (x.Life > Damage)
+                    if (sel == null || x.Life < sel.Life || Utility.Equals(x.Life, sel.Life) && x.Id == MyStrategy.Self.Id)
                         sel = x;
-                    
-            if (sel != null)
-                return sel;
-
+			
+			if (sel != null)
+				return sel;
+			
             foreach (var x in accessible)
-                if (sel == null || x.Life > sel.Life + Const.Eps || Utility.Equals(x.Life, sel.Life) && x.Id == MyStrategy.Self.Id)
-                    sel = x;
-                
+                if (x.Life <= Damage)
+                    if (sel == null || x.Life > sel.Life || Utility.Equals(x.Life, sel.Life) && x.Id == MyStrategy.Self.Id)
+                        sel = x;
+                                    
             return sel;
         }
 
