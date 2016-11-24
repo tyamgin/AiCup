@@ -185,21 +185,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (!TryDodgeProjectile())
             {
                 if (target == null || 
-                    FinalMove.Action == ActionType.Staff ||
+                    (FinalMove.Action == ActionType.Staff ||
                     FinalMove.Action == ActionType.MagicMissile || 
                     FinalMove.Action == ActionType.Fireball ||
-                    FinalMove.Action == ActionType.FrostBolt)
+                    FinalMove.Action == ActionType.FrostBolt) && target.Type == TargetType.Opponent)
                 {
                     if (bonusMoving.Target != null)
                     {
                         NextBonusWaypoint = bonusMoving.Target;
                         FinalMove.Turn = bonusMoving.Move.Turn;
-						if (bonusMoving.Move.Action != ActionType.None)
-							FinalMove.Action = bonusMoving.Move.Action;
-						//FinalMove.MinCastDistance = bonusMoving.Move.MinCastDistance;
-						//FinalMove.MaxCastDistance = bonusMoving.Move.MaxCastDistance;
-						FinalMove.CastAngle = bonusMoving.Move.CastAngle;
-
+                        if (bonusMoving.Move.Action != ActionType.None && bonusMoving.Move.Action != null)
+                        {
+                            FinalMove.Action = bonusMoving.Move.Action;
+                            FinalMove.MinCastDistance = bonusMoving.Move.MinCastDistance;
+                            FinalMove.MaxCastDistance = bonusMoving.Move.MaxCastDistance;
+                            FinalMove.CastAngle = bonusMoving.Move.CastAngle;
+                        }
                         var my = new AWizard(Self);
                         
 						NextBonusWaypoint = my + (NextBonusWaypoint - my).Normalized() * (Self.Radius + 30);
@@ -462,7 +463,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        Point FindTarget(AWizard self, Point moveTo = null)
+        enum TargetType
+        {
+            Opponent,
+            Bonus,
+        }
+
+        class Target
+        {
+            public Point MoveTo;
+            public TargetType Type;
+        }
+
+        Target FindTarget(AWizard self, Point moveTo = null)
         {
             var t0 = FindBonusTarget(self);
             var t1 = FindCastTarget(self);
@@ -482,19 +495,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 FinalMove.MinCastDistance = t1.Move.MinCastDistance;
                 FinalMove.MaxCastDistance = t1.Move.MaxCastDistance;
                 FinalMove.CastAngle = t1.Move.CastAngle;
-                return t1.Target;
+                return new Target {MoveTo = t1.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus};
             }
             if (t0.Target == null && t2.Target != null && t2.Time <= Math.Min(t1.Time, t3.Time))
             {
                 FinalMove.Apply(t2.Move);
-                return t2.Target;
+                return new Target { MoveTo = t2.Target, Type = TargetType.Opponent };
             }
             if (t3.Target != null && t3.Time <= Math.Min(t1.Time, t2.Time))
             {
                 FinalMove.Apply(t3.Move);
-                return t3.Target;
+                return new Target { MoveTo = t3.Target, Type = TargetType.Opponent };
             }
-            return ret;
+
+            if (ret == null)
+                return null;
+
+            return new Target { MoveTo = ret, Type = TargetType.Bonus };
         }
 
         class MovingInfo
