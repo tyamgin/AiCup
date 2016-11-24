@@ -92,6 +92,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             FinalMove = new FinalMove(move);
             
             Const.MapSize = Game.MapSize;
+            Const.WizardRadius = Game.WizardRadius;
 
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
@@ -473,6 +474,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
 
         Target FindTarget(AWizard self, Point moveTo = null)
+        {
+            TimerStart();
+            var ret = _findTarget(self, moveTo);
+            TimerEndLog("FindTarget", 1);
+            return ret;
+        }
+
+        Target _findTarget(AWizard self, Point moveTo)
         {
             var t0 = FindBonusTarget(self);
             var t1 = FindCastTarget(self);

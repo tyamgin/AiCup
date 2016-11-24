@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (length + a.GetDistanceTo(b) > maxLength)
                     break;
 
-                if (obstacles.All(ob => !Geom.SegmentCircleIntersects(a, c, ob, MyStrategy.Game.WizardRadius + ob.Radius + MagicConst.RadiusAdditionalEpsilon)))
+                if (obstacles.All(ob => !Geom.SegmentCircleIntersects(a, c, ob, Const.WizardRadius + ob.Radius + MagicConst.RadiusAdditionalEpsilon)))
                 {
                     RemoveAt(i - 1);
                     i--;
@@ -59,7 +59,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Point p = dir * (1.0 * i / segmentDivideParts) + a;
                 var tree = TreesObserver.GetNearestTree(p);
                 if (tree != null && Geom.SegmentCircleIntersects(a, b, tree,
-                        tree.Radius + MyStrategy.Game.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
+                        tree.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
                     return tree;
             }
             return null;
@@ -113,19 +113,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private static int _segmentDivideParts = 2;
         private static bool _allowTrees;
+        private static AWizard _startState;
 
         static double _getSegmentWeight(Point a, Point b)
         {
             var dir = b - a;
             double res = dir.Length;
-            for (var i = 1; i <= _segmentDivideParts; i++) // начало отрезка намеренно не проверяется
+            for (var i = 1; i <= _segmentDivideParts; i++) // начало отрезка намеренно не проверяется (чтобы не проверять дважды)
             {
                 Point p = dir*(1.0*i/_segmentDivideParts) + a;
                 var tree = TreesObserver.GetNearestTree(p);
                 if (tree != null &&
                     Geom.SegmentCircleIntersects(a, b, tree,
-                        tree.Radius + _selfRadius + MagicConst.RadiusAdditionalEpsilon))
-                    res += _allowTrees ? (Math.Ceiling(tree.Life / 12) * MagicConst.TreeObstacleWeight) : int.MaxValue; //TODO
+                        tree.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
+                    res += _allowTrees ? (Math.Ceiling(tree.Life / 12) * MagicConst.TreeObstacleWeight) : int.MaxValue;
             }
             return res;
         }
@@ -165,15 +166,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
 
         private static ACircularUnit[] _obstacles;
-        private static double _selfRadius;
 
         private static bool CanPass(Point from, Point to)
         {
-            if (to.X < _selfRadius || to.Y < _selfRadius || to.X > Const.MapSize - _selfRadius || to.Y > Const.MapSize - _selfRadius)
+            if (to.X < Const.WizardRadius || to.Y < Const.WizardRadius || to.X > Const.MapSize - Const.WizardRadius || to.Y > Const.MapSize - Const.WizardRadius)
                 return false;
 
+            if (from.GetDistanceTo2(_startState) > Geom.Sqr(_startState.VisionRange)) // нет смысла проверять препятствия далеко
+                return true;
+
             return _obstacles.All(ob =>
-                !Geom.SegmentCircleIntersects(from, to, ob, ob.Radius + _selfRadius + MagicConst.RadiusAdditionalEpsilon));
+                !Geom.SegmentCircleIntersects(from, to, ob, ob.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon));
         }
 
         public enum DijkstraStopStatus
@@ -260,10 +263,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static WizardPath[] DijkstraFindPath(ACombatUnit start, DijkstraStopFuncPoint stopFunc, DijkstraStopFuncPoint canPass, bool allowCutTrees)
+        public static WizardPath[] DijkstraFindPath(AWizard start, DijkstraStopFuncPoint stopFunc, DijkstraStopFuncPoint canPass, bool allowCutTrees)
         {
             _allowTrees = allowCutTrees;
-            _selfRadius = start.Radius;
+            _startState = start;
             
             _obstacles = Combats
                 .Where(x => !x.IsOpponent && x.Id != start.Id && x.GetDistanceTo2(start) < Geom.Sqr(start.VisionRange)) // (нейтральные включительно)

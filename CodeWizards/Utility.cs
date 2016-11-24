@@ -27,9 +27,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static long TimerStop()
         {
 #if DEBUG
-            var res = _timers[_timers.Count - 1];
+            var res = _timers.Last();
             res.Stop();
-            _timers.RemoveAt(_timers.Count - 1);
+            _timers.Pop();
             return res.ElapsedMilliseconds;
 #else
             return 0;
@@ -41,7 +41,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #if DEBUG
             var time = TimerStop();
             if (time > limit)
-                Log(World.TickIndex + "> " + caption + ":" + time);
+                Log(World.TickIndex + ">" + new string('-', _timers.Count * 2) + " " + caption + ":" + time);
 #endif
         }
 
@@ -110,6 +110,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return list[list.Count - 1];
         }
 
+        public static void Pop<T>(this List<T> list)
+        {
+            list.RemoveAt(list.Count - 1);
+        }
+
         public delegate double OrderFunc<in T>(T value);
 
         public static T ArgMin<T>(this IEnumerable<T> ie, OrderFunc<T> func)
@@ -127,5 +132,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             return res;
         }
+
+
     }
 }
