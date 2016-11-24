@@ -149,6 +149,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var outerPadding = 500;
             if (distToLine > linePadding && distToLine < outerPadding)
                 res += (distToLine - linePadding)/(outerPadding - linePadding)*10;
+            else if (distToLine >= outerPadding)
+                res += 10;
             
             // не прижиматься к стене
             var distToBorders = Math.Min(Math.Min(my.X, my.Y), Math.Min(Const.MapSize - my.X, Const.MapSize - my.Y));
