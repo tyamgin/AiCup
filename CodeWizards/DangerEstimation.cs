@@ -80,13 +80,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             // не прижиматься к деревьям
-            var nearestTree = TreesObserver.GetNearestTree(my);
-            if (nearestTree != null)
-            {
-                var dist = my.GetDistanceTo(nearestTree) - nearestTree.Radius;
-                if (dist < 60)
-                    res += 1.5-dist/60*1.5;
-            }
+            //var nearestTree = TreesObserver.GetNearestTree(my);
+            //if (nearestTree != null)
+            //{
+            //    var dist = my.GetDistanceTo(nearestTree) - nearestTree.Radius;
+            //    if (dist < 60)
+            //        res += 1.5-dist/60*1.5;
+            //}
 
             // не прижиматься к своим
             foreach (var co in MyCombats)

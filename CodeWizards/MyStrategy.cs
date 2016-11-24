@@ -312,12 +312,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var nextTree = path.GetNearestTree();
             if (nextTree != null)
             {
-                if (my.GetDistanceTo(nextTree) < my.VisionRange && my.GetAngleTo(nextTree) < Game.StaffSector / 2)
+                if (my.GetDistanceTo(nextTree) < my.VisionRange && my.GetAngleTo(nextTree) > Game.StaffSector / 2)
                     FinalMove.MoveTo(null, nextTree);
 
-                if (my.GetDistanceTo(nextTree) + nextTree.Radius <= Game.StaffRange && my.RemainingActionCooldownTicks == 0 && my.RemainingStaffCooldownTicks == 0)
+                if (my.GetDistanceTo(nextTree) <= Game.StaffRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingStaffCooldownTicks == 0)
                     FinalMove.Action = ActionType.Staff;
-                else if (my.GetDistanceTo(nextTree) + nextTree.Radius <= my.CastRange && my.RemainingActionCooldownTicks == 0 && my.RemainingMagicMissileCooldownTicks == 0)
+                else if (my.GetDistanceTo(nextTree) <= my.CastRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingMagicMissileCooldownTicks == 0)
                     FinalMove.Action = ActionType.MagicMissile; //TODO: не попасть в своих
             }
 #if DEBUG
@@ -398,12 +398,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var nextTree = path.GetNearestTree();
                     if (nextTree != null)
                     {
-                        if (my.GetDistanceTo(nextTree) < my.VisionRange && my.GetAngleTo(nextTree) < Game.StaffSector / 2)
+                        if (my.GetDistanceTo(nextTree) < my.VisionRange && my.GetAngleTo(nextTree) > Game.StaffSector / 2)
                             FinalMove.MoveTo(null, nextTree);
 
-                        if (my.GetDistanceTo(nextTree) + nextTree.Radius <= Game.StaffRange && my.RemainingActionCooldownTicks == 0 && my.RemainingStaffCooldownTicks == 0)
+                        if (my.GetDistanceTo(nextTree) <= Game.StaffRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingStaffCooldownTicks == 0)
                             FinalMove.Action = ActionType.Staff;
-                        else if (my.GetDistanceTo(nextTree) + nextTree.Radius <= my.CastRange && my.RemainingActionCooldownTicks == 0 && my.RemainingMagicMissileCooldownTicks == 0)
+                        else if (my.GetDistanceTo(nextTree) <= my.CastRange + nextTree.Radius && my.RemainingActionCooldownTicks == 0 && my.RemainingMagicMissileCooldownTicks == 0)
                             FinalMove.Action = ActionType.MagicMissile; //TODO: не попасть в своих
                     }
                 }
