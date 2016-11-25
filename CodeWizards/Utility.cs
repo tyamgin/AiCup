@@ -137,7 +137,5 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             return res;
         }
-
-
     }
 }
