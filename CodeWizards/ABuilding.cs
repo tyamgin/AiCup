@@ -65,7 +65,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public bool IsBase => Utility.Equals(MyStrategy.Game.FactionBaseRadius, Radius);
 
-        public LaneType Lane => MyStrategy.GetLane(this);
+        public ALaneType Lane => RoadsHelper.GetLane(this);
 
         public int Order
         {

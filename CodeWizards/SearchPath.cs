@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -29,11 +27,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var a = this[i - 2];
                 var b = this[i - 1];
+                var c = this[i];
 
-                if (_getNearestTree(a, b) != null)
+                if (_getNearestTree(a, b) != null || _getNearestTree(b, c) != null || _getNearestTree(a, c) != null)
                     break;
 
-                var c = this[i];
                 if (length + a.GetDistanceTo(b) > maxLength)
                     break;
 
@@ -51,7 +49,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private ATree _getNearestTree(Point a, Point b)
         {
-            const int segmentDivideParts = 2;
+            const int segmentDivideParts = 3;
             var dir = b - a;
 
             for (var i = 0; i <= segmentDivideParts; i++)
@@ -86,7 +84,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private static double[,] _distMap;
         private static Cell[,] _distPrev;
-        private static Point[,] _points;
+        public static Point[,] _points;
         public static int GridSize = 80;
         public static double CellLength;
         public static double CellDiagLength;
@@ -111,22 +109,26 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        private static int _segmentDivideParts = 2;
+        private static int _segmentDivideParts = 1;
         private static bool _allowTrees;
         private static AWizard _startState;
 
-        static double _getSegmentWeight(Point a, Point b)
+        static double _getSegmentWeight(Point a, Point b, bool checkStart = false)
         {
             var dir = b - a;
             double res = dir.Length;
-            for (var i = 1; i <= _segmentDivideParts; i++) // начало отрезка намеренно не проверяется (чтобы не проверять дважды)
+            ATree prev = null;
+            for (var i = (checkStart ? 0 : 1); i <= _segmentDivideParts; i++)
             {
                 Point p = dir*(1.0*i/_segmentDivideParts) + a;
                 var tree = TreesObserver.GetNearestTree(p);
-                if (tree != null &&
+                if (tree != null && tree != prev &&
                     Geom.SegmentCircleIntersects(a, b, tree,
                         tree.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
-                    res += _allowTrees ? (Math.Ceiling(tree.Life / 12) * MagicConst.TreeObstacleWeight) : int.MaxValue;
+                {
+                    res += _allowTrees ? (Math.Ceiling(tree.Life/12)*MagicConst.TreeObstacleWeight) : int.MaxValue;
+                    prev = tree;
+                }
             }
             return res;
         }
@@ -148,7 +150,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 for (var dj = 0; dj < 2; dj++)
                 {
-                    var dst = _getSegmentWeight(_points[I + di, J + dj], my);
+                    var dst = _getSegmentWeight(_points[I + di, J + dj], my, true);
                     if (dst < minDist && 
                         obstacles.All(ob =>
                             !Geom.SegmentCircleIntersects(my, _points[I + di, J + dj], ob, ob.Radius + my.Radius + MagicConst.RadiusAdditionalEpsilon))
@@ -187,10 +189,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TakeAndStop,
         }
 
-        public delegate bool DijkstraStopFuncCell(Cell pos);
-        public delegate DijkstraStopStatus DijkstraStopFuncPoint(Point pos);
+        public delegate bool DijkstraCellStopFunc(Cell pos);
+        public delegate DijkstraStopStatus DijkstraPointStopFunc(Point pos);
+        public delegate double DijkstraPointCostFunc(Point pos);
 
-        public static void DijkstraStart(Cell start, DijkstraStopFuncCell stopCondition, DijkstraStopFuncPoint canPass)
+        public static void DijkstraStart(Cell start, DijkstraCellStopFunc stopCondition, DijkstraPointCostFunc costFunc)
         {
             var q = new PriorityQueue<Pair<double, Cell>>();
             q.Push(new Pair<double, Cell>(0.0, start));
@@ -226,7 +229,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         continue;
 
                     var distTo = _distMap[cur.I, cur.J] + _getSegmentWeight(_points[cur.I, cur.J], _points[I, J]);
-                    if (distTo < _distMap[I, J] && CanPass(_points[cur.I, cur.J], _points[I, J]) && (canPass == null || canPass(_points[I, J]) == DijkstraStopStatus.Continue))
+                    if (costFunc != null)
+                        distTo += costFunc(_points[I, J]);
+
+                    if (distTo < _distMap[I, J] && CanPass(_points[cur.I, cur.J], _points[I, J]))
                     {
                         _distMap[I, J] = distTo;
                         _distPrev[I, J] = cur;
@@ -263,7 +269,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static WizardPath[] DijkstraFindPath(AWizard start, DijkstraStopFuncPoint stopFunc, DijkstraStopFuncPoint canPass, bool allowCutTrees)
+        public static WizardPath[] DijkstraFindPath(AWizard start, DijkstraPointStopFunc stopFunc, DijkstraPointCostFunc costFunc, bool allowCutTrees)
         {
             _allowTrees = allowCutTrees;
             _startState = start;
@@ -289,7 +295,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (status == DijkstraStopStatus.Stop || status == DijkstraStopStatus.TakeAndStop)
                     return true;
                 return false;
-            }, canPass);
+            }, costFunc);
 
             return endCells.Select(endCell =>
             {

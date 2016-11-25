@@ -16,6 +16,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static void Update()
         {
+            MyStrategy.TimerStart();
+
             CellLength = Const.MapSize / GridSize;
 
             var newState = new Dictionary<long, ATree>();
@@ -49,6 +51,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             _prevState = newState;
             _updateGrid();
+
+            MyStrategy.TimerEndLog("Update trees", 1);
         }
 
 
@@ -75,7 +79,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private static void _updateGridByTree(ATree tree, ATree value)
         {
-            var r = 1.4 * tree.Radius;
+            var r = (tree.Radius + Const.WizardRadius) * 1.1;
             var am = (int) (r/CellLength) + 1;
             var center = _findNearestCell(tree);
             for (var di = -am; di <= am; di++)

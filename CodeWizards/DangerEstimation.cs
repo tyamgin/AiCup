@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -118,21 +119,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             // держаться ближе к бонусам
-            foreach (var bonus in BonusesObserver.Bonuses)
-            {
-                var outer = 1000;
-                var inner = bonus.Radius + my.Radius;
-                var dist = my.GetDistanceTo(bonus);
-                if (dist <= inner && !bonus.Exists && bonus.RemainingAppearanceTicks < 150) // не перекрывать бонус
-                {
-                    res += 30 + 20 - dist/inner*20;
-                }
-                else if (dist < outer)
-                {
-                    if (bonus.Exists || BonusesObserver.Bonuses.All(b => !b.Exists))
-                        res -= 5 - dist/outer*5;
-                }
-            }
+            //foreach (var bonus in BonusesObserver.Bonuses)
+            //{
+            //    var outer = 1000;
+            //    var inner = bonus.Radius + my.Radius;
+            //    var dist = my.GetDistanceTo(bonus);
+            //    if (dist <= inner && !bonus.Exists && bonus.RemainingAppearanceTicks < 150) // не перекрывать бонус
+            //    {
+            //        res += 30 + 20 - dist/inner*20;
+            //    }
+            //    else if (dist < outer)
+            //    {
+            //        if (bonus.Exists || BonusesObserver.Bonuses.All(b => !b.Exists))
+            //            res -= 5 - dist/outer*5;
+            //    }
+            //}
 
             // двигаться по пути к бонусу
             if (NextBonusWaypoint != null)
@@ -144,14 +145,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             
             // прижиматься к центру дорожки
-            var distToLine = Roads.Min(seg => seg.GetDistanceTo(my));
+            var distToLine = RoadsHelper.Roads.Min(seg => seg.GetDistanceTo(my));
             var linePadding = 150.0;
             var outerPadding = 500;
             if (distToLine > linePadding && distToLine < outerPadding)
                 res += (distToLine - linePadding)/(outerPadding - linePadding)*10;
             else if (distToLine >= outerPadding)
                 res += 10;
-            
+
+            distToLine = RoadsHelper.Roads.Where(seg => seg.LaneType != ALaneType.Middle2).Min(seg => seg.GetDistanceTo(my));
+            outerPadding = 500;
+            if (distToLine > linePadding && distToLine < outerPadding)
+                res -= 1 - (distToLine - linePadding) / (outerPadding - linePadding) * 1;
+            else if (distToLine <= linePadding)
+                res -= 1;
+
             // не прижиматься к стене
             var distToBorders = Math.Min(Math.Min(my.X, my.Y), Math.Min(Const.MapSize - my.X, Const.MapSize - my.Y));
             var bordersPadding = 45;
@@ -159,55 +167,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 res += 4 - distToBorders/bordersPadding*4;
 
             return res;
-        }
-
-        public class LaneSegment : Segment
-        {
-            public LaneType LaneType;
-
-            public LaneSegment(Point a, Point b, LaneType laneType) : base(a, b)
-            {
-                LaneType = laneType;
-            }
-        }
-
-        public static void InitializeRoads()
-        {
-            if (Roads == null)
-            {
-                var dx = Const.BaseBuildingDistance / 2;
-                var s = Const.MapSize;
-                var a = new Point(dx, s - dx);
-                var b = new Point(dx, dx);
-                var c = new Point(s - dx, dx);
-                var d = new Point(s - dx, s - dx);
-                Roads = new[]
-                {
-                    new LaneSegment(a, b, LaneType.Top),
-                    new LaneSegment(b, c, LaneType.Top),
-                    new LaneSegment(c, d, LaneType.Bottom),
-                    new LaneSegment(d, a, LaneType.Bottom),
-                    new LaneSegment(a, c, LaneType.Middle),
-                    new LaneSegment(b, d, LaneType.Middle),
-                };
-
-                MagicConst.MinionAppearencePoints = new []
-                {
-                    new Point(Const.BaseBuildingDistance * 2.5, Const.MapSize - Const.BaseBuildingDistance * 0.5),
-                    new Point(Const.BaseBuildingDistance * 0.5, Const.MapSize - Const.BaseBuildingDistance * 2.5),
-                    new Point(Const.BaseBuildingDistance * 2.0, Const.MapSize - Const.BaseBuildingDistance * 2.0),
-                };
-                foreach (var appPt in MagicConst.MinionAppearencePoints)
-                {
-                    appPt.X = Const.MapSize - appPt.X;
-                    appPt.Y = Const.MapSize - appPt.Y;
-                }
-            }
-        }
-
-        public static LaneType GetLane(Point self)
-        {
-            return Roads.ArgMin(r => r.GetDistanceTo(self)).LaneType;
         }
 
         List<Tuple<Point, double>> CalculateDangerMap()
@@ -252,35 +211,46 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             var danger = costFunction(self);
-            double minDanger = int.MaxValue;
-            double selMindangerOld = danger;
-            Point selMoveToOld = null;
-            Point selMoveTo = null;
             List<double> selVec = null;
+            var minDanger = double.MaxValue;
+            Point selMoveTo = null;
 
-            const int grid = 40;
+            const int grid = 24;
             for (var i = 0; i < grid; i++)
             {
                 var angle = Math.PI*2/grid*i + self.Angle;
                 var moveTo = self + Point.ByAngle(angle) * self.VisionRange;
                 var nearest = Combats
-                    .Where(x => x.GetDistanceTo(self) < self.VisionRange)
+                    .Where(x => x.GetDistanceTo(self) < self.VisionRange * 1.3)
                     .Select(Utility.CloneCombat)
                     .ToArray();
                 var tergetsSelector = new TargetsSelector(nearest);
+                var opponents = nearest.Where(x => x.IsOpponent).ToArray();
 
                 var vec = new List<double>();
-                const int steps = 15;
+                const int steps = 18;
 
-                var my = new AWizard(Self);
+                var my = (AWizard) nearest.FirstOrDefault(x => x.Id == self.Id);
                 var ok = true;
+                var canMove = true;
 
-                while (vec.Count < steps && my.MoveTo(moveTo, null,
-                    w => obstacles.All(ob => !Geom.SegmentCircleIntersects(self, w, ob, ob.Radius + self.Radius)))
-                    )
+                while (vec.Count < steps)
                 {
+                    if (canMove)
+                    {
+                        canMove = my.MoveTo(moveTo, null, w =>
+                            obstacles.All(ob => !Geom.SegmentCircleIntersects(self, w, ob, ob.Radius + self.Radius)));
+                    }
+                    else
+                    {
+                        my.SkipTick();
+                    }
+
+                    var tmp = OpponentCombats;//HACK
+                    OpponentCombats = opponents;
                     vec.Add(costFunction(my));
-                    foreach (var x in nearest)
+                    OpponentCombats = tmp;
+                    foreach (var x in opponents)
                     {
                         var tar = tergetsSelector.Select(x);
                         if (tar != null || x is AWizard)
@@ -299,24 +269,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 while(vec.Count < steps)
                     vec.Add(CantMoveDanger);
 
-                if (vec[0] < danger)
+                //if (vec[0] < danger)
                 {
                     var newDanger = 0.0;
                     for (var k = 0; k < steps; k++)
-                        newDanger += vec[k]*Math.Pow(0.88, k);
+                        newDanger += vec[k]*Math.Pow(0.87, k);
+                    newDanger += 3 * vec[0];
 
                     if (newDanger < minDanger)
                     {
                         minDanger = newDanger;
                         selMoveTo = moveTo;
-                        selVec = vec;
                     }
-                }
-
-                if (vec[0] < selMindangerOld)
-                {
-                    selMindangerOld = vec[0];
-                    selMoveToOld = moveTo;
                 }
             }
             if (selMoveTo != null)
@@ -414,7 +378,5 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }).ToArray();
             }
         }
-
-        
     }
 }

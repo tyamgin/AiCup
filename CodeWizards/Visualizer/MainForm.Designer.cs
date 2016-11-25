@@ -35,6 +35,8 @@
             this.buttonPause = new System.Windows.Forms.Button();
             this.renderButton = new System.Windows.Forms.Button();
             this.stopRenderButton = new System.Windows.Forms.Button();
+            this.cellsCheckBox = new System.Windows.Forms.CheckBox();
+            this.gradCheckBox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.panel)).BeginInit();
             this.SuspendLayout();
             // 
@@ -110,11 +112,33 @@
             this.stopRenderButton.UseVisualStyleBackColor = true;
             this.stopRenderButton.Click += new System.EventHandler(this.stopRenderButton_Click);
             // 
+            // cellsCheckBox
+            // 
+            this.cellsCheckBox.AutoSize = true;
+            this.cellsCheckBox.Location = new System.Drawing.Point(3, 189);
+            this.cellsCheckBox.Name = "cellsCheckBox";
+            this.cellsCheckBox.Size = new System.Drawing.Size(47, 17);
+            this.cellsCheckBox.TabIndex = 7;
+            this.cellsCheckBox.Text = "cells";
+            this.cellsCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // gradCheckBox
+            // 
+            this.gradCheckBox.AutoSize = true;
+            this.gradCheckBox.Location = new System.Drawing.Point(3, 212);
+            this.gradCheckBox.Name = "gradCheckBox";
+            this.gradCheckBox.Size = new System.Drawing.Size(47, 17);
+            this.gradCheckBox.TabIndex = 8;
+            this.gradCheckBox.Text = "grad";
+            this.gradCheckBox.UseVisualStyleBackColor = true;
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1126, 879);
+            this.Controls.Add(this.gradCheckBox);
+            this.Controls.Add(this.cellsCheckBox);
             this.Controls.Add(this.stopRenderButton);
             this.Controls.Add(this.renderButton);
             this.Controls.Add(this.buttonPause);
@@ -139,5 +163,7 @@
         private System.Windows.Forms.Button buttonPause;
         private System.Windows.Forms.Button renderButton;
         private System.Windows.Forms.Button stopRenderButton;
+        public System.Windows.Forms.CheckBox cellsCheckBox;
+        public System.Windows.Forms.CheckBox gradCheckBox;
     }
 }

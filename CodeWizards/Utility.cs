@@ -15,7 +15,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private static readonly List<Stopwatch> _timers = new List<Stopwatch>();
 
-        public void TimerStart()
+        public static void TimerStart()
         {
 #if DEBUG
             var timer = new Stopwatch();
@@ -94,6 +94,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (combat is AFetish)
                 return new AFetish(combat as AFetish);
             throw new Exception("unknown combat type");
+        }
+
+        public static bool IsBase(ACombatUnit unit)
+        {
+            return unit is ABuilding && ((ABuilding) unit).IsBase;
         }
 
         public static void Dec(ref int value)

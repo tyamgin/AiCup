@@ -175,25 +175,37 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
-            foreach(var seg in MyStrategy.Roads)
+            foreach(var seg in RoadsHelper.Roads)
                 DrawLine(Color.Khaki, seg.A.X, seg.A.Y, seg.B.X, seg.B.Y);
 
-            var maxDanger = DangerPoints.Max(x => x.Item2);
-            var minDanger = DangerPoints.Min(x => x.Item2);
-
-            if (maxDanger > Const.Eps)
+            if (_form.gradCheckBox.Checked)
             {
-                foreach (var t in DangerPoints)
+                var maxDanger = DangerPoints.Max(x => x.Item2);
+                var minDanger = DangerPoints.Min(x => x.Item2);
+
+                if (maxDanger > Const.Eps)
                 {
-                    var pt = t.Item1;
-                    var danger = t.Item2;
-                    var color = (danger >= 0 ? _grad(BadColors, 1 - danger/maxDanger) : _grad(GoodColors, danger / minDanger)).ToColor();
-                    FillCircle(color, pt.X, pt.Y, 4);
+                    foreach (var t in DangerPoints)
+                    {
+                        var pt = t.Item1;
+                        var danger = t.Item2;
+                        var color =
+                            (danger >= 0 ? _grad(BadColors, 1 - danger/maxDanger) : _grad(GoodColors, danger/minDanger))
+                                .ToColor();
+                        FillCircle(color, pt.X, pt.Y, 4);
+                    }
                 }
             }
 
+            if (_form.cellsCheckBox.Checked)
+            {
+                for (var i = 0; i <= MyStrategy.GridSize; i++)
+                    for (var j = 0; j <= MyStrategy.GridSize; j++)
+                        FillCircle(Color.Red, MyStrategy._points[i, j].X, MyStrategy._points[i, j].Y, 3);
+            }
+
             // wizards
-            foreach(var wizard in MyStrategy.Wizards)
+            foreach (var wizard in MyStrategy.Wizards)
             {
                 var w = MyStrategy.World.Wizards.FirstOrDefault(x => x.Id == wizard.Id);
                 var color = w.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange);

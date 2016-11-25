@@ -10,13 +10,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             // TODO: не пашет
             if (World.TickIndex == 0)
             {
-                //FinalMove.Messages = new[]
-                //{
-                //    new Message(LaneType.Bottom, null, new byte[] {}),
-                //    new Message(LaneType.Bottom, null, new byte[] {}),
-                //    new Message(LaneType.Bottom, null, new byte[] {}),
-                //    new Message(LaneType.Bottom, null, new byte[] {}),
-                //};
+                FinalMove.Messages = new[]
+                {
+                    new Message(LaneType.Bottom, null, new byte[] {}),
+                    new Message(LaneType.Bottom, null, new byte[] {}),
+                    new Message(LaneType.Bottom, null, new byte[] {}),
+                    new Message(LaneType.Bottom, null, new byte[] {}),
+                };
+                return;
 
                 var self = new AWizard(Self);
                 AWizard

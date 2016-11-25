@@ -22,8 +22,8 @@
     {
         public static double RadiusAdditionalEpsilon = 0.5;
         public static Point[] MinionAppearencePoints;
-        public static int GoToBonusmaxTicks = 650;
+        public static int GoToBonusmaxTicks = 550;
         public static double SimplifyMaxLength = 1000;
-		public static double TreeObstacleWeight = 25;
+		public static double TreeObstacleWeight = 35;
     }
 }

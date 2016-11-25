@@ -1,5 +1,8 @@
+using System;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -13,19 +16,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(5000);
 #endif
-            new Runner(args.Length == 3 ? args : new[] { "127.0.0.1", "31001", "0000000000000000" }).Run();
-#if DEBUG
-            //var oldStrategy = new Process
+            File.WriteAllText("G:\\started.txt", string.Join("\n", args));
+            //try
             //{
-            //    StartInfo =
-            //    {
-            //        FileName = "G:\\Projects\\AiCup\\CodeWizards\\local_runner\\bin\\5.exe",
-            //        Arguments = "127.0.0.1 " + (31002 + 0) + " 0000000000000000",
-            //        //CreateNoWindow = true
-            //    }
-            //};
-            //oldStrategy.Start();
-#endif
+                new Runner(args.Length == 3 ? args : new[] {"127.0.0.1", "31001", "0000000000000000"}).Run();
+            //}
+            //catch (Exception e)
+            //{
+            //    File.WriteAllText("G:\\log.txt", e.Message + "\n" + e.StackTrace);
+            //}
         }
 
         private Runner(string[] args) {
@@ -34,7 +33,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
 
         public void Run() {
-            try {
+            try
+            {
                 remoteProcessClient.WriteTokenMessage(token);
                 remoteProcessClient.WriteProtocolVersionMessage();
                 int teamSize = remoteProcessClient.ReadTeamSizeMessage();
@@ -42,21 +42,25 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 IStrategy[] strategies = new IStrategy[teamSize];
 
-                for (int strategyIndex = 0; strategyIndex < teamSize; ++strategyIndex) {
+                for (int strategyIndex = 0; strategyIndex < teamSize; ++strategyIndex)
+                {
                     strategies[strategyIndex] = new MyStrategy();
                 }
 
                 PlayerContext playerContext;
 
-                while ((playerContext = remoteProcessClient.ReadPlayerContextMessage()) != null) {
+                while ((playerContext = remoteProcessClient.ReadPlayerContextMessage()) != null)
+                {
                     Wizard[] playerWizards = playerContext.Wizards;
-                    if (playerWizards == null || playerWizards.Length != teamSize) {
+                    if (playerWizards == null || playerWizards.Length != teamSize)
+                    {
                         break;
                     }
 
                     Move[] moves = new Move[teamSize];
 
-                    for (int wizardIndex = 0; wizardIndex < teamSize; ++wizardIndex) {
+                    for (int wizardIndex = 0; wizardIndex < teamSize; ++wizardIndex)
+                    {
                         Wizard playerWizard = playerWizards[wizardIndex];
 
                         Move move = new Move();
@@ -66,7 +70,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     remoteProcessClient.WriteMovesMessage(moves);
                 }
-            } finally {
+            }
+            catch (Exception e)
+            {
+                File.WriteAllText("G:\\log.txt", e.Message + "\n" + e.StackTrace);
+            }
+            finally
+            {
                 remoteProcessClient.Close();
             }
         }

@@ -34,7 +34,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static ACombatUnit[] Combats, OpponentCombats, MyCombats;
 
         public static AProjectile[][] ProjectilesPaths;
-        public static LaneSegment[] Roads;
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
@@ -134,7 +133,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .Where(x => x.IsOpponent)
                 .ToArray();
 
-            InitializeRoads();
+            RoadsHelper.Initialize();
             BuildingsObserver.Update();
 
             OpponentBuildings = BuildingsObserver.Buildings
@@ -148,11 +147,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             InitializeProjectiles();
             InitializeDijkstra();
 
+            var my = new AWizard(Self);
+
             foreach (var building in OpponentBuildings)
             {
                 building.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
                 var hisWizards = OpponentWizards.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
-                if (building.IsBase && building.OpponentsCount >= 7 || !building.IsBase && building.OpponentsCount >= 5 && hisWizards == 0)
+                if (building.IsBase && building.OpponentsCount >= 7 || !building.IsBase && building.OpponentsCount >= 5)
                     building.IsBesieded = true;
             }
 
@@ -167,9 +168,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (target == null && bonusMoving.Target == null)
             {
                 var nearest = OpponentCombats
-                    .OrderBy(x => x.GetDistanceTo(self) + (x is AWizard ? -40 : (x is ABuilding && !((ABuilding) x).IsBesieded) ? 1500 : 0))
+                    .Where(
+                        x =>
+                            Utility.IsBase(x) || RoadsHelper.GetLane(x) == MessagesObserver.GetLane() ||
+                            RoadsHelper.GetLaneEx(my) == ALaneType.Middle && 
+                            RoadsHelper.GetLaneEx(x) == ALaneType.Middle && CanRush(my, x))
                     .Where(x => x.IsAssailable)
-                    //.Where((x, i) => i == 0 || x.GetDistanceTo(self) < self.VisionRange * 1.7)// чтобы не переходить на другую линию
+                    .OrderBy(
+                        x =>
+                            x.GetDistanceTo(self) +
+                            (x is AWizard ? -40 : (x is ABuilding && !((ABuilding) x).IsBesieded) ? 1500 : 0))
                     .ToArray();
                 if (nearest.Length > 0 && nearest.FirstOrDefault(GoAround) == null)
                 {
@@ -180,6 +188,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
 
+            TimerStart();
             if (!TryDodgeProjectile())
             {
                 if (target == null || 
@@ -199,7 +208,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             FinalMove.MaxCastDistance = bonusMoving.Move.MaxCastDistance;
                             FinalMove.CastAngle = bonusMoving.Move.CastAngle;
                         }
-                        var my = new AWizard(Self);
                         
 						NextBonusWaypoint = my + (NextBonusWaypoint - my).Normalized() * (Self.Radius + 30);
                         TryGoByGradient(EstimateDanger);
@@ -210,6 +218,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
             }
+            TimerEndLog("Go", 1);
         }
 
         public static Point NextBonusWaypoint;
@@ -253,6 +262,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
+        DijkstraPointCostFunc MoveCostFunc(IEnumerable<ACombatUnit> buildings, ALaneType lane)
+        {
+            return pos =>
+            {
+                foreach (var building in buildings)
+                    if (building != null && building.GetDistanceTo2(pos) <= building.CastRange*building.CastRange)
+                        if (RoadsHelper.Roads.All(seg => seg.GetDistanceTo(pos) > 200))
+                            return Const.Infinity;
+
+                if (RoadsHelper.GetAllowedForLine(lane).All(r => r.GetDistanceTo(pos) > 700))
+                    return 1000;
+
+                return 0;
+            };
+        }
+
         bool GoAround(ACombatUnit to)
         {
             TimerStart();
@@ -264,7 +289,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         bool _goAround(ACombatUnit target)
         {
             var my = new AWizard(Self);
-            var building = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
+            var selLane = Utility.IsBase(target) ? MessagesObserver.GetLane() : RoadsHelper.GetLane(target);
+            var nearestBuilding = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
+            var buildings = nearestBuilding.Id == target.Id ? new[] { nearestBuilding } : new[] { nearestBuilding, target};
 
             var path = DijkstraFindPath(new AWizard(Self), pos =>
             {
@@ -280,15 +307,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
                 return DijkstraStopStatus.Continue;
-            }, pos =>
-            {
-                if (building != null && building.GetDistanceTo2(pos) <= building.CastRange*building.CastRange)
-                {
-                    if (Roads.All(seg => seg.GetDistanceTo(pos) > 200))
-                        return DijkstraStopStatus.Stop;
-                }
-                return DijkstraStopStatus.Continue;
-            }, allowCutTrees: true).FirstOrDefault();
+            }, MoveCostFunc(buildings, selLane), allowCutTrees: true).FirstOrDefault();
 
             if (path == null && my.GetDistanceTo(target) - my.Radius - target.Radius <= 1)
                 path = new WizardPath { my }; // из-за эпсилон, если стою близко у цели, то он как бы с ней пересекается, но это не так
@@ -303,7 +322,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var obstacles =
                 Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
-                .Concat(TreesObserver.Trees)
                 .Where(x => my.GetDistanceTo2(x) < Geom.Sqr(my.VisionRange)) //???
                 .ToArray();
 
@@ -353,52 +371,41 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         MovingInfo _goToBonus()
         {
-            var bonuses = BonusesObserver.Bonuses.ToArray();
+            var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
-            if (bonuses.All(b => b.RemainingAppearanceTicks > MagicConst.GoToBonusmaxTicks + 15))
+            if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusmaxTicks + 15)
                 return selMovingInfo;
 
-            var found = new[] { false, false };
+            var my = new AWizard(Self);
+            var nearestBuilding = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
 
-            var paths = DijkstraFindPath(new AWizard(Self), pos =>
+            var path = DijkstraFindPath(new AWizard(Self), pos =>
             {
                 // точка ОК, если бонус совсем близко
-                if (found[0] && found[1])
-                    return DijkstraStopStatus.Stop;
-
-                for (var i = 0; i < 2; i++)
-                {
-                    if (!found[i] && pos.GetDistanceTo2(bonuses[i]) < Geom.Sqr(bonuses[i].Radius + Self.Radius + 35))
-                    {
-                        found[i] = true;
-                        return DijkstraStopStatus.Take;
-                    }
-                }
+                if (pos.GetDistanceTo2(bonus) < Geom.Sqr(bonus.Radius + Self.Radius + 35))
+                    return DijkstraStopStatus.TakeAndStop;
+                
                 return DijkstraStopStatus.Continue;
-            }, null, allowCutTrees: true);
+            }, MoveCostFunc(new [] { nearestBuilding }, MessagesObserver.GetLane()), allowCutTrees: true).FirstOrDefault();
 
-            var my = new AWizard(Self);
+            if (path == null)
+                return selMovingInfo;
+
             var obstacles =
                 Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
-                    .Concat(TreesObserver.Trees)
                     .Where(x => my.GetDistanceTo2(x) < Geom.Sqr(my.VisionRange))
                     .ToArray();
 
-            TimerStart();
-            foreach (var path in paths)
-            {
-                path.Add(bonuses.ArgMin(b => b.GetDistanceTo(path.Last())));
-                path.Simplify(obstacles, MagicConst.SimplifyMaxLength);
-            }
-            TimerEndLog("Simplify path", 1);
-
+            path.Add(bonus);
+            path.Simplify(obstacles, MagicConst.SimplifyMaxLength);
+            
             var selPath = new List<Point>();
             ABonus selBonus = null;
-            foreach (var path in paths)
+            
             {
                 var time = (int) (path.GetLength()/my.MaxForwardSpeed);
-                var bonus = bonuses.ArgMin(b => b.GetDistanceTo(path.Last()));
+                
                 if (time < selMovingInfo.Time && time < MagicConst.GoToBonusmaxTicks)
                 {
                     selMovingInfo.Time = time;
@@ -410,7 +417,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     selMovingInfo.Move = new FinalMove(new Move());
                     selMovingInfo.Move.MoveTo(nextPoint, my.GetDistanceTo(nextNextPoint) < my.Radius + 20 ? nextNextPoint : nextPoint);
                     selMovingInfo.Target = nextPoint;
-
 
                     var nextTree = path.GetNearestTree();
 					CutTreesInPath(nextTree, selMovingInfo.Move);
@@ -428,7 +434,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         private bool HasAnyTarget(AWizard self)
         {
             double wizardDangerRange = 40;
-            var currentLane = GetLane(self);
+            var currentLane = RoadsHelper.GetLane(self);
 
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
@@ -445,7 +451,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var opps = bld.OpponentsCount - (bld.GetDistanceTo(Self) <= bld.CastRange ? 1 : 0);
                     var isLast = BuildingsObserver.OpponentBase.GetDistanceTo(bld) < Const.MapSize/2;
-                    if (bld.IsBase || opps < 1 || isLast && GetLane(bld) != currentLane)
+                    if (bld.IsBase || opps < 1 || isLast && bld.Lane != currentLane)
                     {
                         // чтобы не подходить близко к одиноким башням
                         if (my.GetDistanceTo(bld) < bld.CastRange + 6)
