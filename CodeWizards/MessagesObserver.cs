@@ -16,7 +16,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static ALaneType GetLane()
         {
-            return ALaneType.Top;
             if (LastMessage != null)
                 return (ALaneType) LastMessage.Lane;
 

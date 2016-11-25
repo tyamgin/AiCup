@@ -5,20 +5,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     partial class MyStrategy
     {
+        public delegate ALaneType SelectLaneFunc(AWizard w);
+
         public void MasterSendMessages()
         {
-            // TODO: не пашет
             if (World.TickIndex == 0)
             {
-                FinalMove.Messages = new[]
-                {
-                    new Message(LaneType.Bottom, null, new byte[] {}),
-                    new Message(LaneType.Bottom, null, new byte[] {}),
-                    new Message(LaneType.Bottom, null, new byte[] {}),
-                    new Message(LaneType.Bottom, null, new byte[] {}),
-                };
-                return;
-
                 var self = new AWizard(Self);
                 AWizard
                     leftmost = self,
@@ -34,20 +26,32 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         bottommost = w;
                 }
 
-                
+                SelectLaneFunc selectLane = x =>
+                {
+                    if (x == leftmost)
+                        return ALaneType.Top;
+                    if (x == bottommost)
+                        return ALaneType.Bottom;
+
+                    return ALaneType.Middle;
+                };
+
                 FinalMove.Messages = Wizards
                     .Where(x => x.IsTeammate && x.Id != Self.Id)
                     .OrderBy(x => x.Id)
                     .Select(x =>
                     {
+                        var lane = (LaneType) selectLane(x);
                         if (x == leftmost)
-                            return new Message(LaneType.Top, SkillType.Shield, new byte[] {});
+                            return new Message(lane, SkillType.Shield, new byte[] {});
                         if (x == bottommost)
-                            return new Message(LaneType.Bottom, SkillType.Shield, new byte[] { });
+                            return new Message(lane, SkillType.Shield, new byte[] { });
 
-                        return new Message(LaneType.Middle, SkillType.Shield, new byte[] { });
+                        return new Message(lane, SkillType.Shield, new byte[] { });
                     })
                     .ToArray();
+
+                MessagesObserver.LastMessage = new Message((LaneType) selectLane(self), SkillType.Shield, new byte[] {});
             }
         }
     }
