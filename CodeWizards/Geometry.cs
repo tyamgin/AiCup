@@ -140,16 +140,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return GetDistanceTo2(point.X, point.Y);
         }
 
-        public bool Equals(double otherX, double otherY)
-        {
-            return Math.Abs(X - otherX) < Const.Eps && Math.Abs(Y - otherY) < Const.Eps;
-        }
-
-        public bool Equals(Point other)
-        {
-            return Equals(other.X, other.Y);
-        }
-
         public bool Equals(Unit other)
         {
             return Equals(other.X, other.Y);
@@ -162,7 +152,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public int CompareTo(Point other)
         {
-            if (Math.Abs(X - other.X) < Const.Eps)
+            if (Utility.Equals(X, other.X))
                 return Y.CompareTo(other.Y);
             return X.CompareTo(other.X);
         }

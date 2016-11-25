@@ -31,9 +31,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     new LaneSegment(b, d, ALaneType.Middle2),
                 };
 
-                AllowedForMiddle = Roads.Where(r => r.LaneType == ALaneType.Middle || r.LaneType == ALaneType.Middle2).ToArray();
-                AllowedForTop = Roads.Where(r => r.LaneType == ALaneType.Top || r.LaneType == ALaneType.Middle2).ToArray();
-                AllowedForBottom = Roads.Where(r => r.LaneType == ALaneType.Bottom || r.LaneType == ALaneType.Middle2).ToArray();
+                AllowedForMiddle = Roads
+                    .Where(r => r.LaneType == ALaneType.Middle || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > 500)
+                    .ToArray();
+                AllowedForTop = Roads
+                    .Where(r => r.LaneType == ALaneType.Top || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > 500)
+                    .ToArray();
+                AllowedForBottom = Roads
+                    .Where(r => r.LaneType == ALaneType.Bottom || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > 500)
+                    .ToArray();
 
                 MagicConst.MinionAppearencePoints = new[]
                 {

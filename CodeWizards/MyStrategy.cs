@@ -3,18 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * !-http://russianaicup.ru/game/view/39131 тупит напротив башни
  * !-если атакуем башню - не убегать за бонусом
  * !!-прикрываться деревьями (особенно от визардов)
- * !!-сбегать от кучи орков
+ * !!-сбегать когда мало хп
  * - не идти на своих когда убегаю от орков
- * - идти по уже разбитой ветке, если убили или взял бонус???
- * 
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
