@@ -391,7 +391,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         MovingInfo _goToBonus()
         {
-            const int magic = 35;
+            const int magic = 45;
             var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
