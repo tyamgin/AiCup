@@ -10,16 +10,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         protected AMinion(Minion unit) : base(unit)
         {
+            
         }
 
         protected AMinion(AMinion unit) : base(unit)
         {
             IsAggressiveNeutral = unit.IsAggressiveNeutral;
-        }
-
-        public override void SkipTick()
-        {
-			Utility.Dec(ref RemainingActionCooldownTicks);
         }
 
         public override void EthalonMove(ACircularUnit target)

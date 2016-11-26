@@ -7,10 +7,14 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * !-если атакуем башню - не убегать за бонусом
- * !!-прикрываться деревьями (особенно от визардов)
+ * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
+ * - дальше держаться от орков и башен, если MM без задержек
+ * - обработать isFrozen
+ * - не стрелять в нейтралов при прорубке леса
+ * 
+ * -если атакуем башню - не убегать за бонусом
+ * ?-прикрываться деревьями (особенно от визардов)
  * !!-сбегать когда мало хп
- * - не идти на своих когда убегаю от орков
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -88,6 +92,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             
             Const.MapSize = Game.MapSize;
             Const.WizardRadius = Game.WizardRadius;
+
+            var levelUpXpValues = Game.LevelUpXpValues;
+            AWizard.Xps = new int[Game.LevelUpXpValues.Length + 1];
+            for (var i = 1; i <= levelUpXpValues.Length; i++)
+                AWizard.Xps[i] = AWizard.Xps[i - 1] + levelUpXpValues[i - 1];
 
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
@@ -215,6 +224,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
             TimerEndLog("Go", 1);
+
+            if (my.CanLearnSkill)
+            {
+                move.SkillToLearn = MessagesObserver.GetSkill();
+            }
         }
 
         public static Point NextBonusWaypoint;

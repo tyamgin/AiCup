@@ -71,10 +71,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     remoteProcessClient.WriteMovesMessage(moves);
                 }
             }
-            catch (Exception e)
-            {
-                File.WriteAllText("G:\\log.txt", e.Message + "\n" + e.StackTrace);
-            }
+            //catch (Exception e)
+            //{
+            //    File.WriteAllText("G:\\log.txt", e.Message + "\n" + e.StackTrace);
+            //}
             finally
             {
                 remoteProcessClient.Close();

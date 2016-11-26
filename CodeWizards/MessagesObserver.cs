@@ -1,4 +1,5 @@
-﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+﻿using System;
+using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -21,6 +22,37 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var arr = new [] { LaneType.Top, LaneType.Bottom };
             return (ALaneType) arr[MyStrategy.Self.Id%arr.Length];
+        }
+
+        private static SkillType? _getNearestSkill(AWizard self, SkillType skill)
+        {
+            var skillGroup = Utility.GetSkillGroup(skill);
+            if (self.SkillsLearnedArr[skillGroup] == 5)
+                return null;
+
+            return Utility.GetSkill(skillGroup, self.SkillsLearnedArr[skillGroup]);
+        }
+
+        public static SkillType GetSkill()
+        {
+            var self = new AWizard(MyStrategy.Self);
+
+            var skillsOrder = new[]
+            {
+                SkillType.AdvancedMagicMissile,
+                SkillType.FrostBolt,
+                SkillType.Fireball,
+                SkillType.Haste,
+                SkillType.Shield
+            };
+
+            foreach (var skill in skillsOrder)
+            {
+                var skillToLearn = _getNearestSkill(self, skill);
+                if (skillToLearn != null)
+                    return (SkillType)skillToLearn;
+            }
+            throw new Exception("An impossible state");
         }
     }
 }

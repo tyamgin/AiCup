@@ -14,7 +14,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public double CastRange;
         public int RemainingActionCooldownTicks;
 
-        protected ACombatUnit(CircularUnit unit) : base(unit)
+        public int RemainingHastened;
+        public int RemainingEmpowered;
+        public int RemainingFrozen;
+        public int RemainingShielded;
+
+        public bool IsBurning; // пока только для отображения в визуализаторе
+
+        protected ACombatUnit(LivingUnit unit) : base(unit)
         {
             IsTeammate = unit.Faction == MyStrategy.Self.Faction;
             Faction = unit.Faction;
@@ -43,6 +50,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     CastRange = MyStrategy.Game.FetishBlowdartAttackRange;
                 RemainingActionCooldownTicks = minion.RemainingActionCooldownTicks;
             }
+
+            foreach (var status in unit.Statuses)
+            {
+                switch (status.Type)
+                {
+                    case StatusType.Empowered:
+                        RemainingEmpowered = Math.Max(RemainingEmpowered, status.RemainingDurationTicks);
+                        break;
+                    case StatusType.Frozen:
+                        RemainingFrozen = Math.Max(RemainingFrozen, status.RemainingDurationTicks);
+                        break;
+                    case StatusType.Shielded:
+                        RemainingShielded = Math.Max(RemainingShielded, status.RemainingDurationTicks);
+                        break;
+                    case StatusType.Hastened:
+                        RemainingHastened = Math.Max(RemainingHastened, status.RemainingDurationTicks);
+                        break;
+                    case StatusType.Burning:
+                        IsBurning = true;
+                        break;
+                }
+            }
         }
 
         protected ACombatUnit(ACombatUnit unit) : base(unit)
@@ -53,6 +82,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             VisionRange = unit.VisionRange;
             CastRange = unit.CastRange;
             RemainingActionCooldownTicks = unit.RemainingActionCooldownTicks;
+
+            RemainingHastened = unit.RemainingHastened;
+            RemainingEmpowered = unit.RemainingEmpowered;
+            RemainingFrozen = unit.RemainingFrozen;
+            RemainingShielded = unit.RemainingShielded;
+            IsBurning = unit.IsBurning;
         }
 
         protected ACombatUnit()
@@ -67,7 +102,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public virtual void SkipTick()
         {
-            throw new NotImplementedException();
+            Utility.Dec(ref RemainingActionCooldownTicks);
+
+            Utility.Dec(ref RemainingHastened);
+            Utility.Dec(ref RemainingEmpowered);
+            Utility.Dec(ref RemainingFrozen);
+            Utility.Dec(ref RemainingShielded);
         }
 
         public virtual void EthalonMove(ACircularUnit target)

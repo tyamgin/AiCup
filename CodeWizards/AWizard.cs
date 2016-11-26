@@ -8,59 +8,48 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class AWizard : ACombatUnit
     {
+        public static int[] Xps;
+
         public bool IsMaster;
         public int[] RemainingCooldownTicksByAction;
 
-        public int RemainingHastened;
-        public int RemainingEmpowered;
-        public int RemainingFrozen;
-        public int RemainingShielded;
+        public int Level;
+        public int Xp;// не нужно?
+
+        public int[] SkillsLearnedArr;
 
         public AWizard(Wizard unit) : base(unit)
         {
             IsMaster = unit.IsMaster;
             RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();
-            foreach (var status in unit.Statuses)
+            Level = unit.Level;
+            Xp = unit.Xp;
+
+            SkillsLearnedArr = new int[5];
+            foreach (var skill in unit.Skills)
             {
-                switch (status.Type)
-                {
-                    case StatusType.Empowered:
-                        RemainingEmpowered = Math.Max(RemainingEmpowered, status.RemainingDurationTicks);
-                        break;
-                    case StatusType.Frozen:
-                        RemainingFrozen = Math.Max(RemainingFrozen, status.RemainingDurationTicks);
-                        break;
-                    case StatusType.Shielded:
-                        RemainingShielded = Math.Max(RemainingShielded, status.RemainingDurationTicks);
-                        break;
-                    case StatusType.Hastened:
-                        RemainingHastened = Math.Max(RemainingHastened, status.RemainingDurationTicks);
-                        break;
-                }
+                var skillOrder = Utility.GetSkillOrder(skill);
+                var skillGroup = Utility.GetSkillGroup(skill);
+                SkillsLearnedArr[skillGroup] = Math.Max(SkillsLearnedArr[skillGroup], skillOrder + 1);
             }
         }
 
         public AWizard(AWizard unit) : base(unit)
         {
             IsMaster = unit.IsMaster;
-            RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();
-            RemainingHastened = unit.RemainingHastened;
-            RemainingEmpowered = unit.RemainingEmpowered;
-            RemainingFrozen = unit.RemainingFrozen;
-            RemainingShielded = unit.RemainingShielded;
+            RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();            
+            Level = unit.Level;
+            Xp = unit.Xp;
+            SkillsLearnedArr = unit.SkillsLearnedArr.Select(x => x).ToArray();
         }
 
         public delegate bool CheckWizard(AWizard wizard);
 
         public override void SkipTick()
         {
-            Utility.Dec(ref RemainingActionCooldownTicks);
+            base.SkipTick();
             for (var i = 0; i < RemainingCooldownTicksByAction.Length; i++)
                 Utility.Dec(ref RemainingCooldownTicksByAction[i]);
-            Utility.Dec(ref RemainingHastened);
-            Utility.Dec(ref RemainingEmpowered);
-            Utility.Dec(ref RemainingFrozen);
-            Utility.Dec(ref RemainingShielded);
         }
 
         public bool Move(double forwardSpeed, double strafeSpeed, CheckWizard check = null)
@@ -175,6 +164,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             set { RemainingCooldownTicksByAction[(int) ActionType.MagicMissile] = value; }
         }
 
+        public int RemainingFrostBoltCooldownTicks
+        {
+            get { return RemainingCooldownTicksByAction[(int)ActionType.FrostBolt]; }
+            set { RemainingCooldownTicksByAction[(int)ActionType.FrostBolt] = value; }
+        }
+
+        public int RemainingFireballCooldownTicks
+        {
+            get { return RemainingCooldownTicksByAction[(int)ActionType.Fireball]; }
+            set { RemainingCooldownTicksByAction[(int)ActionType.Fireball] = value; }
+        }
+
         public double MagicMissileDamage
         {
             get
@@ -217,5 +218,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                       (RemainingHastened > 0 ? 1.0 + MyStrategy.Game.HastenedRotationBonusFactor : 1.0);
         // NOTE: Эффективное ограничение может быть выше в 1.0 + hastenedRotationBonusFactor раз в результате действия статуса HASTENED.
         // т.е. ауры и умения никак не влияют на угол поворота
+
+        public bool CanLearnSkill => SkillsLearned < Level;
+
+        public int SkillsLearned => SkillsLearnedArr.Sum(x => x);
     }
 }

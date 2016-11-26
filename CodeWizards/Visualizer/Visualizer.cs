@@ -204,6 +204,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                         FillCircle(Color.Red, MyStrategy._points[i, j].X, MyStrategy._points[i, j].Y, 3);
             }
 
+            // statuses
+            foreach (var unit in MyStrategy.Combats)
+            {
+                if (unit.RemainingFrozen > 0)
+                    FillCircle(Color.SkyBlue, unit.X, unit.Y, unit.Radius - 3);
+                if (unit.IsBurning)
+                    FillCircle(Color.Orange, unit.X, unit.Y, unit.Radius - 3);
+            }
+
             // wizards
             foreach (var wizard in MyStrategy.Wizards)
             {
@@ -211,6 +220,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 var color = w.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange);
 
                 DrawCircle(color, w.X, w.Y, wizard.Radius);
+
                 var d = 7;
                 for(var i = 0; i < d; i++)
                     if (wizard.RemainingStaffCooldownTicks >= MyStrategy.Game.StaffCooldownTicks - d)
@@ -223,6 +233,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 DrawPie(color, wizard.X, wizard.Y, MyStrategy.Game.StaffRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
                 DrawPie(color, wizard.X, wizard.Y, wizard.CastRange, -MyStrategy.Game.StaffSector / 2.0 + wizard.Angle, MyStrategy.Game.StaffSector / 2.0 + wizard.Angle);
 
+
+                var statusesStr = "";
+                if (wizard.RemainingHastened > 0)
+                    statusesStr += "H";
+                if (wizard.RemainingEmpowered > 0)
+                    statusesStr += "E";
+                // TODO: shield
+
+                var skillsStr = "";
+                for (var i = 0; i < 5; i++)
+                    skillsStr += wizard.SkillsLearnedArr[i];
+
+                DrawText(statusesStr, 20, Brushes.Coral, wizard.X + 30, wizard.Y - 40);
+                DrawText(skillsStr, 15, Brushes.Black, wizard.X + 30, wizard.Y - 15);
             }
 
             // minions
@@ -241,7 +265,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 }
 
                 DrawText(minion.Life + "", 15, Brushes.Red, minion.X - 10, minion.Y - 30);
-
             }
 
             // projectiles

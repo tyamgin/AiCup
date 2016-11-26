@@ -96,6 +96,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             throw new Exception("unknown combat type");
         }
 
+        public static int GetSkillOrder(SkillType skill)
+        {
+            return (int) skill%5;
+        }
+
+        public static int GetSkillGroup(SkillType skill)
+        {
+            return (int) skill/5;
+        }
+        public static SkillType GetSkill(int skillGroup, int skillOrder)
+        {
+            if (skillOrder >= 5 && skillGroup >= 5)
+                throw new Exception("Invalid arguments to GetSkill passed");
+
+            return (SkillType) (skillGroup*5 + skillOrder);
+        }
+
         public static bool IsBase(ACombatUnit unit)
         {
             return unit is ABuilding && ((ABuilding) unit).IsBase;

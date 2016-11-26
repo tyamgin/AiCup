@@ -23,11 +23,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             _isAssailable = unit._isAssailable;
         }
 
-        public override void SkipTick()
-        {
-			Utility.Dec(ref RemainingActionCooldownTicks);
-        }
-
         public override void EthalonMove(ACircularUnit target)
         {
             SkipTick();
