@@ -24,6 +24,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static Game Game;
         public static Wizard Self;
         public static FinalMove FinalMove;
+        public static int PrevTickIndex;
 
         public static long[] FriendsIds;
 
@@ -57,12 +58,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             TimerStart();
             _move(self, world, game, move);
+            PrevTickIndex = World.TickIndex;
             TimerEndLog("All", 0);
             //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 0;
+                Visualizer.Visualizer.DrawSince = 2400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();

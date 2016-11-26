@@ -16,6 +16,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static void Update()
         {
+            foreach(var b in Bonuses)
+                for(var t = MyStrategy.PrevTickIndex + 1; t < MyStrategy.World.TickIndex; t++) // это если убили
+                    b.SkipTick();
+
             var interval = MyStrategy.Game.BonusAppearanceIntervalTicks;
             var newDict = new Dictionary<int, ABonus>();
             var curStage = (MyStrategy.World.TickIndex-1)/interval;
