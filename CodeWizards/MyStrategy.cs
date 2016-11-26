@@ -630,7 +630,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         MovingInfo FindStaffTarget(AWizard self)
         {
             var nearest = Combats
-                .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*(CanRush(self, x) ? 6 : 3)))
+                .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*6))
                 .ToArray();
             int minTicks = int.MaxValue;
             var move = new FinalMove(new Move());
