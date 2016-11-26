@@ -65,7 +65,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var outer = 800;
                     if (dist < inner)
                         res += Game.OrcWoodcutterDamage + 15-dist/inner*15;
-                    else if (dist < outer)
+                    else if (dist < outer && my.MmSkillLevel < 5)
                         res -= 3 - (dist - inner)/(outer - inner)*3;
                 }
                 else if (opp is AFetish)
@@ -73,10 +73,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var inner = opp.CastRange + my.Radius + Game.DartRadius + 10;
                     if (dist < inner)
                         res += 15 - dist/inner*15 + Game.DartDirectDamage;
-                }
-                else
-                {
-                    throw new Exception("Unknown type of combat");
                 }
             }
 
@@ -97,13 +93,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     res += 1 - dist/15*1;
             }
 
-            // прижиматься за главную башню (TODO: возможно, уже не нужно)
-            var corner = new Point(World.Width - 70, 70);
-            var cornerMaxDist = 500;
-            var distToCorner = my.GetDistanceTo(corner);
-            if (distToCorner < cornerMaxDist)
-                res -= 4 - (distToCorner/cornerMaxDist)*4;
-
             // держаться подальше от места появления минионов
             var spawnDelta = Game.FactionMinionAppearanceIntervalTicks*0.33;
             var spawnRemains = World.TickIndex%Game.FactionMinionAppearanceIntervalTicks;
@@ -117,23 +106,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         res += 14 - dist/inner*14;
                 }
             }
-
-            // держаться ближе к бонусам
-            //foreach (var bonus in BonusesObserver.Bonuses)
-            //{
-            //    var outer = 1000;
-            //    var inner = bonus.Radius + my.Radius;
-            //    var dist = my.GetDistanceTo(bonus);
-            //    if (dist <= inner && !bonus.Exists && bonus.RemainingAppearanceTicks < 150) // не перекрывать бонус
-            //    {
-            //        res += 30 + 20 - dist/inner*20;
-            //    }
-            //    else if (dist < outer)
-            //    {
-            //        if (bonus.Exists || BonusesObserver.Bonuses.All(b => !b.Exists))
-            //            res -= 5 - dist/outer*5;
-            //    }
-            //}
 
             // двигаться по пути к бонусу
             if (NextBonusWaypoint != null)
@@ -221,7 +193,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var angle = Math.PI*2/grid*i + self.Angle;
                 var moveTo = self + Point.ByAngle(angle) * self.VisionRange;
                 var nearest = Combats
-                    .Where(x => x.GetDistanceTo(self) < self.VisionRange * 1.3)
+                    .Where(x => x.GetDistanceTo(self) < Math.Max(self.VisionRange, x.VisionRange) * 1.3)
                     .Select(Utility.CloneCombat)
                     .ToArray();
                 var tergetsSelector = new TargetsSelector(nearest);

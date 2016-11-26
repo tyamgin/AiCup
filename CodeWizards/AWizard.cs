@@ -43,7 +43,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             SkillsLearnedArr = unit.SkillsLearnedArr.Select(x => x).ToArray();
         }
 
-        public delegate bool CheckWizard(AWizard wizard);
+        public delegate bool CheckWizardCollisionsFunc(AWizard wizard);
 
         public override void SkipTick()
         {
@@ -52,37 +52,39 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Utility.Dec(ref RemainingCooldownTicksByAction[i]);
         }
 
-        public bool Move(double forwardSpeed, double strafeSpeed, CheckWizard check = null)
+        public bool Move(double forwardSpeed, double strafeSpeed, CheckWizardCollisionsFunc checkCollisions = null)
         {
+            var isFrozen = RemainingFrozen > 0;
             SkipTick();
 
-            var dx = Math.Sin(Angle)*forwardSpeed + Math.Cos(Angle)*strafeSpeed;
-            var dy = Math.Cos(Angle)*forwardSpeed - Math.Sin(Angle)*strafeSpeed;
-
-            Y += dx;// TODO: WTF? перепутаны имена переменных?
-            X += dy;
-
-            if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize)
+            if (!isFrozen)
             {
-                Y -= dx;
-                X -= dy;
-                return false;
+                var dx = Math.Sin(Angle)*forwardSpeed + Math.Cos(Angle)*strafeSpeed;
+                var dy = Math.Cos(Angle)*forwardSpeed - Math.Sin(Angle)*strafeSpeed;
+
+                Y += dx; // TODO: WTF? перепутаны имена переменных?
+                X += dy;
+
+                if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize)
+                {
+                    Y -= dx;
+                    X -= dy;
+                    return false;
+                }
+
+                if (checkCollisions != null)
+                    return checkCollisions(this);
             }
-            if (check != null)
-                return check(this);
             return true;
         }
 
-        public bool MoveTo(Point to, Point turnTo, CheckWizard check = null)
+        public bool MoveTo(Point to, Point turnTo, CheckWizardCollisionsFunc check = null)
         {
-            if (turnTo != null)
-            {
+            if (turnTo != null && RemainingFrozen == 0)
                 Angle += Utility.EnsureInterval(GetAngleTo(turnTo), MaxTurnAngle);
-            }
 
             if (to == null || Utility.PointsEqual(this, to))
                 return Move(0, 0); // check не нужен
-
 
             var angle = GetAngleTo(to);
             var cos = Math.Cos(angle);
@@ -104,6 +106,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (RemainingMagicMissileCooldownTicks > 0 || RemainingActionCooldownTicks > 0)
                     return false;
             }
+            if (RemainingFrozen > 0)
+                return false;
 
             var distTo = GetDistanceTo(opp);
             if (distTo > CastRange + opp.Radius + MyStrategy.Game.MagicMissileRadius)
@@ -136,6 +140,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public bool CanStaffAttack(ACircularUnit unit)
         {
+            if (RemainingFrozen > 0)
+                return false;
             if (RemainingActionCooldownTicks > 0 || RemainingStaffCooldownTicks > 0)
                 return false;
             if (GetDistanceTo2(unit) > Geom.Sqr(MyStrategy.Game.StaffRange + unit.Radius))
@@ -222,5 +228,36 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public bool CanLearnSkill => SkillsLearned < Level;
 
         public int SkillsLearned => SkillsLearnedArr.Sum(x => x);
+
+
+        public int MmSkillLevel
+        {
+            get { return SkillsLearnedArr[0]; }
+            set { SkillsLearnedArr[0] = value; }
+        }
+
+        public int FrozenSkillLevel
+        {
+            get { return SkillsLearnedArr[1]; }
+            set { SkillsLearnedArr[1] = value; }
+        }
+
+        public int FireballSkillLevel
+        {
+            get { return SkillsLearnedArr[2]; }
+            set { SkillsLearnedArr[2] = value; }
+        }
+
+        public int HasteSkillLevel
+        {
+            get { return SkillsLearnedArr[3]; }
+            set { SkillsLearnedArr[3] = value; }
+        }
+
+        public int ShieldSkillLevel
+        {
+            get { return SkillsLearnedArr[4]; }
+            set { SkillsLearnedArr[4] = value; }
+        }
     }
 }

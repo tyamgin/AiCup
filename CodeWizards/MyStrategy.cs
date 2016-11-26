@@ -8,9 +8,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
- * - дальше держаться от орков и башен, если MM без задержек
- * - обработать isFrozen
  * - не стрелять в нейтралов при прорубке леса
+ * - увеличить дальность атаки посохом, чтобы добивать фетишей и бороться за бонусы
  * 
  * -если атакуем башню - не убегать за бонусом
  * ?-прикрываться деревьями (особенно от визардов)
@@ -643,6 +642,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 move.Action = ActionType.Staff;
                 return new MovingInfo(selTarget, 0, move);
             }
+
+            if (self.MmSkillLevel == 5)
+            {
+                // т.к. стрелять можно без задержки
+                // возможно, нужно сделать исключение, если прокачан посох
+                return new MovingInfo(null, int.MaxValue, move);
+            }
+
             Point selMoveTo = null;
 
             foreach (var opp in OpponentCombats)

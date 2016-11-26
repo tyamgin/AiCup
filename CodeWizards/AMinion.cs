@@ -20,7 +20,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override void EthalonMove(ACircularUnit target)
         {
+            var isFrozen = RemainingFrozen > 0;
             SkipTick();
+
+            if (isFrozen)
+                return;
+
             if (target == null)
             {
                 X += Math.Cos(Angle)*MyStrategy.Game.MinionSpeed;
@@ -70,6 +75,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override bool EthalonCanHit(ACircularUnit target)
         {
+            if (RemainingFrozen > 0)
+                return false;
             if (RemainingActionCooldownTicks > 0)
                 return false;
 
@@ -94,6 +101,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override bool EthalonCanHit(ACircularUnit target)
         {
+            if (RemainingFrozen > 0)
+                return false;
             if (RemainingActionCooldownTicks > 0)
                 return false;
 
