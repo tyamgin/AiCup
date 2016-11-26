@@ -114,7 +114,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var dist = my.GetDistanceTo(NextBonusWaypoint);
                 var outer = 100.0;
                 if (dist < outer)
-                    res -= 7 - dist/outer*7;
+                    res -= GoToBonusDanger - dist/outer*GoToBonusDanger;
             }
             
             // прижиматься к центру дорожки
