@@ -380,10 +380,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         MovingInfo _goToBonus()
         {
+            const int magic = 25;
             var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
-            if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusmaxTicks + 15)
+            if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusmaxTicks + magic)
                 return selMovingInfo;
 
             var my = new AWizard(Self);
@@ -431,7 +432,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 					CutTreesInPath(nextTree, selMovingInfo.Move);
                 }
             }
-            if (selBonus != null && selMovingInfo.Time <= selBonus.RemainingAppearanceTicks - 15/*запас*/)
+            if (selBonus != null && selMovingInfo.Time <= selBonus.RemainingAppearanceTicks - magic/*запас*/)
                 selMovingInfo.Target = null;
 #if DEBUG
             if (selMovingInfo.Target != null)
@@ -551,7 +552,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         MovingInfo FindBonusTarget(AWizard self)
         {
-            const int grid = 40;
+            const int grid = 24;
             var minTime = int.MaxValue;
             var selGo = 0;
             Point selMoveTo = null;
@@ -559,7 +560,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 if (_bonus.GetDistanceTo(self) - self.Radius - _bonus.Radius > Game.StaffRange*3)
                     continue;
-                if (_bonus.RemainingAppearanceTicks > 40)
+                if (_bonus.RemainingAppearanceTicks > 60)
                     continue;
 
                 var nearest = Combats
@@ -575,7 +576,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var moveTo = my + Point.ByAngle(angle) * self.VisionRange;
                     int time = 0;
                     int go = 0;
-                    while (my.GetDistanceTo(bonus) > my.Radius + bonus.Radius && time < 40)
+                    while (my.GetDistanceTo(bonus) > my.Radius + bonus.Radius && time < 60)
                     {
                         if (!my.MoveTo(moveTo, null, w => !CheckIntersectionsAndTress(w, nearest)))
                         {
@@ -629,7 +630,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         MovingInfo FindStaffTarget(AWizard self)
         {
             var nearest = Combats
-                .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*3))
+                .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange*(CanRush(self, x) ? 6 : 3)))
                 .ToArray();
             int minTicks = int.MaxValue;
             var move = new FinalMove(new Move());
@@ -665,7 +666,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var moveTo = self + (opp - self).Normalized().RotateClockwise(angle)*self.VisionRange;
 
                     var nearstCombats = OpponentCombats
-                        .Where(x => /*x.Id != opp.Id &&*/ x.GetDistanceTo(self) <= x.VisionRange)
+                        .Where(x => x.GetDistanceTo(self) <= x.VisionRange)
                         .Select(Utility.CloneCombat)
                         .ToArray();
 
