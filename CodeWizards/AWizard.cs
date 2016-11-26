@@ -65,15 +65,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Y += dx; // TODO: WTF? перепутаны имена переменных?
                 X += dy;
 
-                if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize)
+                if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize || checkCollisions != null && !checkCollisions(this))
                 {
                     Y -= dx;
                     X -= dy;
                     return false;
                 }
-
-                if (checkCollisions != null)
-                    return checkCollisions(this);
             }
             return true;
         }

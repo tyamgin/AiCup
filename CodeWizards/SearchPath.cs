@@ -6,11 +6,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class WizardPath : List<Point>
     {
+        public static int SegmentDivideParts = 2;
+
         public double GetLength()
         {
             var length = 0.0;
             for (var i = 1; i < Count; i++)
-                length += this[i - 1].GetDistanceTo(this[i]);
+                length += GetSegmentWeight(this[i - 1], this[i], i == 0);
             return length;
         }
 
@@ -49,12 +51,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private ATree _getNearestTree(Point a, Point b)
         {
-            const int segmentDivideParts = 3;
             var dir = b - a;
 
-            for (var i = 0; i <= segmentDivideParts; i++)
+            for (var i = 0; i <= SegmentDivideParts; i++)
             {
-                Point p = dir * (1.0 * i / segmentDivideParts) + a;
+                Point p = dir * (1.0 * i / SegmentDivideParts) + a;
                 var tree = TreesObserver.GetNearestTree(p);
                 if (tree != null && Geom.SegmentCircleIntersects(a, b, tree,
                         tree.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
@@ -74,6 +75,26 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return tree;
             }
             return null;
+        }
+
+        public static double GetSegmentWeight(Point a, Point b, bool checkStart)
+        {
+            var dir = b - a;
+            var res = dir.Length;
+            ATree prev = null;
+            for (var i = (checkStart ? 0 : 1); i <= SegmentDivideParts; i++)
+            {
+                var p = dir * (1.0 * i / SegmentDivideParts) + a;
+                var tree = TreesObserver.GetNearestTree(p);
+                if (tree != null && tree != prev &&
+                    Geom.SegmentCircleIntersects(a, b, tree,
+                        tree.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
+                {
+                    res += Math.Ceiling(tree.Life / 12) * MagicConst.TreeObstacleWeight;
+                    prev = tree;
+                }
+            }
+            return res;
         }
     }
 
@@ -109,29 +130,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        private static int _segmentDivideParts = 1;
-        private static bool _allowTrees;
         private static AWizard _startState;
-
-        static double _getSegmentWeight(Point a, Point b, bool checkStart = false)
-        {
-            var dir = b - a;
-            double res = dir.Length;
-            ATree prev = null;
-            for (var i = (checkStart ? 0 : 1); i <= _segmentDivideParts; i++)
-            {
-                Point p = dir*(1.0*i/_segmentDivideParts) + a;
-                var tree = TreesObserver.GetNearestTree(p);
-                if (tree != null && tree != prev &&
-                    Geom.SegmentCircleIntersects(a, b, tree,
-                        tree.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
-                {
-                    res += _allowTrees ? (Math.Ceiling(tree.Life/12)*MagicConst.TreeObstacleWeight) : int.MaxValue;
-                    prev = tree;
-                }
-            }
-            return res;
-        }
 
         static Cell FindNearestCell(ACircularUnit my)
         {
@@ -150,7 +149,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 for (var dj = 0; dj < 2; dj++)
                 {
-                    var dst = _getSegmentWeight(_points[I + di, J + dj], my, true);
+                    var dst = WizardPath.GetSegmentWeight(_points[I + di, J + dj], my, true);
                     if (dst < minDist && 
                         obstacles.All(ob =>
                             !Geom.SegmentCircleIntersects(my, _points[I + di, J + dj], ob, ob.Radius + my.Radius + MagicConst.RadiusAdditionalEpsilon))
@@ -228,7 +227,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (I < 0 || J < 0 || I > GridSize || J > GridSize)
                         continue;
 
-                    var distTo = _distMap[cur.I, cur.J] + _getSegmentWeight(_points[cur.I, cur.J], _points[I, J]);
+                    var distTo = _distMap[cur.I, cur.J] + WizardPath.GetSegmentWeight(_points[cur.I, cur.J], _points[I, J], false);
                     if (costFunc != null)
                         distTo += costFunc(_points[I, J]);
 
@@ -269,9 +268,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public static WizardPath[] DijkstraFindPath(AWizard start, DijkstraPointStopFunc stopFunc, DijkstraPointCostFunc costFunc, bool allowCutTrees)
+        public static WizardPath[] DijkstraFindPath(AWizard start, DijkstraPointStopFunc stopFunc, DijkstraPointCostFunc costFunc)
         {
-            _allowTrees = allowCutTrees;
             _startState = start;
             
             _obstacles = Combats

@@ -15,7 +15,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #if DEBUG
             Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(5000);
+
+            for (var i = 0; i < 1; i++)
+            {
+                var oldStrategy = new Process
+                {
+                    StartInfo =
+                    {
+                        FileName = @"G:\Projects\AiCup\CodeWizards\bin\Release\csharp-cgdk.exe",
+                        Arguments = "127.0.0.1 " + (31002 + i) + " 0000000000000000",
+                        CreateNoWindow = true
+                    }
+                };
+                oldStrategy.Start();
+            }
 #endif
+
             File.WriteAllText("G:\\started.txt", string.Join("\n", args));
             //try
             //{

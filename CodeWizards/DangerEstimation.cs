@@ -10,6 +10,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     partial class MyStrategy
     {
         public static double CantMoveDanger = 300;
+        public static double GoToBonusDanger;
 
         double EstimateDanger(AWizard my)
         {
@@ -138,6 +139,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (distToBorders < bordersPadding)
                 res += 4 - distToBorders/bordersPadding*4;
 
+            // не перекрывать бонус
+            foreach (var bonus in BonusesObserver.Bonuses)
+            {
+                var inner = bonus.Radius + my.Radius;
+                var dist = my.GetDistanceTo(bonus);
+                if (dist <= inner && !bonus.Exists && bonus.RemainingAppearanceTicks < 100) 
+                    res += 30 + 20 - dist / inner * 20;
+            }
+
             return res;
         }
 
@@ -171,7 +181,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public delegate double PositionCostFunction(AWizard wizard);
         public delegate bool PositionCondition(AWizard wizard);
 
-        private bool TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition = null)
+        private bool TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition, FinalMove move)
         {
             var self = new AWizard(Self);
 
@@ -257,7 +267,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             if (selMoveTo != null)
             {
-                FinalMove.MoveTo(selMoveTo, null);
+                move.MoveTo(selMoveTo, null);
                 return true;
             }
             return false;
@@ -273,6 +283,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var angle = Math.PI*2/grid*i;
                 var ticks = 0;
                 var my = new AWizard(Self);
+                var bonus = new ABonus(BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self)));
                 Point firstMoveTo = null;
 
                 while (ticks < ProjectilesCheckTicks)
@@ -308,7 +319,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     if (firstMoveTo == null)
                         firstMoveTo = moveTo;
-                    my.MoveTo(moveTo, null, w => my.CheckIntersections(obstacles) == null);
+                    bonus.SkipTick();
+                    my.MoveTo(moveTo, null, w =>
+                    {
+                        if (CheckIntersectionsAndTress(w, obstacles))
+                            return false;
+                        if (bonus.RemainingAppearanceTicks < 15 && bonus.IntersectsWith(w))
+                            return false;
+                        return true;
+                    });
 
                     for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
                     {

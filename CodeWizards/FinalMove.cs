@@ -68,7 +68,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 _move.Turn = Utility.EnsureInterval(MyStrategy.Self.GetAngleTo(turnTo.X, turnTo.Y), self.MaxTurnAngle);
             }
 
-            if (to != null)
+            if (to != null && !Utility.PointsEqual(self, to))
             {
                 var angle = self.GetAngleTo(to);
                 var cos = Math.Cos(angle);

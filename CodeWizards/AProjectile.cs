@@ -128,6 +128,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             public ProjectilePathState State;
             public ACombatUnit Target;
             public double StartDistance, EndDistance;
+
+            public double Length => EndDistance - StartDistance;
         }
 
         public List<ProjectilePathSegment> Emulate(ACombatUnit[] _units)
@@ -183,7 +185,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         // TODO: он может убежать боком
                         var wizard = unit as AWizard;
                         var dir = wizard - this + wizard; // вдоль снаряда
-                        wizard.MoveTo(dir, null, null); // TODO: может упереться в дерево
+                        wizard.MoveTo(dir, null, w =>
+                        {
+                            var tree = TreesObserver.GetNearestTree(w);
+                            return tree == null || !w.IntersectsWith(tree);
+                        });
                     }
                     else if (unit is AMinion)
                     {

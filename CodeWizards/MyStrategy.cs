@@ -185,10 +185,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     .ToArray();
                 if (nearest.Length > 0 && nearest.FirstOrDefault(GoAround) == null)
                 {
-                    var goTo = nearest[0];
-                    FinalMove.MoveTo(null, goTo);
-                    var canGo = TryGoByGradient(w => w.GetDistanceTo2(goTo));
-                    TryCutTrees(!canGo);
+                    GoDirect(nearest[0], FinalMove);
                 }
             }
 
@@ -212,13 +209,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             FinalMove.MaxCastDistance = bonusMoving.Move.MaxCastDistance;
                             FinalMove.CastAngle = bonusMoving.Move.CastAngle;
                         }
-                        
-						NextBonusWaypoint = my + (NextBonusWaypoint - my).Normalized() * (Self.Radius + 30);
-                        TryGoByGradient(EstimateDanger);
+
+                        GoToBonusDanger = BonusesObserver.Bonuses.Min(b => b.GetDistanceTo(my)) < my.VisionRange &&
+                                          OpponentWizards.Count(w => my.GetDistanceTo(w) < my.VisionRange) <= 1
+                            ? 41
+                            : 7;
+
+                        NextBonusWaypoint = my + (NextBonusWaypoint - my).Normalized() * (Self.Radius + 30);
+                        TryGoByGradient(EstimateDanger, null, FinalMove);
                     }
                     else
                     {
-                        TryGoByGradient(EstimateDanger, HasAnyTarget);
+                        TryGoByGradient(EstimateDanger, HasAnyTarget, FinalMove);
                     }
                 }
             }
@@ -232,8 +234,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static Point NextBonusWaypoint;
 
-		// TODO: remove
-        bool TryCutTrees(bool cutNearest)
+
+        void GoDirect(Point target, FinalMove move)
+        {
+            move.MoveTo(null, target);
+            var canGo = TryGoByGradient(w => w.GetDistanceTo2(target), null, move);
+            TryCutTrees(!canGo, move);
+        }
+
+        bool TryCutTrees(bool cutNearest, FinalMove move)
         {
             var self = new AWizard(Self);
             var nearestTrees = TreesObserver.Trees.Where(
@@ -247,7 +256,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 if (self.GetStaffAttacked(nearestTrees).Length > 0)
                 {
-                    FinalMove.Action = ActionType.Staff;
+                    move.Action = ActionType.Staff;
                     return true;
                 }
                 if (self.RemainingMagicMissileCooldownTicks == 0)
@@ -256,8 +265,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var path = EmulateMagicMissile(proj);
                     if (path.Count == 0 || path[path.Count - 1].EndDistance < self.CastRange - Const.Eps)
                     {
-                        FinalMove.MinCastDistance = path[path.Count - 1].EndDistance;
-                        FinalMove.Action = ActionType.MagicMissile;
+                        move.MinCastDistance = path[path.Count - 1].EndDistance;
+                        move.Action = ActionType.MagicMissile;
                         return true;
                     }
                 }
@@ -265,7 +274,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (cutNearest)
             {
                 var nearest = nearestTrees.OrderBy(t => self.GetDistanceTo2(t)).FirstOrDefault();
-                FinalMove.MoveTo(null, nearest);
+                move.MoveTo(null, nearest);
             }
 
             return false;
@@ -280,7 +289,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (RoadsHelper.Roads.All(seg => seg.GetDistanceTo(pos) > 200))
                             return Const.Infinity;
 
-                if (RoadsHelper.GetAllowedForLine(lane).All(r => r.GetDistanceTo(pos) > 700))
+                if (RoadsHelper.GetAllowedForLine(lane).All(r => r.GetDistanceTo(pos) > (World.TickIndex < 900 && World.TickIndex > 200 ? 300 : 700)))
                     return 1000;
 
                 return 0;
@@ -316,7 +325,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
                 return DijkstraStopStatus.Continue;
-            }, MoveCostFunc(buildings, selLane), allowCutTrees: true).FirstOrDefault();
+            }, MoveCostFunc(buildings, selLane)).FirstOrDefault();
 
             if (path == null && my.GetDistanceTo(target) - my.Radius - target.Radius <= 1)
                 path = new WizardPath { my }; // из-за эпсилон, если стою близко у цели, то он как бы с ней пересекается, но это не так
@@ -397,10 +406,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return DijkstraStopStatus.TakeAndStop;
                 
                 return DijkstraStopStatus.Continue;
-            }, MoveCostFunc(new [] { nearestBuilding }, MessagesObserver.GetLane()), allowCutTrees: true).FirstOrDefault();
+            }, MoveCostFunc(new [] { nearestBuilding }, MessagesObserver.GetLane())).FirstOrDefault();
 
             if (path == null)
+            {
+                GoDirect(bonus, selMovingInfo.Move);
+                selMovingInfo.Target = bonus;
                 return selMovingInfo;
+            }
 
             var obstacles =
                 Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
@@ -811,7 +824,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             selTarget = combat;
                             selCastAngle = angle;
                             selAngleTo = angleTo;
-                            selMinDist = path[i].StartDistance - 1;
+                            selMinDist = i == 0 || path[i - 1].State == AProjectile.ProjectilePathState.Free && path[i - 1].Length < 40 
+                                ? path[i].StartDistance - 1 
+                                : path[i].StartDistance - 20;
                             selMaxDist = i >= path.Count - 2 ? (self.CastRange + 500) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
                             selPriority = priority;
                         }
