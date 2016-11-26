@@ -8,7 +8,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
- * - не стрелять в нейтралов при прорубке леса
  * - увеличить дальность атаки посохом, чтобы добивать фетишей и бороться за бонусы
  * 
  * -если атакуем башню - не убегать за бонусом
@@ -375,8 +374,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 					move.Action = ActionType.Staff;
 				else if (my.GetDistanceTo(nextTree) <= my.CastRange + nextTree.Radius && my.RemainingMagicMissileCooldownTicks == 0)
 				{
-					move.Action = ActionType.MagicMissile; //TODO: не попасть в своих
+					move.Action = ActionType.MagicMissile;
 					move.CastAngle = angleTo;
+				    move.MinCastDistance = Math.Min(my.CastRange - 1, my.GetDistanceTo(nextTree));
 				}
 			}
 		}
