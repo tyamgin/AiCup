@@ -56,10 +56,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             for (var i = 0; i <= SegmentDivideParts; i++)
             {
                 Point p = dir * (1.0 * i / SegmentDivideParts) + a;
-                var tree = TreesObserver.GetNearestTree(p);
-                if (tree != null && Geom.SegmentCircleIntersects(a, b, tree,
+                var trees = TreesObserver.GetNearestTrees(p);
+                foreach(var tree in trees)
+                    if (Geom.SegmentCircleIntersects(a, b, tree,
                         tree.Radius + Const.WizardRadius + MagicConst.RadiusAdditionalEpsilon))
-                    return tree;
+                        return tree;
             }
             return null;
         }

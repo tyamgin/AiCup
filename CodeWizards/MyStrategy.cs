@@ -64,7 +64,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 2400;
+                Visualizer.Visualizer.DrawSince = 5000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -391,11 +391,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         MovingInfo _goToBonus()
         {
-            const int magic = 45;
+            const int magic = 45; // запас
             var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
-            if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusmaxTicks + magic)
+            if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + magic)
                 return selMovingInfo;
 
             var my = new AWizard(Self);
@@ -425,33 +425,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             path.Add(bonus);
             path.Simplify(obstacles, MagicConst.SimplifyMaxLength);
             
-            var selPath = new List<Point>();
-            ABonus selBonus = null;
             
-            {
-                var time = (int) (path.GetLength()/my.MaxForwardSpeed);
+            var time = (int) (path.GetLength()/my.MaxForwardSpeed);
                 
-                if (time < selMovingInfo.Time && time < MagicConst.GoToBonusmaxTicks)
-                {
-                    selMovingInfo.Time = time;
-                    selPath = path;
-                    selBonus = bonus;
+            if (time < MagicConst.GoToBonusMaxTicks)
+            {
+                selMovingInfo.Time = time;
 
-                    var nextPoint = path[1];
-                    var nextNextPoint = path.Count > 2 ? path[2] : nextPoint;
-                    selMovingInfo.Move = new FinalMove(new Move());
-                    selMovingInfo.Move.MoveTo(nextPoint, my.GetDistanceTo(nextNextPoint) < my.Radius + 20 ? nextNextPoint : nextPoint);
-                    selMovingInfo.Target = nextPoint;
+                var nextPoint = path[1];
+                var nextNextPoint = path.Count > 2 ? path[2] : nextPoint;
+                selMovingInfo.Move = new FinalMove(new Move());
+                selMovingInfo.Move.MoveTo(nextPoint, my.GetDistanceTo(nextNextPoint) < my.Radius + 20 ? nextNextPoint : nextPoint);
+                selMovingInfo.Target = nextPoint;
 
-                    var nextTree = path.GetNearestTree();
-					CutTreesInPath(nextTree, selMovingInfo.Move);
-                }
+                var nextTree = path.GetNearestTree();
+				CutTreesInPath(nextTree, selMovingInfo.Move);
             }
-            if (selBonus != null && selMovingInfo.Time <= selBonus.RemainingAppearanceTicks - magic/*запас*/)
+           
+            if (selMovingInfo.Time <= bonus.RemainingAppearanceTicks - magic)
                 selMovingInfo.Target = null;
 #if DEBUG
             if (selMovingInfo.Target != null)
-                Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { selPath, Pens.Red, 3 });
+                Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Red, 3 });
 #endif
             return selMovingInfo;
         }

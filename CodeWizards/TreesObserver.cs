@@ -118,7 +118,27 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static ATree GetNearestTree(Point point)
         {
             var cell = _findNearestCell(point);
-            return _nearest[cell.I, cell.J];
+            return cell.I >= 0 && cell.J >= 0 && cell.I <= GridSize && cell.J <= GridSize
+                ? _nearest[cell.I, cell.J]
+                : null;
+        }
+
+        public static ATree[] GetNearestTrees(Point point)
+        {
+            var trees = new Dictionary<long, ATree>();
+            var I = (int)(point.X / CellLength + Const.Eps);
+            var J = (int)(point.Y / CellLength + Const.Eps);
+
+            if (_nearest[I, J] != null)
+                trees[_nearest[I, J].Id] = _nearest[I, J];
+            if (I < GridSize && _nearest[I + 1, J] != null)
+                trees[_nearest[I + 1, J].Id] = _nearest[I + 1, J];
+            if (J < GridSize && _nearest[I, J + 1] != null)
+                trees[_nearest[I, J + 1].Id] = _nearest[I, J + 1];
+            if (I < GridSize && J < GridSize && _nearest[I + 1, J + 1] != null)
+                trees[_nearest[I + 1, J + 1].Id] = _nearest[I + 1, J + 1];
+
+            return trees.Values.ToArray();
         }
 
         private static List<object[]> _prevSegments = new List<object[]>();
