@@ -14,36 +14,44 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public int[] RemainingCooldownTicksByAction;
 
         public int Level;
-        public int Xp;// не нужно?
+        public int Xp; // TODO: не используется
         public double Mana;
 
         public int[] SkillsLearnedArr;
+        public int[] SkillsFactorsArr; // какие у меня умения (без учета аур)
+        public int[] AurasFactorsArr; // какие на меня действуют ауры (в т.ч. мои)
 
         public AWizard(Wizard unit) : base(unit)
         {
             IsMaster = unit.IsMaster;
-            RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();
+            RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.ToArray();
             Level = unit.Level;
             Xp = unit.Xp;
             Mana = unit.Mana;
 
             SkillsLearnedArr = new int[5];
+            SkillsFactorsArr = new int[5];
+            AurasFactorsArr = new int[5]; // массив заполняется внешним кодом
             foreach (var skill in unit.Skills)
             {
                 var skillOrder = Utility.GetSkillOrder(skill);
                 var skillGroup = Utility.GetSkillGroup(skill);
                 SkillsLearnedArr[skillGroup] = Math.Max(SkillsLearnedArr[skillGroup], skillOrder + 1);
             }
+            for (var i = 0; i < 5; i++)
+                SkillsFactorsArr[i] = (Math.Min(4, SkillsLearnedArr[i]) + 1)/2;
         }
 
         public AWizard(AWizard unit) : base(unit)
         {
             IsMaster = unit.IsMaster;
-            RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();            
+            RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.ToArray();            
             Level = unit.Level;
             Xp = unit.Xp;
             Mana = unit.Mana;
-            SkillsLearnedArr = unit.SkillsLearnedArr.Select(x => x).ToArray();
+            SkillsLearnedArr = unit.SkillsLearnedArr.ToArray();
+            SkillsFactorsArr = unit.SkillsFactorsArr.ToArray();
+            AurasFactorsArr = unit.AurasFactorsArr.ToArray();
         }
 
         public delegate bool CheckWizardCollisionsFunc(AWizard wizard);
@@ -158,46 +166,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
         }
 
-        public int RemainingStaffCooldownTicks
-        {
-            get { return RemainingCooldownTicksByAction[(int)ActionType.Staff]; }
-            set { RemainingCooldownTicksByAction[(int)ActionType.Staff] = value; }
-        }
-
-        public int RemainingMagicMissileCooldownTicks
-        {
-            get { return RemainingCooldownTicksByAction[(int) ActionType.MagicMissile]; }
-            set { RemainingCooldownTicksByAction[(int) ActionType.MagicMissile] = value; }
-        }
-
-        public int RemainingFrostBoltCooldownTicks
-        {
-            get { return RemainingCooldownTicksByAction[(int)ActionType.FrostBolt]; }
-            set { RemainingCooldownTicksByAction[(int)ActionType.FrostBolt] = value; }
-        }
-
-        public int RemainingFireballCooldownTicks
-        {
-            get { return RemainingCooldownTicksByAction[(int)ActionType.Fireball]; }
-            set { RemainingCooldownTicksByAction[(int)ActionType.Fireball] = value; }
-        }
+        public int RemainingStaffCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Staff];
+            
+        public int RemainingMagicMissileCooldownTicks => RemainingCooldownTicksByAction[(int) ActionType.MagicMissile];
+            
+        public int RemainingFrostBoltCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.FrostBolt];
+            
+        public int RemainingFireballCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Fireball];
+            
 
         private double _getDamageFactor()
         {
+            // действие статуса
             return RemainingEmpowered > 0 ? MyStrategy.Game.EmpoweredDamageFactor : 1;
         }
 
         private double _getCastDamageAddition()
         {
-            return MyStrategy.Game.MagicalDamageBonusPerSkillLevel*Math.Min(4, FrozenSkillLevel);
+            // действие скиллов и аур
+            return MyStrategy.Game.MagicalDamageBonusPerSkillLevel*(SkillsFactorsArr[1] + AurasFactorsArr[1]);
         }
 
         private double _getStaffDamageAddition()
         {
-            return MyStrategy.Game.StaffDamageBonusPerSkillLevel * Math.Min(4, FireballSkillLevel);
+            // действие скиллов и аур
+            return MyStrategy.Game.StaffDamageBonusPerSkillLevel * (SkillsFactorsArr[2] + AurasFactorsArr[2]);
         }
 
-        // TODO: ауры
         public double MagicMissileDamage => MyStrategy.Game.MagicMissileDirectDamage*_getDamageFactor() + _getCastDamageAddition();
 
         public double StaffDamage => MyStrategy.Game.StaffDamage*_getDamageFactor() + _getStaffDamageAddition();
@@ -229,36 +224,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public int SkillsLearned => SkillsLearnedArr.Sum(x => x);
 
 
-        public int MmSkillLevel
-        {
-            get { return SkillsLearnedArr[0]; }
-            set { SkillsLearnedArr[0] = value; }
-        }
+        public int MmSkillLevel => SkillsLearnedArr[0];
 
-        public int FrozenSkillLevel
-        {
-            get { return SkillsLearnedArr[1]; }
-            set { SkillsLearnedArr[1] = value; }
-        }
+        public int FrozenSkillLevel => SkillsLearnedArr[1];
 
-        public int FireballSkillLevel
-        {
-            get { return SkillsLearnedArr[2]; }
-            set { SkillsLearnedArr[2] = value; }
-        }
+        public int FireballSkillLevel => SkillsLearnedArr[2];
+            
+        public int HasteSkillLevel => SkillsLearnedArr[3];
 
-        public int HasteSkillLevel
-        {
-            get { return SkillsLearnedArr[3]; }
-            set { SkillsLearnedArr[3] = value; }
-        }
-
-        public int ShieldSkillLevel
-        {
-            get { return SkillsLearnedArr[4]; }
-            set { SkillsLearnedArr[4] = value; }
-        }
-
+        public int ShieldSkillLevel => SkillsLearnedArr[4];
+        
+            
         public bool IsActionAvailable(ActionType action)
         {
             switch (action)

@@ -23,6 +23,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static World World;
         public static Game Game;
         public static Wizard Self;
+        public static AWizard ASelf;
         public static FinalMove FinalMove;
         public static int PrevTickIndex;
 
@@ -90,7 +91,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Game = game;
             Self = self;
             FinalMove = new FinalMove(move);
-            
+
             Const.Initialize();
 
             var levelUpXpValues = Game.LevelUpXpValues;
@@ -101,6 +102,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
                 .ToArray();
+
+            foreach (var wizard in Wizards)
+            {
+                foreach (var other in Wizards)
+                {
+                    if (wizard.Faction != other.Faction)
+                        continue;
+                    if (wizard.GetDistanceTo2(other) > Geom.Sqr(Game.AuraSkillRange))
+                        continue;
+                    
+                    for (var i = 0; i < 5; i++)
+                        wizard.AurasFactorsArr[i] = Math.Max(wizard.AurasFactorsArr[i], other.SkillsLearnedArr[i] / 2);
+                }
+            }
 
             OpponentWizards = Wizards
                 .Where(x => x.IsOpponent)
@@ -152,7 +167,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             InitializeProjectiles();
             InitializeDijkstra();
 
-            var my = new AWizard(Self);
+            ASelf = Wizards.FirstOrDefault(x => x.Id == Self.Id);
+            if (ASelf == null)
+                throw new Exception("Self not found in wizards list");
 
             foreach (var building in OpponentBuildings)
             {
@@ -169,15 +186,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             var bonusMoving = GoToBonus();
-            var target = FindTarget(new AWizard(self), bonusMoving.Target);
+            var target = FindTarget(new AWizard(ASelf), bonusMoving.Target);
             if (target == null && bonusMoving.Target == null)
             {
                 var nearest = OpponentCombats
                     .Where(
                         x =>
                             Utility.IsBase(x) || RoadsHelper.GetLane(x) == MessagesObserver.GetLane() ||
-                            RoadsHelper.GetLaneEx(my) == ALaneType.Middle && 
-                            RoadsHelper.GetLaneEx(x) == ALaneType.Middle && CanRush(my, x))
+                            RoadsHelper.GetLaneEx(ASelf) == ALaneType.Middle && 
+                            RoadsHelper.GetLaneEx(x) == ALaneType.Middle && CanRush(ASelf, x))
                     .Where(x => x.IsAssailable)
                     .OrderBy(
                         x =>
@@ -211,12 +228,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             FinalMove.CastAngle = bonusMoving.Move.CastAngle;
                         }
 
-                        GoToBonusDanger = BonusesObserver.Bonuses.Min(b => b.GetDistanceTo(my)) < my.VisionRange &&
-                                          OpponentWizards.Count(w => my.GetDistanceTo(w) < my.VisionRange) <= 1
+                        GoToBonusDanger = BonusesObserver.Bonuses.Min(b => b.GetDistanceTo(ASelf)) < ASelf.VisionRange &&
+                                          OpponentWizards.Count(w => ASelf.GetDistanceTo(w) < ASelf.VisionRange) <= 1
                             ? 41
                             : 7;
 
-                        NextBonusWaypoint = my + (NextBonusWaypoint - my).Normalized() * (Self.Radius + 30);
+                        NextBonusWaypoint = ASelf + (NextBonusWaypoint - ASelf).Normalized() * (Self.Radius + 30);
                         TryGoByGradient(EstimateDanger, null, FinalMove);
                     }
                     else
@@ -227,7 +244,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             TimerEndLog("Go", 1);
 
-            if (my.CanLearnSkill)
+            if (ASelf.CanLearnSkill)
             {
                 move.SkillToLearn = MessagesObserver.GetSkill();
             }
@@ -245,7 +262,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool TryCutTrees(bool cutNearest, FinalMove move)
         {
-            var self = new AWizard(Self);
+            var self = new AWizard(ASelf);
             var nearestTrees = TreesObserver.Trees.Where(
                 t => self.GetDistanceTo(t) < self.CastRange + t.Radius + Game.MagicMissileRadius
                 ).ToArray();
@@ -307,12 +324,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool _goAround(ACombatUnit target)
         {
-            var my = new AWizard(Self);
+            var my = new AWizard(ASelf);
             var selLane = Utility.IsBase(target) ? MessagesObserver.GetLane() : RoadsHelper.GetLane(target);
             var nearestBuilding = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
             var buildings = nearestBuilding.Id == target.Id ? new[] { nearestBuilding } : new[] { nearestBuilding, target};
 
-            var path = DijkstraFindPath(new AWizard(Self), pos =>
+            var path = DijkstraFindPath(ASelf, pos =>
             {
                 // точка ОК, если с неё можно стрелять
                 if (pos.GetDistanceTo2(target) < Geom.Sqr(Self.CastRange))
@@ -362,7 +379,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 		{
 			if (nextTree == null)
 				return;
-			var my = new AWizard(Self);
+			var my = new AWizard(ASelf);
 			
 			var angleTo = my.GetAngleTo(nextTree);
 			if (my.GetDistanceTo(nextTree) < my.VisionRange && Math.Abs(angleTo) > Game.StaffSector / 2)
@@ -398,10 +415,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + magic)
                 return selMovingInfo;
 
-            var my = new AWizard(Self);
+            var my = new AWizard(ASelf);
             var nearestBuilding = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
 
-            var path = DijkstraFindPath(new AWizard(Self), pos =>
+            var path = DijkstraFindPath(ASelf, pos =>
             {
                 // точка ОК, если бонус совсем близко
                 if (pos.GetDistanceTo2(bonus) < Geom.Sqr(bonus.Radius + Self.Radius + 35))

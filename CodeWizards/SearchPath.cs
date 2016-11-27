@@ -271,6 +271,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static WizardPath[] DijkstraFindPath(AWizard start, DijkstraPointStopFunc stopFunc, DijkstraPointCostFunc costFunc)
         {
+            start = new AWizard(start);
             _startState = start;
             
             _obstacles = Combats

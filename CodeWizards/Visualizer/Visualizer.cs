@@ -245,8 +245,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 for (var i = 0; i < 5; i++)
                     skillsStr += wizard.SkillsLearnedArr[i];
 
+                var skillsStr2 = "";
+                for (var i = 0; i < 5; i++)
+                    skillsStr2 += wizard.SkillsFactorsArr[i] + wizard.AurasFactorsArr[i];
+
                 DrawText(statusesStr, 20, Brushes.Coral, wizard.X + 30, wizard.Y - 40);
                 DrawText(skillsStr, 15, Brushes.Black, wizard.X + 30, wizard.Y - 15);
+                DrawText(skillsStr2, 15, Brushes.DeepSkyBlue, wizard.X + 30, wizard.Y + 5);
             }
 
             // minions

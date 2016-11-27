@@ -398,7 +398,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             foreach (var opp in OpponentCombats)
             {
-                if (self.GetDistanceTo2(opp) > Geom.Sqr(self.VisionRange) || !opp.IsAssailable)
+                if (self.GetDistanceTo2(opp) > Geom.Sqr(self.CastRange + opp.Radius + 60) || !opp.IsAssailable)
                     continue;
 
                 var nearstCombats = nearest

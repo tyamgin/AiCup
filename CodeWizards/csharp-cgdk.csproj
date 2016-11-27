@@ -128,7 +128,6 @@
     <Compile Include="SearchPath.cs" />
     <Compile Include="BuildingsObserver.cs" />
     <Compile Include="TargetsSelector.cs" />
-    <Compile Include="Test.cs" />
     <Compile Include="TreesObserver.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="Visualizer\MainForm.cs">

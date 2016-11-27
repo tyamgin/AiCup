@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             if (World.TickIndex == 0)
             {
-                var self = new AWizard(Self);
+                var self = new AWizard(ASelf);
                 AWizard
                     leftmost = self,
                     bottommost = self;

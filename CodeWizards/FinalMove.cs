@@ -62,7 +62,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void MoveTo(Point to, Point turnTo)
         {
-            var self = new AWizard(MyStrategy.Self);
+            var self = MyStrategy.ASelf;
             if (turnTo != null)
             {
                 _move.Turn = Utility.EnsureInterval(MyStrategy.Self.GetAngleTo(turnTo.X, turnTo.Y), self.MaxTurnAngle);

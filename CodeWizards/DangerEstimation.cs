@@ -161,7 +161,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             int grid = 60;
             var res = new List<Tuple<Point, double>>();
-            var my = new AWizard(Self);
+            var my = new AWizard(ASelf);
             for (int i = 0; i <= grid; i++)
             {
                 for (int j = 0; j <= grid; j++)
@@ -191,7 +191,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool _TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition, FinalMove move)
         {
-            var self = new AWizard(Self);
+            var self = new AWizard(ASelf);
 
             var obstacles = 
                 Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
@@ -299,7 +299,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 var angle = Math.PI*2/grid*i;
                 var ticks = 0;
-                var my = new AWizard(Self);
+                var my = new AWizard(ASelf);
                 var bonus = new ABonus(BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self)));
                 Point firstMoveTo = null;
 
