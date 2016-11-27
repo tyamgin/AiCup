@@ -88,6 +88,7 @@
     <Compile Include="Const.cs" />
     <Compile Include="DangerEstimation.cs" />
     <Compile Include="FinalMove.cs" />
+    <Compile Include="FindTarget.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="MasterStrategy.cs" />
     <Compile Include="MessagesObserver.cs" />
