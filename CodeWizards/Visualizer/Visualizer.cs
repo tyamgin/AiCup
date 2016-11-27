@@ -274,7 +274,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                     ? Color.Blue
                     : projectile.Type == ProjectileType.Dart
                         ? Color.Black
-                        : Color.DarkOrange;
+                        : projectile.Type == ProjectileType.FrostBolt
+                            ? Color.SkyBlue
+                            : Color.DarkOrange;
+
                 FillCircle(color, projectile.X, projectile.Y, projectile.Radius);
                 if (Projectiles.ContainsKey(projectile.Id))
                 {

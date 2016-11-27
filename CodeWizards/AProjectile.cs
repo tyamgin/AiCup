@@ -13,6 +13,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public ProjectileType Type;
         public double RemainingDistance;
         public long OwnerUnitId;
+        public Faction Faction;
 
 
         public AProjectile(Projectile unit) : base(unit)
@@ -23,6 +24,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Type = unit.Type;
             OwnerUnitId = unit.OwnerUnitId;
             RemainingDistance = 0; // это значение должно перезаписываться использующим кодом
+            Faction = unit.Faction;
         }
 
         public AProjectile(AProjectile unit) : base(unit)
@@ -33,19 +35,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Type = unit.Type;
             OwnerUnitId = unit.OwnerUnitId;
             RemainingDistance = unit.RemainingDistance;
+            Faction = unit.Faction;
         }
 
         public AProjectile(ACombatUnit self, double castAngle, ProjectileType type)
         {
             Type = type;
             Speed = Const.ProjectileInfo[(int) type].Speed;
-            Radius = Const.ProjectileInfo[(int)type].Radius;
+            Radius = Const.ProjectileInfo[(int) type].Radius;
             X = self.X;
             Y = self.Y;
             SpeedX = Math.Cos(self.Angle + castAngle) *Speed;
             SpeedY = Math.Sin(self.Angle + castAngle) *Speed;
             RemainingDistance = self.CastRange;
             OwnerUnitId = self.Id;
+            Faction = self.Faction;
         }
 
         public bool Exists
@@ -113,13 +117,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public enum ProjectilePathState
         {
             Free,
-            Fire,
+            Shot,
+            Fireball,
         }
 
         public class ProjectilePathSegment
         {
             public ProjectilePathState State;
             public ACombatUnit Target;
+            public int OpponentDeadsCount;
+            public double OpponentDamage;
+            public double SelfDamage;
+            public int OpponentBurned;
+            public int SelfBurned;
             public double StartDistance, EndDistance;
 
             public double Length => EndDistance - StartDistance;
@@ -127,7 +137,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public List<ProjectilePathSegment> Emulate(ACombatUnit[] _units)
         {
-            if (Type != ProjectileType.MagicMissile && Type != ProjectileType.FrostBolt)
+            if (Type != ProjectileType.MagicMissile && Type != ProjectileType.FrostBolt && Type != ProjectileType.Fireball)
                 throw new NotImplementedException();
 
             var list = new List<ProjectilePathSegment>();
@@ -140,31 +150,88 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 projectile.Move(proj =>
                 {
-                    var inter = proj.CheckIntersections(units);
-
-                    if (inter != null)
+                    if (Type == ProjectileType.Fireball)
                     {
-                        if (list.Count == 0 || list.Last().State != ProjectilePathState.Fire)
+                        double selfDamage = 0;
+                        double oppDamage = 0;
+                        int oppBurned = 0;
+                        int selfBurned = 0;
+                        ACombatUnit firstTarget = null;
+                        // TODO: deads count
+                        foreach (var unit in units)
                         {
-                            list.Add(new ProjectilePathSegment
+                            var dist = proj.GetDistanceTo(unit) - unit.Radius;
+                            double damage = 0;
+                            if (dist <= MyStrategy.Game.FireballExplosionMaxDamageRange)
+                                damage += MyStrategy.Game.FireballExplosionMaxDamage;
+                            else if (dist <= MyStrategy.Game.FireballExplosionMinDamageRange)
                             {
-                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                State = ProjectilePathState.Fire,
-                                Target = Utility.CloneCombat(inter as ACombatUnit),
-                            });
+                                var ratio = 1 - (dist - MyStrategy.Game.FireballExplosionMaxDamageRange)/(MyStrategy.Game.FireballExplosionMinDamageRange - MyStrategy.Game.FireballExplosionMaxDamageRange);
+                                damage += ratio*(MyStrategy.Game.FireballExplosionMaxDamage - MyStrategy.Game.FireballExplosionMinDamage) + MyStrategy.Game.FireballExplosionMinDamage;
+                            }
+
+                            if (damage > 0)
+                            {
+                                if (damage >= unit.Life - Const.Eps)
+                                {
+                                    // killed
+                                    damage = unit.Life;
+                                }
+
+                                if (unit.Faction != proj.Faction)
+                                {
+                                    oppDamage += damage;
+                                    oppBurned++;
+                                    firstTarget = unit;
+                                }
+                                else
+                                {
+                                    selfDamage += damage;
+                                    selfBurned++;
+                                }
+                            }
                         }
+                        list.Add(new ProjectilePathSegment
+                        {
+                            StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                            EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                            OpponentDamage = oppDamage,
+                            SelfDamage = selfDamage,
+                            OpponentDeadsCount = 0,//TODO
+                            State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball,
+                            OpponentBurned = oppBurned,
+                            SelfBurned = selfBurned,
+                            Target = firstTarget,
+                        });
                     }
                     else
                     {
-                        if (list.Count == 0 || list.Last().State != ProjectilePathState.Free)
+                        var inter = proj.CheckIntersections(units);
+
+                        if (inter != null)
                         {
-                            list.Add(new ProjectilePathSegment
+                            if (list.Count == 0 || list.Last().State != ProjectilePathState.Shot)
                             {
-                                StartDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                EndDistance = list.Count == 0 ? 0 : list[list.Count - 1].EndDistance,
-                                State = ProjectilePathState.Free,
-                            });
+                                list.Add(new ProjectilePathSegment
+                                {
+                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    State = ProjectilePathState.Shot,
+                                    Target = Utility.CloneCombat(inter as ACombatUnit),
+                                });
+                            }
+                        }
+                        else
+                        {
+                            if (list.Count == 0 || list.Last().State != ProjectilePathState.Free)
+                            {
+                                list.Add(new ProjectilePathSegment
+                                {
+                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    State = ProjectilePathState.Free,
+                                });
+                            }
                         }
                     }
                     list.Last().EndDistance += proj.Speed / AProjectile.MicroTicks;

@@ -124,7 +124,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 var proj = new AProjectile(this, angle, ProjectileType.MagicMissile);
                 var path = proj.Emulate(new[] {(ACombatUnit) opp});
-                if (path.Any(x => x.State == AProjectile.ProjectilePathState.Fire && x.Target.Faction != Faction)) //IsOpponent?
+                if (path.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != Faction)) //IsOpponent?
                     return true;
             }
             return false;

@@ -10,7 +10,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         Target _findTarget(AWizard self, Point moveTo)
         {
             var t0 = FindBonusTarget(self);
-            var tfb = FindCastTarget(self, ProjectileType.FrostBolt);
+            var tfrost = FindCastTarget(self, ProjectileType.FrostBolt);
+            var tfball = FindCastTarget(self, ProjectileType.Fireball);
             var tmm = FindCastTarget(self, ProjectileType.MagicMissile);
             var t2 = FindStaffTarget(self);
             var t3 = FindCastTarget2(self, t0.Target ?? moveTo);
@@ -22,13 +23,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 ret = t0.Target;
             }
 
-            if (tfb.Target != null && tfb.Time <= Math.Min(t2.Time, t3.Time))
+            if (tfball.Target != null && tfball.Time <= Math.Min(t2.Time, t3.Time))
             {
-                FinalMove.Action = tfb.Move.Action;
-                FinalMove.MinCastDistance = tfb.Move.MinCastDistance;
-                FinalMove.MaxCastDistance = tfb.Move.MaxCastDistance;
-                FinalMove.CastAngle = tfb.Move.CastAngle;
-                return new Target { MoveTo = tfb.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
+                FinalMove.Action = tfball.Move.Action;
+                FinalMove.MinCastDistance = tfball.Move.MinCastDistance;
+                FinalMove.MaxCastDistance = tfball.Move.MaxCastDistance;
+                FinalMove.CastAngle = tfball.Move.CastAngle;
+                return new Target { MoveTo = tfball.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
+            }
+            if (tfrost.Target != null && tfrost.Time <= Math.Min(t2.Time, t3.Time))
+            {
+                FinalMove.Action = tfrost.Move.Action;
+                FinalMove.MinCastDistance = tfrost.Move.MinCastDistance;
+                FinalMove.MaxCastDistance = tfrost.Move.MaxCastDistance;
+                FinalMove.CastAngle = tfrost.Move.CastAngle;
+                return new Target { MoveTo = tfrost.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
             }
             if (tmm.Target != null && tmm.Time <= Math.Min(t2.Time, t3.Time))
             {
@@ -278,18 +287,58 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             double
                 selMinDist = 0,
                 selMaxDist = self.CastRange + 20,
-                selAngleTo = 0,
-                selCastAngle = 0,
-                selPriority = int.MaxValue;
+                selCastAngle = 0;
 
-            foreach (var angle in angles)
+            if (projectileType == ProjectileType.Fireball)
             {
-                var proj = new AProjectile(new AWizard(self), angle, projectileType);
-                var path = EmulateMagicMissile(proj);
-                for (var i = 0; i < path.Count; i++)
+                double
+                    selPriority = int.MaxValue,
+                    maxDamage = 0;
+                int maxBurned = 0;
+
+                foreach (var angle in angles)
                 {
-                    if (path[i].State == AProjectile.ProjectilePathState.Fire)
+                    var proj = new AProjectile(new AWizard(self), angle, projectileType);
+                    var path = EmulateMagicMissile(proj);
+                    for (var i = 0; i < path.Count; i++)
                     {
+                        var seg = path[i];
+                        if (seg.State == AProjectile.ProjectilePathState.Free)
+                            continue;
+
+                        if (seg.SelfDamage > 0) // TODO: можно и пожертвовать
+                            continue;
+
+                        if (seg.OpponentBurned > maxBurned 
+                            || seg.OpponentBurned == maxBurned && seg.OpponentDamage > maxDamage 
+                            //|| seg.OpponentBurned == maxBurned && Utility.Equals(seg.OpponentDamage, maxDamage)
+                            //TODO: combare by angle and priority
+                            )
+                        {
+                            maxBurned = seg.OpponentBurned;
+                            maxDamage = seg.OpponentDamage;
+                            selCastAngle = angle;
+                            selMinDist = selMaxDist = seg.StartDistance;
+                            selTarget = seg.Target;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                double
+                    selPriority = int.MaxValue,
+                    selAngleTo = 0;
+
+                foreach (var angle in angles)
+                {
+                    var proj = new AProjectile(new AWizard(self), angle, projectileType);
+                    var path = EmulateMagicMissile(proj);
+                    for (var i = 0; i < path.Count; i++)
+                    {
+                        if (path[i].State == AProjectile.ProjectilePathState.Free)
+                            continue;
+
                         // TODO: если можно убить нескольких, убивать того, у кого больше жизней
                         var combat = path[i].Target;
                         if (!combat.IsAssailable)
@@ -308,7 +357,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             selMinDist = i == 0 || path[i - 1].State == AProjectile.ProjectilePathState.Free && path[i - 1].Length < 40
                                 ? path[i].StartDistance - 1
                                 : path[i].StartDistance - 20;
-                            selMaxDist = i >= path.Count - 2 ? (self.CastRange + 500) : (path[i + 1].EndDistance + path[i].EndDistance) / 2;
+                            selMaxDist = i >= path.Count - 2
+                                ? (self.CastRange + 500)
+                                : (path[i + 1].EndDistance + path[i].EndDistance)/2;
                             selPriority = priority;
                         }
                     }
@@ -459,6 +510,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         List<AProjectile.ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
         {
+            // TODO: не передавать всех, а только ближайших
             return projectile.Emulate(Combats);
         }
 
