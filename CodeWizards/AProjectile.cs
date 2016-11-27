@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Speed = Geom.Hypot(SpeedX, SpeedY);
             Type = unit.Type;
             OwnerUnitId = unit.OwnerUnitId;
-            RemainingDistance = MyStrategy.Game.WizardCastRange;  // TODO: его навыки
+            RemainingDistance = 0; // это значение должно перезаписываться использующим кодом
         }
 
         public AProjectile(AProjectile unit) : base(unit)
@@ -38,15 +38,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public AProjectile(ACombatUnit self, double castAngle, ProjectileType type)
         {
             Type = type;
-            switch (type)
-            {
-                case ProjectileType.MagicMissile:
-                    Speed = MyStrategy.Game.MagicMissileSpeed;
-                    Radius = MyStrategy.Game.MagicMissileRadius;
-                    break;
-                default:
-                    throw new NotImplementedException(type.ToString());
-            }
+            Speed = Const.ProjectileInfo[(int) type].Speed;
+            Radius = Const.ProjectileInfo[(int)type].Radius;
             X = self.X;
             Y = self.Y;
             SpeedX = Math.Cos(self.Angle + castAngle) *Speed;
@@ -134,7 +127,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public List<ProjectilePathSegment> Emulate(ACombatUnit[] _units)
         {
-            if (Type != ProjectileType.MagicMissile)
+            if (Type != ProjectileType.MagicMissile && Type != ProjectileType.FrostBolt)
                 throw new NotImplementedException();
 
             var list = new List<ProjectilePathSegment>();

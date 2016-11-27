@@ -6,7 +6,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     class ProjectilesObserver
     {
-        private static Dictionary<long, AProjectile> _projectiles = new Dictionary<long, AProjectile>(); 
+        private static Dictionary<long, AProjectile> _projectiles = new Dictionary<long, AProjectile>();
 
         public static void Update()
         {
@@ -31,10 +31,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     // только появился
                     var owner = MyStrategy.World.Wizards.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
-                    if (owner != null && proj.GetDistanceTo(owner) < proj.Speed * 1.2)
+                    if (owner != null && proj.GetDistanceTo(owner) < proj.Speed * 1.4)
                     {
                         newDict[proj.Id] = proj;
-                        proj.RemainingDistance -= proj.Speed;
+                        proj.RemainingDistance = owner.CastRange - proj.Speed;
                     }
                 }
             }

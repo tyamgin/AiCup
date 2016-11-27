@@ -7,6 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - учитывать изменение маны
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * - увеличить дальность атаки посохом, чтобы добивать фетишей и бороться за бонусы
  * 
@@ -90,8 +91,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Self = self;
             FinalMove = new FinalMove(move);
             
-            Const.MapSize = Game.MapSize;
-            Const.WizardRadius = Game.WizardRadius;
+            Const.Initialize();
 
             var levelUpXpValues = Game.LevelUpXpValues;
             AWizard.Xps = new int[Game.LevelUpXpValues.Length + 1];

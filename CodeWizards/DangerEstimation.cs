@@ -183,6 +183,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition, FinalMove move)
         {
+            TimerStart();
+            var ret = _TryGoByGradient(costFunction, condition, move);
+            TimerEndLog("TryGoByGradient", 1);
+            return ret;
+        }
+
+        private bool _TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition, FinalMove move)
+        {
             var self = new AWizard(Self);
 
             var obstacles = 
@@ -262,6 +270,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     {
                         minDanger = newDanger;
                         selMoveTo = moveTo;
+                        selVec = vec;
                     }
                 }
             }
@@ -275,7 +284,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool TryDodgeProjectile()
         {
-            var obstacles = Combats.Where(x => x.Id != Self.Id).ToArray();//TODO деревья
+            TimerStart();
+            var ret = _tryDodgeProjectile();
+            TimerEndLog("TryDodgeProjectile", 1);
+            return ret;
+        }
+
+        bool _tryDodgeProjectile()
+        {
+            var obstacles = Combats.Where(x => x.Id != Self.Id).ToArray();
 
             const int grid = 40;
             for (var i = 0; i < grid; i++)
@@ -352,7 +369,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        public static int ProjectilesCheckTicks = 15;
+        public static int ProjectilesCheckTicks = 18;
 
 
         public void InitializeProjectiles()

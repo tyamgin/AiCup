@@ -15,6 +15,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public int Level;
         public int Xp;// не нужно?
+        public double Mana;
 
         public int[] SkillsLearnedArr;
 
@@ -24,6 +25,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();
             Level = unit.Level;
             Xp = unit.Xp;
+            Mana = unit.Mana;
 
             SkillsLearnedArr = new int[5];
             foreach (var skill in unit.Skills)
@@ -40,6 +42,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             RemainingCooldownTicksByAction = unit.RemainingCooldownTicksByAction.Select(x => x).ToArray();            
             Level = unit.Level;
             Xp = unit.Xp;
+            Mana = unit.Mana;
             SkillsLearnedArr = unit.SkillsLearnedArr.Select(x => x).ToArray();
         }
 
@@ -100,7 +103,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             if (checkCooldown)
             {
-                if (RemainingMagicMissileCooldownTicks > 0 || RemainingActionCooldownTicks > 0)
+                if (RemainingMagicMissileCooldownTicks > 0 || RemainingActionCooldownTicks > 0 || Mana < MyStrategy.Game.MagicMissileManacost)
                     return false;
             }
             if (RemainingFrozen > 0)
@@ -179,29 +182,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             set { RemainingCooldownTicksByAction[(int)ActionType.Fireball] = value; }
         }
 
-        public double MagicMissileDamage
+        private double _getDamageFactor()
         {
-            get
-            {
-                // TODO: умения и ауры
-                double damage = MyStrategy.Game.MagicMissileDirectDamage;
-                if (RemainingEmpowered > 0)
-                    damage *= MyStrategy.Game.EmpoweredDamageFactor;
-                return damage;
-            }
+            return RemainingEmpowered > 0 ? MyStrategy.Game.EmpoweredDamageFactor : 1;
         }
 
-        public double StaffDamage
+        private double _getCastDamageAddition()
         {
-            get
-            {
-                // TODO: умения и ауры
-                double damage = MyStrategy.Game.StaffDamage;
-                if (RemainingEmpowered > 0)
-                    damage *= MyStrategy.Game.EmpoweredDamageFactor;
-                return damage;
-            }
+            return MyStrategy.Game.MagicalDamageBonusPerSkillLevel*Math.Min(4, FrozenSkillLevel);
         }
+
+        private double _getStaffDamageAddition()
+        {
+            return MyStrategy.Game.StaffDamageBonusPerSkillLevel * Math.Min(4, FireballSkillLevel);
+        }
+
+        // TODO: ауры
+        public double MagicMissileDamage => MyStrategy.Game.MagicMissileDirectDamage*_getDamageFactor() + _getCastDamageAddition();
+
+        public double StaffDamage => MyStrategy.Game.StaffDamage*_getDamageFactor() + _getStaffDamageAddition();
+
+        public double FrostBoltDamage => MyStrategy.Game.FrostBoltDirectDamage*_getDamageFactor() + _getCastDamageAddition();
+
 
         private double _getHastenedFactor()
         {
@@ -255,6 +257,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             get { return SkillsLearnedArr[4]; }
             set { SkillsLearnedArr[4] = value; }
+        }
+
+        public bool IsActionAvailable(ActionType action)
+        {
+            switch (action)
+            {
+                case ActionType.FrostBolt:
+                    return FrozenSkillLevel == 5;
+                case ActionType.Fireball:
+                    return FireballSkillLevel == 5;
+                case ActionType.Haste:
+                    return HasteSkillLevel == 5;
+                case ActionType.Shield:
+                    return ShieldSkillLevel == 5;
+                default:
+                    return true;
+            }
         }
     }
 }

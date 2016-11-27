@@ -1,4 +1,6 @@
-﻿namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
+﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+
+namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class Const
     {
@@ -16,6 +18,51 @@
             new Point(1200, 1200),
             new Point(2800, 2800),
         };
+
+        public static ProjectileInfo[] ProjectileInfo = new ProjectileInfo[4];
+
+        public static void Initialize()
+        {
+            Const.MapSize = MyStrategy.Game.MapSize;
+            Const.WizardRadius = MyStrategy.Game.WizardRadius;
+
+            ProjectileInfo[(int) ProjectileType.MagicMissile] = new ProjectileInfo
+            {
+                ManaCost = MyStrategy.Game.MagicMissileManacost,
+                Radius = MyStrategy.Game.MagicMissileRadius,
+                DamageRadius = MyStrategy.Game.MagicMissileRadius,
+                Speed = MyStrategy.Game.MagicMissileSpeed,
+            };
+            ProjectileInfo[(int)ProjectileType.FrostBolt] = new ProjectileInfo
+            {
+                ManaCost = MyStrategy.Game.FrostBoltManacost,
+                Radius = MyStrategy.Game.FrostBoltRadius,
+                DamageRadius = MyStrategy.Game.FrostBoltRadius,
+                Speed = MyStrategy.Game.FrostBoltSpeed,
+            };
+            ProjectileInfo[(int)ProjectileType.Fireball] = new ProjectileInfo
+            {
+                ManaCost = MyStrategy.Game.FireballManacost,
+                Radius = MyStrategy.Game.FireballRadius,
+                DamageRadius = MyStrategy.Game.FireballExplosionMinDamageRange,
+                Speed = MyStrategy.Game.FireballSpeed,
+            };
+            ProjectileInfo[(int)ProjectileType.Dart] = new ProjectileInfo
+            {
+                ManaCost = 0,
+                Radius = MyStrategy.Game.DartRadius,
+                DamageRadius = MyStrategy.Game.DartRadius,
+                Speed = MyStrategy.Game.DartSpeed,
+            };
+        }
+    }
+
+    public class ProjectileInfo
+    {
+        public double Radius;
+        public double DamageRadius;
+        public double Speed;
+        public double ManaCost;
     }
 
     public class MagicConst

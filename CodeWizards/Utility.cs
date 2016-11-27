@@ -113,6 +113,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return (SkillType) (skillGroup*5 + skillOrder);
         }
 
+        public static ActionType GetActionByProjectileType(ProjectileType type)
+        {
+            switch (type)
+            {
+                case ProjectileType.MagicMissile:
+                    return ActionType.MagicMissile;
+                case ProjectileType.FrostBolt:
+                    return ActionType.FrostBolt;
+                case ProjectileType.Fireball:
+                    return ActionType.Fireball;
+                default:
+                    throw new Exception("Invalid projectile type");
+            }
+        }
+
         public static bool IsBase(ACombatUnit unit)
         {
             return unit is ABuilding && ((ABuilding) unit).IsBase;

@@ -10,7 +10,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         Target _findTarget(AWizard self, Point moveTo)
         {
             var t0 = FindBonusTarget(self);
-            var t1 = FindCastTarget(self);
+            var tfb = FindCastTarget(self, ProjectileType.FrostBolt);
+            var tmm = FindCastTarget(self, ProjectileType.MagicMissile);
             var t2 = FindStaffTarget(self);
             var t3 = FindCastTarget2(self, t0.Target ?? moveTo);
 
@@ -21,20 +22,28 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 ret = t0.Target;
             }
 
-            if (t1.Target != null && t1.Time <= Math.Min(t2.Time, t3.Time))
+            if (tfb.Target != null && tfb.Time <= Math.Min(t2.Time, t3.Time))
             {
-                FinalMove.Action = t1.Move.Action;
-                FinalMove.MinCastDistance = t1.Move.MinCastDistance;
-                FinalMove.MaxCastDistance = t1.Move.MaxCastDistance;
-                FinalMove.CastAngle = t1.Move.CastAngle;
-                return new Target { MoveTo = t1.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
+                FinalMove.Action = tfb.Move.Action;
+                FinalMove.MinCastDistance = tfb.Move.MinCastDistance;
+                FinalMove.MaxCastDistance = tfb.Move.MaxCastDistance;
+                FinalMove.CastAngle = tfb.Move.CastAngle;
+                return new Target { MoveTo = tfb.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
             }
-            if (t0.Target == null && t2.Target != null && t2.Time <= Math.Min(t1.Time, t3.Time))
+            if (tmm.Target != null && tmm.Time <= Math.Min(t2.Time, t3.Time))
+            {
+                FinalMove.Action = tmm.Move.Action;
+                FinalMove.MinCastDistance = tmm.Move.MinCastDistance;
+                FinalMove.MaxCastDistance = tmm.Move.MaxCastDistance;
+                FinalMove.CastAngle = tmm.Move.CastAngle;
+                return new Target { MoveTo = tmm.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
+            }
+            if (t0.Target == null && t2.Target != null && t2.Time <= Math.Min(tmm.Time, t3.Time))
             {
                 FinalMove.Apply(t2.Move);
                 return new Target { MoveTo = t2.Target, Type = TargetType.Opponent };
             }
-            if (t3.Target != null && t3.Time <= Math.Min(t1.Time, t2.Time))
+            if (t3.Target != null && t3.Time <= Math.Min(tmm.Time, t2.Time))
             {
                 FinalMove.Apply(t3.Move);
                 return new Target { MoveTo = t3.Target, Type = TargetType.Opponent };
@@ -231,27 +240,38 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new MovingInfo(selTarget, minTicks, move);
         }
 
-        MovingInfo _findCastTarget(AWizard self)
+        MovingInfo _findCastTarget(AWizard self, ProjectileType projectileType)
         {
+            var actionType = Utility.GetActionByProjectileType(projectileType);
+
             var move = new FinalMove(new Move());
-            if (self.RemainingMagicMissileCooldownTicks > 0 || self.RemainingActionCooldownTicks > 0)
+            if (self.RemainingActionCooldownTicks > 0 || 
+                self.RemainingCooldownTicksByAction[(int) actionType] > 0 ||
+                self.Mana < Const.ProjectileInfo[(int) projectileType].ManaCost ||
+                !self.IsActionAvailable(actionType)
+                )
                 return new MovingInfo(null, int.MaxValue, move);
 
             var angles = new List<double>();
             foreach (var x in OpponentCombats)
             {
-                var dist = self.GetDistanceTo(x);
-
-                if (dist > self.CastRange + x.Radius + Game.MagicMissileRadius + 3) // TODO: возможно ограничить перебор, если угол слишком большой
+                var distTo = self.GetDistanceTo(x);
+                if (distTo > self.CastRange + x.Radius + Const.ProjectileInfo[(int)projectileType].DamageRadius + 3)
                     continue;
 
-                const int grid = 20;
+                var angleTo = self.GetAngleTo(x);
+                if (Math.Abs(angleTo) > Math.PI/3)
+                    continue;
+
+                const int grid = 16;
                 double left = -Game.StaffSector / 2, right = -left;
                 for (var i = 0; i <= grid; i++)
                 {
                     var castAngle = (right - left) / grid * i + left;
                     angles.Add(castAngle);
                 }
+                // нужно найти хотябы 1
+                break;
             }
 
             ACombatUnit selTarget = null;
@@ -264,12 +284,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             foreach (var angle in angles)
             {
-                var proj = new AProjectile(new AWizard(self), angle, ProjectileType.MagicMissile);
+                var proj = new AProjectile(new AWizard(self), angle, projectileType);
                 var path = EmulateMagicMissile(proj);
                 for (var i = 0; i < path.Count; i++)
                 {
                     if (path[i].State == AProjectile.ProjectilePathState.Fire)
                     {
+                        // TODO: если можно убить нескольких, убивать того, у кого больше жизней
                         var combat = path[i].Target;
                         if (!combat.IsAssailable)
                             continue;
@@ -296,7 +317,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (selTarget == null)
                 return new MovingInfo(null, int.MaxValue, move);
 
-            move.Action = ActionType.MagicMissile;
+            move.Action = actionType;
             move.MinCastDistance = selMinDist;
             move.MaxCastDistance = selMaxDist;
             move.CastAngle = selCastAngle;
@@ -420,10 +441,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        MovingInfo FindCastTarget(AWizard self)
+        MovingInfo FindCastTarget(AWizard self, ProjectileType projectileType)
         {
             TimerStart();
-            var ret = _findCastTarget(self);
+            var ret = _findCastTarget(self, projectileType);
             TimerEndLog("FindCastTarget", 1);
             return ret;
         }
@@ -435,7 +456,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("FindCastTarget2", 1);
             return ret;
         }
-
 
         List<AProjectile.ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
         {
