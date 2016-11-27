@@ -163,6 +163,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TreesObserver.Update();
             ProjectilesObserver.Update();
             BonusesObserver.Update();
+            MessagesObserver.Update();
 
             InitializeProjectiles();
             InitializeDijkstra();
