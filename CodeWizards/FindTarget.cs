@@ -1,34 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        enum TargetType
-        {
-            Opponent,
-            Bonus,
-        }
-
-        class Target
-        {
-            public Point MoveTo;
-            public TargetType Type;
-        }
-
-        Target FindTarget(AWizard self, Point moveTo = null)
-        {
-            TimerStart();
-            var ret = _findTarget(self, moveTo);
-            TimerEndLog("FindTarget", 1);
-            return ret;
-        }
-
         Target _findTarget(AWizard self, Point moveTo)
         {
             var t0 = FindBonusTarget(self);
@@ -66,20 +44,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 return null;
 
             return new Target { MoveTo = ret, Type = TargetType.Bonus };
-        }
-
-        class MovingInfo
-        {
-            public Point Target;
-            public int Time;
-            public FinalMove Move;
-
-            public MovingInfo(Point target, int time, FinalMove move)
-            {
-                Target = target;
-                Time = time;
-                Move = move;
-            }
         }
 
         MovingInfo FindBonusTarget(AWizard self)
@@ -151,15 +115,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return moving;
         }
 
-        bool CheckIntersectionsAndTress(AWizard self, IEnumerable<ACircularUnit> units)
-        {
-            if (self.CheckIntersections(units) != null)
-                return true;
-            var nearestTree = TreesObserver.GetNearestTree(self);
-            return nearestTree != null && self.IntersectsWith(nearestTree);
-        }
-
-        MovingInfo FindStaffTarget(AWizard self)
+        MovingInfo _findStaffTarget(AWizard self)
         {
             var nearest = Combats
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange * 6))
@@ -275,22 +231,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new MovingInfo(selTarget, minTicks, move);
         }
 
-        static double GetCombatPriority(AWizard self, ACombatUnit unit)
-        {
-            // чем меньше - тем важнее стрелять в него первого
-            var res = unit.Life;
-            if (unit is AWizard)
-                res /= 4;
-            var dist = self.GetDistanceTo(unit);
-            if (dist <= Game.StaffRange + unit.Radius + 10)
-            {
-                res -= 60;
-                res += Math.Log(dist);
-            }
-            return res;
-        }
-
-        MovingInfo FindCastTarget(AWizard self)
+        MovingInfo _findCastTarget(AWizard self)
         {
             var move = new FinalMove(new Move());
             if (self.RemainingMagicMissileCooldownTicks > 0 || self.RemainingActionCooldownTicks > 0)
@@ -370,33 +311,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new MovingInfo(selTarget, 0, move);
         }
 
-        public static int _lastProjectileTick;
-        public static Point[] _lastProjectilePoints;
-
-        bool CanRush(AWizard self, ACombatUnit opp)
-        {
-            var wizard = opp as AWizard;
-            var minion = opp as AMinion;
-
-            if (wizard != null)
-            {
-                if (wizard.Life <= self.MagicMissileDamage)
-                    return true;
-                if (self.Life <= wizard.MagicMissileDamage)
-                    return false;
-
-                if (self.Life >= wizard.Life + 3 * self.MagicMissileDamage)
-                    return true;
-            }
-            else if (minion != null)
-            {
-                if (minion.Life <= self.MagicMissileDamage)
-                    return true;
-            }
-            return false;
-        }
-
-        MovingInfo FindCastTarget2(AWizard self, Point moveTo = null)
+        MovingInfo _findCastTarget2(AWizard self, Point moveTo)
         {
             var move = new FinalMove(new Move());
             var nearest = Combats
@@ -489,9 +404,120 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new MovingInfo(selTarget, minTicks, move);
         }
 
+        Target FindTarget(AWizard self, Point moveTo = null)
+        {
+            TimerStart();
+            var ret = _findTarget(self, moveTo);
+            TimerEndLog("FindTarget", 1);
+            return ret;
+        }
+
+        MovingInfo FindStaffTarget(AWizard self)
+        {
+            TimerStart();
+            var ret = _findStaffTarget(self);
+            TimerEndLog("FindStaffTarget", 1);
+            return ret;
+        }
+
+        MovingInfo FindCastTarget(AWizard self)
+        {
+            TimerStart();
+            var ret = _findCastTarget(self);
+            TimerEndLog("FindCastTarget", 1);
+            return ret;
+        }
+
+        MovingInfo FindCastTarget2(AWizard self, Point moveTo = null)
+        {
+            TimerStart();
+            var ret = _findCastTarget2(self, moveTo);
+            TimerEndLog("FindCastTarget2", 1);
+            return ret;
+        }
+
+
         List<AProjectile.ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
         {
             return projectile.Emulate(Combats);
+        }
+
+        static double GetCombatPriority(AWizard self, ACombatUnit unit)
+        {
+            // чем меньше - тем важнее стрелять в него первого
+            var res = unit.Life;
+            if (unit is AWizard)
+                res /= 4;
+            var dist = self.GetDistanceTo(unit);
+            if (dist <= Game.StaffRange + unit.Radius + 10)
+            {
+                res -= 60;
+                res += Math.Log(dist);
+            }
+            return res;
+        }
+
+        public static int _lastProjectileTick;
+        public static Point[] _lastProjectilePoints;
+
+        bool CanRush(AWizard self, ACombatUnit opp)
+        {
+            var wizard = opp as AWizard;
+            var minion = opp as AMinion;
+
+            if (wizard != null)
+            {
+                if (wizard.Life <= self.MagicMissileDamage)
+                    return true;
+                if (self.Life <= wizard.MagicMissileDamage)
+                    return false;
+
+                if (self.Life >= wizard.Life + 3 * self.MagicMissileDamage)
+                    return true;
+            }
+            else if (minion != null)
+            {
+                if (minion.Life <= self.MagicMissileDamage)
+                    return true;
+            }
+            return false;
+        }
+
+        bool CheckIntersectionsAndTress(AWizard self, IEnumerable<ACircularUnit> units)
+        {
+            if (self.CheckIntersections(units) != null)
+                return true;
+            var nearestTree = TreesObserver.GetNearestTree(self);
+            return nearestTree != null && self.IntersectsWith(nearestTree);
+        }
+
+
+
+
+        enum TargetType
+        {
+            Opponent,
+            Bonus,
+        }
+
+        class Target
+        {
+            public Point MoveTo;
+            public TargetType Type;
+        }
+
+        class MovingInfo
+        {
+            public Point Target;
+            public int Time;
+            public FinalMove Move;
+
+            public MovingInfo(Point target, int time, FinalMove move)
+            {
+                Target = target;
+                Time = time;
+                Move = move;
+            }
         }
     }
 }
