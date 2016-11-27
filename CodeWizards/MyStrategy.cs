@@ -63,7 +63,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 2000;
+                Visualizer.Visualizer.DrawSince = 2400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -211,15 +211,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             FinalMove.CastAngle = bonusMoving.Move.CastAngle;
                         }
 
-                        var nearestToBonus = my;
-                        var opp = OpponentWizards.FirstOrDefault(w => my.GetDistanceTo(w) < my.VisionRange);
-                        var bon = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(my));
-                        if (opp != null && opp.GetDistanceTo(bon) < my.GetDistanceTo(bon))
-                            nearestToBonus = opp;
-
-                        GoToBonusDanger = bon.GetDistanceTo(nearestToBonus) < my.VisionRange &&
-                                          OpponentWizards.Count(w => my.GetDistanceTo(w) < my.VisionRange) <= 1 &&
-                                          nearestToBonus.Life <= my.Life
+                        GoToBonusDanger = BonusesObserver.Bonuses.Min(b => b.GetDistanceTo(my)) < my.VisionRange &&
+                                          OpponentWizards.Count(w => my.GetDistanceTo(w) < my.VisionRange) <= 1
                             ? 41
                             : 7;
 
