@@ -71,11 +71,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (to != null && !Utility.PointsEqual(self, to))
             {
                 var angle = self.GetAngleTo(to);
-                var cos = Math.Cos(angle);
-                var fs = cos * (cos >= 0 ? self.MaxForwardSpeed : self.MaxBackwardSpeed);
-                var ss = Math.Sin(angle) * self.MaxStrafeSpeed;
-                _move.Speed = fs;
-                _move.StrafeSpeed = ss;
+                var d = AWizard._getHalfEllipseDxDy(self.MaxStrafeSpeed, self.MaxForwardSpeed, self.MaxBackwardSpeed, angle);
+
+                _move.Speed = d.Y;
+                _move.StrafeSpeed = d.X;
             }
         }
 

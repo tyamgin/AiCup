@@ -40,9 +40,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var skillsOrder = new[]
             {
+                SkillType.Fireball,
                 SkillType.AdvancedMagicMissile,
                 SkillType.FrostBolt,
-                SkillType.Fireball,
                 SkillType.Haste,
                 SkillType.Shield
             };

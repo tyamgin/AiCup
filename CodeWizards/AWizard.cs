@@ -63,43 +63,48 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Utility.Dec(ref RemainingCooldownTicksByAction[i]);
         }
 
-        public bool Move(double forwardSpeed, double strafeSpeed, CheckWizardCollisionsFunc checkCollisions = null)
+        public static Point _getHalfEllipseDxDy(double a, double b, double c, double angle)
         {
-            var isFrozen = RemainingFrozen > 0;
-            SkipTick();
+            // http://russianaicup.ru/forum/index.php?topic=708.msg6889#msg6889
+            if (Math.Abs(angle) > Math.PI/2)
+                return new Point(Math.Sin(angle) * c, Math.Cos(angle) * c);
+            
+            if (Math.Abs(angle) < Const.Eps)
+                return new Point(0, b);
 
-            if (!isFrozen)
-            {
-                var dx = Math.Sin(Angle)*forwardSpeed + Math.Cos(Angle)*strafeSpeed;
-                var dy = Math.Cos(Angle)*forwardSpeed - Math.Sin(Angle)*strafeSpeed;
+            var tan = Math.Tan(angle);
+            double dx = Math.Sqrt(1.0 / (Geom.Sqr(1.0 / a) + Geom.Sqr(1.0 / tan / b)));
 
-                Y += dx; // TODO: WTF? перепутаны имена переменных?
-                X += dy;
-
-                if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize || checkCollisions != null && !checkCollisions(this))
-                {
-                    Y -= dx;
-                    X -= dy;
-                    return false;
-                }
-            }
-            return true;
+            if (angle < 0) dx *= -1;
+            return new Point(dx, Math.Abs(dx / tan));
         }
 
-        public bool MoveTo(Point to, Point turnTo, CheckWizardCollisionsFunc check = null)
+        public bool MoveTo(Point to, Point turnTo, CheckWizardCollisionsFunc checkCollisions = null)
         {
             if (turnTo != null && RemainingFrozen == 0)
                 Angle += Utility.EnsureInterval(GetAngleTo(turnTo), MaxTurnAngle);
 
-            if (to == null || Utility.PointsEqual(this, to))
-                return Move(0, 0); // check не нужен
+            var isFrozen = RemainingFrozen > 0;
+            SkipTick();
 
-            var angle = GetAngleTo(to);
-            var cos = Math.Cos(angle);
-            var fs = cos*(cos >= 0 ? MaxForwardSpeed : MaxBackwardSpeed);
-            var ss = Math.Sin(angle)*MaxStrafeSpeed;
-            return Move(fs, ss, check);
-            //TODO can be optimized
+            if (!isFrozen && to != null && !Utility.PointsEqual(this, to))
+            {
+                var angle = GetAngleTo(to);
+                var myDir = Point.ByAngle(Angle);
+                var myStrafeDir = new Point(-myDir.Y, myDir.X);
+                var d = _getHalfEllipseDxDy(MaxStrafeSpeed, MaxForwardSpeed, MaxBackwardSpeed, angle);
+                var move = myDir*d.Y + myStrafeDir*d.X;
+                X += move.X;
+                Y += move.Y;
+
+                if (X - Radius < 0 || Y - Radius < 0 || X + Radius > Const.MapSize || Y + Radius > Const.MapSize || checkCollisions != null && !checkCollisions(this))
+                {
+                    X -= move.X;
+                    Y -= move.Y;
+                    return false;
+                }
+            }
+            return true;
         }
 
         public override void EthalonMove(ACircularUnit target)

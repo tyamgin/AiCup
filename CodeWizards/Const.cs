@@ -67,7 +67,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
     public class MagicConst
     {
-        public static double RadiusAdditionalEpsilon = 0.5;
+        public static double RadiusAdditionalEpsilon = 0.001;
         public static Point[] MinionAppearencePoints;
         public static int GoToBonusMaxTicks = 550;
         public static double SimplifyMaxLength = 1000;

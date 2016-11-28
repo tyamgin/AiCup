@@ -386,5 +386,26 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }).ToArray();
             }
         }
+
+        void GoAway()
+        {
+            GoAround(BuildingsObserver.MyBase);
+        }
+
+        bool GoAwayDetect()
+        {
+            if (ASelf.Life >  Self.MaxLife/2)
+                return false;
+
+            var nearest = OpponentWizards
+                .Where(x => ASelf.GetDistanceTo(x) < x.CastRange + ASelf.Radius + 10 && CanRush(x, ASelf))
+                .ArgMin(x => x.GetDistanceTo2(ASelf));
+
+            if (nearest != null)
+            {
+                 return true;
+            }
+            return false;
+        }
     }
 }

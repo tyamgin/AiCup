@@ -14,6 +14,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * -если атакуем башню - не убегать за бонусом
  * ?-прикрываться деревьями (особенно от визардов)
  * !!-сбегать когда мало хп
+ * 
+ * - обработать isCrashed
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -65,7 +67,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 5000;
+                Visualizer.Visualizer.DrawSince = 3200;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -186,9 +188,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 return;
             }
 
-            var bonusMoving = GoToBonus();
+            var goAway = GoAwayDetect();
+            var bonusMoving = goAway ? new MovingInfo(null, int.MaxValue, null) : GoToBonus();
             var target = FindTarget(new AWizard(ASelf), bonusMoving.Target);
-            if (target == null && bonusMoving.Target == null)
+            if (target == null && bonusMoving.Target == null && !goAway)
             {
                 var nearest = OpponentCombats
                     .Where(
@@ -211,7 +214,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerStart();
             if (!TryDodgeProjectile())
             {
-                if (target == null || 
+                if (goAway)
+                {
+                    GoAway();
+                }
+                else if (target == null || 
                     (FinalMove.Action == ActionType.Staff ||
                     FinalMove.Action == ActionType.MagicMissile || 
                     FinalMove.Action == ActionType.Fireball ||

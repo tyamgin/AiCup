@@ -126,6 +126,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             public ProjectilePathState State;
             public ACombatUnit Target;
             public int OpponentDeadsCount;
+            public int SelfDeadsCount;
             public double OpponentDamage;
             public double SelfDamage;
             public int OpponentBurned;
@@ -133,6 +134,25 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             public double StartDistance, EndDistance;
 
             public double Length => EndDistance - StartDistance;
+
+            public bool Same(ProjectilePathSegment seg)
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        public double _getFireballDamage(AProjectile proj, ACombatUnit unit) // без учета сколько жизней осталось
+        {
+            var dist = proj.GetDistanceTo(unit) - unit.Radius;
+            double damage = 0;
+            if (dist <= MyStrategy.Game.FireballExplosionMaxDamageRange)
+                damage += MyStrategy.Game.FireballExplosionMaxDamage;
+            else if (dist <= MyStrategy.Game.FireballExplosionMinDamageRange)
+            {
+                var ratio = 1 - (dist - MyStrategy.Game.FireballExplosionMaxDamageRange) / (MyStrategy.Game.FireballExplosionMinDamageRange - MyStrategy.Game.FireballExplosionMaxDamageRange);
+                damage += ratio * (MyStrategy.Game.FireballExplosionMaxDamage - MyStrategy.Game.FireballExplosionMinDamage) + MyStrategy.Game.FireballExplosionMinDamage;
+            }
+            return damage;
         }
 
         public List<ProjectilePathSegment> Emulate(ACombatUnit[] _units)
@@ -142,7 +162,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var list = new List<ProjectilePathSegment>();
             var projectile = new AProjectile(this);
-            var units = _units.Select(Utility.CloneCombat).Where(x => x.Id != OwnerUnitId).ToArray();
+            var units = _units.Where(x => x.Id != OwnerUnitId).Select(Utility.CloneCombat).ToArray();
+            var owner = _units.FirstOrDefault(x => x.Id == OwnerUnitId);
 
             var minionsTargetsSelector = new TargetsSelector(_units) { EnableMinionsCache = true };
 
@@ -154,40 +175,57 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     {
                         double selfDamage = 0;
                         double oppDamage = 0;
-                        int oppBurned = 0;
-                        int selfBurned = 0;
+                        var selfBurned = 0;
+                        var oppBurned = 0;
+                        var selfDeads = 0;
+                        var oppDeads = 0;
+
                         ACombatUnit firstTarget = null;
-                        // TODO: deads count
+                        
                         foreach (var unit in units)
                         {
-                            var dist = proj.GetDistanceTo(unit) - unit.Radius;
-                            double damage = 0;
-                            if (dist <= MyStrategy.Game.FireballExplosionMaxDamageRange)
-                                damage += MyStrategy.Game.FireballExplosionMaxDamage;
-                            else if (dist <= MyStrategy.Game.FireballExplosionMinDamageRange)
-                            {
-                                var ratio = 1 - (dist - MyStrategy.Game.FireballExplosionMaxDamageRange)/(MyStrategy.Game.FireballExplosionMinDamageRange - MyStrategy.Game.FireballExplosionMaxDamageRange);
-                                damage += ratio*(MyStrategy.Game.FireballExplosionMaxDamage - MyStrategy.Game.FireballExplosionMinDamage) + MyStrategy.Game.FireballExplosionMinDamage;
-                            }
+                            var damage = _getFireballDamage(proj, unit);
 
                             if (damage > 0)
                             {
+                                var deads = 0;
                                 if (damage >= unit.Life - Const.Eps)
                                 {
                                     // killed
+                                    deads++;
                                     damage = unit.Life;
                                 }
 
-                                if (unit.Faction != proj.Faction)
+                                if (unit.Faction == proj.Faction)
+                                {
+                                    selfDamage += damage;
+                                    selfBurned++;
+                                    selfDeads += deads;
+                                }
+                                else if (!(unit is AMinion) || !(unit as AMinion).IsNeutral || (unit as AMinion).IsAggressiveNeutral)
                                 {
                                     oppDamage += damage;
                                     oppBurned++;
+                                    oppDeads += deads;
                                     firstTarget = unit;
+                                }
+                            }
+                        }
+                        if (owner != null && !projectile.IntersectsWith(owner))
+                        {
+                            var damage = _getFireballDamage(proj, owner);
+                            if (damage > 0)
+                            {
+                                selfBurned++;
+                                if (damage >= owner.Life - Const.Eps)
+                                {
+                                    // killed
+                                    selfDamage += owner.Life;
+                                    selfDeads++;
                                 }
                                 else
                                 {
                                     selfDamage += damage;
-                                    selfBurned++;
                                 }
                             }
                         }
@@ -197,7 +235,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
                             OpponentDamage = oppDamage,
                             SelfDamage = selfDamage,
-                            OpponentDeadsCount = 0,//TODO
+                            OpponentDeadsCount = oppDeads,
+                            SelfDeadsCount = selfDeads,
                             State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball,
                             OpponentBurned = oppBurned,
                             SelfBurned = selfBurned,
