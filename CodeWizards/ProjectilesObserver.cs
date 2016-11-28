@@ -7,15 +7,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     class ProjectilesObserver
     {
         private static Dictionary<long, AProjectile> _projectiles = new Dictionary<long, AProjectile>();
+        private static Dictionary<long, AWizard> _wizardsLastSeen = new Dictionary<long, AWizard>();
 
         public static void Update()
         {
             var projectiles = MyStrategy.World.Projectiles
                 .Select(x => new AProjectile(x))
-                .Where(x => !x.IsFriendly)
+                .Where(x => !x.IsFriendly && x.Type != ProjectileType.Dart) // можно и Dart реализовать
                 .ToArray();
 
             var newDict = new Dictionary<long, AProjectile>();
+            foreach (var w in MyStrategy.OpponentWizards)
+                _wizardsLastSeen[w.Id] = w;
 
             foreach (var proj in projectiles)
             {
@@ -30,12 +33,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else
                 {
                     // только появился
-                    var owner = MyStrategy.World.Wizards.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
-                    if (owner != null && proj.GetDistanceTo(owner) < proj.Speed * 1.4)
+                    var owner = MyStrategy.OpponentWizards.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
+                    if (owner == null && _wizardsLastSeen.ContainsKey(proj.OwnerUnitId))
                     {
-                        newDict[proj.Id] = proj;
-                        proj.RemainingDistance = owner.CastRange - proj.Speed;
+                        // его снаряд видно, но самого не видно
+                        owner = _wizardsLastSeen[proj.OwnerUnitId];
                     }
+                    var castRange = owner?.CastRange ?? (MyStrategy.Game.IsSkillsEnabled ? 600 : 500);
+
+                    // proj.GetDistanceTo(owner) < proj.Speed * 1.4
+                    
+                    newDict[proj.Id] = proj;
+                    proj.RemainingDistance = castRange - proj.Speed;
                 }
             }
             // которые были и пропали не попадут в newDict

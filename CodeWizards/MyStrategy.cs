@@ -7,6 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - TryDodgeProjectile делать с поворотом - должна повыситься эффективность
  * - учитывать изменение маны
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * - увеличить дальность атаки посохом, чтобы добивать фетишей и бороться за бонусы
@@ -14,6 +15,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * -если атакуем башню - не убегать за бонусом
  * ?-прикрываться деревьями (особенно от визардов)
  * !!-сбегать когда мало хп
+ * 
+ * ?-уворот от Dart
  * 
  * - обработать isCrashed
  */
@@ -67,7 +70,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 3200;
+                Visualizer.Visualizer.DrawSince = 5400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
