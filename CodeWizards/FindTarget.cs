@@ -315,11 +315,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             //TODO: combare by angle and priority
                             )
                         {
-                            maxBurned = seg.OpponentBurned;
-                            maxDamage = seg.OpponentDamage;
-                            selCastAngle = angle;
-                            selMinDist = selMaxDist = seg.StartDistance;
-                            selTarget = seg.Target;
+                            if (seg.OpponentBurned > 2 
+                                || self.Mana >= 2*Game.FireballManacost && seg.OpponentBurned > 1 
+                                || seg.OpponentBurned == 1 && seg.Target is AWizard
+                                )
+                            {
+                                maxBurned = seg.OpponentBurned;
+                                maxDamage = seg.OpponentDamage;
+                                selCastAngle = angle;
+                                selMinDist = selMaxDist = seg.StartDistance;
+                                selTarget = seg.Target;
+                            }
                         }
                     }
                 }

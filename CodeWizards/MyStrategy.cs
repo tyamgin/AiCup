@@ -7,6 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - учитывать скилы в AProjectile.Emulate
  * - TryDodgeProjectile делать с поворотом - должна повыситься эффективность
  * - учитывать изменение маны
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
@@ -70,7 +71,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 5400;
+                Visualizer.Visualizer.DrawSince = 6200;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -239,13 +240,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             FinalMove.CastAngle = bonusMoving.Move.CastAngle;
                         }
 
-                        GoToBonusDanger = BonusesObserver.Bonuses.Min(b => b.GetDistanceTo(ASelf)) < ASelf.VisionRange &&
-                                          OpponentWizards.Count(w => ASelf.GetDistanceTo(w) < ASelf.VisionRange) <= 1
-                            ? 41
-                            : 7;
+                        var bns = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(ASelf));
+                        var opps = OpponentWizards.Where(w => bns.GetDistanceTo(w) < ASelf.VisionRange*1.5).ToArray();
+                        //var mines = OpponentWizards.Where(w => w.IsTeammate && ASelf.GetDistanceTo(w) < ASelf.VisionRange * 1.5).ToArray();
 
                         NextBonusWaypoint = ASelf + (NextBonusWaypoint - ASelf).Normalized() * (Self.Radius + 30);
-                        TryGoByGradient(EstimateDanger, null, FinalMove);
+                        GoToBonusDanger = 7;
+
+                        if (bns.GetDistanceTo(ASelf) < ASelf.VisionRange*1.5 &&
+                            bns.GetDistanceTo(ASelf) > 100 &&
+                                          opps.Length <= 1 &&
+                                          ASelf.Life + 10 >= (opps.FirstOrDefault() ?? ASelf).Life &&
+                                          OpponentMinions.Count(x => x.GetDistanceTo(ASelf) < Game.FetishBlowdartAttackRange) == 0
+                                          )
+                            FinalMove.MoveTo(NextBonusWaypoint, null);
+                        else
+                            TryGoByGradient(EstimateDanger, null, FinalMove);
+                        
                     }
                     else
                     {
@@ -425,6 +436,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + magic)
                 return selMovingInfo;
+            if (ASelf.GetDistanceTo(BuildingsObserver.OpponentBase) < BuildingsObserver.OpponentBase.CastRange*1.4)
+                return selMovingInfo;
 
             var my = new AWizard(ASelf);
             var nearestBuilding = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
@@ -432,7 +445,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var path = DijkstraFindPath(ASelf, pos =>
             {
                 // точка ОК, если бонус совсем близко
-                if (pos.GetDistanceTo2(bonus) < Geom.Sqr(bonus.Radius + Self.Radius + 35))
+                if (pos.GetDistanceTo2(bonus) < Geom.Sqr(250))
                     return DijkstraStopStatus.TakeAndStop;
                 
                 return DijkstraStopStatus.Continue;

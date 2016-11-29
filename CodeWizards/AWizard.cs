@@ -205,6 +205,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public double FrostBoltDamage => MyStrategy.Game.FrostBoltDirectDamage*_getDamageFactor() + _getCastDamageAddition();
 
 
+
         private double _getHastenedFactor()
         {
             // TODO: умения и ауры

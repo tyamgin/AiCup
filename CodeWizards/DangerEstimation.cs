@@ -194,10 +194,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var self = new AWizard(ASelf);
 
             var obstacles = 
-                Combats.Where(x => x.Id != Self.Id).Cast<ACircularUnit>()
-                .Concat(TreesObserver.Trees)
+                Combats.Where(x => x.Id != Self.Id && !(x is ABuilding)).Cast<ACircularUnit>()
                 .Concat(BuildingsObserver.Buildings)
-                .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange))
+                .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(x.Radius + 150))
                 .ToArray();
 
             var danger = costFunction(self);
@@ -230,6 +229,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     {
                         canMove = my.MoveTo(moveTo, null, w =>
                             obstacles.All(ob => !Geom.SegmentCircleIntersects(self, w, ob, ob.Radius + self.Radius)));
+                        if (TreesObserver.GetNearestTrees(my).Any(t => t.IntersectsWith(my)))
+                            break;
                     }
                     else
                     {
@@ -293,45 +294,84 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         bool _tryDodgeProjectile()
         {
             var obstacles = Combats.Where(x => x.Id != Self.Id).ToArray();
+            var minTicks = int.MaxValue;
+            var maxDist = 0.0;
+            Point selFirstMoveTo = null;
 
             const int grid = 40;
             for (var i = 0; i < grid; i++)
             {
+                if (minTicks == 0 && maxDist > 999)
+                    break;
+
                 var angle = Math.PI*2/grid*i;
                 var ticks = 0;
                 var my = new AWizard(ASelf);
                 var bonus = new ABonus(BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self)));
                 Point firstMoveTo = null;
+                var myStates = new List<AWizard> { new AWizard(my) };
 
                 while (ticks < ProjectilesCheckTicks)
                 {
+                    var fireballMinDist = 1000.0;
+                    var fireballMinDistTicks = 0;
                     var moveTo = my + Point.ByAngle(angle);
                     var shot = false;
-                    for (var futureTick = ticks; futureTick < ProjectilesCheckTicks && !shot; futureTick++)
+                    for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
                     {
-                        for (var mt = 0; mt < AProjectile.MicroTicks && !shot; mt++)
+                        var cur = myStates[Math.Min(ticksPassed, myStates.Count - 1)];
+                        for (var mt = 0; mt < AProjectile.MicroTicks/* && !shot*/; mt++)
                         {
-                            var microTick = futureTick*AProjectile.MicroTicks + mt + 1;
+                            var microTick = ticksPassed*AProjectile.MicroTicks + mt + 1;
                             foreach (var proj in ProjectilesPaths[microTick])
                             {
                                 if (!proj.Exists)
                                     continue;
 
-                                if (proj.IntersectsWith(my))
+                                if (proj.Type == ProjectileType.Fireball)
                                 {
-                                    shot = true;
-                                    break;
+                                    var dist = Math.Max(0, cur.GetDistanceTo(proj) - cur.Radius - Game.FireballExplosionMaxDamageRange);
+                                    if (dist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
+                                    {
+                                        if (dist < fireballMinDist)
+                                        {
+                                            fireballMinDist = dist;
+                                            fireballMinDistTicks = ticks;
+                                        }
+                                        shot = true;
+                                    }
+                                }
+                                else
+                                {
+                                    if (proj.IntersectsWith(cur))
+                                    {
+                                        shot = true;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
                     if (!shot)
                     {
-                        if (ticks == 0) // если нет потребности уворачиваться
-                            return false;
+                        if (ticks < minTicks)
+                        {
+                            minTicks = ticks;
+                            maxDist = 1000;
+                            selFirstMoveTo = firstMoveTo;
+                        }
+                        break;
+                    }
 
-                        FinalMove.MoveTo(firstMoveTo, null);
-                        return true;
+                    if (fireballMinDist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
+                    {
+                        if (fireballMinDist > maxDist ||
+                            Utility.Equals(fireballMinDist, maxDist) && fireballMinDistTicks < minTicks)
+                        {
+                            maxDist = fireballMinDist;
+                            minTicks = fireballMinDistTicks;
+                            selFirstMoveTo = firstMoveTo;
+                        }
                     }
 
                     if (firstMoveTo == null)
@@ -345,31 +385,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             return false;
                         return true;
                     });
-
-                    for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
-                    {
-                        foreach (var proj in ProjectilesPaths[ticks*AProjectile.MicroTicks + mt + 1])
-                        {
-                            if (!proj.Exists)
-                                continue;
-
-                            if (proj.IntersectsWith(my))
-                            {
-                                // выход из 3-х циклов
-                                ticks = ProjectilesCheckTicks;
-                                mt = AProjectile.MicroTicks;
-                                break;
-                            }
-                        }
-                    }
+                    myStates.Add(new AWizard(my));
 
                     ticks++;
                 }
             }
-            return false;
+            if (minTicks == 0 || minTicks == int.MaxValue) // нет необходимости уворачиваться
+                return false;
+
+            FinalMove.MoveTo(selFirstMoveTo, null);
+            return true;
         }
 
-        public static int ProjectilesCheckTicks = 18;
+        public static int ProjectilesCheckTicks = 25;
 
 
         public void InitializeProjectiles()

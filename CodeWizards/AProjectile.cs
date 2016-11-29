@@ -15,7 +15,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public long OwnerUnitId;
         public Faction Faction;
 
-
         public AProjectile(Projectile unit) : base(unit)
         {
             SpeedX = unit.SpeedX;
