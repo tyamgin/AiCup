@@ -148,6 +148,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     res += 30 + 20 - dist / inner * 20;
             }
 
+            // не прижиматься к углам
+            foreach (var corner in Const.MapCorners)
+            {
+                var dist = my.GetDistanceTo(corner);
+                var outer = 500;
+                if (dist < outer)
+                    res += 7 - dist/outer*7;
+            }
+
             return res;
         }
 

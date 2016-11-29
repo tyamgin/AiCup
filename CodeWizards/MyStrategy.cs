@@ -71,7 +71,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 6200;
+                Visualizer.Visualizer.DrawSince = 3500;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -329,7 +329,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (RoadsHelper.Roads.All(seg => seg.GetDistanceTo(pos) > 200))
                             return Const.Infinity;
 
-                if (RoadsHelper.GetAllowedForLine(lane).All(r => r.GetDistanceTo(pos) > (World.TickIndex < 900 && World.TickIndex > 200 ? 300 : 700)))
+                if (RoadsHelper.GetAllowedForLine(lane).All(r => r.GetDistanceTo(pos) > (World.TickIndex < 900 && World.TickIndex > 200 ? 200 : 700)))
                     return 1000;
 
                 return 0;
@@ -445,7 +445,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var path = DijkstraFindPath(ASelf, pos =>
             {
                 // точка ОК, если бонус совсем близко
-                if (pos.GetDistanceTo2(bonus) < Geom.Sqr(250))
+                if (pos.GetDistanceTo2(bonus) < Geom.Sqr(bonus.Radius + Self.Radius + 35))
                     return DijkstraStopStatus.TakeAndStop;
                 
                 return DijkstraStopStatus.Continue;

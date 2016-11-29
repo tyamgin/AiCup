@@ -27,7 +27,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         CreateNoWindow = true
                     }
                 };
-                oldStrategy.Start();
+                //oldStrategy.Start();
             }
 #endif
 

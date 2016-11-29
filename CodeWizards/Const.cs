@@ -19,12 +19,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             new Point(2800, 2800),
         };
 
+        public static Point[] MapCorners = new Point[4];
+
         public static ProjectileInfo[] ProjectileInfo = new ProjectileInfo[4];
 
         public static void Initialize()
         {
-            Const.MapSize = MyStrategy.Game.MapSize;
-            Const.WizardRadius = MyStrategy.Game.WizardRadius;
+            MapSize = MyStrategy.Game.MapSize;
+            WizardRadius = MyStrategy.Game.WizardRadius;
+
+            MapCorners[0] = new Point(0, 0);
+            MapCorners[1] = new Point(0, MapSize);
+            MapCorners[2] = new Point(MapSize, 0);
+            MapCorners[3] = new Point(MapSize, MapSize);
 
             ProjectileInfo[(int) ProjectileType.MagicMissile] = new ProjectileInfo
             {
