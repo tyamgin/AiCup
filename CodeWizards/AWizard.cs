@@ -77,6 +77,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return new Point(dx, Math.Abs(dx / tan));
         }
 
+        public void Move(double speed, double strafeSpeed)
+        {
+            var myDir = Point.ByAngle(Angle);
+            var myStrafeDir = new Point(-myDir.Y, myDir.X);
+            var d = new Point(strafeSpeed, speed);
+            var move = myDir * d.Y + myStrafeDir * d.X;
+            X += move.X;
+            Y += move.Y;
+        }
+
         public bool MoveTo(Point to, Point turnTo, CheckWizardCollisionsFunc checkCollisions = null)
         {
             if (turnTo != null && RemainingFrozen == 0)

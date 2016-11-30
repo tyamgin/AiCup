@@ -303,6 +303,58 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
+        bool TryPreDodgeProjectile()
+        {
+            const int preTicks = 3;
+            var opp = OpponentWizards
+                .FirstOrDefault(x => 
+                    Math.Min(x.RemainingActionCooldownTicks, x.RemainingMagicMissileCooldownTicks) <= preTicks
+                    && x.GetDistanceTo(ASelf) <= x.CastRange + ASelf.Radius + Game.MagicMissileRadius
+                    && Math.Abs(x.GetAngleTo(ASelf)) <= Game.StaffSector / 2
+                );
+
+            if (opp == null)
+                return false;
+
+            var angleTo = ASelf.GetAngleTo(opp);
+            if (Math.Abs(angleTo) <= Math.PI/2)
+            {
+                if (angleTo > 0)
+                    FinalMove.Turn = -10;
+                else
+                    FinalMove.Turn = 10;
+                return true;
+            }
+            return false;
+        }
+
+        bool _hitNow(AWizard self)
+        {
+            const int ticks = 3;
+            for (var mt = 1; mt <= AProjectile.MicroTicks*ticks; mt++)
+                if (ProjectilesPaths[mt].Any(p => p.Exists && p.IntersectsWith(self)))
+                    return true;
+            return false;
+        }
+
+        bool PostDodgeProjectile()
+        {
+            var self = new AWizard(ASelf);
+
+            if (_hitNow(self))
+                return false;
+
+            self.Move(FinalMove.Speed, FinalMove.StrafeSpeed);
+
+            if (_hitNow(self))
+            {
+                FinalMove.Speed = 0;
+                FinalMove.StrafeSpeed = 0;
+                return true;
+            }
+            return false;
+        }
+
         bool TryDodgeProjectile()
         {
             TimerStart();
@@ -313,107 +365,113 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool _tryDodgeProjectile()
         {
-            var obstacles = Combats.Where(x => x.Id != Self.Id).ToArray();
+            const int grid = 40;
+
+            var obstacles = Combats.Where(x => x.Id != Self.Id && x.GetDistanceTo(ASelf) < 300).ToArray();
             var minTicks = int.MaxValue;
             var maxDist = 0.0;
-            Point selFirstMoveTo = null;
+            Point selMoveTo = null;
+            Point selTurnTo = null;
 
-            const int grid = 40;
-            for (var i = 0; i < grid; i++)
+            foreach (var doTurn in new[] {false, true})
             {
-                if (minTicks == 0 && maxDist > 999)
-                    break;
-
-                var angle = Math.PI*2/grid*i;
-                var ticks = 0;
-                var my = new AWizard(ASelf);
-                var bonus = new ABonus(BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self)));
-                Point firstMoveTo = null;
-                var myStates = new List<AWizard> { new AWizard(my) };
-
-                while (ticks < ProjectilesCheckTicks)
+                for (var i = 0; i < grid; i++)
                 {
-                    var fireballMinDist = 1000.0;
-                    var fireballMinDistTicks = 0;
-                    var moveTo = my + Point.ByAngle(angle);
-                    var shot = false;
-                    for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
-                    {
-                        var cur = myStates[Math.Min(ticksPassed, myStates.Count - 1)];
-                        for (var mt = 0; mt < AProjectile.MicroTicks/* && !shot*/; mt++)
-                        {
-                            var microTick = ticksPassed*AProjectile.MicroTicks + mt + 1;
-                            foreach (var proj in ProjectilesPaths[microTick])
-                            {
-                                if (!proj.Exists)
-                                    continue;
+                    if (minTicks == 0 && maxDist > 999)
+                        break;
 
-                                if (proj.Type == ProjectileType.Fireball)
+                    var angle = Math.PI*2/grid*i;
+                    var ticks = 0;
+                    var my = new AWizard(ASelf);
+                    var bonus = new ABonus(BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self)));
+                    var moveTo = my + Point.ByAngle(angle) * 1000;
+                    var turnTo = doTurn ? moveTo : null;
+                    var myStates = new List<AWizard> {new AWizard(my)};
+
+                    while (ticks < ProjectilesCheckTicks)
+                    {
+                        var fireballMinDist = 1000.0;
+                        var fireballMinDistTicks = 0;
+                        var shot = false;
+                        for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
+                        {
+                            var cur = myStates[Math.Min(ticksPassed, myStates.Count - 1)];
+                            for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
+                            {
+                                var microTick = ticksPassed*AProjectile.MicroTicks + mt + 1;
+                                foreach (var proj in ProjectilesPaths[microTick])
                                 {
-                                    var dist = Math.Max(0, cur.GetDistanceTo(proj) - cur.Radius - Game.FireballExplosionMaxDamageRange);
-                                    if (dist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
+                                    if (!proj.Exists)
+                                        continue;
+
+                                    if (proj.Type == ProjectileType.Fireball)
                                     {
-                                        if (dist < fireballMinDist)
+                                        var dist = Math.Max(0, cur.GetDistanceTo(proj) - cur.Radius - Game.FireballExplosionMaxDamageRange);
+                                        if (dist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
                                         {
-                                            fireballMinDist = dist;
-                                            fireballMinDistTicks = ticks;
+                                            if (dist < fireballMinDist)
+                                            {
+                                                fireballMinDist = dist;
+                                                fireballMinDistTicks = ticks;
+                                            }
+                                            shot = true;
                                         }
-                                        shot = true;
                                     }
-                                }
-                                else
-                                {
-                                    if (proj.IntersectsWith(cur))
+                                    else
                                     {
-                                        shot = true;
-                                        break;
+                                        if (proj.IntersectsWith(cur))
+                                        {
+                                            shot = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                    if (!shot)
-                    {
-                        if (ticks < minTicks)
+                        if (!shot)
                         {
-                            minTicks = ticks;
-                            maxDist = 1000;
-                            selFirstMoveTo = firstMoveTo;
+                            if (ticks < minTicks)
+                            {
+                                minTicks = ticks;
+                                maxDist = 1000;
+                                selMoveTo = moveTo;
+                                selTurnTo = turnTo;
+                            }
+                            break;
                         }
-                        break;
-                    }
 
-                    if (fireballMinDist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
-                    {
-                        if (fireballMinDist > maxDist ||
-                            Utility.Equals(fireballMinDist, maxDist) && fireballMinDistTicks < minTicks)
+                        if (fireballMinDist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
                         {
-                            maxDist = fireballMinDist;
-                            minTicks = fireballMinDistTicks;
-                            selFirstMoveTo = firstMoveTo;
+                            if (fireballMinDist > maxDist ||
+                                Utility.Equals(fireballMinDist, maxDist) && fireballMinDistTicks < minTicks)
+                            {
+                                maxDist = fireballMinDist;
+                                minTicks = fireballMinDistTicks;
+                                selMoveTo = moveTo;
+                                selTurnTo = turnTo;
+                            }
                         }
+
+                        bonus.SkipTick();
+                        my.MoveTo(moveTo, turnTo, w =>
+                        {
+                            if (CheckIntersectionsAndTress(w, obstacles))
+                                return false;
+                            if (bonus.RemainingAppearanceTicks < 15 && bonus.IntersectsWith(w))
+                                return false;
+                            return true;
+                        });
+                        myStates.Add(new AWizard(my));
+
+                        ticks++;
                     }
-
-                    if (firstMoveTo == null)
-                        firstMoveTo = moveTo;
-                    bonus.SkipTick();
-                    my.MoveTo(moveTo, null, w =>
-                    {
-                        if (CheckIntersectionsAndTress(w, obstacles))
-                            return false;
-                        if (bonus.RemainingAppearanceTicks < 15 && bonus.IntersectsWith(w))
-                            return false;
-                        return true;
-                    });
-                    myStates.Add(new AWizard(my));
-
-                    ticks++;
                 }
             }
             if (minTicks == 0 || minTicks == int.MaxValue) // нет необходимости уворачиваться
                 return false;
 
-            FinalMove.MoveTo(selFirstMoveTo, null);
+            FinalMove.Turn = 0;
+            FinalMove.MoveTo(selMoveTo, selTurnTo);
             return true;
         }
 
@@ -442,11 +500,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool GoAwayDetect()
         {
-            if (ASelf.Life >  Self.MaxLife/2)
+            if (ASelf.Life > 45)
                 return false;
 
             var nearest = OpponentWizards
-                .Where(x => ASelf.GetDistanceTo(x) < x.CastRange + ASelf.Radius + 10 && CanRush(x, ASelf))
+                .Where(x => ASelf.GetDistanceTo(x) < x.CastRange + ASelf.Radius + 30 && CanRush(x, ASelf))
                 .ArgMin(x => x.GetDistanceTo2(ASelf));
 
             if (nearest != null)

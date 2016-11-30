@@ -223,6 +223,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerStart();
             if (!TryDodgeProjectile())
             {
+                if (target == null)
+                    TryPreDodgeProjectile();
+
                 if (goAway)
                 {
                     GoAway();
@@ -268,6 +271,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         TryGoByGradient(EstimateDanger, HasAnyTarget, FinalMove);
                     }
                 }
+
+                PostDodgeProjectile();
             }
             TimerEndLog("Go", 1);
 
@@ -502,8 +507,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool HasAnyTarget(AWizard self)
         {
-            double wizardDangerRange = 40;
-            var currentLane = RoadsHelper.GetLane(self);
+            double wizardDangerRange = 0;
 
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
@@ -526,7 +530,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
 
-                if (my.EthalonCanCastMagicMissile(opp, false))
+                if (my.GetDistanceTo(opp) <= my.CastRange + opp.Radius + Game.MagicMissileRadius)
                     return true;
 
                 my.CastRange = prevCastRange;
