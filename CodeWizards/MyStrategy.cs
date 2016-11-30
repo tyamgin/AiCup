@@ -7,15 +7,17 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - ближе к трону
+ * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
+ * - учитывать хасту
+ * - если убегать на базу, то в самый угол
  * - учитывать скилы в AProjectile.Emulate
  * - TryDodgeProjectile делать с поворотом - должна повыситься эффективность
  * - учитывать изменение маны
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
- * - увеличить дальность атаки посохом, чтобы добивать фетишей и бороться за бонусы
  * 
  * -если атакуем башню - не убегать за бонусом
  * ?-прикрываться деревьями (особенно от визардов)
- * !!-сбегать когда мало хп
  * 
  * ?-уворот от Dart
  * 
@@ -71,7 +73,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 3500;
+                Visualizer.Visualizer.DrawSince = 5700;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -99,11 +101,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             FinalMove = new FinalMove(move);
 
             Const.Initialize();
-
-            var levelUpXpValues = Game.LevelUpXpValues;
-            AWizard.Xps = new int[Game.LevelUpXpValues.Length + 1];
-            for (var i = 1; i <= levelUpXpValues.Length; i++)
-                AWizard.Xps[i] = AWizard.Xps[i - 1] + levelUpXpValues[i - 1];
 
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
@@ -182,8 +179,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 building.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
                 var hisWizards = OpponentWizards.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
-                if (building.IsBase && building.OpponentsCount >= 7 || !building.IsBase && building.OpponentsCount >= 5)
-                    building.IsBesieded = true;
+                if (Game.IsSkillsEnabled)
+                {
+                    if (building.OpponentsCount >= 4)
+                        building.IsBesieded = true;
+                }
+                else
+                {
+                    if (building.IsBase && building.OpponentsCount >= 7 || !building.IsBase && building.OpponentsCount >= 5)
+                        building.IsBesieded = true;
+                }
             }
 
             if (Self.IsMaster && World.TickIndex == 0)
@@ -434,6 +439,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
+            if (Game.IsSkillsEnabled)
+                return selMovingInfo;
+
             if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + magic)
                 return selMovingInfo;
             if (ASelf.GetDistanceTo(BuildingsObserver.OpponentBase) < BuildingsObserver.OpponentBase.CastRange*1.4)
@@ -510,9 +518,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     my.CastRange += wizardDangerRange; // чтобы держаться на расстоянии от визардов
                 if (bld != null)
                 {
-                    var opps = bld.OpponentsCount - (bld.GetDistanceTo(Self) <= bld.CastRange ? 1 : 0);
-                    var isLast = BuildingsObserver.OpponentBase.GetDistanceTo(bld) < Const.MapSize/2;
-                    if (bld.IsBase || opps < 1 || isLast && bld.Lane != currentLane)
+                    if (!bld.IsBesieded)
                     {
                         // чтобы не подходить близко к одиноким башням
                         if (my.GetDistanceTo(bld) < bld.CastRange + 6)

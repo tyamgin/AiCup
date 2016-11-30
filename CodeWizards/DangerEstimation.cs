@@ -36,7 +36,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var building = opp as ABuilding;
 
-                    if (building.IsBase)
+                    if (building.IsBase && !Game.IsSkillsEnabled)
                     {
                         var outer = building.CastRange;
                         if (dist <= outer)
@@ -94,6 +94,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     res += 1 - dist/15*1;
             }
 
+            if (Game.IsSkillsEnabled)
+            {
+                // прижиматься за главную башню
+                var cr = new Point(World.Width - 70, 70);
+                var cornerMaxDist = 800;
+                var distToCorner = my.GetDistanceTo(cr);
+                if (distToCorner < cornerMaxDist)
+                    res -= 10 - (distToCorner/cornerMaxDist)*10;
+            }
+
             // держаться подальше от места появления минионов
             var spawnDelta = Game.FactionMinionAppearanceIntervalTicks*0.33;
             var spawnRemains = World.TickIndex%Game.FactionMinionAppearanceIntervalTicks;
@@ -102,7 +112,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 foreach (var pt in MagicConst.MinionAppearencePoints)
                 {
                     var dist = pt.GetDistanceTo(my);
-                    var inner = 400;
+                    var inner = 450;
                     if (dist < inner)
                         res += 14 - dist/inner*14;
                 }
@@ -149,8 +159,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 
             // не прижиматься к углам
-            foreach (var corner in Const.MapCorners)
+            for(var i = 0; i <= 3; i += 3)
             {
+                var corner = Const.MapCorners[i];
                 var dist = my.GetDistanceTo(corner);
                 var outer = 500;
                 if (dist < outer)

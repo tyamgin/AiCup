@@ -8,8 +8,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class AWizard : ACombatUnit
     {
-        public static int[] Xps;
-
         public bool IsMaster;
         public int[] RemainingCooldownTicksByAction;
 
