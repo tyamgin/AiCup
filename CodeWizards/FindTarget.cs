@@ -318,14 +318,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             if (seg.OpponentBurned > 2 
                                 || self.Mana >= 2*Game.FireballManacost && seg.OpponentBurned > 1 
                                 || seg.OpponentBurned == 1 && seg.Target is AWizard
-                                || seg.OpponentBurned == 1 && seg.Target is ABuilding && self.Mana >= 2 * Game.FireballManacost
+                                || seg.OpponentBurned == 1 && seg.Target is ABuilding && self.Mana >= 2 * Game.FireballManacost && seg.OpponentDamage > Game.FireballExplosionMaxDamage - 1 //TODO: костыль
                                 )
                             {
-                                maxBurned = seg.OpponentBurned;
-                                maxDamage = seg.OpponentDamage;
-                                selCastAngle = angle;
-                                selMinDist = selMaxDist = seg.StartDistance;
-                                selTarget = seg.Target;
+                                if (Math.Abs(angle) < Game.StaffSector/2*0.8)
+                                {
+                                    maxBurned = seg.OpponentBurned;
+                                    maxDamage = seg.OpponentDamage;
+                                    selCastAngle = angle;
+                                    selMinDist = selMaxDist = seg.StartDistance;
+                                    selTarget = seg.Target;
+                                }
                             }
                         }
                     }

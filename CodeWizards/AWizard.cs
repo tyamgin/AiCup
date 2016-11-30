@@ -38,6 +38,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             for (var i = 0; i < 5; i++)
                 SkillsFactorsArr[i] = (Math.Min(4, SkillsLearnedArr[i]) + 1)/2;
+
+
         }
 
         public AWizard(AWizard unit) : base(unit)

@@ -97,7 +97,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (Game.IsSkillsEnabled)
             {
                 // прижиматься за главную башню
-                var cr = new Point(World.Width - 70, 70);
+                var cr = new Point(World.Width - 258, 258);
                 var cornerMaxDist = 800;
                 var distToCorner = my.GetDistanceTo(cr);
                 if (distToCorner < cornerMaxDist)
@@ -316,13 +316,37 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (opp == null)
                 return false;
 
-            var angleTo = ASelf.GetAngleTo(opp);
-            if (Math.Abs(angleTo) <= Math.PI/2)
+            if (Math.Abs(ASelf.GetAngleTo(opp)) < Math.PI/2)
             {
-                if (angleTo > 0)
-                    FinalMove.Turn = -10;
-                else
-                    FinalMove.Turn = 10;
+                var obstacles = Combats.Where(x => x.Id != Self.Id && x.GetDistanceTo(ASelf) < 300).ToArray();
+                var selSign = 0;
+                double selPriority = int.MaxValue;
+
+                for (var sign = -1; sign <= 1; sign += 2)
+                {
+                    var my = new AWizard(ASelf);
+                    var priority = 0.0;
+                    while (Math.Abs(my.GetAngleTo(opp)) < Math.PI/2)
+                    {
+                        my.Angle += sign*my.MaxTurnAngle;
+                        priority += 0.1;
+                    }
+                    for (var i = 0; i < 15; i++)
+                    {
+                        if (!my.MoveTo(my + Point.ByAngle(my.Angle), null, w => !CheckIntersectionsAndTress(w, obstacles)))
+                        {
+                            break;
+                        }
+                        priority--;
+                    }
+                    if (priority < selPriority)
+                    {
+                        selPriority = priority;
+                        selSign = sign;
+                    }
+                }
+
+                FinalMove.Turn = selSign * 10;
                 return true;
             }
             return false;

@@ -7,12 +7,10 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * - ближе к трону
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
  * - учитывать хасту
  * - если убегать на базу, то в самый угол
  * - учитывать скилы в AProjectile.Emulate
- * - TryDodgeProjectile делать с поворотом - должна повыситься эффективность
  * - учитывать изменение маны
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * 
@@ -20,8 +18,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * ?-прикрываться деревьями (особенно от визардов)
  * 
  * ?-уворот от Dart
- * 
- * - обработать isCrashed
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -73,7 +69,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 5700;
+                Visualizer.Visualizer.DrawSince = 7000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -118,6 +114,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     for (var i = 0; i < 5; i++)
                         wizard.AurasFactorsArr[i] = Math.Max(wizard.AurasFactorsArr[i], other.SkillsLearnedArr[i] / 2);
                 }
+                var orig = World.Wizards.FirstOrDefault(w => w.Id == wizard.Id);
+                var player = World.Players.FirstOrDefault(p => orig != null && p.Id == orig.OwnerPlayerId);
+                if (player != null && player.IsStrategyCrashed)
+                    wizard.RemainingFrozen = 100500;
             }
 
             OpponentWizards = Wizards
