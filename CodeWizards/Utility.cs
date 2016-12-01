@@ -128,6 +128,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
+        public static bool HasConflicts(ACombatUnit a, ACombatUnit b)
+        {
+            if (a is AMinion && (a as AMinion).IsNeutral && !(a as AMinion).IsAggressiveNeutral)
+                return false;
+            if (b is AMinion && (b as AMinion).IsNeutral && !(b as AMinion).IsAggressiveNeutral)
+                return false;
+
+            return a.Faction != b.Faction;
+        }
+
         public static bool IsBase(ACombatUnit unit)
         {
             return unit is ABuilding && ((ABuilding) unit).IsBase;

@@ -13,7 +13,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var projectiles = MyStrategy.World.Projectiles
                 .Select(x => new AProjectile(x))
-                .Where(x => !x.IsFriendly && x.Type != ProjectileType.Dart) // можно и Dart реализовать
+                .Where(x => !x.IsFriendly)
                 .ToArray();
 
             var newDict = new Dictionary<long, AProjectile>();
@@ -33,15 +33,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else
                 {
                     // только появился
-                    var owner = MyStrategy.OpponentWizards.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
+                    var owner = MyStrategy.OpponentCombats.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
                     if (owner == null && _wizardsLastSeen.ContainsKey(proj.OwnerUnitId))
                     {
                         // его снаряд видно, но самого не видно
                         owner = _wizardsLastSeen[proj.OwnerUnitId];
                     }
-                    var castRange = owner?.CastRange ?? (MyStrategy.Game.IsSkillsEnabled ? 600 : 500);
-
-                    // proj.GetDistanceTo(owner) < proj.Speed * 1.4
+                    var castRange = owner?.CastRange ??
+                                    (proj.Type == ProjectileType.Dart
+                                        ? MyStrategy.Game.FetishBlowdartAttackRange
+                                        : MyStrategy.Game.IsSkillsEnabled ? 600 : 500);
                     
                     newDict[proj.Id] = proj;
                     proj.RemainingDistance = castRange - proj.Speed;

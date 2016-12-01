@@ -54,6 +54,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             set { _move.MaxCastDistance = value; }
         }
 
+        public long StatusTargetId
+        {
+            get { return _move.StatusTargetId; }
+            set { _move.StatusTargetId = value; }
+        }
+
         public Message[] Messages
         {
             get { return _move.Messages; }

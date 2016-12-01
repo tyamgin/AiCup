@@ -48,13 +48,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override ACombatUnit SelectTarget(ACombatUnit[] candidates)
         {
-            var nearest = candidates
-                .Where(
-                    c =>
-                        c.Faction != Faction.Neutral && c.Faction != Faction && // с противоположной фракции
-                        GetDistanceTo(c) < MyStrategy.Game.MinionVisionRange)
-                .ArgMin(x => Math.Abs(Geom.AngleNormalize(GetAngleTo(x))));
-            return nearest;
+            return candidates
+                .Where(c =>
+                    Utility.HasConflicts(this, c)
+                    && GetDistanceTo2(c) < Geom.Sqr(MyStrategy.Game.MinionVisionRange)
+                )
+                .ArgMin(GetDistanceTo2);
         }
 
         public override bool IsOpponent => IsAggressiveNeutral || !IsTeammate && (Faction == Faction.Academy || Faction == Faction.Renegades);

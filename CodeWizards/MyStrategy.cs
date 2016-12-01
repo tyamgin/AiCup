@@ -33,7 +33,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public static long[] FriendsIds;
 
-        public static AWizard[] Wizards, OpponentWizards;
+        public static AWizard[] Wizards, OpponentWizards, MyWizards;
         public static AMinion[] Minions, OpponentMinions, NeutralMinions;
         public static ABuilding[] OpponentBuildings;
         public static ACombatUnit[] Combats, OpponentCombats, MyCombats;
@@ -45,6 +45,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             // занулям чтобы случайно не использовать данные с предыдущего тика
             Wizards = null;
             OpponentWizards = null;
+            MyWizards = null;
             Minions = null;
             OpponentMinions = null;
             NeutralMinions = null;
@@ -122,6 +123,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             OpponentWizards = Wizards
                 .Where(x => x.IsOpponent)
+                .ToArray();
+
+            MyWizards = Wizards
+                .Where(x => x.IsTeammate)
                 .ToArray();
 
             Minions = world.Minions
@@ -280,10 +285,42 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 move.SkillToLearn = MessagesObserver.GetSkill();
             }
+            UseUltimate();
         }
 
         public static Point NextBonusWaypoint;
 
+        bool UseUltimate()
+        {
+            if (FinalMove.Action != null && FinalMove.Action != ActionType.None)
+                return false;
+
+            if (ASelf.RemainingActionCooldownTicks > 0)
+                return false;
+
+            if (ASelf.RemainingHasteCooldownTicks == 0 && ASelf.HasteSkillLevel == 5)
+            {
+                if (ASelf.Mana >= Game.HasteManacost && ASelf.RemainingHastened == 0)
+                {
+                    FinalMove.Action = ActionType.Haste;
+                    FinalMove.StatusTargetId = ASelf.Id;
+                    return true;
+                }
+
+                foreach (var wizard in MyWizards)
+                {
+                    if (ASelf.Mana >= Game.HasteManacost*2 && wizard.RemainingHastened == 0)
+                    {
+                        FinalMove.Action = ActionType.Haste;
+                        FinalMove.StatusTargetId = wizard.Id;
+                        return true;
+                    }
+                }
+            }
+
+            // TODO: shield так же
+            return false;
+        }
 
         void GoDirect(Point target, FinalMove move)
         {

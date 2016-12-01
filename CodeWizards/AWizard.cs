@@ -188,7 +188,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public int RemainingFrostBoltCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.FrostBolt];
             
         public int RemainingFireballCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Fireball];
-            
+
+        public int RemainingHasteCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Haste];
+
+        public int RemainingShieldCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Shield];
+
 
         private double _getDamageFactor()
         {
@@ -218,10 +222,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private double _getHastenedFactor()
         {
-            // TODO: умения и ауры
-            if (RemainingHastened > 0)
-                return 1.0 + MyStrategy.Game.HastenedMovementBonusFactor;
-            return 1.0;
+            return 1 
+                + (RemainingHastened > 0 ? MyStrategy.Game.HastenedMovementBonusFactor : 0) 
+                + (SkillsFactorsArr[3] + AurasFactorsArr[3]) * MyStrategy.Game.MovementBonusFactorPerSkillLevel;
         }
 
         public double MaxForwardSpeed => MyStrategy.Game.WizardForwardSpeed*_getHastenedFactor();
