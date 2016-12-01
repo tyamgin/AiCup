@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -6,34 +8,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     partial class MyStrategy
     {
         public delegate ALaneType SelectLaneFunc(AWizard w);
+        public delegate SkillType? SelectSkillFunc(AWizard w);
 
         public void MasterSendMessages()
         {
             if (World.TickIndex == 0)
             {
                 var self = new AWizard(ASelf);
-                AWizard
-                    leftmost = self,
-                    bottommost = self;
-                foreach (var w in Wizards)
-                {
-                    if (!w.IsTeammate)
-                        continue;
-
-                    if (w.X < leftmost.X)
-                        leftmost = w;
-                    if (w.Y > bottommost.Y)
-                        bottommost = w;
-                }
+                var sorted = MyWizards.ToList();
+                sorted.Sort((a, b) => Utility.Equals(a.X, b.X) ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
+                var order = new Dictionary<long, int>();
+                for (var i = 0; i < sorted.Count; i++)
+                    order[sorted[i].Id] = i;
 
                 SelectLaneFunc selectLane = x =>
                 {
-                    if (x == leftmost)
+                    if (order[x.Id] <= 1)
                         return ALaneType.Top;
-                    if (x == bottommost)
+                    if (order[x.Id] == 4)
                         return ALaneType.Bottom;
 
                     return ALaneType.Middle;
+                };
+
+                SelectSkillFunc selectSkill = x =>
+                {
+                    // TODO
+                    return null;
                 };
 
                 FinalMove.Messages = Wizards
@@ -42,12 +43,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     .Select(x =>
                     {
                         var lane = (LaneType) selectLane(x);
-                        if (x == leftmost)
-                            return new Message(lane, SkillType.Shield, new byte[] {});
-                        if (x == bottommost)
-                            return new Message(lane, SkillType.Shield, new byte[] { });
-
-                        return new Message(lane, SkillType.Shield, new byte[] { });
+                        var skill = selectSkill(x);
+                        return new Message(lane, skill, new byte[] { });
                     })
                     .ToArray();
 

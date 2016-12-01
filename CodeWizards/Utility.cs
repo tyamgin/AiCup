@@ -128,7 +128,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        public static bool HasConflicts(ACombatUnit a, ACombatUnit b)
+        public static bool HasConflicts(AUnit a, AUnit b)
         {
             if (a is AMinion && (a as AMinion).IsNeutral && !(a as AMinion).IsAggressiveNeutral)
                 return false;

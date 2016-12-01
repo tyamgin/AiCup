@@ -7,17 +7,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public double Angle;
         public long Id;
+        public Faction Faction;
 
         public AUnit(Unit unit) : base(unit)
         {
             Id = unit.Id;
             Angle = unit.Angle;
+            Faction = unit.Faction;
         }
 
         public AUnit(AUnit unit) : base(unit)
         {
             Id = unit.Id;
             Angle = unit.Angle;
+            Faction = unit.Faction;
         }
 
         public AUnit()

@@ -8,16 +8,14 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
- * - учитывать хасту
  * - если убегать на базу, то в самый угол
  * - учитывать скилы в AProjectile.Emulate
  * - учитывать изменение маны
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * 
- * -если атакуем башню - не убегать за бонусом
- * ?-прикрываться деревьями (особенно от визардов)
- * 
- * ?-уворот от Dart
+ * - если атакуем башню - не убегать за бонусом
+ * - прятаться в тени
+ * ?- прикрываться деревьями (особенно от визардов)
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -30,8 +28,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static AWizard ASelf;
         public static FinalMove FinalMove;
         public static int PrevTickIndex;
-
-        public static long[] FriendsIds;
 
         public static AWizard[] Wizards, OpponentWizards, MyWizards;
         public static AMinion[] Minions, OpponentMinions, NeutralMinions;
@@ -145,11 +141,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             MyCombats = Combats
                 .Where(x => x.IsTeammate)
-                .ToArray();
-
-            FriendsIds = Combats
-                .Where(x => x.IsTeammate)
-                .Select(x => x.Id)
                 .ToArray();
 
             NeutralMinionsObserver.Update();

@@ -13,7 +13,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var projectiles = MyStrategy.World.Projectiles
                 .Select(x => new AProjectile(x))
-                .Where(x => !x.IsFriendly)
+                .Where(x => !x.IsFriendly || x.Type == ProjectileType.Dart) // свои Dart тоже могут нанести урон
                 .ToArray();
 
             var newDict = new Dictionary<long, AProjectile>();

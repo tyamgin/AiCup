@@ -8,7 +8,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public bool IsTeammate;
         public virtual bool IsOpponent => !IsTeammate;
 
-        public Faction Faction;
         public double Life;
         public double VisionRange;
         public double CastRange;
@@ -24,7 +23,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         protected ACombatUnit(LivingUnit unit) : base(unit)
         {
             IsTeammate = unit.Faction == MyStrategy.Self.Faction;
-            Faction = unit.Faction;
             var wizard = unit as Wizard;
             if (wizard != null)
             {
@@ -77,7 +75,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         protected ACombatUnit(ACombatUnit unit) : base(unit)
         {
             IsTeammate = unit.IsTeammate;
-            Faction = unit.Faction;
             Life = unit.Life;
             VisionRange = unit.VisionRange;
             CastRange = unit.CastRange;

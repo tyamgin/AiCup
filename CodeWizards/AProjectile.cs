@@ -110,7 +110,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return true;
         }
 
-        public bool IsFriendly => MyStrategy.FriendsIds.Contains(OwnerUnitId);
+        public bool IsFriendly => Faction == MyStrategy.Self.Faction;
 
 
         public enum ProjectilePathState
@@ -201,7 +201,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                     selfBurned++;
                                     selfDeads += deads;
                                 }
-                                else if (!(unit is AMinion) || !(unit as AMinion).IsNeutral || (unit as AMinion).IsAggressiveNeutral)
+                                else if (Utility.HasConflicts(proj, unit))
                                 {
                                     oppDamage += damage;
                                     oppBurned++;
