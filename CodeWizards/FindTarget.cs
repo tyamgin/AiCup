@@ -135,13 +135,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         MovingInfo _findStaffTarget(AWizard self)
         {
-            var nearest = Combats
+            var potentialColliders = Combats
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(Game.StaffRange * 6))
                 .ToArray();
             int minTicks = int.MaxValue;
             var move = new FinalMove(new Move());
 
-            var attacked = self.GetStaffAttacked(nearest).Cast<ACombatUnit>().ToArray();
+            var attacked = self.GetStaffAttacked(potentialColliders).Cast<ACombatUnit>().ToArray();
 
             ACircularUnit selTarget = attacked.FirstOrDefault(x => x.IsOpponent);
             if (selTarget != null) // если уже можно бить
@@ -162,7 +162,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var opp in OpponentCombats)
             {
                 var dist = self.GetDistanceTo(opp);
-                if (dist > Game.StaffRange * 3 || !opp.IsAssailable)
+                if (dist > Game.StaffRange * 4 || !opp.IsAssailable)
                     continue;
 
                 var range = opp.Radius + Game.StaffRange;
@@ -171,28 +171,32 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var angle = Math.Atan2(delta, dist);
                     var moveTo = self + (opp - self).Normalized().RotateClockwise(angle) * self.VisionRange;
 
-                    var nearstCombats = OpponentCombats
-                        .Where(x => x.GetDistanceTo(self) <= x.VisionRange)
+                    var nearstCombats = Combats
+                        .Where(x => x.GetDistanceTo(self) <= Math.Max(x.VisionRange, self.VisionRange) * 1.2)
                         .Select(Utility.CloneCombat)
                         .ToArray();
+
+                    var targetsSelector = new TargetsSelector(nearstCombats) {EnableMinionsCache = true};
+                    var nearstOpponents = nearstCombats.Where(x => x.IsOpponent).ToArray();
+
+                    var my = nearstCombats.FirstOrDefault(x => x.Id == self.Id) as AWizard;
+                    var his = nearstCombats.FirstOrDefault(x => x.Id == opp.Id);
 
                     var canHitNow = opp.EthalonCanHit(self);
 
                     var ticks = 0;
-                    var my = new AWizard(self);
-                    var his = Utility.CloneCombat(opp);
                     var ok = true;
 
-                    while (my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
+                    while (ticks < 35 && my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
                     {
-                        his.EthalonMove(my);
-                        if (!my.MoveTo(moveTo, his, w => !CheckIntersectionsAndTress(w, nearest)))
+                        foreach (var x in nearstOpponents) // свои как-бы стоят на месте
+                            x.EthalonMove(targetsSelector.Select(x) ?? my);
+
+                        if (!my.MoveTo(moveTo, his, w => !CheckIntersectionsAndTress(w, potentialColliders)))
                         {
                             ok = false;
                             break;
                         }
-                        foreach (var x in nearstCombats)
-                            x.EthalonMove(my);
                         ticks++;
                     }
 
@@ -201,27 +205,44 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         while (Math.Abs(my.GetAngleTo(his)) > Game.StaffSector / 2)
                         {
                             my.MoveTo(null, his);
-                            foreach (var x in nearstCombats)
-                                x.EthalonMove(my);
-                            his.EthalonMove(my);
+                            foreach (var x in nearstOpponents)
+                                x.EthalonMove(targetsSelector.Select(x) ?? my);
                             ticks++;
                         }
                     }
+
+                    Func<ACombatUnit, bool> check = x =>
+                    {
+                        if (canHitNow && x.Id == opp.Id) // он и так доставал
+                            return true;
+
+                        if (!x.EthalonCanHit(my))
+                            return true;
+
+                        if (his.Id == x.Id && my.StaffDamage >= his.Life)
+                            return true;
+
+                        var target = targetsSelector.Select(x);
+                        if (target != null && target.Id != my.Id)
+                            return true;
+
+                        return false;
+                    };
 
                     if (ok && ticks < minTicks)
                     {
                         if (my.CanStaffAttack(his))
                         {
-                            if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
+                            if (nearstOpponents.All(check))
                             {
                                 // успею-ли я вернуться обратно
                                 while (my.GetDistanceTo(self) > my.MaxForwardSpeed)//TODO:HACK
                                 {
                                     my.MoveTo(self, null);
-                                    foreach (var x in nearstCombats)
+                                    foreach (var x in nearstOpponents)
                                         x.SkipTick();
                                 }
-                                if (nearstCombats.All(x => canHitNow && x.Id == opp.Id || !x.EthalonCanHit(my)))
+                                if (nearstOpponents.All(check))
                                 {
                                     selTarget = opp;
                                     selMoveTo = moveTo;
@@ -400,7 +421,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange * 1.3))
                 .ToArray();
 
-            var targetsSelector = new TargetsSelector(nearest) { EnableMinionsCache = true };
+            var targetsSelector = new TargetsSelector(nearest) { EnableMinionsCache = true }; // TODO: почему без Self?
 
             ACircularUnit selTarget = null;
             var minTicks = int.MaxValue;

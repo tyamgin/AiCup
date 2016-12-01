@@ -7,6 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - findCastTraget2 делать только с поворотом (дополнительно)
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
  * - если убегать на базу, то в самый угол
  * - учитывать скилы в AProjectile.Emulate
