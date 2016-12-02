@@ -78,6 +78,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Math.Abs(x - y) < Const.Eps;
         }
 
+        public static bool Less(double x, double y)
+        {
+            return x + Const.Eps < y;
+        }
+
         public static bool PointsEqual(Point a, Point b)
         {
             return Equals(a.X, b.X) && Equals(a.Y, b.Y);

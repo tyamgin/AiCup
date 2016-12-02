@@ -46,6 +46,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     
                     newDict[proj.Id] = proj;
                     proj.RemainingDistance = castRange - proj.Speed;
+
+                    if (owner != null)
+                        proj.SetupDamage(owner);
                 }
             }
             // которые были и пропали не попадут в newDict

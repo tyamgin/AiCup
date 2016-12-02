@@ -13,7 +13,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public ProjectileType Type;
         public double RemainingDistance;
         public long OwnerUnitId;
-        public Faction Faction;
+        public double Damage;
+        public double MinDamage; // for Fireball
 
         public AProjectile(Projectile unit) : base(unit)
         {
@@ -23,7 +24,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Type = unit.Type;
             OwnerUnitId = unit.OwnerUnitId;
             RemainingDistance = 0; // это значение должно перезаписываться использующим кодом
-            Faction = unit.Faction;
+            _setupDefaultDamage();
         }
 
         public AProjectile(AProjectile unit) : base(unit)
@@ -34,7 +35,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Type = unit.Type;
             OwnerUnitId = unit.OwnerUnitId;
             RemainingDistance = unit.RemainingDistance;
-            Faction = unit.Faction;
+            Damage = unit.Damage;
+            MinDamage = unit.MinDamage;
         }
 
         public AProjectile(ACombatUnit self, double castAngle, ProjectileType type)
@@ -49,6 +51,48 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             RemainingDistance = self.CastRange;
             OwnerUnitId = self.Id;
             Faction = self.Faction;
+            SetupDamage(self);
+        }
+
+        private void _setupDefaultDamage()
+        {
+            switch (Type)
+            {
+                case ProjectileType.Fireball:
+                    Damage = MyStrategy.Game.FireballExplosionMaxDamage;
+                    MinDamage = MyStrategy.Game.FireballExplosionMinDamage;
+                    break;
+                case ProjectileType.MagicMissile:
+                    Damage = MyStrategy.Game.MagicMissileDirectDamage;
+                    break;
+                case ProjectileType.FrostBolt:
+                    Damage = MyStrategy.Game.FrostBoltDirectDamage;
+                    break;
+                case ProjectileType.Dart:
+                    Damage = MyStrategy.Game.DartDirectDamage;
+                    break;
+            }
+        }
+
+        public void SetupDamage(ACombatUnit unit)
+        {
+            var self = unit as AWizard;
+            switch (Type)
+            {
+                case ProjectileType.Fireball:
+                    Damage = self.FireballMaxDamage;
+                    MinDamage = self.FireballMinDamage;
+                    break;
+                case ProjectileType.MagicMissile:
+                    Damage = self.MagicMissileDamage;
+                    break;
+                case ProjectileType.FrostBolt:
+                    Damage = self.FrostBoltDamage;
+                    break;
+                case ProjectileType.Dart:
+                    Damage = MyStrategy.Game.DartDirectDamage;
+                    break;
+            }
         }
 
         public bool Exists
@@ -69,9 +113,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (!Exists)
                 return;
 
-            RemainingDistance -= Speed / MicroTicks;
-            X += SpeedX / MicroTicks;
-            Y += SpeedY / MicroTicks;
+            RemainingDistance -= Speed/MicroTicks;
+            X += SpeedX/MicroTicks;
+            Y += SpeedY/MicroTicks;
         }
 
         public delegate bool CheckProjectile(AProjectile proj);
@@ -99,8 +143,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (check != null && !check(this))
                     return false;
             }
-            if (nearestTree != null &&
-                Geom.SegmentCircleIntersects(prev, this, nearestTree, nearestTree.Radius + Radius))
+            if (nearestTree != null && Geom.SegmentCircleIntersects(prev, this, nearestTree, nearestTree.Radius + Radius))
             {
                 // снаряд ударился об дерево (это более точная проверка)
                 RemainingDistance = 0;
@@ -140,16 +183,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        public double _getFireballDamage(AProjectile proj, ACombatUnit unit) // без учета сколько жизней осталось
+        public static double GetFireballDamage(AProjectile proj, ACombatUnit unit) // без учета сколько жизней осталось
         {
             var dist = proj.GetDistanceTo(unit) - unit.Radius;
             double damage = 0;
             if (dist <= MyStrategy.Game.FireballExplosionMaxDamageRange)
-                damage += MyStrategy.Game.FireballExplosionMaxDamage;
+                damage += proj.Damage;
             else if (dist <= MyStrategy.Game.FireballExplosionMinDamageRange)
             {
-                var ratio = 1 - (dist - MyStrategy.Game.FireballExplosionMaxDamageRange) / (MyStrategy.Game.FireballExplosionMinDamageRange - MyStrategy.Game.FireballExplosionMaxDamageRange);
-                damage += ratio * (MyStrategy.Game.FireballExplosionMaxDamage - MyStrategy.Game.FireballExplosionMinDamage) + MyStrategy.Game.FireballExplosionMinDamage;
+                var ratio = 1 - (dist - MyStrategy.Game.FireballExplosionMaxDamageRange)/(MyStrategy.Game.FireballExplosionMinDamageRange - MyStrategy.Game.FireballExplosionMaxDamageRange);
+                damage += ratio*(proj.Damage - proj.MinDamage) + proj.MinDamage;
             }
             return damage;
         }
@@ -164,7 +207,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var units = _units.Where(x => x.Id != OwnerUnitId).Select(Utility.CloneCombat).ToArray();
             var owner = _units.FirstOrDefault(x => x.Id == OwnerUnitId);
 
-            var minionsTargetsSelector = new TargetsSelector(_units) { EnableMinionsCache = true };
+            var minionsTargetsSelector = new TargetsSelector(_units) {EnableMinionsCache = true};
 
             while (projectile.Exists)
             {
@@ -180,10 +223,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         var oppDeads = 0;
 
                         ACombatUnit firstTarget = null;
-                        
+
                         foreach (var unit in units)
                         {
-                            var damage = _getFireballDamage(proj, unit);
+                            var damage = GetFireballDamage(proj, unit);
 
                             if (damage > 0)
                             {
@@ -197,9 +240,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                                 if (unit.Faction == proj.Faction)
                                 {
-                                    selfDamage += damage;
-                                    selfBurned++;
-                                    selfDeads += deads;
+                                    if (unit is AWizard)
+                                    {
+                                        selfDamage += damage;
+                                        selfBurned++;
+                                        selfDeads += deads;
+                                    }
                                 }
                                 else if (Utility.HasConflicts(proj, unit))
                                 {
@@ -212,7 +258,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
                         if (owner != null && !projectile.IntersectsWith(owner))
                         {
-                            var damage = _getFireballDamage(proj, owner);
+                            var damage = GetFireballDamage(proj, owner);
                             if (damage > 0)
                             {
                                 selfBurned++;
@@ -230,15 +276,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
                         list.Add(new ProjectilePathSegment
                         {
-                            StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
-                            EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
-                            OpponentDamage = oppDamage,
-                            SelfDamage = selfDamage,
-                            OpponentDeadsCount = oppDeads,
-                            SelfDeadsCount = selfDeads,
-                            State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball,
-                            OpponentBurned = oppBurned,
-                            SelfBurned = selfBurned,
+                            StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
+                            EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
+                            OpponentDamage = oppDamage, 
+                            SelfDamage = selfDamage, 
+                            OpponentDeadsCount = oppDeads, 
+                            SelfDeadsCount = selfDeads, 
+                            State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball, 
+                            OpponentBurned = oppBurned, 
+                            SelfBurned = selfBurned, 
                             Target = firstTarget,
                         });
                     }
@@ -252,9 +298,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             {
                                 list.Add(new ProjectilePathSegment
                                 {
-                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
-                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
-                                    State = ProjectilePathState.Shot,
+                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
+                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
+                                    State = ProjectilePathState.Shot, 
                                     Target = Utility.CloneCombat(inter as ACombatUnit),
                                 });
                             }
@@ -272,7 +318,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             }
                         }
                     }
-                    list.Last().EndDistance += proj.Speed / AProjectile.MicroTicks;
+                    list.Last().EndDistance += proj.Speed/AProjectile.MicroTicks;
 
                     return true;
                 });

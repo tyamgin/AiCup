@@ -352,25 +352,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        bool _hitNow(AWizard self)
-        {
-            const int ticks = 3;
-            for (var mt = 1; mt <= AProjectile.MicroTicks*ticks; mt++)
-                if (ProjectilesPaths[mt].Any(p => p.Exists && p.IntersectsWith(self)))
-                    return true;
-            return false;
-        }
-
         bool PostDodgeProjectile()
         {
             var self = new AWizard(ASelf);
 
-            if (_hitNow(self))
-                return false;
-
+            var curDamage = _getProjectilesDamage(new List<AWizard> {self});
             self.Move(FinalMove.Speed, FinalMove.StrafeSpeed);
+            var newDamage = _getProjectilesDamage(new List<AWizard> { self });
 
-            if (_hitNow(self))
+            if (Utility.Less(curDamage, newDamage))
             {
                 FinalMove.Speed = 0;
                 FinalMove.StrafeSpeed = 0;
@@ -387,13 +377,62 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
+        double _getProjectilesDamage(List<AWizard> myStates)
+        {
+            var totalDamage = 0.0;
+
+            for (var projIdx = 0; projIdx < ProjectilesPaths[0].Length; projIdx++)
+            {
+                var fireballMinDist = 1000.0;
+                AProjectile fireballMinDistState = null;
+
+                for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
+                {
+                    var cur = myStates[Math.Min(ticksPassed, myStates.Count - 1)];
+                    for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
+                    {
+                        var microTick = ticksPassed * AProjectile.MicroTicks + mt + 1;
+                        var proj = ProjectilesPaths[microTick][projIdx];
+
+                        if (!proj.Exists)
+                        {
+                            ticksPassed = ProjectilesCheckTicks; // выход из внешнего цикла
+                            break;
+                        }
+
+                        if (proj.Type == ProjectileType.Fireball)
+                        {
+                            var dist = cur.GetDistanceTo(proj);
+                            if (dist < fireballMinDist)
+                            {
+                                fireballMinDist = dist;
+                                fireballMinDistState = proj;
+                            }
+                        }
+                        else
+                        {
+                            if (proj.IntersectsWith(cur))
+                            {
+                                totalDamage += proj.Damage;
+                                ticksPassed = ProjectilesCheckTicks; // выход из внешнего цикла
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                totalDamage += AProjectile.GetFireballDamage(fireballMinDistState, myStates.Last());
+            }
+            return totalDamage;
+        }
+
         bool _tryDodgeProjectile()
         {
             const int grid = 40;
 
             var obstacles = Combats.Where(x => x.Id != Self.Id && x.GetDistanceTo(ASelf) < 300).ToArray();
             var minTicks = int.MaxValue;
-            var maxDist = 0.0;
+            var minDamage = 1000.0;
             Point selMoveTo = null;
             Point selTurnTo = null;
 
@@ -401,7 +440,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 for (var i = 0; i < grid; i++)
                 {
-                    if (minTicks == 0 && maxDist > 999)
+                    if (minTicks == 0 && minDamage < Const.Eps) // ничего не грозит
                         break;
 
                     var angle = Math.PI*2/grid*i;
@@ -414,66 +453,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     while (ticks < ProjectilesCheckTicks)
                     {
-                        var fireballMinDist = 1000.0;
-                        var fireballMinDistTicks = 0;
-                        var shot = false;
-                        for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
-                        {
-                            var cur = myStates[Math.Min(ticksPassed, myStates.Count - 1)];
-                            for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
-                            {
-                                var microTick = ticksPassed*AProjectile.MicroTicks + mt + 1;
-                                foreach (var proj in ProjectilesPaths[microTick])
-                                {
-                                    if (!proj.Exists)
-                                        continue;
+                        var totalDamage = _getProjectilesDamage(myStates);
 
-                                    if (proj.Type == ProjectileType.Fireball)
-                                    {
-                                        var dist = Math.Max(0, cur.GetDistanceTo(proj) - cur.Radius - Game.FireballExplosionMaxDamageRange);
-                                        if (dist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
-                                        {
-                                            if (dist < fireballMinDist)
-                                            {
-                                                fireballMinDist = dist;
-                                                fireballMinDistTicks = ticks;
-                                            }
-                                            shot = true;
-                                        }
-                                    }
-                                    else
-                                    {
-                                        if (proj.IntersectsWith(cur))
-                                        {
-                                            shot = true;
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if (!shot)
+                        if (Utility.Less(totalDamage, minDamage) ||
+                            Utility.Equals(totalDamage, minDamage) && ticks < minTicks)
                         {
-                            if (ticks < minTicks)
-                            {
-                                minTicks = ticks;
-                                maxDist = 1000;
-                                selMoveTo = moveTo;
-                                selTurnTo = turnTo;
-                            }
-                            break;
-                        }
-
-                        if (fireballMinDist <= Game.FireballExplosionMinDamageRange - Game.FireballExplosionMaxDamageRange)
-                        {
-                            if (fireballMinDist > maxDist ||
-                                Utility.Equals(fireballMinDist, maxDist) && fireballMinDistTicks < minTicks)
-                            {
-                                maxDist = fireballMinDist;
-                                minTicks = fireballMinDistTicks;
-                                selMoveTo = moveTo;
-                                selTurnTo = turnTo;
-                            }
+                            minTicks = ticks;
+                            minDamage = totalDamage;
+                            selMoveTo = moveTo;
+                            selTurnTo = turnTo;
                         }
 
                         bonus.SkipTick();

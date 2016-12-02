@@ -218,7 +218,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public double FrostBoltDamage => MyStrategy.Game.FrostBoltDirectDamage*_getDamageFactor() + _getCastDamageAddition();
 
+        public double FireballMaxDamage => MyStrategy.Game.FireballExplosionMaxDamage * _getDamageFactor() + _getCastDamageAddition();
 
+        public double FireballMinDamage => MyStrategy.Game.FireballExplosionMinDamage * _getDamageFactor() + _getCastDamageAddition();
 
         private double _getHastenedFactor()
         {
