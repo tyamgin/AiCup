@@ -421,7 +421,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                 }
 
-                totalDamage += AProjectile.GetFireballDamage(fireballMinDistState, myStates.Last());
+                if (fireballMinDistState != null)
+                    totalDamage += AProjectile.GetFireballDamage(fireballMinDistState, myStates.Last());
             }
             return totalDamage;
         }
