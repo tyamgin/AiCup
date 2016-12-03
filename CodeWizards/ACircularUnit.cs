@@ -30,7 +30,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public ACircularUnit CheckIntersections(IEnumerable<ACircularUnit> units)
         {
-            return units.FirstOrDefault(IntersectsWith);
+            return units.FirstOrDefault(x => x.Id != Id && IntersectsWith(x));
         }
 
         public override string ToString()

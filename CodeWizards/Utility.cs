@@ -153,6 +153,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (value > 0)
                 value--;
         }
+
+        public static IEnumerable<double> Range(double min, double max, int segments, bool rightInclusive = true)
+        {
+            for (var i = 0; i < segments; i++)
+                yield return (max - min)/segments*i + min;
+            if (rightInclusive)
+                yield return max;
+        }
     }
 
     public static class ListExtension

@@ -27,7 +27,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         private static SkillType? _getNearestSkill(AWizard self, SkillType skill)
         {
             var skillGroup = Utility.GetSkillGroup(skill);
-            if (self.SkillsLearnedArr[skillGroup] == 5)
+            var skillOrder = Utility.GetSkillOrder(skill);
+            if (self.SkillsLearnedArr[skillGroup] > skillOrder)
                 return null;
 
             return Utility.GetSkill(skillGroup, self.SkillsLearnedArr[skillGroup]);
@@ -38,16 +39,27 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var self = MyStrategy.ASelf;
 
 
+            //var skillsOrder = new[]
+            //{
+            //    SkillType.Fireball,
+            //    SkillType.RangeBonusPassive1,
+            //    SkillType.Haste,
+            //    SkillType.AdvancedMagicMissile,
+
+            //    SkillType.FrostBolt,
+            //    SkillType.Shield
+            //};
+
             var skillsOrder = new[]
             {
                 SkillType.Fireball,
-                SkillType.RangeBonusPassive1,
-                SkillType.Haste,
                 SkillType.AdvancedMagicMissile,
+                SkillType.Haste,
 
                 SkillType.FrostBolt,
                 SkillType.Shield
             };
+
 
             foreach (var skill in skillsOrder)
             {

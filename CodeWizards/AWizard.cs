@@ -14,6 +14,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public int Level;
         public int Xp; // TODO: не используется
         public double Mana;
+        public int MaxMana;
 
         public int[] SkillsLearnedArr;
         public int[] SkillsFactorsArr; // какие у меня умения (без учета аур)
@@ -39,7 +40,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             for (var i = 0; i < 5; i++)
                 SkillsFactorsArr[i] = (Math.Min(4, SkillsLearnedArr[i]) + 1)/2;
 
-
+            MaxMana = unit.MaxMana;
         }
 
         public AWizard(AWizard unit) : base(unit)
@@ -52,15 +53,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             SkillsLearnedArr = unit.SkillsLearnedArr.ToArray();
             SkillsFactorsArr = unit.SkillsFactorsArr.ToArray();
             AurasFactorsArr = unit.AurasFactorsArr.ToArray();
+            MaxMana = unit.MaxMana;
         }
-
-        public delegate bool CheckWizardCollisionsFunc(AWizard wizard);
 
         public override void SkipTick()
         {
             base.SkipTick();
             for (var i = 0; i < RemainingCooldownTicksByAction.Length; i++)
                 Utility.Dec(ref RemainingCooldownTicksByAction[i]);
+
+            Mana += MyStrategy.Game.WizardBaseManaRegeneration + MyStrategy.Game.WizardManaRegenerationGrowthPerLevel * Level;
+            if (Mana > MaxMana)
+                Mana = MaxMana;
         }
 
         public static Point _getHalfEllipseDxDy(double a, double b, double c, double angle)
@@ -89,7 +93,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Y += move.Y;
         }
 
-        public bool MoveTo(Point to, Point turnTo, CheckWizardCollisionsFunc checkCollisions = null)
+        public bool MoveTo(Point to, Point turnTo, Func<AWizard, bool> checkCollisions = null)
         {
             if (turnTo != null && RemainingFrozen == 0)
                 Angle += Utility.EnsureInterval(GetAngleTo(turnTo), MaxTurnAngle);
@@ -122,7 +126,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             MoveTo(target, target);
         }
 
-        public bool EthalonCanCastMagicMissile(ACircularUnit opp, bool checkCooldown = true)
+        public bool EthalonCanCastMagicMissile(ACircularUnit opp, bool checkCooldown = true, bool checkAngle = true)
+        {
+            double tmp = Angle;
+            if (!checkAngle)
+                Angle = GetAngleTo(opp);
+            var ret = _ethalonCanCastMagicMissile(opp, checkCooldown);
+            if (!checkAngle)
+                Angle = tmp;
+            return ret;
+        }
+
+        public bool _ethalonCanCastMagicMissile(ACircularUnit opp, bool checkCooldown)
         {
             if (checkCooldown)
             {

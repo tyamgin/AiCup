@@ -14,7 +14,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var tfball = FindCastTarget(self, ProjectileType.Fireball);
             var tmm = FindCastTarget(self, ProjectileType.MagicMissile);
             var t2 = FindStaffTarget(self);
-            var t3 = FindCastTarget2(self, t0.Target ?? moveTo);
+            var t3 = FindCastTarget2(self, t0.Target ?? moveTo, ProjectileType.MagicMissile);
+            var t3fball = FindCastTarget2(self, t0.Target ?? moveTo, ProjectileType.Fireball);
 
             Point ret = null;
             if (t0.Target != null)
@@ -23,7 +24,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 ret = t0.Target;
             }
 
-            if (tfball.Target != null && tfball.Time <= Math.Min(t2.Time, t3.Time))
+            if (tfball.Target != null && tfball.Damage >= t3fball.Damage && tfball.Damage > tmm.Damage)
             {
                 FinalMove.Action = tfball.Move.Action;
                 FinalMove.MinCastDistance = tfball.Move.MinCastDistance;
@@ -52,6 +53,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 FinalMove.Apply(t2.Move);
                 return new Target { MoveTo = t2.Target, Type = TargetType.Opponent };
             }
+            if (t3fball.Target != null)
+            {
+                FinalMove.Apply(t3fball.Move);
+                return new Target { MoveTo = t3fball.Target, Type = TargetType.Opponent };
+            }
             if (t3.Target != null && t3.Time <= Math.Min(tmm.Time, t2.Time))
             {
                 FinalMove.Apply(t3.Move);
@@ -66,7 +72,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         MovingInfo FindBonusTarget(AWizard self)
         {
-            const int grid = 24;
             var minTime = int.MaxValue;
             var selGo = 0;
             Point selMoveTo = null;
@@ -81,11 +86,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange))
                     .ToArray();
 
-
-                for (var i = 0; i < grid; i++)
+                foreach (var angle in Utility.Range(self.Angle, Math.PI * 2 + self.Angle, 24, false))
                 {
                     var bonus = new ABonus(_bonus);
-                    var angle = Math.PI * 2 / grid * i + self.Angle;
                     var my = new AWizard(self);
                     var moveTo = my + Point.ByAngle(angle) * self.VisionRange;
                     int time = 0;
@@ -259,15 +262,29 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     distOk = self.GetDistanceTo2(selTarget) <= Geom.Sqr(Game.StaffRange + selTarget.Radius);
 
                 if (!distOk)
-                {
                     move.MoveTo(selMoveTo, selTarget);
-                }
                 else if (!angleOk)
-                {
                     move.MoveTo(null, selTarget);
-                }
             }
             return new MovingInfo(selTarget, minTicks, move);
+        }
+
+        private bool _isFireballGoodSeg(AWizard self, AProjectile.ProjectilePathSegment seg)
+        {
+            if (seg.State == AProjectile.ProjectilePathState.Free)
+                return false;
+
+            if (seg.SelfDamage > 0) // TODO: можно и пожертвовать
+                return false;
+
+            return seg.OpponentBurned > 2
+                   || self.Mana >= 2*Game.FireballManacost && seg.OpponentBurned > 1
+                   || seg.OpponentBurned == 1 && seg.Target is AWizard
+                   || seg.OpponentBurned == 1
+                       && seg.Target is ABuilding
+                       && self.Mana >= 2*Game.FireballManacost
+                       && seg.OpponentDamage > Game.FireballExplosionMaxDamage - 1 //TODO: костыль
+                ;
         }
 
         MovingInfo _findCastTarget(AWizard self, ProjectileType projectileType)
@@ -293,13 +310,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (Math.Abs(angleTo) > Math.PI/3)
                     continue;
 
-                const int grid = 16;
-                double left = -Game.StaffSector / 2, right = -left;
-                for (var i = 0; i <= grid; i++)
-                {
-                    var castAngle = (right - left) / grid * i + left;
-                    angles.Add(castAngle);
-                }
+                angles.AddRange(Utility.Range(-Game.StaffSector / 2, Game.StaffSector / 2, 16));
                 // нужно найти хотябы 1
                 break;
             }
@@ -308,14 +319,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             double
                 selMinDist = 0,
                 selMaxDist = self.CastRange + 20,
-                selCastAngle = 0;
+                selCastAngle = 0,
+                selMaxDamage = 0;
 
             if (projectileType == ProjectileType.Fireball)
             {
-                double
-                    selPriority = int.MaxValue,
-                    maxDamage = 0;
-                int maxBurned = 0;
+                var maxDamage = 0.0;
+                var maxBurned = 0;
 
                 foreach (var angle in angles)
                 {
@@ -324,32 +334,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     for (var i = 0; i < path.Count; i++)
                     {
                         var seg = path[i];
-                        if (seg.State == AProjectile.ProjectilePathState.Free)
-                            continue;
 
-                        if (seg.SelfDamage > 0) // TODO: можно и пожертвовать
-                            continue;
-
-                        if (seg.OpponentBurned > maxBurned 
-                            || seg.OpponentBurned == maxBurned && seg.OpponentDamage > maxDamage 
-                            //|| seg.OpponentBurned == maxBurned && Utility.Equals(seg.OpponentDamage, maxDamage)
-                            //TODO: combare by angle and priority
-                            )
+                        if (_isFireballGoodSeg(self, seg))
                         {
-                            if (seg.OpponentBurned > 2 
-                                || self.Mana >= 2*Game.FireballManacost && seg.OpponentBurned > 1 
-                                || seg.OpponentBurned == 1 && seg.Target is AWizard
-                                || seg.OpponentBurned == 1 && seg.Target is ABuilding && self.Mana >= 2 * Game.FireballManacost && seg.OpponentDamage > Game.FireballExplosionMaxDamage - 1 //TODO: костыль
+                            if (seg.OpponentBurned > maxBurned
+                                || seg.OpponentBurned == maxBurned && seg.OpponentDamage > maxDamage
+                                //|| seg.OpponentBurned == maxBurned && Utility.Equals(seg.OpponentDamage, maxDamage)
+                                //TODO: combare by angle and priority
                                 )
                             {
-                                if (Math.Abs(angle) < Game.StaffSector/2*0.8)
-                                {
-                                    maxBurned = seg.OpponentBurned;
-                                    maxDamage = seg.OpponentDamage;
-                                    selCastAngle = angle;
-                                    selMinDist = selMaxDist = seg.StartDistance;
-                                    selTarget = seg.Target;
-                                }
+                                maxBurned = seg.OpponentBurned;
+                                maxDamage = seg.OpponentDamage;
+                                selCastAngle = angle;
+                                selMinDist = selMaxDist = seg.StartDistance;
+                                selTarget = seg.Target;
+                                selMaxDamage = seg.OpponentDamage;
                             }
                         }
                     }
@@ -380,18 +379,22 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         var angleTo = Geom.GetAngleBetween(myAngle, hisAngle);
 
                         var priority = GetCombatPriority(self, combat);
-                        if (combat.IsOpponent && (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo))
+                        if (combat.IsOpponent &&
+                            (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo))
                         {
                             selTarget = combat;
                             selCastAngle = angle;
                             selAngleTo = angleTo;
-                            selMinDist = i == 0 || path[i - 1].State == AProjectile.ProjectilePathState.Free && path[i - 1].Length < 40
+                            selMinDist = i == 0 ||
+                                         path[i - 1].State == AProjectile.ProjectilePathState.Free &&
+                                         path[i - 1].Length < 40
                                 ? path[i].StartDistance - 1
                                 : path[i].StartDistance - 20;
                             selMaxDist = i >= path.Count - 2
                                 ? (self.CastRange + 500)
                                 : (path[i + 1].EndDistance + path[i].EndDistance)/2;
                             selPriority = priority;
+                            selMaxDamage = path[i].OpponentDamage;
                         }
                     }
                 }
@@ -411,100 +414,193 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 self + Point.ByAngle(self.Angle + selCastAngle) * Math.Min(Self.CastRange, selMaxDist),
             };
 #endif
-            return new MovingInfo(selTarget, 0, move);
+            return new MovingInfo(selTarget, 0, move) {Damage = selMaxDamage};
         }
 
-        MovingInfo _findCastTarget2(AWizard self, Point moveTo)
+        MovingInfo _findCastTarget2(AWizard self, Point moveTo, ProjectileType projectileType)
         {
             var move = new FinalMove(new Move());
-            var nearest = Combats
-                .Where(x => x.Id != self.Id && self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange * 1.3))
-                .ToArray();
 
-            var targetsSelector = new TargetsSelector(nearest) { EnableMinionsCache = true }; // TODO: почему без Self?
-
-            ACircularUnit selTarget = null;
-            var minTicks = int.MaxValue;
-            double minPriority = int.MaxValue;
-
-            foreach (var opp in OpponentCombats)
+            if (projectileType == ProjectileType.MagicMissile)
             {
-                if (self.GetDistanceTo2(opp) > Geom.Sqr(self.CastRange + opp.Radius + 60) || !opp.IsAssailable)
-                    continue;
+                Point mmSelTarget = null, mmSelFirstMoveTo = null;
+                var mmMinTicks = int.MaxValue;
+                double mmMinPriority = int.MaxValue;
 
-                var nearstCombats = nearest
-                    .Where(x => x.IsOpponent)
-                    .Select(Utility.CloneCombat)
-                    .ToArray();
-
-                var canHitNow = opp.EthalonCanHit(self);
-
-                var ticks = 0;
-                var my = new AWizard(self);
-                var his = Utility.CloneCombat(opp);
-                var ok = true;
-
-                while (!my.EthalonCanCastMagicMissile(his, checkCooldown: false))
+                foreach (var opp in OpponentCombats)
                 {
-                    // только поворачиваться, если и так близко
-                    if (!my.MoveTo(
-                        moveTo ?? (my.GetDistanceTo2(his) < Geom.Sqr(my.CastRange) ? null : his),
-                        his,
-                        w => !CheckIntersectionsAndTress(w, nearest))
+                    if (self.GetDistanceTo2(opp) > Geom.Sqr(self.CastRange + opp.Radius + 40) || !opp.IsAssailable)
+                        continue;
 
-                        || ticks > 40 // снаряду может помешать дерево
-                        )
+                    var nearest = Combats
+                        .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange*1.3))
+                        .Select(Utility.CloneCombat)
+                        .ToArray();
+
+                    var targetsSelector = new TargetsSelector(nearest) {EnableMinionsCache = true};
+
+                    var nearstOpponents = nearest
+                        .Where(x => x.IsOpponent)
+                        .ToArray();
+
+                    var canHitNow = opp.EthalonCanHit(self);
+
+                    var ticks = 0;
+                    var my = nearest.FirstOrDefault(x => x.Id == self.Id) as AWizard;
+                    var his = nearest.FirstOrDefault(x => x.Id == opp.Id);
+                    if (my == null || his == null)
+                        continue;
+
+                    Point firstMoveTo = null;
+                    while (!my.EthalonCanCastMagicMissile(his, checkCooldown: false))
                     {
-                        ok = false;
-                        break;
+                        if (ticks > 40)
+                            break;
+
+                        var m = moveTo;
+                        if (m == null && my.EthalonCanCastMagicMissile(his, checkCooldown: false, checkAngle: false))
+                        {
+                            m = my + (my - his);
+                            var tmp = new AWizard(my);
+                            tmp.MoveTo(m, his, w => !CheckIntersectionsAndTress(w, nearest));
+                            if (EstimateDanger(my) <= EstimateDanger(tmp))
+                                m = null;
+                        }
+                        if (m == null)
+                            m = his;
+
+                        if (ticks == 0)
+                            firstMoveTo = m;
+
+                        if (!my.MoveTo(m, his, w => !CheckIntersectionsAndTress(w, nearest)) && Utility.PointsEqual(m, his))
+                            break;
+                        
+                        foreach (var x in nearest)
+                        {
+                            if (x.Id == my.Id)
+                                continue;
+                            var tar = targetsSelector.Select(x);
+                            if (x.IsOpponent)
+                                x.EthalonMove(tar ?? my);
+                            else if (tar != null)
+                                x.EthalonMove(tar);
+                        }
+                        ticks++;
                     }
-                    foreach (var x in nearstCombats)
-                        x.EthalonMove(my);
-                    ticks++;
-                }
 
-                if (his is AWizard && CanRush(my, his))
-                    ticks -= 10;// чтобы дать больше приоритета визарду
+                    if (his is AWizard && CanRush(my, his))
+                        ticks -= 10; // чтобы дать больше приоритета визарду
 
-                var priority = GetCombatPriority(self, his);
-                if (ok && (ticks < minTicks || ticks == minTicks && priority < minPriority))
-                {
-                    if (my.EthalonCanCastMagicMissile(his))
+                    var priority = GetCombatPriority(self, his);
+                    if (ticks < mmMinTicks || ticks == mmMinTicks && priority < mmMinPriority)
                     {
-                        if (nearstCombats.All(x =>
+                        if (my.EthalonCanCastMagicMissile(his))
                         {
-                            //TODO: возможно, скопировать эти условия и для staff
-                            if (canHitNow && x.Id == opp.Id) // он и так доставал
-                                return true;
+                            if (nearstOpponents.All(x =>
+                            {
+                                if (canHitNow && x.Id == opp.Id) // он и так доставал
+                                    return true;
 
-                            if (!x.EthalonCanHit(my))
-                                return true;
+                                if (!x.EthalonCanHit(my))
+                                    return true;
 
-                            if (his.Id == x.Id && CanRush(my, x))
-                                return true;
+                                if (his.Id == x.Id && CanRush(my, x))
+                                    return true;
 
-                            var target = targetsSelector.Select(x);
-                            if (target != null && target.Id != my.Id)
-                                return true;
+                                var target = targetsSelector.Select(x);
+                                if (target != null && target.Id != my.Id)
+                                    return true;
 
-                            return false;
-                        })
-                            )
-                        {
-                            minTicks = ticks;
-                            minPriority = priority;
-                            selTarget = opp;
+                                return false;
+                            })
+                                )
+                            {
+                                mmMinTicks = ticks;
+                                mmMinPriority = priority;
+                                mmSelTarget = opp;
+                                mmSelFirstMoveTo = firstMoveTo;
+                            }
                         }
                     }
                 }
+
+
+                if (mmSelTarget != null)
+                {
+                    mmMinTicks = Math.Max(0, mmMinTicks);
+                    move.MoveTo(moveTo ?? mmSelFirstMoveTo, mmSelTarget);
+                    return new MovingInfo(mmSelTarget, mmMinTicks, move);
+                }
             }
 
-            if (selTarget == null)
-                return new MovingInfo(null, int.MaxValue, move);
 
-            minTicks = Math.Max(0, minTicks);
-            move.MoveTo(moveTo ?? (self.GetDistanceTo2(selTarget) < Geom.Sqr(self.CastRange) ? null : selTarget), selTarget);
-            return new MovingInfo(selTarget, minTicks, move);
+            const int walkLimit = 9;
+
+            if (projectileType == ProjectileType.Fireball && self.FireballSkillLevel == 5 && Math.Max(self.RemainingActionCooldownTicks, self.RemainingFireballCooldownTicks) <= walkLimit)
+            {
+                var fbMaxDamage = 0.0;
+                Point fbSelTarget = null;
+                var fbMinTicks = int.MaxValue;
+
+                foreach (var ang in Utility.Range(-Game.StaffSector, Game.StaffSector, 10))
+                {
+                    var nearest = Combats
+                        .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange*1.3))
+                        .Select(Utility.CloneCombat)
+                        .ToArray();
+
+                    var targetsSelector = new TargetsSelector(nearest) {EnableMinionsCache = true};
+
+                    var ticks = 0;
+                    var my = nearest.FirstOrDefault(x => x.Id == self.Id) as AWizard;
+                    var dir = my + Point.ByAngle(my.Angle + ang)*1000;
+
+                    while (ticks <= walkLimit)
+                    {
+                        if (my.Mana >= Game.FireballManacost
+                            && my.RemainingActionCooldownTicks == 0 
+                            && my.RemainingFireballCooldownTicks == 0
+                            )
+                        {
+                            var proj = new AProjectile(my, 0, ProjectileType.Fireball);
+                            var path = proj.Emulate(nearest);
+
+                            var damage =
+                                path.Where(x => _isFireballGoodSeg(my, x))
+                                    .Select(x => x.OpponentDamage)
+                                    .DefaultIfEmpty(0)
+                                    .Max();
+                            if (damage > fbMaxDamage)
+                            {
+                                fbMaxDamage = damage;
+                                fbSelTarget = dir;
+                                fbMinTicks = ticks;
+                            }
+                        }
+
+                        foreach (var x in nearest)
+                            if (x.Id != my.Id && x is AMinion)
+                                x.EthalonMove(targetsSelector.Select(x));
+
+                        if (!my.MoveTo(dir, dir, w => !CheckIntersectionsAndTress(w, nearest)))
+                        {
+                            // TODO: bonuses
+                            break;
+                        }
+                        // TODO: условия что в меня не пальнут
+                        ticks++;
+                    }
+                }
+
+
+                if (fbSelTarget != null)
+                {
+                    move.MoveTo(fbSelTarget, fbSelTarget);
+                    return new MovingInfo(fbSelTarget, fbMinTicks, move) {Damage = fbMaxDamage};
+                }
+            }
+
+            return new MovingInfo(null, int.MaxValue, move);
         }
 
         Target FindTarget(AWizard self, Point moveTo = null)
@@ -531,10 +627,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        MovingInfo FindCastTarget2(AWizard self, Point moveTo = null)
+        MovingInfo FindCastTarget2(AWizard self, Point moveTo, ProjectileType projectileType)
         {
             TimerStart();
-            var ret = _findCastTarget2(self, moveTo);
+            var ret = _findCastTarget2(self, moveTo, projectileType);
             TimerEndLog("FindCastTarget2", 1);
             return ret;
         }
@@ -614,6 +710,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             public Point Target;
             public int Time;
             public FinalMove Move;
+            public double Damage;
 
             public MovingInfo(Point target, int time, FinalMove move)
             {

@@ -224,10 +224,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var minDanger = double.MaxValue;
             Point selMoveTo = null;
 
-            const int grid = 24;
-            for (var i = 0; i < grid; i++)
+            foreach(var angle in Utility.Range(self.Angle, Math.PI*2 + self.Angle, 24, false))
             {
-                var angle = Math.PI*2/grid*i + self.Angle;
                 var moveTo = self + Point.ByAngle(angle) * self.VisionRange;
                 var nearest = Combats
                     .Where(x => x.GetDistanceTo(self) < Math.Max(self.VisionRange, x.VisionRange) * 1.3)
@@ -439,12 +437,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             foreach (var doTurn in new[] {false, true})
             {
-                for (var i = 0; i < grid; i++)
+                foreach (var angle in Utility.Range(0, Math.PI * 2, 40, false))
                 {
                     if (minTicks == 0 && minDamage < Const.Eps) // ничего не грозит
                         break;
-
-                    var angle = Math.PI*2/grid*i;
+                    
                     var ticks = 0;
                     var my = new AWizard(ASelf);
                     var bonus = new ABonus(BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self)));

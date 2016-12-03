@@ -296,12 +296,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         {
                             if (list.Count == 0 || list.Last().State != ProjectilePathState.Shot)
                             {
+                                var opp = inter as ACombatUnit;
                                 list.Add(new ProjectilePathSegment
                                 {
                                     StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
                                     EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
                                     State = ProjectilePathState.Shot, 
-                                    Target = Utility.CloneCombat(inter as ACombatUnit),
+                                    Target = Utility.CloneCombat(opp),
+                                    SelfDamage = proj.Faction == inter.Faction ? Math.Min(opp.Life, Damage) : 0,
+                                    OpponentDamage = Utility.HasConflicts(proj, opp) ? Math.Min(opp.Life, Damage) : 0,
                                 });
                             }
                         }
