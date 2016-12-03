@@ -14,8 +14,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             if (World.TickIndex == 0)
             {
-                return;
-
                 var self = new AWizard(ASelf);
                 var sorted = MyWizards.ToList();
                 sorted.Sort((a, b) => Utility.Equals(a.X, b.X) ? a.Y.CompareTo(b.Y) : a.X.CompareTo(b.X));
