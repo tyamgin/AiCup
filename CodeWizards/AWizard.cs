@@ -123,7 +123,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public override void EthalonMove(ACircularUnit target)
         {
-            MoveTo(target, target);
+            MoveTo(target, target, w => !w.IntersectsWith(target));
         }
 
         public bool EthalonCanCastMagicMissile(ACircularUnit opp, bool checkCooldown = true, bool checkAngle = true)

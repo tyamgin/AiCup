@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(5000);
 
-            for (var i = 0; i < 1; i++)
+            for (var i = 0; i < 0; i++)
             {
                 var oldStrategy = new Process
                 {
@@ -27,7 +27,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         CreateNoWindow = true
                     }
                 };
-                //oldStrategy.Start();
+                oldStrategy.Start();
             }
 #endif
 

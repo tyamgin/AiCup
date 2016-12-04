@@ -42,11 +42,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             if (tmm.Target != null && tmm.Time <= Math.Min(t2.Time, t3.Time))
             {
-                FinalMove.Action = tmm.Move.Action;
-                FinalMove.MinCastDistance = tmm.Move.MinCastDistance;
-                FinalMove.MaxCastDistance = tmm.Move.MaxCastDistance;
-                FinalMove.CastAngle = tmm.Move.CastAngle;
-                return new Target { MoveTo = tmm.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
+                var wiz = t3.Target as AWizard;
+                if (wiz != null && CanRush(ASelf, wiz) && t3.TargetId != tmm.TargetId)
+                {
+                }
+                else
+                {
+                    FinalMove.Action = tmm.Move.Action;
+                    FinalMove.MinCastDistance = tmm.Move.MinCastDistance;
+                    FinalMove.MaxCastDistance = tmm.Move.MaxCastDistance;
+                    FinalMove.CastAngle = tmm.Move.CastAngle;
+                    return new Target {MoveTo = tmm.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus};
+                }
             }
             if (t0.Target == null && t2.Target != null && t2.Time <= Math.Min(tmm.Time, t3.Time))
             {
@@ -232,6 +239,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         return false;
                     };
 
+                    if (opp is AWizard)
+                        ticks -= 5;
+
                     if (ok && ticks < minTicks)
                     {
                         if (my.CanStaffAttack(his))
@@ -266,7 +276,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else if (!angleOk)
                     move.MoveTo(null, selTarget);
             }
-            return new MovingInfo(selTarget, minTicks, move);
+            return new MovingInfo(selTarget, Math.Max(0, minTicks), move);
         }
 
         private bool _isFireballGoodSeg(AWizard self, AProjectile.ProjectilePathSegment seg)
@@ -414,7 +424,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 self + Point.ByAngle(self.Angle + selCastAngle) * Math.Min(Self.CastRange, selMaxDist),
             };
 #endif
-            return new MovingInfo(selTarget, 0, move) {Damage = selMaxDamage};
+            return new MovingInfo(selTarget, 0, move) {Damage = selMaxDamage, TargetId = selTarget.Id};
         }
 
         MovingInfo _findCastTarget2(AWizard self, Point moveTo, ProjectileType projectileType)
@@ -423,7 +433,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             if (projectileType == ProjectileType.MagicMissile)
             {
-                Point mmSelTarget = null, mmSelFirstMoveTo = null;
+                AUnit mmSelTarget = null;
+                Point mmSelFirstMoveTo = null;
                 var mmMinTicks = int.MaxValue;
                 double mmMinPriority = int.MaxValue;
 
@@ -489,7 +500,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
 
                     if (his is AWizard && CanRush(my, his))
-                        ticks -= 10; // чтобы дать больше приоритета визарду
+                        ticks -= 15; // чтобы дать больше приоритета визарду
 
                     var priority = GetCombatPriority(self, his);
                     if (ticks < mmMinTicks || ticks == mmMinTicks && priority < mmMinPriority)
@@ -529,7 +540,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     mmMinTicks = Math.Max(0, mmMinTicks);
                     move.MoveTo(moveTo ?? mmSelFirstMoveTo, mmSelTarget);
-                    return new MovingInfo(mmSelTarget, mmMinTicks, move);
+                    return new MovingInfo(mmSelTarget, mmMinTicks, move) {TargetId = mmSelTarget.Id};
                 }
             }
 
@@ -711,6 +722,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             public int Time;
             public FinalMove Move;
             public double Damage;
+            public long TargetId;
 
             public MovingInfo(Point target, int time, FinalMove move)
             {

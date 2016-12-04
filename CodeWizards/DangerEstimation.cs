@@ -11,6 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public static double CantMoveDanger = 300;
         public static double GoToBonusDanger;
+        public TargetsSelector FetishTargetsSelector;
 
         double EstimateDanger(AWizard my)
         {
@@ -26,11 +27,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var wizard = opp as AWizard;
                     var inner = (Game.StaffRange + my.Radius) + 1; // (куда достаёт посохом) + запас
                     var outer = (opp.CastRange + my.Radius + Game.MagicMissileRadius) + 1; // (куда достанет MagicMissile) + запас
+                    if (GoAwayCond(my, wizard))
+                        outer += GoAwaySafeDist - Game.MagicMissileRadius;
                     var coeff = 45;
-                    if (dist < inner)
-                        res += (wizard.StaffDamage + wizard.MagicMissileDamage) * 2;
-                    else if (dist < outer)
-                        res += (wizard.MagicMissileDamage + coeff - (dist - inner)/(outer - inner)*coeff) * 2;
+                    //if (!HasSuperiority || !CanRush(my, wizard)) // TODO
+                    {
+                        if (dist < inner)
+                            res += (wizard.StaffDamage + wizard.MagicMissileDamage)*2;
+                        else if (dist < outer)
+                            res += (wizard.MagicMissileDamage + coeff - (dist - inner)/(outer - inner)*coeff)*2;
+                    }
                 }
                 else if (opp is ABuilding)
                 {
@@ -73,18 +79,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var inner = opp.CastRange + my.Radius + Game.DartRadius + 10;
                     if (dist < inner)
-                        res += 15 - dist/inner*15 + Game.DartDirectDamage;
+                    {
+                        var fetishTarget = FetishTargetsSelector.Select(opp);
+                        if (fetishTarget == null || Geom.Sqr(dist - 5) < opp.GetDistanceTo2(fetishTarget))
+                            res += 15 - dist/inner*15 + Game.DartDirectDamage;
+                    }
                 }
             }
-
-            // не прижиматься к деревьям
-            //var nearestTree = TreesObserver.GetNearestTree(my);
-            //if (nearestTree != null)
-            //{
-            //    var dist = my.GetDistanceTo(nearestTree) - nearestTree.Radius;
-            //    if (dist < 60)
-            //        res += 1.5-dist/60*1.5;
-            //}
 
             // не прижиматься к своим
             foreach (var co in MyCombats)
@@ -171,6 +172,36 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
+
+        public static bool HasSuperiority;
+
+        static bool _ourSuperiorityDetect()
+        {
+            var ourPower = 0.0;
+            var oppPower = 0.0;
+            foreach (var x in Combats)
+            {
+                if (ASelf.GetDistanceTo(x) - x.Radius < ASelf.VisionRange)
+                    continue;
+
+                var power = 0.0;
+                if (x is AWizard)
+                {
+                    power += x.Life;
+                }
+                else if (x is AMinion)
+                {
+                    power += x.Life/2;
+                }
+
+                if (x.IsTeammate)
+                    ourPower += power;
+                else if (x.IsOpponent)
+                    oppPower += power;
+            }
+            return ourPower > oppPower;
+        }
+
         List<Tuple<Point, double>> CalculateDangerMap()
         {
             double range = Self.VisionRange * 1.1,
@@ -198,10 +229,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-        public delegate double PositionCostFunction(AWizard wizard);
-        public delegate bool PositionCondition(AWizard wizard);
-
-        private bool TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition, FinalMove move)
+        private bool TryGoByGradient(Func<AWizard, double> costFunction, Func<AWizard, bool> condition, FinalMove move)
         {
             TimerStart();
             var ret = _TryGoByGradient(costFunction, condition, move);
@@ -209,7 +237,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        private bool _TryGoByGradient(PositionCostFunction costFunction, PositionCondition condition, FinalMove move)
+        private bool _TryGoByGradient(Func<AWizard, double> costFunction, Func<AWizard, bool> condition, FinalMove move)
         {
             var self = new AWizard(ASelf);
 
@@ -219,7 +247,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(x.Radius + 150))
                 .ToArray();
 
-            var danger = costFunction(self);
+            var danger = costFunction(self); // for debug
             List<double> selVec = null;
             var minDanger = double.MaxValue;
             Point selMoveTo = null;
@@ -278,19 +306,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 while(vec.Count < steps)
                     vec.Add(CantMoveDanger);
 
-                //if (vec[0] < danger)
-                {
-                    var newDanger = 0.0;
-                    for (var k = 0; k < steps; k++)
-                        newDanger += vec[k]*Math.Pow(0.87, k);
-                    newDanger += 3 * vec[0];
+                var newDanger = 0.0;
+                for (var k = 0; k < steps; k++)
+                    newDanger += vec[k]*Math.Pow(0.87, k);
+                newDanger += 3 * vec[0];
 
-                    if (newDanger < minDanger)
-                    {
-                        minDanger = newDanger;
-                        selMoveTo = moveTo;
-                        selVec = vec;
-                    }
+                if (newDanger < minDanger)
+                {
+                    minDanger = newDanger;
+                    selMoveTo = moveTo;
+                    selVec = vec; // for debug
                 }
             }
             if (selMoveTo != null)
@@ -303,7 +328,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool TryPreDodgeProjectile()
         {
-            const int preTicks = 3;
+            const int preTicks = 4;
             var opp = OpponentWizards
                 .FirstOrDefault(x => 
                     Math.Min(x.RemainingActionCooldownTicks, x.RemainingMagicMissileCooldownTicks) <= preTicks
@@ -381,6 +406,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             for (var projIdx = 0; projIdx < ProjectilesPaths[0].Length; projIdx++)
             {
+                if (ProjectilesPaths[0][projIdx].GetDistanceTo2(ASelf) > Geom.Sqr(1000))
+                    continue;
+
                 var fireballMinDist = 1000.0;
                 AProjectile fireballMinDistState = null;
 
@@ -427,8 +455,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool _tryDodgeProjectile()
         {
-            const int grid = 40;
-
             var obstacles = Combats.Where(x => x.Id != Self.Id && x.GetDistanceTo(ASelf) < 300).ToArray();
             var minTicks = int.MaxValue;
             var minDamage = 1000.0;
@@ -505,16 +531,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         void GoAway()
         {
-            GoAround(BuildingsObserver.MyBase);
+            if (ASelf.GetDistanceTo(BuildingsObserver.MyBase) > Game.FactionBaseVisionRange)
+                GoAround(BuildingsObserver.MyBase);
+        }
+
+        public static int GoAwayMaxLife = 45;
+        public static double GoAwayMaxDist = 15;
+        public static double GoAwaySafeDist = 30;
+
+        bool GoAwayCond(AWizard self, AWizard opp)
+        {
+            return self.Life <= GoAwayMaxLife && CanRush(opp, self);
         }
 
         bool GoAwayDetect()
         {
-            if (ASelf.Life > 45)
-                return false;
-
             var nearest = OpponentWizards
-                .Where(x => ASelf.GetDistanceTo(x) < x.CastRange + ASelf.Radius + 30 && CanRush(x, ASelf))
+                .Where(x => ASelf.GetDistanceTo(x) < x.CastRange + ASelf.Radius + GoAwayMaxDist && GoAwayCond(ASelf, x))
                 .ArgMin(x => x.GetDistanceTo2(ASelf));
 
             if (nearest != null)

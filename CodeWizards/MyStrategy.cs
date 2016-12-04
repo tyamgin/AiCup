@@ -7,11 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * - findCastTraget2 делать только с поворотом (дополнительно)
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
- * - если убегать на базу, то в самый угол
- * - учитывать скилы в AProjectile.Emulate
- * - учитывать изменение маны
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * 
  * - если атакуем башню - не убегать за бонусом
@@ -175,7 +171,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var building in OpponentBuildings)
             {
                 building.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
-                var hisWizards = OpponentWizards.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
                 if (Game.IsSkillsEnabled)
                 {
                     if (building.OpponentsCount >= 4)
@@ -187,6 +182,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         building.IsBesieded = true;
                 }
             }
+
+            HasSuperiority = _ourSuperiorityDetect();
+            FetishTargetsSelector = new TargetsSelector(Combats) {EnableMinionsCache = true};
 
             if (Self.IsMaster && World.TickIndex == 0)
             {
@@ -536,8 +534,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         private bool HasAnyTarget(AWizard self)
         {
-            double wizardDangerRange = 0;
-
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
             {
@@ -548,7 +544,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 var bld = opp as ABuilding;
                 if (opp is AWizard)
-                    my.CastRange += wizardDangerRange; // чтобы держаться на расстоянии от визардов
+                {
+                    if (my.CastRange <= opp.CastRange)
+                    {
+                        if (GoAwayCond(my, opp as AWizard))
+                            my.CastRange = opp.CastRange + GoAwaySafeDist;
+                        else if (my.CastRange < opp.CastRange)
+                            my.CastRange = opp.CastRange;
+                    }
+                }
                 if (bld != null)
                 {
                     if (!bld.IsBesieded)

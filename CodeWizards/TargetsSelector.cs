@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
-    class TargetsSelector
+    public class TargetsSelector
     {
         private ACombatUnit[] _combats;
         private bool _enableMinionsCache;
