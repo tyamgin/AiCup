@@ -172,7 +172,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var opp in OpponentCombats)
             {
                 var dist = self.GetDistanceTo(opp);
-                if (dist > Game.StaffRange * 4 || !opp.IsAssailable)
+                if (dist > Game.StaffRange * 5 || !opp.IsAssailable)
                     continue;
 
                 var range = opp.Radius + Game.StaffRange;
@@ -192,12 +192,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var my = nearstCombats.FirstOrDefault(x => x.Id == self.Id) as AWizard;
                     var his = nearstCombats.FirstOrDefault(x => x.Id == opp.Id);
 
+                    var allowRush = opp is AFetish || opp is AWizard;
+
+                    var tmp = opp.RemainingActionCooldownTicks; // HACK: чтобы не бояться нападать посохом
+                    if (allowRush)
+                        opp.RemainingActionCooldownTicks = 0;
                     var canHitNow = opp.EthalonCanHit(self);
+                    opp.RemainingActionCooldownTicks = tmp;
 
                     var ticks = 0;
                     var ok = true;
 
-                    while (ticks < 35 && my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
+                    while (ticks < (allowRush ? 65 : 35) && my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
                     {
                         foreach (var x in nearstOpponents) // свои как-бы стоят на месте
                             x.EthalonMove(targetsSelector.Select(x) ?? my);
@@ -495,6 +501,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 x.EthalonMove(tar ?? my);
                             else if (tar != null)
                                 x.EthalonMove(tar);
+                            else
+                                x.SkipTick();
                         }
                         ticks++;
                     }
@@ -590,15 +598,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
 
                         foreach (var x in nearest)
-                            if (x.Id != my.Id && x is AMinion)
+                        {
+                            if (x.Id == my.Id)
+                                continue;
+
+                            if (x is AMinion)
                                 x.EthalonMove(targetsSelector.Select(x));
+                            else
+                                x.SkipTick();
+                        }
 
                         if (!my.MoveTo(dir, dir, w => !CheckIntersectionsAndTress(w, nearest)))
                         {
                             // TODO: bonuses
                             break;
                         }
-                        // TODO: условия что в меня не пальнут
+                        if (nearest.Any(x => x.IsOpponent && x is ABuilding && x.EthalonCanHit(my) && targetsSelector.Select(x) == my))
+                            break;
                         ticks++;
                     }
                 }
