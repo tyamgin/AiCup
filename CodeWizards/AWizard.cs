@@ -130,7 +130,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             double tmp = Angle;
             if (!checkAngle)
-                Angle = GetAngleTo(opp);
+                Angle += GetAngleTo(opp); // поворачиваем, чтобы угол до цели был 0
             var ret = _ethalonCanCastMagicMissile(opp, checkCooldown);
             if (!checkAngle)
                 Angle = tmp;

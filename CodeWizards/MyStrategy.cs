@@ -7,6 +7,9 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - застревание перед башней
+ * - хаста, не изусать advanced mm
+ * - бегать за бонусами на первых тиках
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * 
@@ -63,7 +66,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 5000;
+                Visualizer.Visualizer.DrawSince = 8600;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -471,7 +474,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
-            if (Game.IsSkillsEnabled)
+            if (Game.IsSkillsEnabled && World.TickIndex > 3500) // брать только первый бонус со скилами
                 return selMovingInfo;
 
             if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + magic)
