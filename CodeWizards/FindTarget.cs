@@ -24,7 +24,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 ret = t0.Target;
             }
 
-            if (tfball.Target != null && tfball.Damage >= t3fball.Damage && tfball.Damage > tmm.Damage)
+            if (tfball.Target != null && tfball.Damage + 1 >= t3fball.Damage && tfball.Damage > tmm.Damage)
             {
                 FinalMove.Action = tfball.Move.Action;
                 FinalMove.MinCastDistance = tfball.Move.MinCastDistance;
@@ -259,7 +259,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 {
                                     my.MoveTo(self, null);
                                     foreach (var x in nearstOpponents)
-                                        x.SkipTick();
+                                    {
+                                        var tar = targetsSelector.Select(x);
+                                        if (tar != null)
+                                            x.EthalonMove(tar);
+                                        else
+                                            x.SkipTick();
+                                    }
                                 }
                                 if (nearstOpponents.All(check))
                                 {
@@ -294,9 +300,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 return false;
 
             return seg.OpponentBurned > 2
-                   || self.Mana >= 2*Game.FireballManacost && seg.OpponentBurned > 1
-                   || seg.OpponentBurned == 1 && seg.Target is AWizard
-                   || seg.OpponentBurned == 1
+                   || seg.OpponentBurned > 0 && seg.Target is AWizard
+                   || seg.OpponentBurned > 0
                        && seg.Target is ABuilding
                        && self.Mana >= 2*Game.FireballManacost
                        && seg.OpponentDamage > Game.FireballExplosionMaxDamage - 1 //TODO: костыль

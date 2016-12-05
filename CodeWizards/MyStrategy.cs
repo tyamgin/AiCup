@@ -8,10 +8,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 /**
  * TODO:
  * - когда мало жизней от фаербольшика держаться подальше
- * - застревание перед башней
- * - не стрелять fireball в двоих
  * - хаста, не изусать advanced mm
- * - бегать за бонусами на первых тиках
  * - не идти за нейтралами
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
@@ -189,6 +186,30 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             HasSuperiority = _ourSuperiorityDetect();
             FetishTargetsSelector = new TargetsSelector(Combats) {EnableMinionsCache = true};
+
+            BuildingsDangerTriangles = new List<Point[]>();
+            var top0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 1 && x.Lane == ALaneType.Top);
+            if (top0 != null)
+            {
+                BuildingsDangerTriangles.Add(new[]
+                {
+                    top0 + new Point(top0.Radius + Const.WizardRadius, 0),
+                    top0 + new Point(-top0.Radius, -(top0.Radius * 7 + Const.WizardRadius)),
+                    top0 + new Point(-top0.Radius, 0),
+                });
+            }
+
+            var bottom0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 0 && x.Lane == ALaneType.Bottom);
+            if (bottom0 != null)
+            {
+                BuildingsDangerTriangles.Add(new[]
+                {
+                    bottom0 + new Point(0, -(bottom0.Radius + Const.WizardRadius)),
+                    bottom0 + new Point(bottom0.Radius * 7 + Const.WizardRadius, bottom0.Radius),
+                    bottom0 + new Point(0, bottom0.Radius),
+                });
+            }
+
 
             if (Self.IsMaster && World.TickIndex == 0)
             {

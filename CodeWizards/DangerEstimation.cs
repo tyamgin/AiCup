@@ -12,6 +12,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static double CantMoveDanger = 300;
         public static double GoToBonusDanger;
         public TargetsSelector FetishTargetsSelector;
+        public static List<Point[]> BuildingsDangerTriangles;
 
         double EstimateDanger(AWizard my)
         {
@@ -167,6 +168,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var outer = 500;
                 if (dist < outer)
                     res += 7 - dist/outer*7;
+            }
+
+            foreach (var tr in BuildingsDangerTriangles)
+            {
+                if (Geom.ContainPoint(tr, my))
+                    res += new Segment(tr[0], tr[1]).GetDistanceTo(my) / 100 * 10;
             }
 
             return res;

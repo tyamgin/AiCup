@@ -197,6 +197,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return damage;
         }
 
+        private static int _targetImportance(ACombatUnit unit)
+        {
+            if (unit is AWizard)
+                return 3;
+            if (unit is ABuilding)
+                return 2;
+            return 1;
+        }
+
         public List<ProjectilePathSegment> Emulate(ACombatUnit[] _units)
         {
             if (Type != ProjectileType.MagicMissile && Type != ProjectileType.FrostBolt && Type != ProjectileType.Fireball)
@@ -222,7 +231,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         var selfDeads = 0;
                         var oppDeads = 0;
 
-                        ACombatUnit firstTarget = null;
+                        ACombatUnit importantTarget = null;
 
                         foreach (var unit in units)
                         {
@@ -252,7 +261,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                     oppDamage += damage;
                                     oppBurned++;
                                     oppDeads += deads;
-                                    firstTarget = unit;
+                                    if (importantTarget == null || _targetImportance(unit) > _targetImportance(importantTarget))
+                                        importantTarget = unit;
                                 }
                             }
                         }
@@ -285,7 +295,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball, 
                             OpponentBurned = oppBurned, 
                             SelfBurned = selfBurned, 
-                            Target = firstTarget,
+                            Target = importantTarget,
                         });
                     }
                     else
