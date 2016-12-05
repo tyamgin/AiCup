@@ -7,9 +7,12 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - когда мало жизней от фаербольшика держаться подальше
  * - застревание перед башней
+ * - не стрелять fireball в двоих
  * - хаста, не изусать advanced mm
  * - бегать за бонусами на первых тиках
+ * - не идти за нейтралами
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * 
@@ -62,11 +65,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             _move(self, world, game, move);
             PrevTickIndex = World.TickIndex;
             TimerEndLog("All", 0);
-            //if (world.TickIndex % 1000 == 999 || world.TickIndex == 3525)
-            //    _recheckNeighbours();
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 8600;
+                Visualizer.Visualizer.DrawSince = 1000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();

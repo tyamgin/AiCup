@@ -31,8 +31,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var b = this[i - 1];
                 var c = this[i];
 
-                if (_getNearestTree(a, b) != null || _getNearestTree(b, c) != null || _getNearestTree(a, c) != null)
+                if (_getNearestTree(a, b) != null)
                     break;
+
+                var bcTree = _getNearestTree(b, c);
+                var acTree = _getNearestTree(a, c);
+                if (bcTree != null || acTree != null)
+                {
+                    if (acTree == bcTree)
+                        RemoveAt(i - 1);
+                    break;
+                }
 
                 if (length + a.GetDistanceTo(b) > maxLength)
                     break;

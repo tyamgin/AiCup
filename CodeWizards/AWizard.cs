@@ -95,13 +95,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public bool MoveTo(Point to, Point turnTo, Func<AWizard, bool> checkCollisions = null)
         {
-            if (turnTo != null && RemainingFrozen == 0)
-                Angle += Utility.EnsureInterval(GetAngleTo(turnTo), MaxTurnAngle);
+            var result = true;
+            var turn = RemainingFrozen == 0 && turnTo != null ? GetAngleTo(turnTo) : 0;
 
-            var isFrozen = RemainingFrozen > 0;
-            SkipTick();
-
-            if (!isFrozen && to != null && !Utility.PointsEqual(this, to))
+            if (RemainingFrozen == 0 && to != null && !Utility.PointsEqual(this, to))
             {
                 var angle = GetAngleTo(to);
                 var myDir = Point.ByAngle(Angle);
@@ -115,10 +112,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     X -= move.X;
                     Y -= move.Y;
-                    return false;
+                    result = false;
                 }
             }
-            return true;
+
+            Angle += Utility.EnsureInterval(turn, MaxTurnAngle);
+
+            SkipTick();
+            return result;
         }
 
         public override void EthalonMove(ACircularUnit target)
