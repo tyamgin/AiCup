@@ -7,6 +7,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - если перевес сил на бонусе, то бросать его
  * - идти в ближний бой, если между нами нету других
  * - Улучшить cancastmagicmissile
  * - когда мало жизней от фаербольшика держаться подальше
@@ -36,7 +37,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static ABuilding[] OpponentBuildings;
         public static ACombatUnit[] Combats, OpponentCombats, MyCombats;
 
-        public static AProjectile[][] ProjectilesPaths;
+        public static AProjectile[][] ProjectilesPaths1;
 
         public void Move(Wizard self, World world, Game game, Move move)
         {
@@ -66,7 +67,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 1800;
+                Visualizer.Visualizer.DrawSince = 2300;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();

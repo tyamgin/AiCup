@@ -8,8 +8,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class AProjectile : ACircularUnit
     {
-        public static readonly int MicroTicks = 10;
-
         public double SpeedX, SpeedY, Speed;
         public ProjectileType Type;
         public double RemainingDistance;
@@ -119,6 +117,24 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Y += SpeedY/MicroTicks;
         }
 
+        public int MicroTicks
+        {
+            get
+            {
+                switch (Type)
+                {
+                    case ProjectileType.MagicMissile:
+                        return 8;
+                    case ProjectileType.FrostBolt:
+                        return 7;
+                    case ProjectileType.Fireball:
+                        return 6;
+                    default:
+                        return 10;
+                }
+            }
+        }
+
         public delegate bool CheckProjectile(AProjectile proj);
 
         public bool Move(CheckProjectile check = null)
@@ -215,10 +231,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var list = new List<ProjectilePathSegment>();
             var projectile = new AProjectile(this);
             var owner = nearestUnits.FirstOrDefault(x => x.Id == OwnerUnitId);
-            var nearestCandidates = nearestUnits
-                .Where(x => x.Id != OwnerUnitId)
-                .Select(Utility.CloneCombat)
-                .ToArray();
+            var nearestCandidates = nearestUnits.Where(x => x.Id != OwnerUnitId).Select(Utility.CloneCombat).ToArray();
 
             var minionsTargetsSelector = new TargetsSelector(nearestUnits) {EnableMinionsCache = true};
 
@@ -290,16 +303,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
                         list.Add(new ProjectilePathSegment
                         {
-                            StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
-                            EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
-                            OpponentDamage = oppDamage, 
-                            SelfDamage = selfDamage, 
-                            OpponentDeadsCount = oppDeads, 
-                            SelfDeadsCount = selfDeads, 
-                            State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball, 
-                            OpponentBurned = oppBurned, 
-                            SelfBurned = selfBurned, 
-                            Target = importantTarget,
+                            StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, OpponentDamage = oppDamage, SelfDamage = selfDamage, OpponentDeadsCount = oppDeads, SelfDeadsCount = selfDeads, State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball, OpponentBurned = oppBurned, SelfBurned = selfBurned, Target = importantTarget,
                         });
                     }
                     else
@@ -313,12 +317,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 var opp = inter as ACombatUnit;
                                 list.Add(new ProjectilePathSegment
                                 {
-                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
-                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, 
-                                    State = ProjectilePathState.Shot, 
-                                    Target = Utility.CloneCombat(opp),
-                                    SelfDamage = proj.Faction == inter.Faction ? Math.Min(opp.Life, Damage) : 0,
-                                    OpponentDamage = Utility.HasConflicts(proj, opp) ? Math.Min(opp.Life, Damage) : 0,
+                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, State = ProjectilePathState.Shot, Target = Utility.CloneCombat(opp), SelfDamage = proj.Faction == inter.Faction ? Math.Min(opp.Life, Damage) : 0, OpponentDamage = Utility.HasConflicts(proj, opp) ? Math.Min(opp.Life, Damage) : 0,
                                 });
                             }
                         }
@@ -328,14 +327,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             {
                                 list.Add(new ProjectilePathSegment
                                 {
-                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
-                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
-                                    State = ProjectilePathState.Free,
+                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, State = ProjectilePathState.Free,
                                 });
                             }
                         }
                     }
-                    list.Last().EndDistance += proj.Speed/AProjectile.MicroTicks;
+                    list.Last().EndDistance += proj.Speed/proj.MicroTicks;
 
                     return true;
                 });

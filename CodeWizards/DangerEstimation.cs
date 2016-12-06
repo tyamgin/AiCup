@@ -412,9 +412,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var totalDamage = 0.0;
 
-            for (var projIdx = 0; projIdx < ProjectilesPaths[0].Length; projIdx++)
+            foreach (var arr in ProjectilesPaths1)
             {
-                if (ProjectilesPaths[0][projIdx].GetDistanceTo2(ASelf) > Geom.Sqr(1000))
+                if (arr[0].GetDistanceTo2(ASelf) > Geom.Sqr(1000))
                     continue;
 
                 var fireballMinDist = 1000.0;
@@ -423,10 +423,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
                 {
                     var cur = myStates[Math.Min(ticksPassed, myStates.Count - 1)];
-                    for (var mt = 0; mt < AProjectile.MicroTicks; mt++)
+                    for (var mt = 0; mt < arr[0].MicroTicks; mt++)
                     {
-                        var microTick = ticksPassed * AProjectile.MicroTicks + mt + 1;
-                        var proj = ProjectilesPaths[microTick][projIdx];
+                        var microTick = ticksPassed * arr[0].MicroTicks + mt + 1;
+                        var proj = arr[microTick];
 
                         if (!proj.Exists)
                         {
@@ -445,7 +445,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            if (proj.IntersectsWith(cur))
+                            var prevProj = arr[microTick - 1];
+                            var t1 = proj.IntersectsWith(cur);
+                            var t2 = Geom.SegmentCircleIntersects(prevProj, proj, cur, cur.Radius + proj.Radius);
+                            if (!t1 && t2 && (mt != 0 || ticksPassed != 0))
+                            {
+                                t2 = t2;
+                            }
+                            if (t1 || t2)
                             {
                                 totalDamage += proj.Damage;
                                 ticksPassed = ProjectilesCheckTicks; // выход из внешнего цикла
@@ -524,16 +531,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void InitializeProjectiles()
         {
-            ProjectilesPaths = new AProjectile[ProjectilesCheckTicks * AProjectile.MicroTicks + 1][];
-            ProjectilesPaths[0] = ProjectilesObserver.Projectiles.Select(x => new AProjectile(x)).ToArray();
-            for (var i = 1; i <= ProjectilesCheckTicks * AProjectile.MicroTicks; i++)
+            var projectiles = ProjectilesObserver.Projectiles;
+            ProjectilesPaths1 = new AProjectile[projectiles.Length][];
+            for (var i = 0; i < projectiles.Length; i++)
             {
-                ProjectilesPaths[i] = ProjectilesPaths[i - 1].Select(x =>
+                var proj = projectiles[i];
+                ProjectilesPaths1[i] = new AProjectile[ProjectilesCheckTicks * proj.MicroTicks + 1];
+                ProjectilesPaths1[i][0] = new AProjectile(proj);
+                for (var j = 1; j < ProjectilesPaths1[i].Length; j++)
                 {
-                    var next = new AProjectile(x);
-                    next.MicroMove();
-                    return next;
-                }).ToArray();
+                    ProjectilesPaths1[i][j] = new AProjectile(ProjectilesPaths1[i][j - 1]);
+                    ProjectilesPaths1[i][j].MicroMove();
+                }
             }
         }
 
