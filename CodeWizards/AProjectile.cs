@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -206,17 +207,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return 1;
         }
 
-        public List<ProjectilePathSegment> Emulate(ACombatUnit[] _units)
+        public List<ProjectilePathSegment> Emulate(ACombatUnit[] nearestUnits, double wizardsChangeAngle)
         {
             if (Type != ProjectileType.MagicMissile && Type != ProjectileType.FrostBolt && Type != ProjectileType.Fireball)
                 throw new NotImplementedException();
 
             var list = new List<ProjectilePathSegment>();
             var projectile = new AProjectile(this);
-            var units = _units.Where(x => x.Id != OwnerUnitId).Select(Utility.CloneCombat).ToArray();
-            var owner = _units.FirstOrDefault(x => x.Id == OwnerUnitId);
+            var owner = nearestUnits.FirstOrDefault(x => x.Id == OwnerUnitId);
+            var nearestCandidates = nearestUnits
+                .Where(x => x.Id != OwnerUnitId)
+                .Select(Utility.CloneCombat)
+                .ToArray();
 
-            var minionsTargetsSelector = new TargetsSelector(_units) {EnableMinionsCache = true};
+            var minionsTargetsSelector = new TargetsSelector(nearestUnits) {EnableMinionsCache = true};
 
             while (projectile.Exists)
             {
@@ -233,7 +237,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                         ACombatUnit importantTarget = null;
 
-                        foreach (var unit in units)
+                        foreach (var unit in nearestCandidates)
                         {
                             var damage = GetFireballDamage(proj, unit);
 
@@ -300,7 +304,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        var inter = proj.CheckIntersections(units);
+                        var inter = proj.CheckIntersections(nearestCandidates);
 
                         if (inter != null)
                         {
@@ -335,16 +339,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     return true;
                 });
-                foreach (var unit in units)
+                foreach (var unit in nearestCandidates)
                 {
                     if (unit is AWizard)
                     {
-                        // TODO: он может убежать боком
                         var wizard = unit as AWizard;
-                        var dir = wizard - this + wizard; // вдоль снаряда
+                        var dir = (wizard - this).RotateClockwise(wizardsChangeAngle) + wizard; // вдоль снаряда
                         wizard.MoveTo(dir, null, w =>
                         {
                             var tree = TreesObserver.GetNearestTree(w);
+                            // TODO: крипы и башни?
                             return tree == null || !w.IntersectsWith(tree);
                         });
                     }

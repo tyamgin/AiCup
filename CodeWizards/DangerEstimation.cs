@@ -128,10 +128,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (dist < outer)
                     res -= GoToBonusDanger - dist/outer*GoToBonusDanger;
             }
-            
+
             // прижиматься к центру дорожки
-            var distToLine = RoadsHelper.Roads.Min(seg => seg.GetDistanceTo(my));
-            var linePadding = 150.0;
+            var nearestRoad = RoadsHelper.Roads.ArgMin(seg => seg.GetDistanceTo(my));
+            var distToLine = nearestRoad.GetDistanceTo(my);
+            var linePadding = nearestRoad.LaneType == ALaneType.Middle || nearestRoad.LaneType == ALaneType.Middle2 ? 250.0 : 160.0;
             var outerPadding = 500;
             if (distToLine > linePadding && distToLine < outerPadding)
                 res += (distToLine - linePadding)/(outerPadding - linePadding)*10;

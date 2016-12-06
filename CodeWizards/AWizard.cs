@@ -93,7 +93,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Y += move.Y;
         }
 
-        public bool MoveTo(Point to, Point turnTo, Func<AWizard, bool> checkCollisions = null)
+        public virtual bool MoveTo(Point to, Point turnTo, Func<AWizard, bool> checkCollisions = null)
         {
             var result = true;
             var turn = RemainingFrozen == 0 && turnTo != null ? GetAngleTo(turnTo) : 0;
@@ -162,9 +162,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     continue;
 
                 var proj = new AProjectile(this, angle, ProjectileType.MagicMissile);
-                var path = proj.Emulate(new[] {(ACombatUnit) opp});
-                if (path.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != Faction)) //IsOpponent?
+                if (Utility.Range(0, Math.PI, 2).All(changeAngle =>
+                {
+                    var path = proj.Emulate(new[] {(ACombatUnit) opp}, changeAngle);
+                    return path.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != Faction);
+                }))
+                {
                     return true;
+                }
             }
             return false;
         }

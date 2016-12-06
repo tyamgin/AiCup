@@ -377,6 +377,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
             else
             {
+
                 double
                     selPriority = int.MaxValue,
                     selAngleTo = 0;
@@ -401,7 +402,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                         var priority = GetCombatPriority(self, combat);
                         if (combat.IsOpponent &&
-                            (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo))
+                            (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo) &&
+                            Utility.Range(0, Math.PI, 2).All(changeAngle =>
+                             {
+                                 var pth = proj.Emulate(new[] { Combats.FirstOrDefault(x => x.Id == combat.Id) }, changeAngle);
+                                 return pth.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != self.Faction);
+                             })
+                            )
                         {
                             selTarget = combat;
                             selCastAngle = angle;
@@ -587,7 +594,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             )
                         {
                             var proj = new AProjectile(my, 0, ProjectileType.Fireball);
-                            var path = proj.Emulate(nearest);
+                            var path = proj.Emulate(nearest, 0.0);
 
                             var damage =
                                 path.Where(x => _isFireballGoodSeg(my, x))
@@ -669,7 +676,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         List<AProjectile.ProjectilePathSegment> EmulateProjectileWithNearest(AProjectile projectile)
         {
-            return projectile.Emulate(Combats.Where(x => x.GetDistanceTo(ASelf) - x.Radius < 900).ToArray());
+            return projectile.Emulate(Combats.Where(x => x.GetDistanceTo(ASelf) - x.Radius < 900).ToArray(), 0.0);
         }
 
         static double GetCombatPriority(AWizard self, ACombatUnit unit)

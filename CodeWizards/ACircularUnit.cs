@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
         }
 
-        public bool IntersectsWith(ACircularUnit unit)
+        public virtual bool IntersectsWith(ACircularUnit unit)
         {
             // если касаются, то false
             return GetDistanceTo2(unit) < Geom.Sqr(Radius + unit.Radius);
