@@ -7,6 +7,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - идти в ближний бой, если между нами нету других
+ * - Улучшить cancastmagicmissile
  * - когда мало жизней от фаербольшика держаться подальше
  * - хаста, не изусать advanced mm
  * - не идти за нейтралами
@@ -64,7 +66,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 1000;
+                Visualizer.Visualizer.DrawSince = 1800;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -364,7 +366,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (self.RemainingMagicMissileCooldownTicks == 0)
                 {
                     var proj = new AProjectile(self, 0, ProjectileType.MagicMissile);
-                    var path = EmulateMagicMissile(proj);
+                    var path = EmulateProjectileWithNearest(proj);
                     if (path.Count == 0 || path[path.Count - 1].EndDistance < self.CastRange - Const.Eps)
                     {
                         move.MinCastDistance = path[path.Count - 1].EndDistance;

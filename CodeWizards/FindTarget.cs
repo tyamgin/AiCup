@@ -351,7 +351,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 foreach (var angle in angles)
                 {
                     var proj = new AProjectile(new AWizard(self), angle, projectileType);
-                    var path = EmulateMagicMissile(proj);
+                    var path = EmulateProjectileWithNearest(proj);
                     for (var i = 0; i < path.Count; i++)
                     {
                         var seg = path[i];
@@ -384,7 +384,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 foreach (var angle in angles)
                 {
                     var proj = new AProjectile(new AWizard(self), angle, projectileType);
-                    var path = EmulateMagicMissile(proj);
+                    var path = EmulateProjectileWithNearest(proj);
                     for (var i = 0; i < path.Count; i++)
                     {
                         if (path[i].State == AProjectile.ProjectilePathState.Free)
@@ -667,10 +667,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        List<AProjectile.ProjectilePathSegment> EmulateMagicMissile(AProjectile projectile)
+        List<AProjectile.ProjectilePathSegment> EmulateProjectileWithNearest(AProjectile projectile)
         {
-            // TODO: не передавать всех, а только ближайших
-            return projectile.Emulate(Combats);
+            return projectile.Emulate(Combats.Where(x => x.GetDistanceTo(ASelf) - x.Radius < 900).ToArray());
         }
 
         static double GetCombatPriority(AWizard self, ACombatUnit unit)

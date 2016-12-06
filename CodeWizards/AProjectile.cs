@@ -266,7 +266,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 }
                             }
                         }
-                        if (owner != null && !projectile.IntersectsWith(owner))
+                        if (owner != null)
                         {
                             var damage = GetFireballDamage(proj, owner);
                             if (damage > 0)
