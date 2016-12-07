@@ -423,9 +423,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
                 {
                     var cur = myStates[Math.Min(ticksPassed, myStates.Count - 1)];
-                    for (var mt = 0; mt < arr[0].MicroTicks; mt++)
+                    for (var mt = 0; mt <= arr[0].MicroTicks; mt++)
                     {
-                        var microTick = ticksPassed * arr[0].MicroTicks + mt + 1;
+                        var microTick = ticksPassed * arr[0].MicroTicks + mt;
                         var proj = arr[microTick];
 
                         if (!proj.Exists)
