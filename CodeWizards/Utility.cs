@@ -175,9 +175,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             list.RemoveAt(list.Count - 1);
         }
 
-        public delegate double OrderFunc<in T>(T value);
-
-        public static T ArgMin<T>(this IEnumerable<T> ie, OrderFunc<T> func)
+        public static T ArgMin<T>(this IEnumerable<T> ie, Func<T, double> func)
         {
             var minValue = double.MaxValue;
             var res = default(T);

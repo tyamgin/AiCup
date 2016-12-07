@@ -28,7 +28,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return GetDistanceTo2(unit) < Geom.Sqr(Radius + unit.Radius);
         }
 
-        public ACircularUnit CheckIntersections(IEnumerable<ACircularUnit> units)
+        public ACircularUnit GetFirstIntersection(IEnumerable<ACircularUnit> units)
         {
             return units.FirstOrDefault(x => x.Id != Id && IntersectsWith(x));
         }

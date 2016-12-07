@@ -135,9 +135,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
         }
 
-        public delegate bool CheckProjectile(AProjectile proj);
-
-        public bool Move(CheckProjectile check = null)
+        public bool Move(Func<AProjectile, bool> check = null)
 
         {
             var prev = new Point(this);
@@ -308,7 +306,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        var inter = proj.CheckIntersections(nearestCandidates);
+                        var inter = proj.GetFirstIntersection(nearestCandidates);
 
                         if (inter != null)
                         {
@@ -345,7 +343,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         wizard.MoveTo(dir, null, w =>
                         {
                             var tree = TreesObserver.GetNearestTree(w);
-                            // TODO: крипы и башни?
+                            // TODO: коллизия с крипами и башнями?
                             return tree == null || !w.IntersectsWith(tree);
                         });
                     }

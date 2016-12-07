@@ -245,7 +245,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        private bool _TryGoByGradient(Func<AWizard, double> costFunction, Func<AWizard, bool> condition, FinalMove move)
+        private bool _TryGoByGradient(Func<AWizard, double> costFunction, Func<AWizard, bool> firstMoveCondition, FinalMove move)
         {
             var self = new AWizard(ASelf);
 
@@ -281,8 +281,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     if (canMove)
                     {
-                        canMove = my.MoveTo(moveTo, null, w =>
-                            obstacles.All(ob => !Geom.SegmentCircleIntersects(self, w, ob, ob.Radius + self.Radius)));
+                        canMove = my.MoveTo(moveTo, null, w => w.GetFirstIntersection(obstacles) == null);
                         if (TreesObserver.GetNearestTrees(my).Any(t => t.IntersectsWith(my)))
                             break;
                     }
@@ -301,7 +300,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (tar != null || x is AWizard)
                             x.EthalonMove(tar);
                     }
-                    if (vec.Count == 1 && condition != null && !condition(my))
+                    if (vec.Count == 1 && firstMoveCondition != null && !firstMoveCondition(my))
                     {
                         ok = false;
                         break;

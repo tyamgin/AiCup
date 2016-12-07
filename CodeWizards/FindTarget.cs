@@ -722,7 +722,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool CheckIntersectionsAndTress(AWizard self, IEnumerable<ACircularUnit> units)
         {
-            if (self.CheckIntersections(units) != null)
+            if (self.GetFirstIntersection(units) != null)
                 return true;
             var nearestTree = TreesObserver.GetNearestTree(self);
             return nearestTree != null && self.IntersectsWith(nearestTree);

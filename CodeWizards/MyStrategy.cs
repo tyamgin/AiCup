@@ -19,6 +19,7 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * - если атакуем башню - не убегать за бонусом
  * - прятаться в тени
  * ?- прикрываться деревьями (особенно от визардов)
+ * - тормозит CanCastMM 
  */
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -595,7 +596,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
 
                 if (my.GetDistanceTo(opp) <= my.CastRange + opp.Radius + Game.MagicMissileRadius)
-                    return true;
+                {
+                    var tmp = opp.RemainingFrozen;
+                    opp.RemainingFrozen = 100500;
+                    var canCast = my.EthalonCanCastMagicMissile(opp, checkCooldown: false, checkAngle: false);
+                    opp.RemainingFrozen = tmp;
+                    if (canCast)
+                        return true;
+                }
 
                 my.CastRange = prevCastRange;
             }

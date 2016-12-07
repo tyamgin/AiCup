@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
@@ -7,9 +8,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     partial class MyStrategy
     {
-        public delegate ALaneType SelectLaneFunc(AWizard w);
-        public delegate SkillType? SelectSkillFunc(AWizard w);
-
         public void MasterSendMessages()
         {
             if (World.TickIndex == 0)
@@ -21,7 +19,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 for (var i = 0; i < sorted.Count; i++)
                     order[sorted[i].Id] = i;
 
-                SelectLaneFunc selectLane = x =>
+                Func<AWizard, ALaneType> selectLane = x =>
                 {
                     if (order[x.Id] <= 1)
                         return ALaneType.Top;
@@ -31,7 +29,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return ALaneType.Middle;
                 };
 
-                SelectSkillFunc selectSkill = x =>
+                Func<AWizard, SkillType?> selectSkill = x =>
                 {
                     // TODO
                     return null;
