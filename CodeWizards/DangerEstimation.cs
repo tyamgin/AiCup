@@ -445,9 +445,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
                         else
                         {
-                            var prevProj = arr[microTick - 1];
                             var t1 = proj.IntersectsWith(cur);
-                            var t2 = Geom.SegmentCircleIntersects(prevProj, proj, cur, cur.Radius + proj.Radius);
+                            var t2 = microTick > 0 && Geom.SegmentCircleIntersects(arr[microTick - 1], proj, cur, cur.Radius + proj.Radius);
                             if (!t1 && t2 && (mt != 0 || ticksPassed != 0))
                             {
                                 t2 = t2;
