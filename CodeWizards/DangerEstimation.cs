@@ -341,12 +341,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool TryPreDodgeProjectile()
         {
-            const int preTicks = 4;
+            const int preTicks = 13;
             var opp = OpponentWizards
                 .FirstOrDefault(x => 
                     Math.Min(x.RemainingActionCooldownTicks, x.RemainingMagicMissileCooldownTicks) <= preTicks
-                    && x.GetDistanceTo(ASelf) <= x.CastRange + ASelf.Radius + Game.MagicMissileRadius
-                    && Math.Abs(x.GetAngleTo(ASelf)) <= Game.StaffSector / 2
+                    && x.GetDistanceTo(ASelf) <= x.CastRange + ASelf.Radius + Game.MagicMissileRadius + 5
+                    && Math.Abs(x.GetAngleTo(ASelf)) <= Game.StaffSector /* /2*/
                 );
 
             if (opp == null)

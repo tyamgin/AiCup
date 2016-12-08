@@ -343,10 +343,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (Math.Abs(angleTo) > Math.PI/3)
                     continue;
 
-                angles.AddRange(Utility.Range(-Game.StaffSector / 2, Game.StaffSector / 2, 16));
-                // нужно найти хотябы 1
-                break;
+                var deltaAngle = Math.Atan2(x.Radius, distTo);
+                angles.AddRange(new[] {angleTo, angleTo + deltaAngle, angleTo - deltaAngle}.Where(a => Math.Abs(a) <= Game.StaffSector/2));
             }
+            if (angles.Count > 0)
+                angles.AddRange(Utility.Range(-Game.StaffSector / 2, Game.StaffSector / 2, 16));
 
             ACombatUnit selTarget = null;
             double
