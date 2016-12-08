@@ -7,6 +7,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
+        private long _LastMmTarget = 0;
+
         Target _findTarget(AWizard self, Point moveTo)
         {
             var t0 = FindBonusTarget(self);
@@ -52,6 +54,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     FinalMove.MinCastDistance = tmm.Move.MinCastDistance;
                     FinalMove.MaxCastDistance = tmm.Move.MaxCastDistance;
                     FinalMove.CastAngle = tmm.Move.CastAngle;
+                    _LastMmTarget = tmm.TargetId;
                     return new Target {MoveTo = tmm.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus};
                 }
             }
@@ -229,6 +232,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     Func<ACombatUnit, bool> check = x =>
                     {
+                        if ((opp is AWizard) && (opp as AWizard).IsBesieded)
+                            return true;
+
                         if (canHitNow && x.Id == opp.Id) // он и так доставал
                             return true;
 
@@ -246,7 +252,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     };
 
                     if (opp is AWizard)
+                    {
                         ticks -= 5;
+                        if ((opp as AWizard).IsBesieded)
+                        {
+                            ticks -= 10;
+                        }
+                    }
 
                     if (ok && ticks < minTicks)
                     {
@@ -519,7 +531,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         ticks++;
                     }
 
-                    if (his is AWizard && CanRush(my, his))
+                    if (his is AWizard && (his as AWizard).IsBesieded)
                         ticks -= 15; // чтобы дать больше приоритета визарду
 
                     var priority = GetCombatPriority(self, his);
@@ -684,7 +696,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             // чем меньше - тем важнее стрелять в него первого
             var res = unit.Life;
             if (unit is AWizard)
+            {
                 res /= 4;
+                if ((unit as AWizard).IsBesieded)
+                    res /= 4;
+            }
             var dist = self.GetDistanceTo(unit);
             if (dist <= Game.StaffRange + unit.Radius + 10)
             {

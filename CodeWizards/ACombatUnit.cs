@@ -8,7 +8,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public bool IsTeammate;
         public virtual bool IsOpponent => !IsTeammate;
 
-        public double Life;
+        public double Life, MaxLife;
         public double VisionRange;
         public double CastRange;
         public int RemainingActionCooldownTicks;
@@ -23,10 +23,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         protected ACombatUnit(LivingUnit unit) : base(unit)
         {
             IsTeammate = unit.Faction == MyStrategy.Self.Faction;
+            Life = unit.Life;
+            MaxLife = unit.MaxLife;
             var wizard = unit as Wizard;
             if (wizard != null)
             {
-                Life = wizard.Life;
                 VisionRange = wizard.VisionRange;
                 CastRange = wizard.CastRange;
                 RemainingActionCooldownTicks = wizard.RemainingActionCooldownTicks;
@@ -34,7 +35,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var building = unit as Building;
             if (building != null)
             {
-                Life = building.Life;
                 VisionRange = building.VisionRange;
                 CastRange = building.AttackRange;
                 RemainingActionCooldownTicks = building.RemainingActionCooldownTicks;
@@ -42,7 +42,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var minion = unit as Minion;
             if (minion != null)
             {
-                Life = minion.Life;
                 VisionRange = minion.VisionRange;
                 if (minion.Type == MinionType.FetishBlowdart)
                     CastRange = MyStrategy.Game.FetishBlowdartAttackRange;
@@ -76,6 +75,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             IsTeammate = unit.IsTeammate;
             Life = unit.Life;
+            MaxLife = unit.MaxLife;
             VisionRange = unit.VisionRange;
             CastRange = unit.CastRange;
             RemainingActionCooldownTicks = unit.RemainingActionCooldownTicks;
@@ -118,5 +118,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         }
 
         public virtual bool IsAssailable => true;
+
+        public void ApplyDamage(double damage)
+        {
+            // TODO: умения
+            if (RemainingShielded > 0)
+                damage -= damage * MyStrategy.Game.ShieldedDirectDamageAbsorptionFactor;
+            Life -= damage;
+            if (Life < 0)
+                Life = 0;
+        }
     }
 }

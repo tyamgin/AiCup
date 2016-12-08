@@ -31,7 +31,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (GoAwayCond(my, wizard))
                         outer += GoAwaySafeDist - Game.MagicMissileRadius;
                     var coeff = 45;
-                    //if (!HasSuperiority || !CanRush(my, wizard)) // TODO
+                    if (wizard.IsBesieded)
+                    {
+                        var otr = my.VisionRange * 1.3;
+                        if (dist < otr)
+                            res -= 10 + 60 - dist/otr*60;
+                    }
+                    else
                     {
                         if (dist < inner)
                             res += (wizard.StaffDamage + wizard.MagicMissileDamage)*2;

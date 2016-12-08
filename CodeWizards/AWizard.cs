@@ -20,6 +20,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public int[] SkillsFactorsArr; // какие у меня умения (без учета аур)
         public int[] AurasFactorsArr; // какие на меня действуют ауры (в т.ч. мои)
 
+        public bool IsBesieded;
+
         public AWizard(Wizard unit) : base(unit)
         {
             IsMaster = unit.IsMaster;
@@ -54,6 +56,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             SkillsFactorsArr = unit.SkillsFactorsArr.ToArray();
             AurasFactorsArr = unit.AurasFactorsArr.ToArray();
             MaxMana = unit.MaxMana;
+            IsBesieded = unit.IsBesieded;
         }
 
         public override void SkipTick()
@@ -62,9 +65,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             for (var i = 0; i < RemainingCooldownTicksByAction.Length; i++)
                 Utility.Dec(ref RemainingCooldownTicksByAction[i]);
 
-            Mana += MyStrategy.Game.WizardBaseManaRegeneration + MyStrategy.Game.WizardManaRegenerationGrowthPerLevel * Level;
-            if (Mana > MaxMana)
-                Mana = MaxMana;
+            if (Life > Const.Eps)
+            {
+                Mana += MyStrategy.Game.WizardBaseManaRegeneration +
+                        MyStrategy.Game.WizardManaRegenerationGrowthPerLevel*Level;
+                if (Mana > MaxMana)
+                    Mana = MaxMana;
+
+                Life += MyStrategy.Game.WizardBaseLifeRegeneration +
+                        MyStrategy.Game.WizardLifeRegenerationGrowthPerLevel*Level;
+                if (Life > MaxLife)
+                    Life = MaxLife;
+            }
         }
 
         public static Point _getHalfEllipseDxDy(double a, double b, double c, double angle)
@@ -202,10 +214,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
         }
 
-        public int RemainingStaffCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Staff];
-            
-        public int RemainingMagicMissileCooldownTicks => RemainingCooldownTicksByAction[(int) ActionType.MagicMissile];
-            
+        public int RemainingStaffCooldownTicks
+        {
+            get { return RemainingCooldownTicksByAction[(int) ActionType.Staff]; }
+            set { RemainingCooldownTicksByAction[(int)ActionType.Staff] = value; }
+        }
+
+        public int RemainingMagicMissileCooldownTicks
+        {
+            get { return RemainingCooldownTicksByAction[(int) ActionType.MagicMissile]; }
+            set { RemainingCooldownTicksByAction[(int)ActionType.MagicMissile] = value; }
+        }
+
         public int RemainingFrostBoltCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.FrostBolt];
             
         public int RemainingFireballCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Fireball];
@@ -293,5 +313,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return true;
             }
         }
+
+        public bool IsAlive => Life > Const.Eps;
     }
 }

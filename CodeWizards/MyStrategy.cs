@@ -214,6 +214,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 });
             }
 
+            foreach (var opp in OpponentWizards)
+                if (opp.GetDistanceTo(ASelf) < ASelf.VisionRange)
+                    opp.IsBesieded = EmulateRush(ASelf, opp) > 30;
 
             if (Self.IsMaster && World.TickIndex == 0)
             {
@@ -608,6 +611,101 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 my.CastRange = prevCastRange;
             }
             return false;
+        }
+
+        void _rushTo(AWizard self, AWizard opp)
+        {
+            // TODO: check angle
+            if (self.RemainingStaffCooldownTicks == 0
+                && self.RemainingActionCooldownTicks == 0
+                && self.GetDistanceTo(opp) <= Game.StaffRange + opp.Radius)
+            {
+                opp.ApplyDamage(self.StaffDamage);
+                self.RemainingStaffCooldownTicks = Game.StaffCooldownTicks;
+                self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
+            }
+
+            if (self.RemainingMagicMissileCooldownTicks == 0
+                && self.RemainingActionCooldownTicks == 0
+                && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
+            {
+                opp.ApplyDamage(self.MagicMissileDamage);
+                self.RemainingMagicMissileCooldownTicks = Game.MagicMissileCooldownTicks;
+                self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
+            }
+
+            if (self.GetDistanceTo(opp) > Game.StaffRange + opp.Radius)
+            {
+                self.MoveTo(opp, opp);
+            }
+            self.SkipTick();
+            opp.SkipTick();
+        }
+
+        double EmulateRush(AWizard self, AWizard opp)
+        {
+            TimerStart();
+            var ret = _emulateRush(self, opp);
+            TimerEndLog("EmulateRush", 1);
+            return ret;
+        }
+
+        double _emulateRush(AWizard self, AWizard opp)
+        {
+            var nearest = Combats.Where(x => x.GetDistanceTo(ASelf) < ASelf.VisionRange*1.4).Select(Utility.CloneCombat).ToArray();
+            self = nearest.FirstOrDefault(x => x.Id == self.Id) as AWizard;
+            opp = nearest.FirstOrDefault(x => x.Id == opp.Id) as AWizard;
+            
+            if (self == null || opp == null/* || nearest.Count(x => x.IsOpponent && x is AWizard) > 1*/)
+                return int.MinValue;
+
+            var tergetsSelector = new TargetsSelector(nearest);
+            if (opp.Id == _LastMmTarget && World.Projectiles.Any(x => x.OwnerUnitId == self.Id))
+                opp.ApplyDamage(self.MagicMissileDamage);
+
+            while (true)
+            {
+                _rushTo(self, opp);
+                foreach (var unit in nearest)
+                {
+                    if (unit.Id == self.Id)
+                        continue;
+                    if (unit is AWizard)
+                    {
+                        if (unit.IsOpponent)
+                            _rushTo(unit as AWizard, self);
+                        else
+                            unit.SkipTick();
+                    }
+                    else if (unit is AMinion)
+                    {
+                        var tar = tergetsSelector.Select(unit);
+                        unit.EthalonMove(tar);
+                        if (tar != null && unit.EthalonCanHit(tar))
+                        {
+                            if (tar is AFetish)
+                            {
+                                unit.RemainingActionCooldownTicks = Game.FetishBlowdartActionCooldownTicks - 1;
+                                tar.ApplyDamage(Game.DartDirectDamage);
+                            }
+                            else
+                            {
+                                unit.RemainingActionCooldownTicks =  Game.OrcWoodcutterActionCooldownTicks - 1;
+                                tar.ApplyDamage(Game.OrcWoodcutterDamage);
+                            }
+                        }
+                    }
+                }
+                
+                if (!self.IsAlive)
+                    return -opp.Life;
+                if (!opp.IsAlive)
+                {
+                    if (nearest.Where(x => x.IsOpponent && x is AWizard).Sum(x => x.Life) > self.Life)
+                        return int.MinValue;
+                    return self.Life;
+                }
+            }
         }
     }
 }
