@@ -485,6 +485,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         continue;
 
                     Point firstMoveTo = null;
+                    var buildingsHit = false;
                     while (!my.EthalonCanCastMagicMissile(his, checkCooldown: false))
                     {
                         if (ticks > 40)
@@ -515,6 +516,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             if (x.Id == my.Id)
                                 continue;
                             var tar = targetsSelector.Select(x);
+                            buildingsHit = buildingsHit ||
+                                           (x.IsOpponent && x is ABuilding && tar != null && tar.Id == my.Id && x.EthalonCanHit(my));
+
                             if (x.IsOpponent)
                                 x.EthalonMove(tar ?? my);
                             else if (tar != null)
@@ -538,7 +542,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 if (canHitNow && x.Id == opp.Id) // он и так доставал
                                     return true;
 
-                                if (!x.EthalonCanHit(my))
+                                if (!x.EthalonCanHit(my) && (!(x is ABuilding) || !buildingsHit))
                                     return true;
 
                                 if (his.Id == x.Id && CanRush(my, x))

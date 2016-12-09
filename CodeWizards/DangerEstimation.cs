@@ -629,7 +629,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool GoAwayCond(AWizard self, AWizard opp)
         {
-            return self.Life <= GoAwayMaxLife && CanRush(opp, self);
+            return self.Life <= GoAwayMaxLife && CanRush(opp, self) && !opp.IsBesieded;
         }
 
         bool GoAwayDetect()

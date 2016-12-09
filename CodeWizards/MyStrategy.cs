@@ -564,7 +564,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (GoAwayCond(my, opp as AWizard))
                             my.CastRange = opp.CastRange + GoAwaySafeDist;
                         else if (my.CastRange < opp.CastRange)
-                            my.CastRange = opp.CastRange;
+                            my.CastRange = my.CastRange + 25; // HACK: чтобы не бояться подходить к тем у кого прокачан range 
                     }
                 }
                 if (bld != null)
@@ -622,6 +622,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
             {
                 opp.ApplyDamage(self.FrostBoltDamage);
+                opp.RemainingFrozen = Game.FrozenDurationTicks;
                 self.RemainingFrostBoltCooldownTicks = Game.FrostBoltCooldownTicks;
                 self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
             }
