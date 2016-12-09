@@ -72,11 +72,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         }
 
-        public override bool EthalonCanHit(ACircularUnit target)
+        public override bool EthalonCanHit(ACircularUnit target, bool checkCooldown = true)
         {
             if (RemainingFrozen > 0)
                 return false;
-            if (RemainingActionCooldownTicks > 0)
+            if (checkCooldown && RemainingActionCooldownTicks > 0)
                 return false;
 
             var angleTo = GetAngleTo(target);
@@ -98,11 +98,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         }
 
-        public override bool EthalonCanHit(ACircularUnit target)
+        public override bool EthalonCanHit(ACircularUnit target, bool checkCooldown = true)
         {
             if (RemainingFrozen > 0)
                 return false;
-            if (RemainingActionCooldownTicks > 0)
+            if (checkCooldown && RemainingActionCooldownTicks > 0)
                 return false;
 
             var angleTo = GetAngleTo(target);

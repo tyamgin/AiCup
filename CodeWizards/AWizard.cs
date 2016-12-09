@@ -186,19 +186,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
-        public override bool EthalonCanHit(ACircularUnit target)
+        public override bool EthalonCanHit(ACircularUnit target, bool checkCooldown = true)
         {
-            if (CanStaffAttack(target))
+            if (CanStaffAttack(target, checkCooldown))
                 return true;
 
-            return EthalonCanCastMagicMissile(target);
+            return EthalonCanCastMagicMissile(target, checkCooldown);
         }
 
-        public bool CanStaffAttack(ACircularUnit unit)
+        public bool CanStaffAttack(ACircularUnit unit, bool checkCooldown = true)
         {
             if (RemainingFrozen > 0)
                 return false;
-            if (RemainingActionCooldownTicks > 0 || RemainingStaffCooldownTicks > 0)
+            if (checkCooldown && (RemainingActionCooldownTicks > 0 || RemainingStaffCooldownTicks > 0))
                 return false;
             if (GetDistanceTo2(unit) > Geom.Sqr(MyStrategy.Game.StaffRange + unit.Radius))
                 return false;
@@ -210,7 +210,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public ACircularUnit[] GetStaffAttacked(IEnumerable<ACircularUnit> candidates)
         {
             return candidates
-                .Where(CanStaffAttack)
+                .Where(x => CanStaffAttack(x))
                 .ToArray();
         }
 

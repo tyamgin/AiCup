@@ -7,8 +7,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - bottom
  * - если перевес сил на бонусе, то бросать его
- * - идти в ближний бой, если между нами нету других
  * - Улучшить cancastmagicmissile
  * - когда мало жизней от фаербольшика держаться подальше
  * - хаста, не изусать advanced mm
@@ -192,16 +192,29 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             FetishTargetsSelector = new TargetsSelector(Combats) {EnableMinionsCache = true};
 
             BuildingsDangerTriangles = new List<Point[]>();
-            var top0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 1 && x.Lane == ALaneType.Top);
+            var top1 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 1 && x.Lane == ALaneType.Top);
+            if (top1 != null)
+            {
+                BuildingsDangerTriangles.Add(new[]
+                {
+                    top1 + new Point(top1.Radius + Const.WizardRadius, 0),
+                    top1 + new Point(-top1.Radius, -(top1.Radius * 7 + Const.WizardRadius)),
+                    top1 + new Point(-top1.Radius, 0),
+                });
+            }
+
+            var top0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsOpponent && x.Order == 0 && x.Lane == ALaneType.Top);
             if (top0 != null)
             {
                 BuildingsDangerTriangles.Add(new[]
                 {
-                    top0 + new Point(top0.Radius + Const.WizardRadius, 0),
-                    top0 + new Point(-top0.Radius, -(top0.Radius * 7 + Const.WizardRadius)),
-                    top0 + new Point(-top0.Radius, 0),
+                    top0 + new Point(0, top0.Radius + Const.WizardRadius),
+                    top0 + new Point(top0.Radius * 7 + Const.WizardRadius, -top0.Radius),
+                    top0 + new Point(0, -top0.Radius),
                 });
             }
+
+            // TODO: bottom
 
             var bottom0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 0 && x.Lane == ALaneType.Bottom);
             if (bottom0 != null)

@@ -196,12 +196,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var his = nearstCombats.FirstOrDefault(x => x.Id == opp.Id);
 
                     var allowRush = opp is AFetish || opp is AWizard;
-
-                    var tmp = opp.RemainingActionCooldownTicks; // HACK: чтобы не бояться нападать посохом
-                    if (allowRush)
-                        opp.RemainingActionCooldownTicks = 0;
-                    var canHitNow = opp.EthalonCanHit(self);
-                    opp.RemainingActionCooldownTicks = tmp;
+                    var canHitNow = opp.EthalonCanHit(self, checkCooldown: !allowRush);
 
                     var ticks = 0;
                     var ok = true;
@@ -485,7 +480,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         .Where(x => x.IsOpponent)
                         .ToArray();
 
-                    var canHitNow = opp.EthalonCanHit(self);
+                    var canHitNow = opp.EthalonCanHit(self, checkCooldown: !(opp is AWizard));
 
                     var ticks = 0;
                     var my = nearest.FirstOrDefault(x => x.Id == self.Id) as AWizard;

@@ -28,9 +28,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             SkipTick();
         }
 
-        public override bool EthalonCanHit(ACircularUnit target)
+        public override bool EthalonCanHit(ACircularUnit target, bool checkCooldown = true)
         {
-            return RemainingActionCooldownTicks == 0 && 
+            return (!checkCooldown || RemainingActionCooldownTicks == 0) && 
                 GetDistanceTo2(target) <= Geom.Sqr(CastRange);
         }
 

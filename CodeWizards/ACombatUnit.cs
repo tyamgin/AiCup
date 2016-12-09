@@ -112,7 +112,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             throw new NotImplementedException();
         }
 
-        public virtual bool EthalonCanHit(ACircularUnit target)
+        public virtual bool EthalonCanHit(ACircularUnit target, bool checkCooldown = true)
         {
             throw new NotImplementedException();
         }
