@@ -381,7 +381,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var my = new AWizard(ASelf);
             var selLane = Utility.IsBase(target) ? MessagesObserver.GetLane() : RoadsHelper.GetLane(target);
             var nearestBuilding = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
-            var buildings = nearestBuilding.Id == target.Id ? new[] { nearestBuilding } : new[] { nearestBuilding, target};
+
+            var buildings = new List<ABuilding>();
+            if (nearestBuilding.GetDistanceTo(my) > nearestBuilding.VisionRange)
+                buildings.Add(nearestBuilding);
+            if (target.IsOpponent && target.Id != nearestBuilding.Id && target is ABuilding)
+                buildings.Add((ABuilding) target);
 
             var path = DijkstraFindPath(ASelf, pos =>
             {
