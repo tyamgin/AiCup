@@ -411,11 +411,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         var priority = GetCombatPriority(self, combat);
                         if (combat.IsOpponent &&
                             (priority < selPriority || Utility.Equals(priority, selPriority) && angleTo < selAngleTo) &&
-                            Utility.Range(0, Math.PI, 2).All(changeAngle =>
-                             {
-                                 var pth = proj.Emulate(new[] { Combats.FirstOrDefault(x => x.Id == combat.Id) }, changeAngle);
-                                 return pth.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != self.Faction);
-                             })
+                            self.CheckProjectileCantDodge(proj, Combats.FirstOrDefault(x => x.Id == combat.Id))
                             )
                         {
                             selTarget = combat;

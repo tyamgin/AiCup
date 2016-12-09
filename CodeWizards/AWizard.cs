@@ -174,16 +174,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     continue;
 
                 var proj = new AProjectile(this, angle, ProjectileType.MagicMissile);
-                if (Utility.Range(0, Math.PI, 2).All(changeAngle =>
-                {
-                    var path = proj.Emulate(new[] {(ACombatUnit) opp}, changeAngle);
-                    return path.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != Faction);
-                }))
-                {
+                if (CheckProjectileCantDodge(proj, opp as ACombatUnit))
                     return true;
-                }
             }
             return false;
+        }
+
+        public bool CheckProjectileCantDodge(AProjectile proj, ACombatUnit opp)
+        {
+            return (opp is AWizard ? Utility.Range(-Math.PI/2, Math.PI/2, 4) : new [] {0.0}).All(changeAngle =>
+            {
+                var path = proj.Emulate(new[] {opp}, changeAngle);
+                return path.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != Faction);
+            });
         }
 
         public override bool EthalonCanHit(ACircularUnit target, bool checkCooldown = true)
