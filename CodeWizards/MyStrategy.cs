@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 7600;
+                Visualizer.Visualizer.DrawSince = 3000;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -612,7 +612,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
             {
                 opp.ApplyDamage(self.MagicMissileDamage);
-                self.RemainingMagicMissileCooldownTicks = Game.MagicMissileCooldownTicks;
+                self.RemainingMagicMissileCooldownTicks = self.MmSkillLevel == 5 ? 0 : Game.MagicMissileCooldownTicks;
+                self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
+            }
+
+            if (self.FrozenSkillLevel == 5
+                && self.RemainingFrostBoltCooldownTicks == 0
+                && self.RemainingActionCooldownTicks == 0
+                && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
+            {
+                opp.ApplyDamage(self.FrostBoltDamage);
+                self.RemainingFrostBoltCooldownTicks = Game.FrostBoltCooldownTicks;
                 self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
             }
 
@@ -621,7 +631,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 self.MoveTo(opp, opp);
             }
             self.SkipTick();
-            opp.SkipTick();
         }
 
         double EmulateRush(AWizard self, AWizard opp)

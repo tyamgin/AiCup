@@ -123,7 +123,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     {
                         var outer = building.CastRange;
                         if (dist <= outer)
-                            res += 30 - dist/outer*30 + building.Damage;
+                            res += 90 - dist/outer*90 + building.Damage;
                     }
                     else if (building.IsBesieded)
                     {
@@ -136,7 +136,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     {
                         var inner = Game.StaffRange + building.Radius; // откуда можно достать посохом
                         var outer = building.CastRange + my.Radius; // куда достреливает башня
-                        double delta = -10;
+                        double delta = -80;
                         if (dist < inner)
                             res += building.Damage - delta;
                         else if (dist < outer)
@@ -422,7 +422,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (opp == null)
                 return false;
 
-            if (Math.Abs(ASelf.GetAngleTo(opp)) < Math.PI/2)
+            if (Math.Abs(ASelf.GetAngleTo(opp)) < Math.PI/2 && ASelf.GetDistanceTo(opp) > 500)
             {
                 var obstacles = Combats.Where(x => x.Id != Self.Id && x.GetDistanceTo(ASelf) < 300).ToArray();
                 var selSign = 0;

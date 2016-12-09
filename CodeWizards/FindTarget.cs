@@ -697,7 +697,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 res /= 4;
                 if ((unit as AWizard).IsBesieded)
+                {
                     res /= 4;
+                    res -= 50;
+                }
             }
             var dist = self.GetDistanceTo(unit);
             if (dist <= Game.StaffRange + unit.Radius + 10)

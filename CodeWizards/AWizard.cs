@@ -226,8 +226,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             set { RemainingCooldownTicksByAction[(int)ActionType.MagicMissile] = value; }
         }
 
-        public int RemainingFrostBoltCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.FrostBolt];
-            
+        public int RemainingFrostBoltCooldownTicks
+        {
+            get { return RemainingCooldownTicksByAction[(int) ActionType.FrostBolt]; }
+            set { RemainingCooldownTicksByAction[(int)ActionType.FrostBolt] = value; }
+        }
+
         public int RemainingFireballCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Fireball];
 
         public int RemainingHasteCooldownTicks => RemainingCooldownTicksByAction[(int)ActionType.Haste];
