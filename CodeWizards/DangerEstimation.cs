@@ -415,7 +415,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var opp = OpponentWizards
                 .FirstOrDefault(x => 
                     Math.Min(x.RemainingActionCooldownTicks, x.RemainingMagicMissileCooldownTicks) <= preTicks
-                    && x.GetDistanceTo(ASelf) <= x.CastRange + ASelf.Radius + Game.MagicMissileRadius + 5
+                    && x.GetDistanceTo(ASelf) <= x.CastRange + ASelf.Radius + Game.MagicMissileRadius + 7
                     && Math.Abs(x.GetAngleTo(ASelf)) <= Game.StaffSector /* /2*/
                 );
 
