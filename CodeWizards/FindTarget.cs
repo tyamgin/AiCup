@@ -495,8 +495,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             break;
 
                         var m = moveTo;
+                        var stopIfCannotMove = true;
                         if (m == null && my.EthalonCanCastMagicMissile(his, checkCooldown: false, checkAngle: false))
                         {
+                            stopIfCannotMove = false;
                             m = my + (my - his);
                             var tmp = new AWizard(my);
                             tmp.MoveTo(m, his, w => !CheckIntersectionsAndTress(w, nearest));
@@ -509,7 +511,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (ticks == 0)
                             firstMoveTo = m;
 
-                        if (!my.MoveTo(m, his, w => !CheckIntersectionsAndTress(w, nearest)) && Utility.PointsEqual(m, his))
+                        if (!my.MoveTo(m, his, w => !CheckIntersectionsAndTress(w, nearest)) && Utility.PointsEqual(m, his) && stopIfCannotMove)
                             break;
                         
                         foreach (var x in nearest)

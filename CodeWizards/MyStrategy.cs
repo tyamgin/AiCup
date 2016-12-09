@@ -465,18 +465,32 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
+        bool _skipBonusCond()
+        {
+            var oppFirst = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsOpponent && x.Lane == MessagesObserver.GetLane() && x.Order == 0);
+            if (oppFirst == null || ASelf.GetDistanceTo(oppFirst) <= oppFirst.CastRange)
+                return true;
+
+            var myFirst = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Lane == MessagesObserver.GetLane() && x.Order == 0);
+            if (myFirst == null || OpponentWizards.Any(x => x.GetDistanceTo(myFirst) <= myFirst.Radius))
+                return true;
+
+            // TODO
+            return false;
+        }
+
         MovingInfo _goToBonus()
         {
             const int magic = 45; // запас
             var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
-            if (Game.IsSkillsEnabled && World.TickIndex > 3500) // брать только первый бонус со скилами
-                return selMovingInfo;
-
             if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + magic)
                 return selMovingInfo;
             if (ASelf.GetDistanceTo(BuildingsObserver.OpponentBase) < BuildingsObserver.OpponentBase.CastRange*1.4)
+                return selMovingInfo;
+
+            if (Game.IsSkillsEnabled && _skipBonusCond())
                 return selMovingInfo;
 
             var my = new AWizard(ASelf);
