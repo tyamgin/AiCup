@@ -65,10 +65,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerStart();
             _move(self, world, game, move);
             PrevTickIndex = World.TickIndex;
+
+            if (move.Action == ActionType.Fireball)
+            {
+                ProjectilesObserver.MyFireballExplosionPoint = ASelf + Point.ByAngle(ASelf.Angle + move.CastAngle)*move.MinCastDistance;
+            }
+
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 15000;
+                Visualizer.Visualizer.DrawSince = 7600;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -173,63 +179,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (ASelf == null)
                 throw new Exception("Self not found in wizards list");
 
-            foreach (var building in OpponentBuildings)
-            {
-                building.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
-                if (Game.IsSkillsEnabled)
-                {
-                    if (building.OpponentsCount >= 4)
-                        building.IsBesieded = true;
-                }
-                else
-                {
-                    if (building.IsBase && building.OpponentsCount >= 7 || !building.IsBase && building.OpponentsCount >= 5)
-                        building.IsBesieded = true;
-                }
-            }
-
-            HasSuperiority = _ourSuperiorityDetect();
-            FetishTargetsSelector = new TargetsSelector(Combats) {EnableMinionsCache = true};
-
-            BuildingsDangerTriangles = new List<Point[]>();
-            var top1 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 1 && x.Lane == ALaneType.Top);
-            if (top1 != null)
-            {
-                BuildingsDangerTriangles.Add(new[]
-                {
-                    top1 + new Point(top1.Radius + Const.WizardRadius, 0),
-                    top1 + new Point(-top1.Radius, -(top1.Radius * 7 + Const.WizardRadius)),
-                    top1 + new Point(-top1.Radius, 0),
-                });
-            }
-
-            var top0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsOpponent && x.Order == 0 && x.Lane == ALaneType.Top);
-            if (top0 != null)
-            {
-                BuildingsDangerTriangles.Add(new[]
-                {
-                    top0 + new Point(0, top0.Radius + Const.WizardRadius),
-                    top0 + new Point(top0.Radius * 7 + Const.WizardRadius, -top0.Radius),
-                    top0 + new Point(0, -top0.Radius),
-                });
-            }
-
-            // TODO: bottom
-
-            var bottom0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 0 && x.Lane == ALaneType.Bottom);
-            if (bottom0 != null)
-            {
-                BuildingsDangerTriangles.Add(new[]
-                {
-                    bottom0 + new Point(0, -(bottom0.Radius + Const.WizardRadius)),
-                    bottom0 + new Point(bottom0.Radius * 7 + Const.WizardRadius, bottom0.Radius),
-                    bottom0 + new Point(0, bottom0.Radius),
-                });
-            }
-
-            foreach (var opp in OpponentWizards)
-                if (opp.GetDistanceTo(ASelf) < ASelf.VisionRange)
-                    opp.IsBesieded = EmulateRush(ASelf, opp) > 30;
+            InitializeDangerEstimation();
 
             if (Self.IsMaster && World.TickIndex == 0)
             {

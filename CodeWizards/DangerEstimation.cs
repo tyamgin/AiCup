@@ -14,6 +14,76 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public TargetsSelector FetishTargetsSelector;
         public static List<Point[]> BuildingsDangerTriangles;
 
+        void InitializeDangerEstimation()
+        {
+            foreach (var building in OpponentBuildings)
+            {
+                building.OpponentsCount = MyCombats.Count(x => x.GetDistanceTo(building) <= building.VisionRange);
+                if (Game.IsSkillsEnabled)
+                {
+                    if (building.OpponentsCount >= 4)
+                        building.IsBesieded = true;
+                }
+                else
+                {
+                    if (building.IsBase && building.OpponentsCount >= 7 || !building.IsBase && building.OpponentsCount >= 5)
+                        building.IsBesieded = true;
+                }
+            }
+
+            HasSuperiority = _ourSuperiorityDetect();
+            FetishTargetsSelector = new TargetsSelector(Combats) { EnableMinionsCache = true };
+
+            BuildingsDangerTriangles = new List<Point[]>();
+            var top1 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 1 && x.Lane == ALaneType.Top);
+            if (top1 != null)
+            {
+                BuildingsDangerTriangles.Add(new[]
+                {
+                    top1 + new Point(top1.Radius + Const.WizardRadius, 0),
+                    top1 + new Point(-top1.Radius, -(top1.Radius * 7 + Const.WizardRadius)),
+                    top1 + new Point(-top1.Radius, 0),
+                });
+            }
+
+            var top0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsOpponent && x.Order == 0 && x.Lane == ALaneType.Top);
+            if (top0 != null)
+            {
+                BuildingsDangerTriangles.Add(new[]
+                {
+                    top0 + new Point(0, top0.Radius + Const.WizardRadius),
+                    top0 + new Point(top0.Radius * 7 + Const.WizardRadius, -top0.Radius),
+                    top0 + new Point(0, -top0.Radius),
+                });
+            }
+
+            var bottom1 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsOpponent && x.Order == 1 && x.Lane == ALaneType.Bottom);
+            if (bottom1 != null)
+            {
+                BuildingsDangerTriangles.Add(new[]
+                {
+                    bottom1 + new Point(-(bottom1.Radius + Const.WizardRadius), 0),
+                    bottom1 + new Point(bottom1.Radius, -(bottom1.Radius * 7 + Const.WizardRadius)),
+                    bottom1 + new Point(bottom1.Radius, 0),
+                });
+            }
+
+            var bottom0 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 0 && x.Lane == ALaneType.Bottom);
+            if (bottom0 != null)
+            {
+                BuildingsDangerTriangles.Add(new[]
+                {
+                    bottom0 + new Point(0, -(bottom0.Radius + Const.WizardRadius)),
+                    bottom0 + new Point(bottom0.Radius * 7 + Const.WizardRadius, bottom0.Radius),
+                    bottom0 + new Point(0, bottom0.Radius),
+                });
+            }
+
+            foreach (var opp in OpponentWizards)
+                if (opp.GetDistanceTo(ASelf) < ASelf.VisionRange)
+                    opp.IsBesieded = EmulateRush(ASelf, opp) > 30;
+        }
+
         double EstimateDanger(AWizard my)
         {
             double res = 0;
@@ -442,21 +512,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (proj.Type == ProjectileType.Fireball)
                         {
                             var dist = cur.GetDistanceTo(proj);
-                            if (dist < fireballMinDist)
+
+                            if (dist < fireballMinDist && (proj.OwnerUnitId != Self.Id || proj.RemainingDistance < Const.Eps)) // для своих фаерболов точно известно когда взорвется
                             {
                                 fireballMinDist = dist;
                                 fireballMinDistState = proj;
                             }
                         }
                         else
-                        {
-                            var t1 = proj.IntersectsWith(cur);
-                            var t2 = microTick > 0 && Geom.SegmentCircleIntersects(arr[microTick - 1], proj, cur, cur.Radius + proj.Radius);
-                            if (!t1 && t2 && (mt != 0 || ticksPassed != 0))
-                            {
-                                t2 = t2;
-                            }
-                            if (t1 || t2)
+                        {   
+                            if (proj.IntersectsWith(cur) || microTick > 0 && Geom.SegmentCircleIntersects(arr[microTick - 1], proj, cur, cur.Radius + proj.Radius))
                             {
                                 totalDamage += proj.Damage;
                                 ticksPassed = ProjectilesCheckTicks; // выход из внешнего цикла
@@ -467,7 +532,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
 
                 if (fireballMinDistState != null)
+                {
                     totalDamage += AProjectile.GetFireballDamage(fireballMinDistState, myStates.Last());
+                }
             }
             return totalDamage;
         }

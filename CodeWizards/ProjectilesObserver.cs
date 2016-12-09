@@ -51,6 +51,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         proj.SetupDamage(owner);
                 }
             }
+
+            var myFireball = MyStrategy.World.Projectiles.FirstOrDefault(
+                x => x.Type == ProjectileType.Fireball && x.OwnerUnitId == MyStrategy.Self.Id);
+            if (myFireball != null)
+            {
+                newDict[myFireball.Id] = new AProjectile(myFireball)
+                {
+                    RemainingDistance = MyFireballExplosionPoint.GetDistanceTo(myFireball)
+                };
+            }
+
+
             // которые были и пропали не попадут в newDict
 
             _projectiles = newDict;
@@ -68,6 +80,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             }
 #endif
         }
+
+        public static Point MyFireballExplosionPoint = Point.Zero;
 
         public static AProjectile[] Projectiles => _projectiles.Values.ToArray();
     }
