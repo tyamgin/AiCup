@@ -121,12 +121,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void ApplyDamage(double damage)
         {
-            // TODO: умения
             if (RemainingShielded > 0)
                 damage -= damage * MyStrategy.Game.ShieldedDirectDamageAbsorptionFactor;
             Life -= damage;
             if (Life < 0)
                 Life = 0;
         }
+
+        public void ApplyMagicalDamage(double damage)
+        {
+            // TODO: умения и ауры щита
+            ApplyDamage(damage);
+        }
+
+        public bool IsAlive => Life > Const.Eps;
     }
 }

@@ -31,7 +31,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
 
-            HasSuperiority = _ourSuperiorityDetect();
             FetishTargetsSelector = new TargetsSelector(Combats) { EnableMinionsCache = true };
 
             BuildingsDangerTriangles = new List<Point[]>();
@@ -256,36 +255,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return res;
         }
 
-
-        public static bool HasSuperiority;
-
-        static bool _ourSuperiorityDetect()
-        {
-            var ourPower = 0.0;
-            var oppPower = 0.0;
-            foreach (var x in Combats)
-            {
-                if (ASelf.GetDistanceTo(x) - x.Radius < ASelf.VisionRange)
-                    continue;
-
-                var power = 0.0;
-                if (x is AWizard)
-                {
-                    power += x.Life;
-                }
-                else if (x is AMinion)
-                {
-                    power += x.Life/2;
-                }
-
-                if (x.IsTeammate)
-                    ourPower += power;
-                else if (x.IsOpponent)
-                    oppPower += power;
-            }
-            return ourPower > oppPower;
-        }
-
         List<Tuple<Point, double>> CalculateDangerMap()
         {
             double range = Self.VisionRange * 1.1,
@@ -332,7 +301,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             var danger = costFunction(self); // for debug
-            List<double> selVec = null;
+            List<double> selVec = null; // for debug
             var minDanger = double.MaxValue;
             Point selMoveTo = null;
 
@@ -634,6 +603,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool GoAwayDetect()
         {
+            if (Const.UpRightCorner.GetDistanceTo(ASelf) < 800)
+                return false;
+
             var nearest = OpponentWizards
                 .Where(x => ASelf.GetDistanceTo(x) < x.CastRange + ASelf.Radius + GoAwayMaxDist && GoAwayCond(ASelf, x))
                 .ArgMin(x => x.GetDistanceTo2(ASelf));

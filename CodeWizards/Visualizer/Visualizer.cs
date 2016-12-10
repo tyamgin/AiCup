@@ -219,9 +219,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 var w = MyStrategy.World.Wizards.FirstOrDefault(x => x.Id == wizard.Id);
                 var color = w.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange);
 
-                if (wizard.Id == MyStrategy.Self.Id && MyStrategy.HasSuperiority)
-                    FillCircle(Color.Green, wizard.X, wizard.Y, 10);
-
                 DrawCircle(color, w.X, w.Y, wizard.Radius);
 
                 var d = 7;

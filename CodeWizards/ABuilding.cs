@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public override ACombatUnit SelectTarget(ACombatUnit[] candidates)
         {
             var accessible = candidates
-                .Where(x => x.Faction != Faction.Neutral && x.Faction != Faction && GetDistanceTo2(x) <= Geom.Sqr(CastRange))
+                .Where(x => x.Faction != Faction.Neutral && x.Faction != Faction && x.IsAlive && GetDistanceTo2(x) <= Geom.Sqr(CastRange))
                 .ToArray();
 
             ACombatUnit sel = null;

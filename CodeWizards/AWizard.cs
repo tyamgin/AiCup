@@ -139,9 +139,24 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             MoveTo(target, target, w => !w.IntersectsWith(target));
         }
 
+        public bool CanUseMagicMissile(bool checkCooldown = true)
+        {
+            if (checkCooldown)
+                if (RemainingMagicMissileCooldownTicks > 0 || RemainingActionCooldownTicks > 0 || Mana < MyStrategy.Game.MagicMissileManacost)
+                    return false;
+            
+            if (RemainingFrozen > 0)
+                return false;
+
+            return true;
+        }
+
         public bool EthalonCanCastMagicMissile(ACircularUnit opp, bool checkCooldown = true, bool checkAngle = true)
         {
-            double tmp = Angle;
+            if (!CanUseMagicMissile(checkCooldown))
+                return false;
+
+            var tmp = Angle;
             if (!checkAngle)
                 Angle += GetAngleTo(opp); // поворачиваем, чтобы угол до цели был 0
             var ret = _ethalonCanCastMagicMissile(opp, checkCooldown);
@@ -152,14 +167,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public bool _ethalonCanCastMagicMissile(ACircularUnit opp, bool checkCooldown)
         {
-            if (checkCooldown)
-            {
-                if (RemainingMagicMissileCooldownTicks > 0 || RemainingActionCooldownTicks > 0 || Mana < MyStrategy.Game.MagicMissileManacost)
-                    return false;
-            }
-            if (RemainingFrozen > 0)
-                return false;
-
             var distTo = GetDistanceTo(opp);
             if (distTo > CastRange + opp.Radius + MyStrategy.Game.MagicMissileRadius)
                 return false;
@@ -182,7 +189,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public bool CheckProjectileCantDodge(AProjectile proj, ACombatUnit opp)
         {
-            return (opp is AWizard ? Utility.Range(-Math.PI/2, Math.PI/2, 4) : new [] {0.0}).All(changeAngle =>
+            return (opp is AWizard ? Utility.Range(-Math.PI/2, Math.PI/2, 4) : new[] {0.0}).All(changeAngle =>
             {
                 var path = proj.Emulate(new[] {opp}, changeAngle);
                 return path.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != Faction);
@@ -197,16 +204,39 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return EthalonCanCastMagicMissile(target, checkCooldown);
         }
 
-        public bool CanStaffAttack(ACircularUnit unit, bool checkCooldown = true)
+        public bool CanUseStaff(bool checkCooldown = true)
         {
             if (RemainingFrozen > 0)
                 return false;
             if (checkCooldown && (RemainingActionCooldownTicks > 0 || RemainingStaffCooldownTicks > 0))
                 return false;
+            return true;
+        }
+
+        public bool CanStaffAttack(ACircularUnit unit, bool checkCooldown = true)
+        {
+            if (!CanUseStaff(checkCooldown))
+                return false;
+
             if (GetDistanceTo2(unit) > Geom.Sqr(MyStrategy.Game.StaffRange + unit.Radius))
                 return false;
             if (Math.Abs(GetAngleTo(unit)) > MyStrategy.Game.StaffSector/2)
                 return false;
+            return true;
+        }
+
+        public bool CanUseFrostBolt(bool checkCooldown = true)
+        {
+            if (FrozenSkillLevel != 5)
+                return false;
+
+            if (checkCooldown)
+                if (RemainingFrostBoltCooldownTicks > 0 || RemainingActionCooldownTicks > 0 || Mana < MyStrategy.Game.FrostBoltManacost)
+                    return false;
+
+            if (RemainingFrozen > 0)
+                return false;
+
             return true;
         }
 
@@ -320,7 +350,5 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return true;
             }
         }
-
-        public bool IsAlive => Life > Const.Eps;
     }
 }

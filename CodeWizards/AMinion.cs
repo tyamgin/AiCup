@@ -50,7 +50,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             return candidates
                 .Where(c =>
-                    Utility.HasConflicts(this, c)
+                    c.IsAlive
+                    && Utility.HasConflicts(this, c)
                     && GetDistanceTo2(c) < Geom.Sqr(MyStrategy.Game.MinionVisionRange)
                 )
                 .ArgMin(GetDistanceTo2);

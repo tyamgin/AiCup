@@ -20,6 +20,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         };
 
         public static Point[] MapCorners = new Point[4];
+        public static Point UpRightCorner;
 
         public static ProjectileInfo[] ProjectileInfo = new ProjectileInfo[4];
 
@@ -30,7 +31,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             MapCorners[0] = new Point(0, 0);
             MapCorners[1] = new Point(0, MapSize);
-            MapCorners[2] = new Point(MapSize, 0);
+            MapCorners[2] = UpRightCorner = new Point(MapSize, 0);
             MapCorners[3] = new Point(MapSize, MapSize);
 
             ProjectileInfo[(int) ProjectileType.MagicMissile] = new ProjectileInfo

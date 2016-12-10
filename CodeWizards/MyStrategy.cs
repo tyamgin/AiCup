@@ -7,7 +7,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * - bottom
  * - если перевес сил на бонусе, то бросать его
  * - Улучшить cancastmagicmissile
  * - когда мало жизней от фаербольшика держаться подальше
@@ -16,7 +15,6 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * 
- * - если атакуем башню - не убегать за бонусом
  * - прятаться в тени
  * ?- прикрываться деревьями (особенно от визардов)
  * - тормозит CanCastMM 
@@ -598,8 +596,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         void _rushTo(AWizard self, AWizard opp)
         {
             // TODO: check angle
-            if (self.RemainingStaffCooldownTicks == 0
-                && self.RemainingActionCooldownTicks == 0
+            if (self.CanUseStaff()
                 && self.GetDistanceTo(opp) <= Game.StaffRange + opp.Radius)
             {
                 opp.ApplyDamage(self.StaffDamage);
@@ -607,21 +604,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
             }
 
-            if (self.RemainingMagicMissileCooldownTicks == 0
-                && self.RemainingActionCooldownTicks == 0
+            if (self.CanUseMagicMissile()
                 && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
             {
-                opp.ApplyDamage(self.MagicMissileDamage);
+                opp.ApplyMagicalDamage(self.MagicMissileDamage);
                 self.RemainingMagicMissileCooldownTicks = self.MmSkillLevel == 5 ? 0 : Game.MagicMissileCooldownTicks;
                 self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
             }
 
-            if (self.FrozenSkillLevel == 5
-                && self.RemainingFrostBoltCooldownTicks == 0
-                && self.RemainingActionCooldownTicks == 0
+            if (self.CanUseFrostBolt()
                 && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
             {
-                opp.ApplyDamage(self.FrostBoltDamage);
+                opp.ApplyMagicalDamage(self.FrostBoltDamage);
                 opp.RemainingFrozen = Game.FrozenDurationTicks;
                 self.RemainingFrostBoltCooldownTicks = Game.FrostBoltCooldownTicks;
                 self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
@@ -648,12 +642,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             self = nearest.FirstOrDefault(x => x.Id == self.Id) as AWizard;
             opp = nearest.FirstOrDefault(x => x.Id == opp.Id) as AWizard;
             
-            if (self == null || opp == null/* || nearest.Count(x => x.IsOpponent && x is AWizard) > 1*/)
+            if (self == null || opp == null)
                 return int.MinValue;
 
             var tergetsSelector = new TargetsSelector(nearest);
             if (opp.Id == _LastMmTarget && World.Projectiles.Any(x => x.OwnerUnitId == self.Id))
-                opp.ApplyDamage(self.MagicMissileDamage);
+                opp.ApplyMagicalDamage(self.MagicMissileDamage);
 
             while (true)
             {
@@ -667,7 +661,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (unit.IsOpponent)
                             _rushTo(unit as AWizard, self);
                         else
-                            unit.SkipTick();
+                            unit.SkipTick(); // TODO: тоже нужно
                     }
                     else if (unit is AMinion)
                     {
@@ -675,7 +669,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         unit.EthalonMove(tar);
                         if (tar != null && unit.EthalonCanHit(tar))
                         {
-                            if (tar is AFetish)
+                            if (unit is AFetish)
                             {
                                 unit.RemainingActionCooldownTicks = Game.FetishBlowdartActionCooldownTicks - 1;
                                 tar.ApplyDamage(Game.DartDirectDamage);

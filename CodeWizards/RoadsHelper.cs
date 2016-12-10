@@ -31,16 +31,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     new LaneSegment(b, d, ALaneType.Middle2),
                 };
 
-                AllowedForMiddle = Roads
-                    .Where(r => r.LaneType == ALaneType.Middle || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > 900)
-                    .ToArray();
-                AllowedForTop = Roads
-                    .Where(r => r.LaneType == ALaneType.Top || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > 900)
-                    .ToArray();
-                AllowedForBottom = Roads
-                    .Where(r => r.LaneType == ALaneType.Bottom || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > 900)
-                    .ToArray();
-
                 MagicConst.MinionAppearencePoints = new[]
                 {
                     new Point(Const.BaseBuildingDistance * 2.5, Const.MapSize - Const.BaseBuildingDistance * 0.5),
@@ -53,6 +43,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     appPt.Y = Const.MapSize - appPt.Y;
                 }
             }
+
+            const int startTicksThreshold = 900;
+            AllowedForMiddle = Roads
+                .Where(r => r.LaneType == ALaneType.Middle || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > startTicksThreshold)
+                .ToArray();
+            AllowedForTop = Roads
+                .Where(r => r.LaneType == ALaneType.Top || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > startTicksThreshold)
+                .ToArray();
+            AllowedForBottom = Roads
+                .Where(r => r.LaneType == ALaneType.Bottom || r.LaneType == ALaneType.Middle2 && MyStrategy.World.TickIndex > startTicksThreshold)
+                .ToArray();
         }
 
         public static ALaneType GetLane(Point self)
