@@ -185,6 +185,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 return;
             }
 
+            var nearestBonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(ASelf));
+            var opponentsAroundBonus = OpponentWizards.Where(w => nearestBonus.GetDistanceTo(w) < ASelf.VisionRange * 1.5).ToArray();
+            var teammatesAroundBonus = MyWizards.Where(w => ASelf.GetDistanceTo(w) < ASelf.VisionRange * 1.5).ToArray();
+
+
+
             var goAway = GoAwayDetect();
             var bonusMoving = goAway ? new MovingInfo(null, int.MaxValue, null) : GoToBonus();
             var target = FindTarget(new AWizard(ASelf), bonusMoving.Target);
@@ -236,17 +242,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             FinalMove.CastAngle = bonusMoving.Move.CastAngle;
                         }
 
-                        var bns = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(ASelf));
-                        var opps = OpponentWizards.Where(w => bns.GetDistanceTo(w) < ASelf.VisionRange*1.5).ToArray();
-                        //var mines = OpponentWizards.Where(w => w.IsTeammate && ASelf.GetDistanceTo(w) < ASelf.VisionRange * 1.5).ToArray();
-
                         NextBonusWaypoint = ASelf + (NextBonusWaypoint - ASelf).Normalized() * (Self.Radius + 30);
-                        GoToBonusDanger = 7;
 
-                        if (bns.GetDistanceTo(ASelf) < ASelf.VisionRange*1.5 &&
-                            bns.GetDistanceTo(ASelf) > 100 &&
-                                          opps.Length <= 1 &&
-                                          ASelf.Life + 10 >= (opps.FirstOrDefault() ?? ASelf).Life &&
+                        if (nearestBonus.GetDistanceTo(ASelf) < ASelf.VisionRange*1.5 &&
+                            nearestBonus.GetDistanceTo(ASelf) > 100 &&
+                                          opponentsAroundBonus.Length <= 1 &&
+                                          ASelf.Life + 10 >= (opponentsAroundBonus.FirstOrDefault() ?? ASelf).Life &&
                                           OpponentMinions.Count(x => x.GetDistanceTo(ASelf) < Game.FetishBlowdartAttackRange) == 0
                                           )
                             FinalMove.MoveTo(NextBonusWaypoint, null);

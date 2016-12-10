@@ -35,8 +35,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return null;
                 };
 
-                FinalMove.Messages = Wizards
-                    .Where(x => x.IsTeammate && x.Id != Self.Id)
+                FinalMove.Messages = MyWizards
+                    .Where(x => x.Id != Self.Id)
                     .OrderBy(x => x.Id)
                     .Select(x =>
                     {

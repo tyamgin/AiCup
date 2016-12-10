@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     partial class MyStrategy
     {
         public static double CantMoveDanger = 300;
-        public static double GoToBonusDanger;
+        public static double GoToBonusDanger = 7;
         public static TargetsSelector MinionsTargetsSelector;
         public static List<Point[]> BuildingsDangerTriangles;
 
@@ -597,8 +597,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         void GoAway()
         {
-            if (ASelf.GetDistanceTo(BuildingsObserver.MyBase) > Game.FactionBaseVisionRange)
-                GoAround(BuildingsObserver.MyBase);
+            GoAround(BuildingsObserver.MyBase);
         }
 
         public static int GoAwayMaxLife = 45;
@@ -613,6 +612,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         bool GoAwayDetect()
         {
             if (Const.TopRightCorner.GetDistanceTo(ASelf) < 800)
+                return false;
+            if (ASelf.GetDistanceTo(BuildingsObserver.MyBase) <= Game.FactionBaseVisionRange)
                 return false;
 
             var nearest = OpponentWizards

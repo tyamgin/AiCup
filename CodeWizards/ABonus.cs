@@ -11,6 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public BonusType Type;
         public int RemainingAppearanceTicks;
+        public bool Skip;
 
         public ABonus(Bonus bonus) : base(bonus)
         {
@@ -22,6 +23,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             Type = bonus.Type;
             RemainingAppearanceTicks = bonus.RemainingAppearanceTicks;
+            Skip = bonus.Skip;
         }
 
         public ABonus()
