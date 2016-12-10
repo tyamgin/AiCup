@@ -72,7 +72,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 3000;
+                Visualizer.Visualizer.DrawSince = 7200;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -596,6 +596,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         void _rushTo(AWizard self, AWizard opp)
         {
             // TODO: check angle
+
+            if (self.CanUseFrostBolt()
+                && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
+            {
+                opp.ApplyMagicalDamage(self.FrostBoltDamage);
+                opp.RemainingFrozen = Game.FrozenDurationTicks;
+                self.RemainingFrostBoltCooldownTicks = Game.FrostBoltCooldownTicks;
+                self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
+            }
+
             if (self.CanUseStaff()
                 && self.GetDistanceTo(opp) <= Game.StaffRange + opp.Radius)
             {
@@ -609,15 +619,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 opp.ApplyMagicalDamage(self.MagicMissileDamage);
                 self.RemainingMagicMissileCooldownTicks = self.MmSkillLevel == 5 ? 0 : Game.MagicMissileCooldownTicks;
-                self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
-            }
-
-            if (self.CanUseFrostBolt()
-                && self.GetDistanceTo(opp) <= Game.WizardCastRange + opp.Radius)
-            {
-                opp.ApplyMagicalDamage(self.FrostBoltDamage);
-                opp.RemainingFrozen = Game.FrozenDurationTicks;
-                self.RemainingFrostBoltCooldownTicks = Game.FrostBoltCooldownTicks;
                 self.RemainingActionCooldownTicks = Game.WizardActionCooldownTicks;
             }
 
