@@ -196,13 +196,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             Utility.IsBase(x) || RoadsHelper.GetLane(x) == MessagesObserver.GetLane() ||
                             RoadsHelper.GetLaneEx(ASelf) == ALaneType.Middle && 
                             RoadsHelper.GetLaneEx(x) == ALaneType.Middle && CanRush(ASelf, x))
-                    .Where(x => x.IsAssailable)
+                    .Where(x => x.IsAssailable && x.Faction != Faction.Neutral)
                     .OrderBy(
                         x =>
                             x.GetDistanceTo(self) +
                             (x is AWizard ? -40 : (x is ABuilding && !((ABuilding) x).IsBesieded) ? 1500 : 0))
                     .ToArray();
-                if (nearest.Length > 0 && nearest.FirstOrDefault(GoAround) == null)
+                if (nearest.Length > 0 && nearest.FirstOrDefault(GoAgainst) == null)
                 {
                     GoDirect(nearest[0], FinalMove);
                 }
@@ -369,12 +369,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         bool GoAround(ACombatUnit to)
         {
             TimerStart();
-            var ret = _goAround(to);
+            var ret = _goAround(to, false);
             TimerEndLog("Dijkstra", 1);
             return ret;
         }
 
-        bool _goAround(ACombatUnit target)
+        bool GoAgainst(ACombatUnit to)
+        {
+            TimerStart();
+            var ret = _goAround(to, true);
+            TimerEndLog("Dijkstra", 1);
+            return ret;
+        }
+
+        bool _goAround(ACombatUnit target, bool goAgainst)
         {
             var my = new AWizard(ASelf);
             var selLane = Utility.IsBase(target) ? MessagesObserver.GetLane() : RoadsHelper.GetLane(target);
@@ -386,12 +394,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (target.IsOpponent && target.Id != nearestBuilding.Id && target is ABuilding)
                 buildings.Add((ABuilding) target);
 
+            var threshold = Self.CastRange - 200;
+            if (ASelf.GetDistanceTo(target) < Self.CastRange || !goAgainst)
+                threshold = 0;
+            
             var path = DijkstraFindPath(ASelf, pos =>
             {
                 // точка ОК, если с неё можно стрелять
-                if (pos.GetDistanceTo2(target) < Geom.Sqr(Self.CastRange))
+                var dist2 = pos.GetDistanceTo2(target);
+                if (dist2 < Geom.Sqr(Self.CastRange) && dist2 > Geom.Sqr(threshold))
                 {
-                    if (TreesObserver.Trees
+                    var distToLine = RoadsHelper.Roads.Where(seg => seg.LaneType == selLane).Min(seg => seg.GetDistanceTo(pos));
+
+                    if (distToLine < 200
+                        && (!goAgainst || BuildingsObserver.MyBase.GetDistanceTo2(pos) < BuildingsObserver.MyBase.GetDistanceTo2(target))
+                        && TreesObserver.Trees
                         .Where(x => x.GetDistanceTo2(pos) < Geom.Sqr(Self.CastRange))
                         .All(x => !Geom.SegmentCircleIntersects(pos, target, x, x.Radius + Game.MagicMissileRadius))
                         )

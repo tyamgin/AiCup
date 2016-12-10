@@ -175,7 +175,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
-            foreach(var seg in RoadsHelper.Roads)
+            // туман войны
+            FillRect(Color.AliceBlue, 0, 0, Const.MapSize, Const.MapSize);
+            foreach (var unit in MyStrategy.MyCombats)
+            {
+                FillCircle(Color.White, unit.X, unit.Y, unit.VisionRange);
+            }
+
+            foreach (var seg in RoadsHelper.Roads)
                 DrawLine(Color.Khaki, seg.A.X, seg.A.Y, seg.B.X, seg.B.Y);
 
             if (_form.gradCheckBox.Checked)

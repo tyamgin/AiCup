@@ -126,10 +126,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     else if (building.IsBesieded)
                     {
+                        var inner = my.Radius + building.Radius + 2*Game.DartRadius + 3; // свои фетиши могут стрелять
                         var outer = building.VisionRange*1.2;
-                        double delta = 2;
-                        if (dist < outer)
-                            res -= delta - dist/outer*delta;
+                        if (dist < inner)
+                            res += 20 - dist/inner*20;
+                        else if (dist < outer)
+                            res -= 2 - dist/outer*2;
                     }
                     else
                     {

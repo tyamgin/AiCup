@@ -200,11 +200,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     var ticks = 0;
                     var ok = true;
+                    var buildingsHit = false;
 
                     while (ticks < (allowRush ? 65 : 35) && my.GetDistanceTo2(his) > Geom.Sqr(Game.StaffRange + his.Radius))
                     {
                         foreach (var x in nearstOpponents) // свои как-бы стоят на месте
-                            x.EthalonMove(targetsSelector.Select(x) ?? my);
+                        {
+                            var tar = targetsSelector.Select(x);
+                            buildingsHit = buildingsHit ||
+                                           (x is ABuilding && tar != null && tar.Id == my.Id && x.EthalonCanHit(my));
+                            x.EthalonMove(tar ?? my);
+                        }
 
                         if (!my.MoveTo(moveTo, his, w => !CheckIntersectionsAndTress(w, potentialColliders)))
                         {
@@ -220,20 +226,25 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         {
                             my.MoveTo(null, his);
                             foreach (var x in nearstOpponents)
-                                x.EthalonMove(targetsSelector.Select(x) ?? my);
+                            {
+                                var tar = targetsSelector.Select(x);
+                                buildingsHit = buildingsHit ||
+                                               (x is ABuilding && tar != null && tar.Id == my.Id && x.EthalonCanHit(my));
+                                x.EthalonMove(tar ?? my);
+                            }
                             ticks++;
                         }
                     }
 
                     Func<ACombatUnit, bool> check = x =>
                     {
-                        if ((opp is AWizard) && (opp as AWizard).IsBesieded)
+                        if ((opp is AWizard) && (opp as AWizard).IsBesieded && !(x is ABuilding))
                             return true;
 
                         if (canHitNow && x.Id == opp.Id) // он и так доставал
                             return true;
 
-                        if (!x.EthalonCanHit(my))
+                        if (!x.EthalonCanHit(my) && (!(x is ABuilding) || !buildingsHit))
                             return true;
 
                         if (his.Id == x.Id && my.StaffDamage >= his.Life)
@@ -268,6 +279,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                     foreach (var x in nearstOpponents)
                                     {
                                         var tar = targetsSelector.Select(x);
+
+                                        buildingsHit = buildingsHit ||
+                                            (x is ABuilding && tar != null && tar.Id == my.Id && x.EthalonCanHit(my));
+
                                         if (tar != null)
                                             x.EthalonMove(tar);
                                         else
@@ -699,8 +714,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if ((unit as AWizard).IsBesieded)
                 {
                     res /= 4;
-                    res -= 50;
                 }
+                res -= 50;
             }
             var dist = self.GetDistanceTo(unit);
             if (dist <= Game.StaffRange + unit.Radius + 10)
@@ -721,6 +736,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             if (wizard != null)
             {
+                if (wizard.IsBesieded)
+                    return true;
+
                 if (wizard.Life <= self.MagicMissileDamage)
                     return true;
                 if (self.Life <= wizard.MagicMissileDamage)
