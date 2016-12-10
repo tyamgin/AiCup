@@ -204,22 +204,29 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     res -= GoToBonusDanger - dist/outer*GoToBonusDanger;
             }
 
-            // прижиматься к центру дорожки
             var nearestRoad = RoadsHelper.Roads.ArgMin(seg => seg.GetDistanceTo(my));
-            var distToLine = nearestRoad.GetDistanceTo(my);
             var linePadding = nearestRoad.LaneType == ALaneType.Middle || nearestRoad.LaneType == ALaneType.Middle2 ? 250.0 : 160.0;
-            var outerPadding = 500;
-            if (distToLine > linePadding && distToLine < outerPadding)
-                res += (distToLine - linePadding)/(outerPadding - linePadding)*10;
-            else if (distToLine >= outerPadding)
-                res += 10;
 
-            distToLine = RoadsHelper.Roads.Where(seg => seg.LaneType != ALaneType.Middle2).Min(seg => seg.GetDistanceTo(my));
-            outerPadding = 500;
-            if (distToLine > linePadding && distToLine < outerPadding)
-                res -= 1 - (distToLine - linePadding) / (outerPadding - linePadding) * 1;
-            else if (distToLine <= linePadding)
-                res -= 1;
+            // не прижиматься к лесу
+            if (MagicConst.TreesFreeCircles.All(x => x.GetDistanceTo(my) > x.Radius))
+            {
+                var distToLine = nearestRoad.GetDistanceTo(my);
+                var outerPadding = 500;
+                if (distToLine > linePadding && distToLine < outerPadding)
+                    res += (distToLine - linePadding)/(outerPadding - linePadding)*10;
+                else if (distToLine >= outerPadding)
+                    res += 10;
+            }
+
+            {
+                // прижиматься к центру дорожки
+                var distToLine = RoadsHelper.Roads.Where(seg => seg.LaneType != ALaneType.Middle2).Min(seg => seg.GetDistanceTo(my));
+                var outerPadding = 500;
+                if (distToLine > linePadding && distToLine < outerPadding)
+                    res -= 1 - (distToLine - linePadding)/(outerPadding - linePadding)*1;
+                else if (distToLine <= linePadding)
+                    res -= 1;
+            }
 
             // не прижиматься к стене
             var distToBorders = Math.Min(Math.Min(my.X, my.Y), Math.Min(Const.MapSize - my.X, Const.MapSize - my.Y));
@@ -603,7 +610,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool GoAwayDetect()
         {
-            if (Const.UpRightCorner.GetDistanceTo(ASelf) < 800)
+            if (Const.TopRightCorner.GetDistanceTo(ASelf) < 800)
                 return false;
 
             var nearest = OpponentWizards

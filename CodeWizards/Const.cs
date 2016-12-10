@@ -20,7 +20,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         };
 
         public static Point[] MapCorners = new Point[4];
-        public static Point UpRightCorner;
+
+        public static Point TopLeftCorner => MapCorners[0];
+        public static Point BottomLeftCorner => MapCorners[1];
+        public static Point TopRightCorner => MapCorners[2];
+        public static Point BottomRightCorner => MapCorners[3];
 
         public static ProjectileInfo[] ProjectileInfo = new ProjectileInfo[4];
 
@@ -31,7 +35,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             MapCorners[0] = new Point(0, 0);
             MapCorners[1] = new Point(0, MapSize);
-            MapCorners[2] = UpRightCorner = new Point(MapSize, 0);
+            MapCorners[2] = new Point(MapSize, 0);
             MapCorners[3] = new Point(MapSize, MapSize);
 
             ProjectileInfo[(int) ProjectileType.MagicMissile] = new ProjectileInfo
@@ -62,6 +66,23 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 DamageRadius = MyStrategy.Game.DartRadius,
                 Speed = MyStrategy.Game.DartSpeed,
             };
+
+            MagicConst.TreesFreeCircles = new[]
+            {
+                new ACircularUnit
+                {
+                    X = TopLeftCorner.X,
+                    Y = TopLeftCorner.Y,
+                    Radius = 1050,
+                },
+                new ACircularUnit
+                {
+                    X = BottomRightCorner.X,
+                    Y = BottomRightCorner.Y,
+                    Radius = 1050,
+                },
+                // TODO: center
+            };
         }
     }
 
@@ -80,5 +101,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static int GoToBonusMaxTicks = 550;
         public static double SimplifyMaxLength = 1000;
 		public static double TreeObstacleWeight = 35;
+        public static ACircularUnit[] TreesFreeCircles;
     }
 }
