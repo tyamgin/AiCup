@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public static double CantMoveDanger = 300;
         public static double GoToBonusDanger;
-        public TargetsSelector FetishTargetsSelector;
+        public static TargetsSelector MinionsTargetsSelector;
         public static List<Point[]> BuildingsDangerTriangles;
 
         void InitializeDangerEstimation()
@@ -31,7 +31,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 }
             }
 
-            FetishTargetsSelector = new TargetsSelector(Combats) { EnableMinionsCache = true };
+            MinionsTargetsSelector = new TargetsSelector(Combats) { EnableMinionsCache = true };
 
             BuildingsDangerTriangles = new List<Point[]>();
             var top1 = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsTeammate && x.Order == 1 && x.Lane == ALaneType.Top);
@@ -156,7 +156,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     var inner = opp.CastRange + my.Radius + Game.DartRadius + 10;
                     if (dist < inner)
                     {
-                        var fetishTarget = FetishTargetsSelector.Select(opp);
+                        var fetishTarget = MinionsTargetsSelector.Select(opp);
                         if (fetishTarget == null || Geom.Sqr(dist - 5) < opp.GetDistanceTo2(fetishTarget))
                             res += 15 - dist/inner*15 + Game.DartDirectDamage;
                     }

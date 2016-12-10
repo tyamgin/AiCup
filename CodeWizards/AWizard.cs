@@ -191,7 +191,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             return (opp is AWizard ? Utility.Range(-Math.PI/2, Math.PI/2, 4) : new[] {0.0}).All(changeAngle =>
             {
-                var path = proj.Emulate(new[] {opp}, changeAngle);
+                var path = proj.Emulate(opp, changeAngle);
                 return path.Any(x => x.State == AProjectile.ProjectilePathState.Shot && x.Target.Faction != Faction);
             });
         }

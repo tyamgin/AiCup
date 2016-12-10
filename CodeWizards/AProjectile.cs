@@ -221,17 +221,32 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return 1;
         }
 
+        public List<ProjectilePathSegment> Emulate(ACombatUnit target, double wizardsChangeAngle)
+        {
+            target = Utility.CloneCombat(target);
+            // NOTE: target и он же в minionsTargetsSelector - разные instance. Этим можно пренебречь
+            return _emulate(new [] {target}, wizardsChangeAngle, MyStrategy.MinionsTargetsSelector /*TODO: HACK*/);
+        }
+
         public List<ProjectilePathSegment> Emulate(ACombatUnit[] nearestUnits, double wizardsChangeAngle)
         {
+            nearestUnits = nearestUnits.Select(Utility.CloneCombat).ToArray();
+            var minionsTargetsSelector = new TargetsSelector(nearestUnits) { EnableMinionsCache = true };
+            return _emulate(nearestUnits, wizardsChangeAngle, minionsTargetsSelector);
+        }
+
+        private List<ProjectilePathSegment> _emulate(ACombatUnit[] nearestUnits, double wizardsChangeAngle, TargetsSelector minionsTargetsSelector)
+        {
             if (Type != ProjectileType.MagicMissile && Type != ProjectileType.FrostBolt && Type != ProjectileType.Fireball)
-                throw new NotImplementedException();
+                throw new Exception("Unsupported projectile type " + Type);
+
+            // NOTE: nearestUnits уже склонированы
+            // NOTE: nearestUnits и они же в minionsTargetsSelector - одни и те же instance
 
             var list = new List<ProjectilePathSegment>();
             var projectile = new AProjectile(this);
             var owner = nearestUnits.FirstOrDefault(x => x.Id == OwnerUnitId);
-            var nearestCandidates = nearestUnits.Where(x => x.Id != OwnerUnitId).Select(Utility.CloneCombat).ToArray();
-
-            var minionsTargetsSelector = new TargetsSelector(nearestUnits) {EnableMinionsCache = true};
+            var nearestCandidates = nearestUnits.Where(x => x.Id != OwnerUnitId).ToArray();
 
             while (projectile.Exists)
             {
@@ -301,7 +316,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
                         list.Add(new ProjectilePathSegment
                         {
-                            StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, OpponentDamage = oppDamage, SelfDamage = selfDamage, OpponentDeadsCount = oppDeads, SelfDeadsCount = selfDeads, State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball, OpponentBurned = oppBurned, SelfBurned = selfBurned, Target = importantTarget,
+                            StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                            EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                            OpponentDamage = oppDamage,
+                            SelfDamage = selfDamage,
+                            OpponentDeadsCount = oppDeads,
+                            SelfDeadsCount = selfDeads,
+                            State = (selfDamage + oppDamage < Const.Eps) ? ProjectilePathState.Free : ProjectilePathState.Fireball,
+                            OpponentBurned = oppBurned,
+                            SelfBurned = selfBurned,
+                            Target = importantTarget,
                         });
                     }
                     else
@@ -315,7 +339,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                 var opp = inter as ACombatUnit;
                                 list.Add(new ProjectilePathSegment
                                 {
-                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, State = ProjectilePathState.Shot, Target = Utility.CloneCombat(opp), SelfDamage = proj.Faction == inter.Faction ? Math.Min(opp.Life, Damage) : 0, OpponentDamage = Utility.HasConflicts(proj, opp) ? Math.Min(opp.Life, Damage) : 0,
+                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    State = ProjectilePathState.Shot,
+                                    Target = Utility.CloneCombat(opp),
+                                    SelfDamage = proj.Faction == inter.Faction ? Math.Min(opp.Life, Damage) : 0,
+                                    OpponentDamage = Utility.HasConflicts(proj, opp) ? Math.Min(opp.Life, Damage) : 0,
                                 });
                             }
                         }
@@ -325,7 +354,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             {
                                 list.Add(new ProjectilePathSegment
                                 {
-                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance, EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance, State = ProjectilePathState.Free,
+                                    StartDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    EndDistance = list.Count == 0 ? 0 : list.Last().EndDistance,
+                                    State = ProjectilePathState.Free,
                                 });
                             }
                         }
