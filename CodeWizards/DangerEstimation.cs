@@ -136,11 +136,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     else
                     {
                         var inner = Game.StaffRange + building.Radius; // откуда можно достать посохом
-                        var outer = building.CastRange + my.Radius; // куда достреливает башня
+                        var outer = building.CastRange; // куда достреливает башня
                         double delta = -80;
                         if (dist < inner)
                             res += building.Damage - delta;
-                        else if (dist < outer)
+                        else if (dist <= outer)
                             res += (dist - inner)/(outer - inner)*delta + building.Damage - delta;
                     }
                 }
