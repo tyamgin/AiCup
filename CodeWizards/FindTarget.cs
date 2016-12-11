@@ -97,50 +97,52 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var ret = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
-            if (self.HasteSkillLevel < 5)
-                return ret;
-
             const int threshold = 29;
             var minTicks = int.MaxValue;
             AWizard selTarget = null;
+            var selAction = ActionType.None;
 
-            var teammates = MyWizards
-                .Where(x => x.Id != self.Id
-                            && self.GetDistanceTo(x) <= self.CastRange
-                            && x.RemainingHastened <= threshold
-                ).
-                ToArray();
-
-            foreach (var teammate in teammates)
+            foreach (var action in new[] {ActionType.Haste, ActionType.Shield})
             {
-                if (self.GetDistanceTo(teammate) > self.CastRange)
+                if (action == ActionType.Haste && self.HasteSkillLevel < 5 ||
+                    action == ActionType.Shield && self.ShieldSkillLevel < 5
+                    )
                     continue;
 
-                if (teammate.RemainingHastened > threshold)
-                    continue;
+                var teammates = MyWizards
+                    .Where(x => x.Id != self.Id
+                                && self.GetDistanceTo(x) <= self.CastRange
+                                && x.RemainingStatusByAction(action) <= threshold
+                    ).
+                    ToArray();
 
-                var ticks = 0;
-                var my = new AWizard(self);
-                while (Math.Abs(my.GetAngleTo(teammate)) > Game.StaffSector/2)
+                foreach (var teammate in teammates)
                 {
-                    ticks++;
-                    my.MoveTo(null, teammate);
+                    var ticks = 0;
+                    var my = new AWizard(self);
+                    while (Math.Abs(my.GetAngleTo(teammate)) > Game.StaffSector/2)
+                    {
+                        ticks++;
+                        my.MoveTo(null, teammate);
+                    }
+                    if (ticks < minTicks && my.CanCastUltimate(action, teammate))
+                    {
+                        minTicks = ticks;
+                        selTarget = teammate;
+                        selAction = action;
+                    }
                 }
-                if (ticks < minTicks && my.CanCastUltimate(ActionType.Haste, teammate))
-                {
-                    minTicks = ticks;
-                    selTarget = teammate;
-                }
-            }
 
-            if (selTarget == null 
-                && teammates.Length == 0
-                && self.RemainingHastened <= threshold 
-                && self.CanUseUltimate(ActionType.Haste)
-                )
-            {
-                minTicks = 0;
-                selTarget = self;
+                if (selTarget == null
+                    && teammates.Length == 0
+                    && self.RemainingStatusByAction(action) <= threshold
+                    && self.CanUseUltimate(action)
+                    )
+                {
+                    minTicks = 100;
+                    selTarget = self;
+                    selAction = action;
+                }
             }
 
             if (selTarget == null)
@@ -150,9 +152,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             ret.TargetId = selTarget.Id;
             ret.Time = minTicks;
 
-            if (self.CanCastUltimate(ActionType.Haste, selTarget))
+            if (self.CanCastUltimate(selAction, selTarget))
             {
-                ret.Move.Action = ActionType.Haste;
+                ret.Move.Action = selAction;
                 ret.Move.StatusTargetId = selTarget.Id;
             }
             else

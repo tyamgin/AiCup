@@ -390,5 +390,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 GetDistanceTo2(teammate) <= Geom.Sqr(CastRange)
                    && Math.Abs(GetAngleTo(teammate)) <= MyStrategy.Game.StaffSector/2;
         }
+
+        public int RemainingStatusByAction(ActionType action)
+        {
+            switch (action)
+            {
+                case ActionType.Haste:
+                    return RemainingHastened;
+                case ActionType.Shield:
+                    return RemainingShielded;
+                default:
+                    throw new Exception("Illegal action " + action);
+            }
+        }
     }
 }
