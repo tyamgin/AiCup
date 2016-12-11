@@ -90,11 +90,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             var group = SkillsGroup.Round2;
 
-            if (Const.IsFinal && LastMessage.RawMessage != null && LastMessage.RawMessage.Length > 0)
+            if (Const.IsFinal/* && LastMessage.RawMessage != null && LastMessage.RawMessage.Length > 0*/)
             {
-                group = (SkillsGroup) LastMessage.RawMessage[0];
+                group = (SkillsGroup) LastMessage.SkillToLearn /*(SkillsGroup) LastMessage.RawMessage[0]*/;
             }
-
 
             var skillsOrder = SkillOrders[group];
 
