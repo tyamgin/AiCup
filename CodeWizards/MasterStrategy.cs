@@ -29,24 +29,35 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return ALaneType.Middle;
                 };
 
-                Func<AWizard, SkillType?> selectSkill = x =>
+                Func<AWizard, MessagesObserver.SkillsGroup> selectSkill = x =>
                 {
-                    // TODO
-                    return null;
+                    switch (order[x.Id])
+                    {
+                        case 0:
+                        case 2:
+                            return MessagesObserver.SkillsGroup.Haster;
+                        case 1:
+                        case 3:
+                            return MessagesObserver.SkillsGroup.Fireballer;
+                        case 4:
+                            return MessagesObserver.SkillsGroup.Round2;
+                        default:
+                            throw new Exception("Invalid state");
+                    }
+                };
+
+                Func<AWizard, Message> selectMessage = x =>
+                {
+                    return new Message((LaneType) selectLane(x), null, new byte[] {(byte) selectSkill(x)});
                 };
 
                 FinalMove.Messages = MyWizards
                     .Where(x => x.Id != Self.Id)
                     .OrderBy(x => x.Id)
-                    .Select(x =>
-                    {
-                        var lane = (LaneType) selectLane(x);
-                        var skill = selectSkill(x);
-                        return new Message(lane, skill, new byte[] { });
-                    })
+                    .Select(selectMessage)
                     .ToArray();
 
-                MessagesObserver.LastMessage = new Message((LaneType) selectLane(self), SkillType.Shield, new byte[] {});
+                MessagesObserver.LastMessage = selectMessage(self);
             }
         }
     }

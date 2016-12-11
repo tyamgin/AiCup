@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -34,21 +35,68 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Utility.GetSkill(skillGroup, self.SkillsLearnedArr[skillGroup]);
         }
 
+        public enum SkillsGroup
+        {
+            Round2,
+            Haster,
+            Fireballer,
+        }
+
+        public static Dictionary<SkillsGroup, SkillType[]> SkillOrders = new Dictionary<SkillsGroup, SkillType[]>
+        {
+            {
+                SkillsGroup.Round2,
+                new[]
+                {
+                    SkillType.Fireball,
+                    SkillType.RangeBonusPassive1,
+                    SkillType.Haste,
+                    SkillType.AdvancedMagicMissile,
+
+                    SkillType.FrostBolt,
+                    SkillType.Shield
+                }
+            },
+            {
+                SkillsGroup.Haster,
+                new[]
+                {
+                    SkillType.Haste,
+                    SkillType.AdvancedMagicMissile,
+                    SkillType.FrostBolt,
+
+                    SkillType.Shield,
+                    SkillType.Fireball,
+                }
+            },
+            {
+                SkillsGroup.Fireballer,
+                new[]
+                {
+                    SkillType.Fireball,
+                    SkillType.MagicalDamageBonusAura2,
+                    SkillType.Shield,
+
+                    SkillType.FrostBolt,
+                    SkillType.Haste, 
+                    SkillType.AdvancedMagicMissile,
+                }
+            },
+        };
+
         public static SkillType GetSkill()
         {
             var self = MyStrategy.ASelf;
 
-            var skillsOrder = new[]
+            var group = SkillsGroup.Round2;
+
+            if (Const.IsFinal && LastMessage.RawMessage != null && LastMessage.RawMessage.Length > 0)
             {
-                SkillType.Fireball,
-                SkillType.RangeBonusPassive1,
-                SkillType.Haste,
-                SkillType.AdvancedMagicMissile,
+                group = (SkillsGroup) LastMessage.RawMessage[0];
+            }
 
-                SkillType.FrostBolt,
-                SkillType.Shield
-            };
 
+            var skillsOrder = SkillOrders[group];
 
             foreach (var skill in skillsOrder)
             {

@@ -16,9 +16,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             Process.Start("G:\\Projects\\AiCup\\CodeWizards\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(5000);
 
-            for (var i = 0; i < 0; i++)
+            for (var i = 0; i < 4; i++)
             {
-                var oldStrategy = new Process
+                var otherStrategy = new Process
                 {
                     StartInfo =
                     {
@@ -27,19 +27,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         CreateNoWindow = true
                     }
                 };
-                oldStrategy.Start();
+                otherStrategy.Start();
+                Thread.Sleep(100);
             }
-#endif
-
-            File.WriteAllText("G:\\started.txt", string.Join("\n", args));
-            //try
-            //{
-                new Runner(args.Length == 3 ? args : new[] {"127.0.0.1", "31001", "0000000000000000"}).Run();
-            //}
-            //catch (Exception e)
-            //{
-            //    File.WriteAllText("G:\\log.txt", e.Message + "\n" + e.StackTrace);
-            //}
+#endif      
+            new Runner(args.Length == 3 ? args : new[] {"127.0.0.1", "31001", "0000000000000000"}).Run();
         }
 
         private Runner(string[] args) {

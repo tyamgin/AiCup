@@ -19,6 +19,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             new Point(2800, 2800),
         };
 
+        public static bool IsFinal;
+
         public static Point[] MapCorners = new Point[4];
 
         public static Point TopLeftCorner => MapCorners[0];
@@ -83,6 +85,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 },
                 // TODO: center
             };
+
+            IsFinal = MyStrategy.Game.IsRawMessagesEnabled;
         }
     }
 
