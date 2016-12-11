@@ -224,7 +224,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     GoAway();
                 }
-                else if (target == null || 
+                else if (target == null || target.Type == TargetType.Teammate ||
                     (FinalMove.Action == ActionType.Staff ||
                     FinalMove.Action == ActionType.MagicMissile || 
                     FinalMove.Action == ActionType.Fireball ||
@@ -269,42 +269,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             {
                 move.SkillToLearn = MessagesObserver.GetSkill();
             }
-            UseUltimate();
         }
 
         public static Point NextBonusWaypoint;
-
-        bool UseUltimate()
-        {
-            if (FinalMove.Action != null && FinalMove.Action != ActionType.None)
-                return false;
-
-            if (ASelf.RemainingActionCooldownTicks > 0)
-                return false;
-
-            if (ASelf.RemainingHasteCooldownTicks == 0 && ASelf.HasteSkillLevel == 5)
-            {
-                if (ASelf.Mana >= Game.HasteManacost && ASelf.RemainingHastened == 0)
-                {
-                    FinalMove.Action = ActionType.Haste;
-                    FinalMove.StatusTargetId = ASelf.Id;
-                    return true;
-                }
-
-                foreach (var wizard in MyWizards)
-                {
-                    if (ASelf.Mana >= Game.HasteManacost*2 && wizard.RemainingHastened == 0)
-                    {
-                        FinalMove.Action = ActionType.Haste;
-                        FinalMove.StatusTargetId = wizard.Id;
-                        return true;
-                    }
-                }
-            }
-
-            // TODO: shield так же
-            return false;
-        }
 
         void GoDirect(Point target, FinalMove move)
         {

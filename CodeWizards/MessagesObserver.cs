@@ -38,23 +38,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var self = MyStrategy.ASelf;
 
-
-            //var skillsOrder = new[]
-            //{
-            //    SkillType.Fireball,
-            //    SkillType.RangeBonusPassive1,
-            //    SkillType.Haste,
-            //    SkillType.AdvancedMagicMissile,
-
-            //    SkillType.FrostBolt,
-            //    SkillType.Shield
-            //};
-
             var skillsOrder = new[]
             {
+                SkillType.Haste,
                 SkillType.Fireball,
                 SkillType.AdvancedMagicMissile,
-                SkillType.Haste,
+                //SkillType.Haste,
 
                 SkillType.FrostBolt,
                 SkillType.Shield

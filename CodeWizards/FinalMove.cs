@@ -93,6 +93,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             CastAngle = move.CastAngle;
             MinCastDistance = move.MinCastDistance;
             MaxCastDistance = move.MaxCastDistance;
+            StatusTargetId = move.StatusTargetId;
             Messages = move.Messages;
         }
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Resources;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -18,6 +19,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             var t2 = FindStaffTarget(self);
             var t3 = FindCastTarget2(self, t0.Target ?? moveTo, ProjectileType.MagicMissile);
             var t3fball = FindCastTarget2(self, t0.Target ?? moveTo, ProjectileType.Fireball);
+            var ult = FindUltimateTarget(self);
 
             Point ret = null;
             if (t0.Target != null)
@@ -32,7 +34,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 FinalMove.MinCastDistance = tfball.Move.MinCastDistance;
                 FinalMove.MaxCastDistance = tfball.Move.MaxCastDistance;
                 FinalMove.CastAngle = tfball.Move.CastAngle;
-                return new Target { MoveTo = tfball.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
+                return new Target { Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
             }
             if (tfrost.Target != null && tfrost.Time <= Math.Min(t2.Time, t3.Time))
             {
@@ -40,7 +42,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 FinalMove.MinCastDistance = tfrost.Move.MinCastDistance;
                 FinalMove.MaxCastDistance = tfrost.Move.MaxCastDistance;
                 FinalMove.CastAngle = tfrost.Move.CastAngle;
-                return new Target { MoveTo = tfrost.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
+                return new Target { Type = ret == null ? TargetType.Opponent : TargetType.Bonus };
             }
             if (tmm.Target != null && tmm.Time <= Math.Min(t2.Time, t3.Time))
             {
@@ -55,29 +57,110 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     FinalMove.MaxCastDistance = tmm.Move.MaxCastDistance;
                     FinalMove.CastAngle = tmm.Move.CastAngle;
                     _LastMmTarget = tmm.TargetId;
-                    return new Target {MoveTo = tmm.Target, Type = ret == null ? TargetType.Opponent : TargetType.Bonus};
+                    return new Target {Type = ret == null ? TargetType.Opponent : TargetType.Bonus};
                 }
             }
             if (t0.Target == null && t2.Target != null && t2.Time <= Math.Min(tmm.Time, t3.Time))
             {
-                FinalMove.Apply(t2.Move);
-                return new Target { MoveTo = t2.Target, Type = TargetType.Opponent };
+                // иначе вообще не кидает хасту/щит
+                if (ult.Target == null || t2.Target is AWizard)
+                {
+                    FinalMove.Apply(t2.Move);
+                    return new Target {Type = TargetType.Opponent};
+                }
             }
             if (t3fball.Target != null)
             {
                 FinalMove.Apply(t3fball.Move);
-                return new Target { MoveTo = t3fball.Target, Type = TargetType.Opponent };
+                return new Target { Type = TargetType.Opponent };
             }
             if (t3.Target != null && t3.Time <= Math.Min(tmm.Time, t2.Time))
             {
                 FinalMove.Apply(t3.Move);
-                return new Target { MoveTo = t3.Target, Type = TargetType.Opponent };
+                return new Target { Type = TargetType.Opponent };
+            }
+
+            if (ult.Target != null)
+            {
+                FinalMove.Apply(ult.Move);
+                return new Target { Type = TargetType.Teammate };
             }
 
             if (ret == null)
                 return null;
+            
 
-            return new Target { MoveTo = ret, Type = TargetType.Bonus };
+            return new Target { Type = TargetType.Bonus };
+        }
+
+        MovingInfo FindUltimateTarget(AWizard self)
+        {
+            var ret = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
+
+            if (self.HasteSkillLevel < 5)
+                return ret;
+
+            const int threshold = 29;
+            var minTicks = int.MaxValue;
+            AWizard selTarget = null;
+
+            var teammates = MyWizards
+                .Where(x => x.Id != self.Id
+                            && self.GetDistanceTo(x) <= self.CastRange
+                            && x.RemainingHastened <= threshold
+                ).
+                ToArray();
+
+            foreach (var teammate in teammates)
+            {
+                if (self.GetDistanceTo(teammate) > self.CastRange)
+                    continue;
+
+                if (teammate.RemainingHastened > threshold)
+                    continue;
+
+                var ticks = 0;
+                var my = new AWizard(self);
+                while (Math.Abs(my.GetAngleTo(teammate)) > Game.StaffSector/2)
+                {
+                    ticks++;
+                    my.MoveTo(null, teammate);
+                }
+                if (ticks < minTicks && my.CanCastUltimate(ActionType.Haste, teammate))
+                {
+                    minTicks = ticks;
+                    selTarget = teammate;
+                }
+            }
+
+            if (selTarget == null 
+                && teammates.Length == 0
+                && self.RemainingHastened <= threshold 
+                && self.CanUseUltimate(ActionType.Haste)
+                )
+            {
+                minTicks = 0;
+                selTarget = self;
+            }
+
+            if (selTarget == null)
+                return ret;
+
+            ret.Target = selTarget;
+            ret.TargetId = selTarget.Id;
+            ret.Time = minTicks;
+
+            if (self.CanCastUltimate(ActionType.Haste, selTarget))
+            {
+                ret.Move.Action = ActionType.Haste;
+                ret.Move.StatusTargetId = selTarget.Id;
+            }
+            else
+            {
+                ret.Move.MoveTo(null, selTarget);
+            }
+
+            return ret;
         }
 
         MovingInfo FindBonusTarget(AWizard self)
@@ -769,12 +852,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         enum TargetType
         {
             Opponent,
+            Teammate,
             Bonus,
         }
 
         class Target
         {
-            public Point MoveTo;
             public TargetType Type;
         }
 

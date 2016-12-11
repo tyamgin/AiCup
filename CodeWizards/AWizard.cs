@@ -350,5 +350,45 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return true;
             }
         }
+
+        public bool CanUseUltimate(ActionType ultimate)
+        {
+            if (RemainingActionCooldownTicks > 0)
+                return false;
+
+            if (ultimate == ActionType.Haste)
+            {
+                if (HasteSkillLevel < 5)
+                    return false;
+                if (Mana < MyStrategy.Game.HasteManacost)
+                    return false;
+                if (RemainingHasteCooldownTicks > 0)
+                    return false;
+            }
+            else if (ultimate == ActionType.Shield)
+            {
+                if (ShieldSkillLevel < 5)
+                    return false;
+                if (Mana < MyStrategy.Game.ShieldManacost)
+                    return false;
+                if (RemainingShieldCooldownTicks > 0)
+                    return false;
+            }
+            else
+            {
+                throw new Exception("Unknown ultimate type");
+            }
+            return true;
+        }
+
+        public bool CanCastUltimate(ActionType ultimate, AWizard teammate)
+        {
+            if (!CanUseUltimate(ultimate))
+                return false;
+
+            return Id == teammate.Id ||
+                GetDistanceTo2(teammate) <= Geom.Sqr(CastRange)
+                   && Math.Abs(GetAngleTo(teammate)) <= MyStrategy.Game.StaffSector/2;
+        }
     }
 }
