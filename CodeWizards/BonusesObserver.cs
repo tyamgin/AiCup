@@ -68,11 +68,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     {
                         X = Const.BonusAppearencePoints[i].X,
                         Y = Const.BonusAppearencePoints[i].Y,
-                        Id = -1,
+                        Id = i - 2,
                         RemainingAppearanceTicks = remains,
                         Radius = MyStrategy.Game.BonusRadius,
-                        //Type = BonusType.Empower,
-                        //Angle = 0,
                     };
                 }
             }

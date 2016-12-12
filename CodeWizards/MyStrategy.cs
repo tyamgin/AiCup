@@ -448,7 +448,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        bool _skipBonusCond()
+        bool _skipBonusCond(ABonus bonus)
         {
             var oppFirst = BuildingsObserver.Buildings.FirstOrDefault(x => x.IsOpponent && x.Lane == MessagesObserver.GetLane() && x.Order == 0);
             if (oppFirst == null || ASelf.GetDistanceTo(oppFirst) <= oppFirst.CastRange)
@@ -462,19 +462,45 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return false;
         }
 
+        ABonus SelectBonus(AWizard self)
+        {
+            var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo2(self));
+
+            if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + MagicConst.BonusTimeReserve)
+                return null;
+
+            if (self.GetDistanceTo(BuildingsObserver.OpponentBase) < BuildingsObserver.OpponentBase.CastRange * 1.4)
+                return null;
+
+            if (Game.IsSkillsEnabled && _skipBonusCond(bonus))
+                return null;
+
+            return bonus;
+        }
+
         MovingInfo _goToBonus()
         {
-            const int magic = 45; // запас
-            var bonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(Self));
+            var bonus = SelectBonus(ASelf);
             var selMovingInfo = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
 
-            if (bonus.RemainingAppearanceTicks > MagicConst.GoToBonusMaxTicks + magic)
-                return selMovingInfo;
-            if (ASelf.GetDistanceTo(BuildingsObserver.OpponentBase) < BuildingsObserver.OpponentBase.CastRange*1.4)
+            if (bonus == null)
                 return selMovingInfo;
 
-            if (Game.IsSkillsEnabled && _skipBonusCond())
-                return selMovingInfo;
+            if (Const.IsFinal)
+            {
+                var teammates = MyWizards
+                    .Where(x => x.Id != ASelf.Id)
+                    .Where(x =>
+                    {
+                        var b = SelectBonus(x);
+                        return b != null && b.Id == bonus.Id;
+                    })
+                    .ToArray();
+                if (teammates.Any(x => ASelf.GetDistanceTo(bonus) > x.GetDistanceTo(bonus)))
+                {
+                    return selMovingInfo;
+                }
+            }
 
             var my = new AWizard(ASelf);
             var nearestBuilding = OpponentBuildings.ArgMin(b => b.GetDistanceTo2(my));
@@ -520,7 +546,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 				CutTreesInPath(nextTree, selMovingInfo.Move);
             }
            
-            if (selMovingInfo.Time <= bonus.RemainingAppearanceTicks - magic)
+            if (selMovingInfo.Time <= bonus.RemainingAppearanceTicks - MagicConst.BonusTimeReserve)
                 selMovingInfo.Target = null;
 #if DEBUG
             if (selMovingInfo.Target != null)

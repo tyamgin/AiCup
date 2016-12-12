@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 Func<AWizard, Message> selectMessage = x =>
                 {
-                    return new Message((LaneType) selectLane(x), (SkillType) selectSkill(x), new byte[] {/*(byte) selectSkill(x)*/});
+                    return new Message((LaneType) selectLane(x), null, new byte[] {(byte) selectSkill(x)});
                 };
 
                 FinalMove.Messages = MyWizards
