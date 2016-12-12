@@ -8,7 +8,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     partial class MyStrategy
     {
-        public Dictionary<long, Message> LastMessages = new Dictionary<long, Message>(); 
+        public Dictionary<long, AMessage> LastMessages = new Dictionary<long, AMessage>(); 
 
         public void MasterSendMessages()
         {
@@ -30,31 +30,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return ALaneType.Middle;
                 };
 
-                Func<AWizard, MessagesObserver.SkillsGroup> selectSkill = x =>
+                Func<AWizard, AMessage> selectMessage = x =>
                 {
-                    switch (order[x.Id])
-                    {
-                        case 0:
-                        case 2:
-                            return MessagesObserver.SkillsGroup.Haster;
-                        case 1:
-                        case 3:
-                            return MessagesObserver.SkillsGroup.Fireballer;
-                        case 4:
-                            return MessagesObserver.SkillsGroup.Round2;
-                        default:
-                            throw new Exception("Invalid state");
-                    }
-                };
-
-                Func<AWizard, Message> selectMessage = x =>
-                {
-                    return new Message((LaneType) selectLane(x), null, new byte[] {(byte) selectSkill(x)});
+                    return new AMessage(selectLane(x), SkillsGroup.Round2);
                 };
 
                 foreach (var x in MyWizards)
                     LastMessages[x.Id] = selectMessage(x);
 
+                _redistributeSkills();
                 _sendMessages();
             }
         }
@@ -64,7 +48,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             FinalMove.Messages = MyWizards
                     .Where(x => x.Id != Self.Id)
                     .OrderBy(x => x.Id)
-                    .Select(x => LastMessages[x.Id])
+                    .Select(x => LastMessages[x.Id].ToMessage())
                     .ToArray();
 
             MessagesObserver.LastMessage = LastMessages[ASelf.Id];
@@ -72,6 +56,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         public void MasterCheckRearrange()
         {
+            if (!Const.IsFinal)
+                return;
             if (World.TickIndex > 2000)
                 return;
 
@@ -79,7 +65,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             foreach (var lane in allLanes)
             {
                 var oppsCount = SupportObserver.CountOpponentsOnLane(lane);
-                var minesCount = LastMessages.Values.Count(x => (ALaneType) x.Lane == lane);
+                var minesCount = LastMessages.Values.Count(x => x.Lane == lane);
                 var target = RoadsHelper.GetLaneCenter(lane);
                 if (oppsCount > minesCount + 1)
                 {
@@ -88,22 +74,58 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     foreach (var anotherLane in allLanes.Where(l => l != lane))
                     {
                         var oppsCount2 = SupportObserver.CountOpponentsOnLane(anotherLane);
-                        var minesCount2 = LastMessages.Values.Count(x => (ALaneType)x.Lane == anotherLane);
+                        var minesCount2 = LastMessages.Values.Count(x => x.Lane == anotherLane);
                         var disbalance = minesCount2 - oppsCount2;
 
                         if (disbalance >= maxDisbalance)
                         {
                             maxDisbalance = disbalance;
-                            foreach(var w in MyWizards.Where(x => (ALaneType) LastMessages[x.Id].Lane == anotherLane))
+                            foreach(var w in MyWizards.Where(x => LastMessages[x.Id].Lane == anotherLane))
                                 if (selSupportId == -1 || w.GetDistanceTo(target) < SupportObserver.LastSeen[selSupportId].Wizard.GetDistanceTo(target))
                                     selSupportId = w.Id;
                         }
                     }
                     if (selSupportId != -1)
                     {
-                        var prev = LastMessages[selSupportId];
-                        LastMessages[selSupportId] = new Message((LaneType) lane, prev.SkillToLearn, prev.RawMessage);
+                        LastMessages[selSupportId].Lane = lane;
+                        _redistributeSkills();
                         _sendMessages();
+                    }
+                }
+            }
+        }
+
+        private void _redistributeSkills()
+        {
+            var allLanes = new[] { ALaneType.Middle, ALaneType.Top, ALaneType.Bottom };
+            foreach (var lane in allLanes)
+            {
+                var wizards = MyWizards.Where(w => LastMessages[w.Id].Lane == lane).ToArray();
+                var skills = SkillGroups.GetDistribution(wizards.Length);
+                foreach (var skill in skills)
+                {
+                    bool found = false;
+                    for (var i = 0; i < wizards.Length; i++)
+                    {
+                        if (wizards[i] == null)
+                            continue;
+                        if (LastMessages[wizards[i].Id].SkillsGroup == skill)
+                        {
+                            found = true;
+                            wizards[i] = null;
+                            break;
+                        }
+                    }
+                    if (!found)
+                    {
+                        for (var i = 0; i < wizards.Length; i++)
+                        {
+                            if (wizards[i] == null)
+                                continue;
+                            LastMessages[wizards[i].Id].SkillsGroup = skill;
+                            wizards[i] = null;
+                            break;
+                        }
                     }
                 }
             }

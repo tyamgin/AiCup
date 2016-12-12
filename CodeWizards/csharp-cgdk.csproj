@@ -78,6 +78,7 @@
     <Compile Include="ABuilding.cs" />
     <Compile Include="ACircularUnit.cs" />
     <Compile Include="ACombatUnit.cs" />
+    <Compile Include="AMessage.cs" />
     <Compile Include="AMinion.cs" />
     <Compile Include="AProjectile.cs" />
     <Compile Include="ATree.cs" />
@@ -127,6 +128,7 @@
     <Compile Include="Runner.cs" />
     <Compile Include="SearchPath.cs" />
     <Compile Include="BuildingsObserver.cs" />
+    <Compile Include="SkillGroups.cs" />
     <Compile Include="SupportObserver.cs" />
     <Compile Include="TargetsSelector.cs" />
     <Compile Include="TreesObserver.cs" />

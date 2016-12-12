@@ -677,7 +677,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         if (unit.IsOpponent)
                             _rushTo(unit as AWizard, self);
                         else
+                        {
+                            //if (Const.IsFinal) rush
                             unit.SkipTick(); // TODO: тоже нужно
+                        }
                     }
                     else if (unit is AMinion)
                     {

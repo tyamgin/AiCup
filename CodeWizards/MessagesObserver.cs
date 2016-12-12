@@ -6,20 +6,20 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     public class MessagesObserver
     {
-        public static Message LastMessage;
+        public static AMessage LastMessage;
 
         public static void Update()
         {
             var msges = MyStrategy.Self.Messages;
             if (msges != null && msges.Length > 0)
-                LastMessage = msges[msges.Length - 1];
+                LastMessage = new AMessage(msges[msges.Length - 1]);
         }
 
 
         public static ALaneType GetLane()
         {
             if (LastMessage != null)
-                return (ALaneType) LastMessage.Lane;
+                return LastMessage.Lane;
 
             var arr = new [] { LaneType.Top, LaneType.Bottom };
             return (ALaneType) arr[MyStrategy.Self.Id%arr.Length];
@@ -35,55 +35,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return Utility.GetSkill(skillGroup, self.SkillsLearnedArr[skillGroup]);
         }
 
-        public enum SkillsGroup
-        {
-            Round2,
-            Haster,
-            Fireballer,
-        }
-
-        public static Dictionary<SkillsGroup, SkillType[]> SkillOrders = new Dictionary<SkillsGroup, SkillType[]>
-        {
-            {
-                SkillsGroup.Round2,
-                new[]
-                {
-                    SkillType.Fireball,
-                    SkillType.RangeBonusPassive1,
-                    SkillType.Haste,
-                    SkillType.AdvancedMagicMissile,
-
-                    SkillType.FrostBolt,
-                    SkillType.Shield
-                }
-            },
-            {
-                SkillsGroup.Haster,
-                new[]
-                {
-                    SkillType.Haste,
-                    SkillType.AdvancedMagicMissile,
-                    SkillType.FrostBolt,
-
-                    SkillType.Shield,
-                    SkillType.Fireball,
-                }
-            },
-            {
-                SkillsGroup.Fireballer,
-                new[]
-                {
-                    SkillType.Fireball,
-                    SkillType.MagicalDamageBonusAura2,
-                    SkillType.Shield,
-
-                    SkillType.FrostBolt,
-                    SkillType.Haste, 
-                    SkillType.AdvancedMagicMissile,
-                }
-            },
-        };
-
         public static SkillType GetSkill()
         {
             var self = MyStrategy.ASelf;
@@ -95,7 +46,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 group = (SkillsGroup) LastMessage.RawMessage[0];
             }
 
-            var skillsOrder = SkillOrders[group];
+            var skillsOrder = SkillGroups.Orders[group];
 
             foreach (var skill in skillsOrder)
             {
