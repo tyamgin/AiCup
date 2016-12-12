@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
@@ -33,6 +34,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
         private void stopRenderButton_Click(object sender, EventArgs e)
         {
             Visualizer.DrawSince = 1000000;
+        }
+
+        private void lookAtTextBox_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

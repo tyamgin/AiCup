@@ -37,6 +37,7 @@
             this.stopRenderButton = new System.Windows.Forms.Button();
             this.cellsCheckBox = new System.Windows.Forms.CheckBox();
             this.gradCheckBox = new System.Windows.Forms.CheckBox();
+            this.lookAtTextBox = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.panel)).BeginInit();
             this.SuspendLayout();
             // 
@@ -132,11 +133,21 @@
             this.gradCheckBox.Text = "grad";
             this.gradCheckBox.UseVisualStyleBackColor = true;
             // 
+            // lookAtTextBox
+            // 
+            this.lookAtTextBox.Location = new System.Drawing.Point(3, 236);
+            this.lookAtTextBox.Name = "lookAtTextBox";
+            this.lookAtTextBox.Size = new System.Drawing.Size(52, 20);
+            this.lookAtTextBox.TabIndex = 9;
+            this.lookAtTextBox.Text = "1";
+            this.lookAtTextBox.TextChanged += new System.EventHandler(this.lookAtTextBox_TextChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1126, 879);
+            this.Controls.Add(this.lookAtTextBox);
             this.Controls.Add(this.gradCheckBox);
             this.Controls.Add(this.cellsCheckBox);
             this.Controls.Add(this.stopRenderButton);
@@ -165,5 +176,6 @@
         private System.Windows.Forms.Button stopRenderButton;
         public System.Windows.Forms.CheckBox cellsCheckBox;
         public System.Windows.Forms.CheckBox gradCheckBox;
+        public System.Windows.Forms.TextBox lookAtTextBox;
     }
 }

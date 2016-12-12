@@ -175,6 +175,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
+            var tar = MyStrategy.Combats.FirstOrDefault(x => x.Id.ToString() == _form.lookAtTextBox.Text.Trim());
+            if (tar != null)
+                LookAt(new Point(tar));
+
             // туман войны
             FillRect(Color.AliceBlue, 0, 0, Const.MapSize, Const.MapSize);
             foreach (var unit in MyStrategy.MyCombats)
@@ -378,7 +382,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
 
         public static bool Pause = false;
 
-        public static void LookUp(Point p, double scale = -1)
+        public static void LookAt(Point p, double scale = -1)
         {
             Zoom = scale;
 

@@ -78,7 +78,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
             else
                 Visualizer.Visualizer.DangerPoints = null;
-            Visualizer.Visualizer.LookUp(new Point(self));
+            if (World.TickIndex == 0)
+                Visualizer.Visualizer.LookAt(new Point(self));
             Visualizer.Visualizer.Draw();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
             {
