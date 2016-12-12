@@ -83,6 +83,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     throw new Exception("Invalid lane type");
             }
         }
+
+        public static Point GetLaneCenter(ALaneType lane)
+        {
+            switch (lane)
+            {
+                case ALaneType.Top:
+                    return Const.TopLeftCorner;
+                case ALaneType.Middle:
+                    return (Const.TopLeftCorner + Const.BottomRightCorner)/2;
+                case ALaneType.Bottom:
+                    return Const.BottomRightCorner;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(lane), lane, null);
+            }
+        }
     }
 
     public enum ALaneType

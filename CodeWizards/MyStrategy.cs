@@ -178,11 +178,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 throw new Exception("Self not found in wizards list");
 
             InitializeDangerEstimation();
+            SupportObserver.Update();
 
             if (Self.IsMaster && World.TickIndex == 0)
             {
                 MasterSendMessages();
-                return;
+            }
+            if (Self.IsMaster)
+            {
+                MasterCheckRearrange();
             }
 
             var nearestBonus = BonusesObserver.Bonuses.ArgMin(b => b.GetDistanceTo(ASelf));

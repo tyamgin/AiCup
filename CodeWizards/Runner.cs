@@ -30,6 +30,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 otherStrategy.Start();
                 Thread.Sleep(100);
             }
+
+            for (var i = 4; i < 9; i++)
+            {
+                var otherStrategy = new Process
+                {
+                    StartInfo =
+                    {
+                        FileName = @"G:\Projects\AiCup\CodeWizards\bin\Release\mid.exe",
+                        Arguments = "127.0.0.1 " + (31002 + i) + " 0000000000000000",
+                        CreateNoWindow = true
+                    }
+                };
+                otherStrategy.Start();
+                Thread.Sleep(100);
+            }
 #endif      
             new Runner(args.Length == 3 ? args : new[] {"127.0.0.1", "31001", "0000000000000000"}).Run();
         }
