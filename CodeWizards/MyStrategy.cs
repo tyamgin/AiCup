@@ -102,6 +102,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             FinalMove = new FinalMove(move);
 
             Const.Initialize();
+            MagicConst.TreeObstacleWeight = Const.IsFinal ? 25 : 35;
 
             Wizards = world.Wizards
                 .Select(x => new AWizard(x))
@@ -269,9 +270,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             TryGoByGradient(EstimateDanger, null, FinalMove);
                         
                     }
-                    else if (/*!Const.IsFinal || */path == null || path.GetLength() < 400)
+                    else
                     {
-                        TryGoByGradient(EstimateDanger, HasAnyTarget, FinalMove);
+                        var skipBuildings = path == null || path.GetLength() < 300;
+                        TryGoByGradient(EstimateDanger, x => HasAnyTarget(x, skipBuildings), FinalMove);
                     }
                 }
 
@@ -344,7 +346,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (RoadsHelper.GetAllowedForLine(lane).All(r => r.GetDistanceTo(pos) > (World.TickIndex < 900 && World.TickIndex > 200 ? 200 : 700)))
                     return 1000;
 
-                return 0;
+                foreach(var opp in OpponentWizards)
+                    if (pos.GetDistanceTo2(opp) < Geom.Sqr(opp.CastRange + Const.WizardRadius + 20))
+                        return 400;
+
+                return 0.0;
             };
         }
 
@@ -377,6 +383,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 buildings.Add((ABuilding) target);
 
             var threshold = Self.CastRange - 200;
+            
             if (ASelf.GetDistanceTo(target) < Self.CastRange || !goAgainst)
                 threshold = 0;
             
@@ -569,7 +576,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return selMovingInfo;
         }
 
-        private bool HasAnyTarget(AWizard self)
+        private bool HasAnyTarget(AWizard self, bool skipBuildings)
         {
             var my = new AWizard(self);
             foreach (var opp in OpponentCombats)
@@ -590,7 +597,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             my.CastRange = my.CastRange + 25; // HACK: чтобы не бояться подходить к тем у кого прокачан range 
                     }
                 }
-                if (bld != null)
+                if (bld != null && skipBuildings)
                 {
                     if (!bld.IsBase && bld.Lane != MessagesObserver.GetLane())
                         continue;

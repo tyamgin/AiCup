@@ -105,7 +105,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static Point[] MinionAppearencePoints;
         public static int GoToBonusMaxTicks = 550;
         public static double SimplifyMaxLength = 1000;
-		public static double TreeObstacleWeight = 35;
+		public static double TreeObstacleWeight;
         public static ACircularUnit[] TreesFreeCircles;
     }
 }

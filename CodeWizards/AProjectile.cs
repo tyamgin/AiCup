@@ -374,8 +374,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         wizard.MoveTo(dir, null, w =>
                         {
                             var tree = TreesObserver.GetNearestTree(w);
-                            // TODO: коллизия с крипами и башнями?
-                            return tree == null || !w.IntersectsWith(tree);
+                            return (tree == null || !w.IntersectsWith(tree)) && wizard.GetFirstIntersection(nearestCandidates) == null;
                         });
                     }
                     else if (unit is AMinion)
