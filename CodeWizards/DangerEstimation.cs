@@ -310,7 +310,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 .ToArray();
 
             var danger = costFunction(self); // for debug
-            List<double> selVec = null; // for debug
+            List<double> selVec = null;
             var minDanger = double.MaxValue;
             Point selMoveTo = null;
 
@@ -375,12 +375,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 if (newDanger < minDanger)
                 {
                     minDanger = newDanger;
-                    selMoveTo = moveTo;
-                    selVec = vec; // for debug
+                    selMoveTo = Utility.PointsEqual(my, self) ? null : moveTo;
+                    selVec = vec;
                 }
             }
-            if (selMoveTo != null)
+            if (selVec != null)
             {
+                move.Speed = move.StrafeSpeed = 0;
                 move.MoveTo(selMoveTo, null);
                 return true;
             }

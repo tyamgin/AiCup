@@ -73,7 +73,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 1950;
+                Visualizer.Visualizer.DrawSince = 1040;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
