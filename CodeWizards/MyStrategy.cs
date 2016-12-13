@@ -73,7 +73,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 5800;
+                Visualizer.Visualizer.DrawSince = 1950;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -197,6 +197,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
 
 
+            WizardPath path = null;
             var goAway = GoAwayDetect();
             var bonusMoving = goAway ? new MovingInfo(null, int.MaxValue, null) : GoToBonus();
             var target = FindTarget(new AWizard(ASelf), bonusMoving.Target);
@@ -214,7 +215,14 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             x.GetDistanceTo(self) +
                             (x is AWizard ? -40 : (x is ABuilding && !((ABuilding) x).IsBesieded) ? 1500 : 0))
                     .ToArray();
-                if (nearest.Length > 0 && nearest.FirstOrDefault(GoAgainst) == null)
+                
+                foreach (var n in nearest)
+                {
+                    path = GoAgainst(n);
+                    if (path != null)
+                        break;
+                }
+                if (nearest.Length > 0 && path == null)
                 {
                     GoDirect(nearest[0], FinalMove);
                 }
@@ -261,7 +269,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             TryGoByGradient(EstimateDanger, null, FinalMove);
                         
                     }
-                    else
+                    else if (/*!Const.IsFinal || */path == null || path.GetLength() < 400)
                     {
                         TryGoByGradient(EstimateDanger, HasAnyTarget, FinalMove);
                     }
@@ -340,7 +348,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             };
         }
 
-        bool GoAround(ACombatUnit to)
+        WizardPath GoAround(ACombatUnit to)
         {
             TimerStart();
             var ret = _goAround(to, false);
@@ -348,7 +356,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        bool GoAgainst(ACombatUnit to)
+        WizardPath GoAgainst(ACombatUnit to)
         {
             TimerStart();
             var ret = _goAround(to, true);
@@ -356,7 +364,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
-        bool _goAround(ACombatUnit target, bool goAgainst)
+        WizardPath _goAround(ACombatUnit target, bool goAgainst)
         {
             var my = new AWizard(ASelf);
             var selLane = Utility.IsBase(target) ? MessagesObserver.GetLane() : RoadsHelper.GetLane(target);
@@ -396,12 +404,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (path == null && my.GetDistanceTo(target) - my.Radius - target.Radius <= 1)
                 path = new WizardPath { my }; // из-за эпсилон, если стою близко у цели, то он как бы с ней пересекается, но это не так
             if (path == null || path.Count == 0)
-                return false;
+                return null;
 
             if (path.Count == 1)
             {
                 FinalMove.Turn = my.GetAngleTo(target);
-                return true;
+                return null;
             }
 
             var obstacles =
@@ -420,7 +428,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #if DEBUG
             Visualizer.Visualizer.SegmentsDrawQueue.Add(new object[] { path, Pens.Blue, 3 });
 #endif
-            return true;
+            return path;
         }
 		
 		void CutTreesInPath(ATree nextTree, FinalMove move) 
