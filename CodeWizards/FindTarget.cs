@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Resources;
+using System.Windows.Forms;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
@@ -566,7 +567,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         continue;
 
                     var nearest = Combats
-                        .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange*1.3))
+                        .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(Math.Max(x.VisionRange, self.VisionRange) * 1.3))
                         .Select(Utility.CloneCombat)
                         .ToArray();
 
@@ -686,7 +687,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 foreach (var ang in Utility.Range(-Game.StaffSector, Game.StaffSector, 10))
                 {
                     var nearest = Combats
-                        .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(self.VisionRange*1.3))
+                        .Where(x => self.GetDistanceTo2(x) < Geom.Sqr(Math.Max(x.VisionRange, self.VisionRange) * 1.3))
                         .Select(Utility.CloneCombat)
                         .ToArray();
 
@@ -698,10 +699,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     while (ticks <= walkLimit)
                     {
-                        if (my.Mana >= Game.FireballManacost
-                            && my.RemainingActionCooldownTicks == 0 
-                            && my.RemainingFireballCooldownTicks == 0
-                            )
+                        if (my.CanUseFireball())
                         {
                             var proj = new AProjectile(my, 0, ProjectileType.Fireball);
                             var path = proj.Emulate(nearest, 0.0);
@@ -731,10 +729,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         }
 
                         if (!my.MoveTo(dir, dir, w => !CheckIntersectionsAndTress(w, nearest)))
-                        {
-                            // TODO: bonuses
                             break;
-                        }
+                        
                         if (nearest.Any(x => x.IsOpponent && x is ABuilding && x.EthalonCanHit(my) && targetsSelector.Select(x) == my))
                             break;
                         ticks++;

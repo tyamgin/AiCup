@@ -7,16 +7,17 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - Застревание в деревьях при защите на Mid
+ * - Не правильно убегает
+ * - отбегать назад
+ * 
  * - если перевес сил на бонусе, то бросать его
  * - Улучшить cancastmagicmissile
  * - когда мало жизней от фаербольшика держаться подальше
- * - хаста, не изусать advanced mm
  * - не идти за нейтралами
  * - учитывать что бонусов скорее всего нет (или кто-то рядом ходит со статусом)
  * - когда MM без задержек - не рубит деревья, т.к. отвлекается на стрельбу
  * 
- * - прятаться в тени
- * ?- прикрываться деревьями (особенно от визардов)
  * - тормозит CanCastMM 
  */
 
@@ -72,7 +73,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 5300;
+                Visualizer.Visualizer.DrawSince = 5800;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();

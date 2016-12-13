@@ -139,6 +139,18 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             MoveTo(target, target, w => !w.IntersectsWith(target));
         }
 
+        public bool CanUseFireball(bool checkCooldown = true)
+        {
+            if (checkCooldown)
+                if (RemainingFireballCooldownTicks > 0 || RemainingActionCooldownTicks > 0 || Mana < MyStrategy.Game.FireballManacost)
+                    return false;
+
+            if (RemainingFrozen > 0)
+                return false;
+
+            return true;
+        }
+
         public bool CanUseMagicMissile(bool checkCooldown = true)
         {
             if (checkCooldown)
