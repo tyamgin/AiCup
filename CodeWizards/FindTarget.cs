@@ -166,6 +166,43 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             return ret;
         }
 
+        MovingInfo FindTreeTarget(AWizard self)
+        {
+            var res = new MovingInfo(null, int.MaxValue, new FinalMove(new Move()));
+            var trees = TreesObserver.Trees.Where(t => self.GetDistanceTo(t) <= Game.StaffRange + t.Radius).ToArray();
+            var minTicks = int.MaxValue;
+            ATree selTarget = null;
+
+            foreach (var tree in trees)
+            {
+                var my = new AWizard(self);
+                var ticks = 0;
+                while (Math.Abs(my.GetAngleTo(tree)) > Game.StaffSector/2)
+                {
+                    my.MoveTo(null, tree);
+                    ticks++;
+                }
+                if (ticks < minTicks && my.CanStaffAttack(tree))
+                {
+                    minTicks = ticks;
+                    selTarget = tree;
+                }
+            }
+
+            if (selTarget == null)
+                return res;
+
+            res.Time = minTicks;
+            res.Target = selTarget;
+            res.TargetId = selTarget.Id;
+            if (minTicks == 0)
+                res.Move.Action = ActionType.Staff;
+            else
+                res.Move.MoveTo(null, selTarget);
+
+            return res;
+        }
+
         MovingInfo FindBonusTarget(AWizard self)
         {
             var minTime = int.MaxValue;

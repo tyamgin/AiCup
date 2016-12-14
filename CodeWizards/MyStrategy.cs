@@ -7,7 +7,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
- * - Застревание в деревьях при защите на Mid
+ * - уворот от своих фаерболов
+ * - Застревание в деревьях при защите на Mid    - fixed?
  * - Не правильно убегает
  * - отбегать назад
  * 
@@ -73,7 +74,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 1040;
+                Visualizer.Visualizer.DrawSince = 3130;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -273,7 +274,17 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     else
                     {
                         var skipBuildings = path == null || path.GetLength() < 300;
-                        TryGoByGradient(EstimateDanger, x => HasAnyTarget(x, skipBuildings), FinalMove);
+                        if (TryGoByGradient(EstimateDanger, x => HasAnyTarget(x, skipBuildings), FinalMove))
+                        {
+                            var cutTreeMovingInfo = FindTreeTarget(ASelf);
+                            if (cutTreeMovingInfo.Target != null)
+                            {
+                                FinalMove.Turn = cutTreeMovingInfo.Move.Turn;
+                                if (cutTreeMovingInfo.Move.Action != null && FinalMove.Action == null)
+                                    FinalMove.Action = cutTreeMovingInfo.Move.Action;
+                                // не будет мешать TryPreDodgeProjectile?
+                            }
+                        }
                     }
                 }
 

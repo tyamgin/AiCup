@@ -571,7 +571,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             if (minTicks == 0 || minTicks == int.MaxValue) // нет необходимости уворачиваться
                 return false;
 
-            FinalMove.Turn = 0;
+            if (selTurnTo != null || Math.Abs(ASelf.GetAngleTo(selMoveTo)) < Math.PI/2)
+            {
+                FinalMove.Turn = 0;
+            }
             FinalMove.MoveTo(selMoveTo, selTurnTo);
             return true;
         }
