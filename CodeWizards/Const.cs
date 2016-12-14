@@ -1,4 +1,5 @@
-﻿using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
+﻿using System.Linq;
+using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
@@ -47,21 +48,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 DamageRadius = MyStrategy.Game.MagicMissileRadius,
                 Speed = MyStrategy.Game.MagicMissileSpeed,
             };
-            ProjectileInfo[(int)ProjectileType.FrostBolt] = new ProjectileInfo
+            ProjectileInfo[(int) ProjectileType.FrostBolt] = new ProjectileInfo
             {
                 ManaCost = MyStrategy.Game.FrostBoltManacost,
                 Radius = MyStrategy.Game.FrostBoltRadius,
                 DamageRadius = MyStrategy.Game.FrostBoltRadius,
                 Speed = MyStrategy.Game.FrostBoltSpeed,
             };
-            ProjectileInfo[(int)ProjectileType.Fireball] = new ProjectileInfo
+            ProjectileInfo[(int) ProjectileType.Fireball] = new ProjectileInfo
             {
                 ManaCost = MyStrategy.Game.FireballManacost,
                 Radius = MyStrategy.Game.FireballRadius,
                 DamageRadius = MyStrategy.Game.FireballExplosionMinDamageRange,
                 Speed = MyStrategy.Game.FireballSpeed,
             };
-            ProjectileInfo[(int)ProjectileType.Dart] = new ProjectileInfo
+            ProjectileInfo[(int) ProjectileType.Dart] = new ProjectileInfo
             {
                 ManaCost = 0,
                 Radius = MyStrategy.Game.DartRadius,
@@ -69,22 +70,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 Speed = MyStrategy.Game.DartSpeed,
             };
 
-            MagicConst.TreesFreeCircles = new[]
-            {
-                new ACircularUnit
-                {
-                    X = TopLeftCorner.X,
-                    Y = TopLeftCorner.Y,
-                    Radius = 1050,
-                },
-                new ACircularUnit
-                {
-                    X = BottomRightCorner.X,
-                    Y = BottomRightCorner.Y,
-                    Radius = 1050,
-                },
-                // TODO: center
-            };
+            MagicConst.TreesFreeCircles = 
+                MapCorners.Select(c => new ACircularUnit { X = c.X, Y = c.Y, Radius = 1050 })
+                .Concat(new [] { new ACircularUnit { X = MapSize / 2, Y = MapSize / 2, Radius = 500 } })
+                .ToArray();
 
             IsFinal = MyStrategy.Game.IsRawMessagesEnabled;
         }
