@@ -7,8 +7,8 @@ using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 /**
  * TODO:
+ * - !!свои углы в ПП!!
  * - уворот от своих фаерболов
- * - Застревание в деревьях при защите на Mid    - fixed?
  * - Не правильно убегает
  * - отбегать назад
  * 
@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 3130;
+                Visualizer.Visualizer.DrawSince = 5090;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -608,7 +608,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             my.CastRange = my.CastRange + 25; // HACK: чтобы не бояться подходить к тем у кого прокачан range 
                     }
                 }
-                if (bld != null && skipBuildings)
+                if (bld != null && (skipBuildings || bld.IsBase))
                 {
                     if (!bld.IsBase && bld.Lane != MessagesObserver.GetLane())
                         continue;

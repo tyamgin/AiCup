@@ -22,9 +22,11 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 Func<AWizard, ALaneType> selectLane = x =>
                 {
-                    if (order[x.Id] <= 1)
+                    var o = order[x.Id];
+
+                    if (o <= 1)
                         return ALaneType.Top;
-                    if (order[x.Id] == 4)
+                    if (o == 4)
                         return ALaneType.Bottom;
 
                     return ALaneType.Middle;

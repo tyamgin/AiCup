@@ -96,5 +96,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             StatusTargetId = move.StatusTargetId;
             Messages = move.Messages;
         }
+
+        public override string ToString()
+        {
+            // for DEBUG
+            var res = "(" + Speed.ToString().Replace(',', '.') + ", " + StrafeSpeed.ToString().Replace(',', '.') + ")";
+            if (Math.Abs(Turn) > Const.Eps)
+                res += " " + Turn.ToString().Replace(',', '.');
+            if (Action != null)
+                res += " " + Action;
+            return res;
+        }
     }
 }
