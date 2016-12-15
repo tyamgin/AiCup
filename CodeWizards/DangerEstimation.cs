@@ -83,7 +83,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     opp.IsBesieded = EmulateRush(ASelf, opp) > 30;
         }
 
-        double EstimateDanger(AWizard my)
+        double EstimateDanger(AWizard my, bool considerWizardBesieded = true)
         {
             double res = 0;
             foreach (var opp in OpponentCombats)
@@ -100,7 +100,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (GoAwayCond(my, wizard))
                         outer += GoAwaySafeDist - Game.MagicMissileRadius;
                     var coeff = 45;
-                    if (wizard.IsBesieded)
+                    if (wizard.IsBesieded && considerWizardBesieded)
                     {
                         var otr = my.VisionRange * 1.3;
                         if (dist < otr)

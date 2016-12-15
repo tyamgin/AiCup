@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 3550;
+                Visualizer.Visualizer.DrawSince = 2400;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -268,13 +268,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                                           )
                             FinalMove.MoveTo(NextBonusWaypoint, null);
                         else
-                            TryGoByGradient(EstimateDanger, null, FinalMove);
+                            TryGoByGradient(x => EstimateDanger(x), null, FinalMove);
                         
                     }
                     else
                     {
                         var skipBuildings = path == null || path.GetLength() < 300;
-                        if (TryGoByGradient(EstimateDanger, x => HasAnyTarget(x, skipBuildings), FinalMove))
+                        if (TryGoByGradient(x => EstimateDanger(x), x => HasAnyTarget(x, skipBuildings), FinalMove))
                         {
                             var cutTreeMovingInfo = FindTreeTarget(ASelf);
                             if (cutTreeMovingInfo.Target != null)

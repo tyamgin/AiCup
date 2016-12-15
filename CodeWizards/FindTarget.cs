@@ -637,7 +637,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             m = my + (my - his);
                             var tmp = new AWizard(my);
                             tmp.MoveTo(m, his, w => !CheckIntersectionsAndTress(w, nearest));
-                            if (EstimateDanger(my) <= EstimateDanger(tmp))
+                            
+                            if (EstimateDanger(my, false) <= EstimateDanger(tmp, false))
                                 m = null;
                         }
                         if (m == null)
