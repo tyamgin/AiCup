@@ -26,8 +26,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                     if (o <= 1)
                         return ALaneType.Top;
-                    if (o == 4)
-                        return ALaneType.Bottom;
+                    //if (o == 4)
+                    //    return ALaneType.Bottom;
 
                     return ALaneType.Middle;
                 };
@@ -69,7 +69,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var oppsCount = SupportObserver.CountOpponentsOnLane(lane);
                 var minesCount = LastMessages.Values.Count(x => x.Lane == lane);
                 var target = RoadsHelper.GetLaneCenter(lane);
-                if (oppsCount > minesCount + 1)
+                if (oppsCount > minesCount + 1 || oppsCount > 0 && minesCount == 0)
                 {
                     long selSupportId = -1;
                     var maxDisbalance = int.MinValue;

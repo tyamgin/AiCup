@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 5090;
+                Visualizer.Visualizer.DrawSince = 3550;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -736,9 +736,19 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return -opp.Life;
                 if (!opp.IsAlive)
                 {
-                    if (nearest.Where(x => x.IsOpponent && x is AWizard).Sum(x => x.Life) > self.Life)
-                        return int.MinValue;
-                    return self.Life;
+                    var mines = nearest.Where(x => x.IsTeammate && x is AWizard).ToArray();
+                    if (mines.Length >= 2 && Const.IsFinal)
+                    {
+                        if (!mines.All(x => x.Life > 10))
+                            return int.MinValue;
+                        return 50.0;//hack
+                    }
+                    else
+                    {
+                        if (nearest.Where(x => x.IsOpponent && x is AWizard).Sum(x => x.Life) > self.Life)
+                            return int.MinValue;
+                        return self.Life;
+                    }
                 }
             }
         }
