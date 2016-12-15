@@ -390,8 +390,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
         bool TryPreDodgeProjectile()
         {
-            const int preTicks = 13;
+            const int preTicks = 18;
             var opp = OpponentWizards
+                .OrderBy(x => x.GetDistanceTo2(ASelf))
                 .FirstOrDefault(x => 
                     Math.Min(x.RemainingActionCooldownTicks, x.RemainingMagicMissileCooldownTicks) <= preTicks
                     && x.GetDistanceTo(ASelf) <= x.CastRange + ASelf.Radius + Game.MagicMissileRadius + 7
@@ -406,12 +407,15 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var obstacles = Combats.Where(x => x.Id != Self.Id && x.GetDistanceTo(ASelf) < 300).ToArray();
                 var selSign = 0;
                 double selPriority = int.MaxValue;
+                var requiredAngle = ASelf.GetDistanceTo(opp) <= opp.CastRange + ASelf.Radius
+                    ? Math.PI - 2*ASelf.MaxTurnAngle - 0.001
+                    : Math.PI/2;
 
                 for (var sign = -1; sign <= 1; sign += 2)
                 {
                     var my = new AWizard(ASelf);
                     var priority = 0.0;
-                    while (Math.Abs(my.GetAngleTo(opp)) < Math.PI/2)
+                    while (Math.Abs(my.GetAngleTo(opp)) < requiredAngle)
                     {
                         my.Angle += sign*my.MaxTurnAngle;
                         priority += 0.1;
