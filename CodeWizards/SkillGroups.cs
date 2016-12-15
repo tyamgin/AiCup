@@ -63,6 +63,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 SkillsGroup.Froster,
                 new[]
                 {
+                    SkillType.RangeBonusAura1,
                     SkillType.FrostBolt,
                     SkillType.Fireball,
 

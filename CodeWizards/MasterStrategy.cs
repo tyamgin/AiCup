@@ -24,10 +24,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var o = order[x.Id];
 
-                    if (o <= 1)
+                    if (o < 1)
                         return ALaneType.Top;
-                    //if (o == 4)
-                    //    return ALaneType.Bottom;
+                    if (o == 4)
+                        return ALaneType.Bottom;
 
                     return ALaneType.Middle;
                 };
@@ -69,7 +69,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 var oppsCount = SupportObserver.CountOpponentsOnLane(lane);
                 var minesCount = LastMessages.Values.Count(x => x.Lane == lane);
                 var target = RoadsHelper.GetLaneCenter(lane);
-                if (oppsCount > minesCount + 1 || oppsCount > 0 && minesCount == 0)
+                if (oppsCount > minesCount + 1/* || oppsCount > 0 && minesCount == 0*/)
                 {
                     long selSupportId = -1;
                     var maxDisbalance = int.MinValue;
@@ -94,12 +94,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         _sendMessages();
                     }
                 }
+
+                if (lane != ALaneType.Middle && oppsCount == 0 && minesCount > 0 && SupportObserver.CountOpponentsOnLane(_revLane(lane)) > 0 && SupportObserver.LastSeen.Count == 10)
+                {
+                    var id = LastMessages.FirstOrDefault(x => x.Value.Lane == lane).Key;
+                    LastMessages[id].Lane = _revLane(lane);
+                    _redistributeSkills();
+                    _sendMessages();
+                }
+            }
+        }
+
+        private static ALaneType _revLane(ALaneType lane)
+        {
+            switch (lane)
+            {
+                case ALaneType.Top:
+                    return ALaneType.Bottom;
+                case ALaneType.Bottom:
+                    return ALaneType.Top;
+                default:
+                    return ALaneType.Middle;
             }
         }
 
         private void _redistributeSkills()
         {
-            var allLanes = new[] { ALaneType.Middle, ALaneType.Top, ALaneType.Bottom };
+            var allLanes = new[] {ALaneType.Middle, ALaneType.Top, ALaneType.Bottom};
             foreach (var lane in allLanes)
             {
                 var wizards = MyWizards.Where(w => LastMessages[w.Id].Lane == lane).ToArray();
