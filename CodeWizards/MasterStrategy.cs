@@ -24,7 +24,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var o = order[x.Id];
 
-                    if (Const.IsFinal && World.Players.Any(p => new[] {"mustang"}.Contains(p.Name)))
+                    if (Const.IsFinal && World.Players.Any(p => new[] {"mustang", "NighTurs" }.Contains(p.Name)))
                     {
                         if (o < 1)
                             return ALaneType.Top;
