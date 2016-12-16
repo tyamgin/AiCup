@@ -74,7 +74,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
             TimerEndLog("All", 0);
 #if DEBUG
             if (world.TickIndex == 0)
-                Visualizer.Visualizer.DrawSince = 2400;
+                Visualizer.Visualizer.DrawSince = 600;
             Visualizer.Visualizer.CreateForm();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
                 Visualizer.Visualizer.DangerPoints = CalculateDangerMap();
@@ -200,6 +200,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
 
             WizardPath path = null;
+            AUnit pathTarget = null;
             var goAway = GoAwayDetect();
             var bonusMoving = goAway ? new MovingInfo(null, int.MaxValue, null) : GoToBonus();
             var target = FindTarget(new AWizard(ASelf), bonusMoving.Target);
@@ -222,7 +223,10 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     path = GoAgainst(n);
                     if (path != null)
+                    {
+                        pathTarget = n;
                         break;
+                    }
                 }
                 if (nearest.Length > 0 && path == null)
                 {
@@ -273,7 +277,21 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        var skipBuildings = path == null || path.GetLength() < 300;
+                        var all = Combats.Select(Utility.CloneCombat).ToArray();
+                        var my = all.FirstOrDefault(x => x.Id == ASelf.Id) as AWizard;
+
+                        my?.Move(FinalMove.Speed, FinalMove.StrafeSpeed);
+                        var ts = new TargetsSelector(all);
+
+                        var skipBuildings = path == null 
+                            || path.GetLength() < 300
+                            || path.GetLength() < 600 && OpponentBuildings.Any(x =>
+                            {
+                                var tar = ts.Select(x);
+                                return tar != null && tar.Id == ASelf.Id;
+                            });
+
+
                         if (TryGoByGradient(x => EstimateDanger(x), x => HasAnyTarget(x, skipBuildings), FinalMove))
                         {
                             var cutTreeMovingInfo = FindTreeTarget(ASelf);
