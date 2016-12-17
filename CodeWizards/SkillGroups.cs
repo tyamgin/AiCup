@@ -100,6 +100,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     return new[] { SkillsGroup.Fireballer, SkillsGroup.Haster, SkillsGroup.Froster };
                 case 4:
                     return new[] { SkillsGroup.Fireballer, SkillsGroup.Haster, SkillsGroup.Froster, SkillsGroup.Shielder };
+                case 5:
+                    return new[] { SkillsGroup.Fireballer, SkillsGroup.Haster, SkillsGroup.Froster, SkillsGroup.Shielder, SkillsGroup.Froster };
                 default:
                     throw new Exception("?");
             }
