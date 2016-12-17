@@ -55,8 +55,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         proj.SetupDamage(owner);
                         if (proj.Type == ProjectileType.Fireball && owner.IsTeammate)
                         {
-                            proj.RemainingDistance = DecodeFbCastDist(owner.Id);
-                            proj.Move();
+                            proj.RemainingDistance = DecodeFbCastDist(owner.Id) - proj.Speed;
                         }
                     }
                 }

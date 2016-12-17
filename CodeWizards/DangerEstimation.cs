@@ -486,6 +486,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 var fireballMinDist = 1000.0;
                 AProjectile fireballMinDistState = null;
+                AWizard fireballMinDistMyState = null;
 
                 for (var ticksPassed = 0; ticksPassed < ProjectilesCheckTicks; ticksPassed++)
                 {
@@ -509,6 +510,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             {
                                 fireballMinDist = dist;
                                 fireballMinDistState = proj;
+                                fireballMinDistMyState = cur;
                             }
                         }
                         else
@@ -525,7 +527,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
                 if (fireballMinDistState != null)
                 {
-                    totalDamage += AProjectile.GetFireballDamage(fireballMinDistState, myStates.Last());
+                    totalDamage += AProjectile.GetFireballDamage(fireballMinDistState, fireballMinDistMyState);
                 }
             }
             return totalDamage;

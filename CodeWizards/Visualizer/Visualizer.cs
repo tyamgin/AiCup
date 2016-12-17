@@ -228,7 +228,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
             foreach (var wizard in MyStrategy.Wizards)
             {
                 var w = MyStrategy.World.Wizards.FirstOrDefault(x => x.Id == wizard.Id);
-                var color = w.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.DarkOrange);
+                var color = w.IsMe ? Color.Red : (wizard.Faction == MyStrategy.Self.Faction ? Color.Blue : Color.Gold);
 
                 DrawCircle(color, w.X, w.Y, wizard.Radius);
 
@@ -284,25 +284,6 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 DrawText(minion.Life + "", 15, Brushes.Red, minion.X - 10, minion.Y - 30);
             }
 
-            // projectiles
-            foreach (var projectile in MyStrategy.World.Projectiles)
-            {
-                var color = projectile.Type == ProjectileType.MagicMissile
-                    ? Color.Blue
-                    : projectile.Type == ProjectileType.Dart
-                        ? Color.Black
-                        : projectile.Type == ProjectileType.FrostBolt
-                            ? Color.SkyBlue
-                            : Color.DarkOrange;
-
-                FillCircle(color, projectile.X, projectile.Y, projectile.Radius);
-                if (Projectiles.ContainsKey(projectile.Id))
-                {
-                    var pts = Projectiles[projectile.Id];
-                    DrawLine(Color.BlueViolet, pts[0].X, pts[0].Y, pts[1].X, pts[1].Y, 3);
-                }
-            }
-
             // trees
             foreach (var tree in TreesObserver.Trees)
             {
@@ -350,20 +331,33 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Visualizer
                 FillCircle(Color.Khaki, Const.MapSize - pt.X, Const.MapSize - pt.Y, 20);
             }
 
-            try
+            // projectiles
+            foreach (var projectile in MyStrategy.World.Projectiles)
             {
-                foreach (var seg in SegmentsDrawQueue)
+                var color = projectile.Type == ProjectileType.MagicMissile
+                    ? Color.Blue
+                    : projectile.Type == ProjectileType.Dart
+                        ? Color.Black
+                        : projectile.Type == ProjectileType.FrostBolt
+                            ? Color.SkyBlue
+                            : Color.Gold;
+
+                FillCircle(color, projectile.X, projectile.Y, projectile.Radius);
+                if (Projectiles.ContainsKey(projectile.Id))
                 {
-                    var points = seg[0] as List<Point>;
-                    var pen = seg[1] as Pen;
-                    float width = seg.Length > 2 ? Convert.ToSingle(seg[2]) : 0F;
-                    for (var i = 1; i < points.Count; i++)
-                        DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y, width);
+                    var pts = Projectiles[projectile.Id];
+                    DrawLine(Color.BlueViolet, pts[0].X, pts[0].Y, pts[1].X, pts[1].Y, 3);
                 }
             }
-            catch (Exception)
+
+
+            foreach (var seg in SegmentsDrawQueue)
             {
-                // TODO: Падает если не успевает отрисоваться. Необходима синхронизация потоков.
+                var points = seg[0] as List<Point>;
+                var pen = seg[1] as Pen;
+                float width = seg.Length > 2 ? Convert.ToSingle(seg[2]) : 0F;
+                for (var i = 1; i < points.Count; i++)
+                    DrawLine(pen.Color, points[i].X, points[i].Y, points[i - 1].X, points[i - 1].Y, width);
             }
         }
 
