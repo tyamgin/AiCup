@@ -496,7 +496,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                         {
                             var dist = cur.GetDistanceTo(proj);
 
-                            if (dist < fireballMinDist && (proj.OwnerUnitId != Self.Id || proj.RemainingDistance < Const.Eps)) // для своих фаерболов точно известно когда взорвется
+                            if (dist < fireballMinDist && (!proj.IsFriendly || proj.RemainingDistance < Const.Eps)) // для своих фаерболов точно известно когда взорвется
                             {
                                 fireballMinDist = dist;
                                 fireballMinDistState = proj;

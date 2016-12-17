@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
@@ -13,7 +14,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         {
             var projectiles = MyStrategy.World.Projectiles
                 .Select(x => new AProjectile(x))
-                .Where(x => !x.IsFriendly || x.Type == ProjectileType.Dart) // свои Dart тоже могут нанести урон
+                .Where(x => !x.IsFriendly 
+                    || x.Type == ProjectileType.Dart 
+                    || x.Type == ProjectileType.Fireball && (Const.IsFinal || x.OwnerUnitId == MyStrategy.ASelf.Id))
                 .ToArray();
 
             var newDict = new Dictionary<long, AProjectile>();
@@ -33,7 +36,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 else
                 {
                     // только появился
-                    var owner = MyStrategy.OpponentCombats.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
+                    var owner = MyStrategy.Combats.FirstOrDefault(x => x.Id == proj.OwnerUnitId);
                     if (owner == null && _wizardsLastSeen.ContainsKey(proj.OwnerUnitId))
                     {
                         // его снаряд видно, но самого не видно
@@ -48,20 +51,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     proj.RemainingDistance = castRange - proj.Speed;
 
                     if (owner != null)
+                    {
                         proj.SetupDamage(owner);
+                        if (proj.Type == ProjectileType.Fireball && owner.IsTeammate)
+                        {
+                            proj.RemainingDistance = DecodeFbCastDist(owner.Id);
+                            proj.Move();
+                        }
+                    }
                 }
             }
-
-            var myFireball = MyStrategy.World.Projectiles.FirstOrDefault(
-                x => x.Type == ProjectileType.Fireball && x.OwnerUnitId == MyStrategy.Self.Id);
-            if (myFireball != null)
-            {
-                newDict[myFireball.Id] = new AProjectile(myFireball)
-                {
-                    RemainingDistance = MyFireballExplosionPoint.GetDistanceTo(myFireball)
-                };
-            }
-
 
             // которые были и пропали не попадут в newDict
 
@@ -81,7 +80,32 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 #endif
         }
 
-        public static Point MyFireballExplosionPoint = Point.Zero;
+        public static double DecodeFbCastDist(long ownerId)
+        {
+            var ownerPrev = MyStrategy.MyWizardsPrevState.FirstOrDefault(x => x.Id == ownerId);
+            var owner = MyStrategy.MyWizards.FirstOrDefault(x => x.Id == ownerId);
+            if (ownerPrev == null || owner == null)
+                return 0.0; // an impossible state
+
+            try
+            {
+                var angle = Geom.GetAngleBetween(owner.Angle, ownerPrev.Angle);
+                var val = (long)((angle + Const.Eps) * 1e8) % 1000;
+                return val;
+            }
+            catch (Exception)
+            {
+                // на случай long overflow
+                return 0.0;
+            }
+        }
+
+        public static double EncodeFbCastDist(double turn, double fbCastDist)
+        {
+            turn = Math.Round(turn, 5);
+            var newTurn = turn + (int)(fbCastDist + Const.Eps) / 1e8 * (turn < 0 ? -1 : 1);
+            return newTurn;
+        }
 
         public static AProjectile[] Projectiles => _projectiles.Values.ToArray();
     }

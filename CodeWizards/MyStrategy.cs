@@ -38,6 +38,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         public static ABuilding[] OpponentBuildings;
         public static ACombatUnit[] Combats, OpponentCombats, MyCombats;
 
+        public static AWizard[] MyWizardsPrevState = new AWizard[0];
+
         public static AProjectile[][] ProjectilesPaths1;
 
         public void Move(Wizard self, World world, Game game, Move move)
@@ -68,8 +70,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 
             if (move.Action == ActionType.Fireball)
             {
-                ProjectilesObserver.MyFireballExplosionPoint = ASelf + Point.ByAngle(ASelf.Angle + move.CastAngle)*move.MinCastDistance;
+                move.Turn = ProjectilesObserver.EncodeFbCastDist(move.Turn, move.MinCastDistance);
             }
+            MyWizardsPrevState = MyWizards;
 
             TimerEndLog("All", 0);
 #if DEBUG
