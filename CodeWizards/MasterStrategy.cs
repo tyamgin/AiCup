@@ -2,13 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
 {
     partial class MyStrategy
     {
-        public Dictionary<long, AMessage> LastMessages = new Dictionary<long, AMessage>(); 
+        public Dictionary<long, AMessage> LastMessages = new Dictionary<long, AMessage>();
+
+        public static string[] Names140 = {"mustang"};
+        public static string[] Names041 = {"Rety"};
 
         public void MasterSendMessages()
         {
@@ -24,10 +28,16 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                 {
                     var o = order[x.Id];
 
-                    if (Const.IsFinal && World.Players.Any(p => new[] {"mustang"}.Contains(p.Name)))
+                    if (Const.IsFinal && World.Players.Any(p => Names140.Contains(p.Name)))
                     {
                         if (o < 1)
                             return ALaneType.Top;
+                        return ALaneType.Middle;
+                    }
+                    if (Const.IsFinal && World.Players.Any(p => Names041.Contains(p.Name)))
+                    {
+                        if (o == 4)
+                            return ALaneType.Bottom;
                         return ALaneType.Middle;
                     }
 
