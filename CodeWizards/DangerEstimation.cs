@@ -86,6 +86,8 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
         double EstimateDanger(AWizard my, bool considerWizardBesieded = true)
         {
             double res = 0;
+            var nearestTower = OpponentCombats.FirstOrDefault(x => x is ABuilding && x.GetDistanceTo2(my) <= Geom.Sqr(x.CastRange));
+
             foreach (var opp in OpponentCombats)
             {
                 var dist = opp.GetDistanceTo(my);
@@ -100,18 +102,25 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                     if (GoAwayCond(my, wizard))
                         outer += GoAwaySafeDist - Game.MagicMissileRadius;
                     var coeff = 45;
-                    if (wizard.IsBesieded && considerWizardBesieded)
+                    if (!wizard.IsBesieded 
+                        || !considerWizardBesieded 
+                        || (nearestTower != null 
+                        && !Utility.IsBase(nearestTower)
+                        && BuildingsObserver.MyBase.GetDistanceTo2(my) > BuildingsObserver.MyBase.GetDistanceTo2(nearestTower)
+                        && BuildingsObserver.MyBase.GetDistanceTo2(wizard) > BuildingsObserver.MyBase.GetDistanceTo2(nearestTower)
+                        )
+                        )
                     {
-                        var otr = my.VisionRange * 1.3;
-                        if (dist < otr)
-                            res -= 10 + 60 - dist/otr*60;
+                        if (dist < inner)
+                            res += (wizard.StaffDamage + wizard.MagicMissileDamage) * 2;
+                        else if (dist < outer)
+                            res += (wizard.MagicMissileDamage + coeff - (dist - inner) / (outer - inner) * coeff) * 2;
                     }
                     else
                     {
-                        if (dist < inner)
-                            res += (wizard.StaffDamage + wizard.MagicMissileDamage)*2;
-                        else if (dist < outer)
-                            res += (wizard.MagicMissileDamage + coeff - (dist - inner)/(outer - inner)*coeff)*2;
+                        var otr = my.VisionRange * 1.3;
+                        if (dist < otr)
+                            res -= 10 + 60 - dist / otr * 60;
                     }
                 }
                 else if (opp is ABuilding)

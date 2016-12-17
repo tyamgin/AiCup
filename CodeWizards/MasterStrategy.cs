@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public Dictionary<long, AMessage> LastMessages = new Dictionary<long, AMessage>();
 
-        public static string[] Names140 = {"mustang"};
+        public static string[] Names140 = {"mustang", "Milanin"};
         public static string[] Names041 = {"Rety"};
 
         public void MasterSendMessages()
@@ -40,6 +40,13 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             return ALaneType.Bottom;
                         return ALaneType.Middle;
                     }
+
+                    //if (true)
+                    //{
+                    //    if (o < 3)
+                    //        return ALaneType.Middle;
+                    //    return ALaneType.Top;
+                    //}
 
                     if (o < 1)
                         return ALaneType.Top;
