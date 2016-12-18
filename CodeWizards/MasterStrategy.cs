@@ -11,8 +11,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public Dictionary<long, AMessage> LastMessages = new Dictionary<long, AMessage>();
 
-        public static string[] Names140 = {"mustang", "Milanin"};
-        public static string[] Names041 = {"Rety"};
+        public static string[] Names140 = { "mustang", "Milanin", /*"Antmsu", "NighTurs", "Recar",*/ };
+        public static string[] Names041 = { "Rety" };
+        public static string[] Names230 = { "byserge" };
 
         public void MasterSendMessages()
         {
@@ -40,13 +41,12 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
                             return ALaneType.Bottom;
                         return ALaneType.Middle;
                     }
-
-                    //if (true)
-                    //{
-                    //    if (o < 3)
-                    //        return ALaneType.Middle;
-                    //    return ALaneType.Top;
-                    //}
+                    if (Const.IsFinal && World.Players.Any(p => Names230.Contains(p.Name)))
+                    {
+                        if (o < 2)
+                            return ALaneType.Top;
+                        return ALaneType.Middle;
+                    }
 
                     if (o < 1)
                         return ALaneType.Top;
