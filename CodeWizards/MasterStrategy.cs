@@ -11,9 +11,9 @@ namespace Com.CodeGame.CodeWizards2016.DevKit.CSharpCgdk
     {
         public Dictionary<long, AMessage> LastMessages = new Dictionary<long, AMessage>();
 
-        public static string[] Names140 = { "mustang", "Milanin", /*"Antmsu", "NighTurs", "Recar",*/ };
+        public static string[] Names140 = { "mustang", "Milanin", "Antmsu", "NighTurs", "Recar", };
         public static string[] Names041 = { "Rety" };
-        public static string[] Names230 = { "byserge" };
+        public static string[] Names230 = { "byserge", "cheeser" };
 
         public void MasterSendMessages()
         {
