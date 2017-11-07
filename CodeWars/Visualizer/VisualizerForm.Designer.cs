@@ -39,9 +39,12 @@
             // 
             // panel
             // 
+            this.panel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel.Location = new System.Drawing.Point(86, 12);
             this.panel.Name = "panel";
-            this.panel.Size = new System.Drawing.Size(932, 515);
+            this.panel.Size = new System.Drawing.Size(1232, 888);
             this.panel.TabIndex = 0;
             this.panel.TabStop = false;
             // 
@@ -99,15 +102,17 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1030, 539);
+            this.ClientSize = new System.Drawing.Size(1330, 912);
             this.Controls.Add(this.tickLabel);
             this.Controls.Add(this.renderButton);
             this.Controls.Add(this.buttonUnZoom);
             this.Controls.Add(this.buttonZoom);
             this.Controls.Add(this.buttonPause);
             this.Controls.Add(this.panel);
+            this.KeyPreview = true;
             this.Name = "VisualizerForm";
             this.Text = "VisualizerForm";
+            this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.VisualizerForm_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.panel)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

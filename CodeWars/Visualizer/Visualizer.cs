@@ -22,12 +22,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
 
         private static void _showWindow()
         {
-            _form = new MainForm();
+            _form = new VisualizerForm();
             _form.ShowDialog();
             _form.Focus();
         }
 
-        private static MainForm _form;
+        private static VisualizerForm _form;
         private static Graphics _graphics;
 
         private delegate void DrawDelegate();
@@ -69,23 +69,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
         {
             var font = new Font("Comic Sans MS", _S(size));
             _graphics.DrawString(text, font, brush, _X(x), _Y(y));
-        }
-
-        private static double _lookX = 0, _lookY = 0, _scale = 1.5;
-
-        private static int _X(double x)
-        {
-            return (int)((x - _lookX) / _scale);
-        }
-
-        private static int _Y(double y)
-        {
-            return (int)((y - _lookY) / _scale);
-        }
-
-        private static int _S(double x)
-        {
-            return (int)Math.Ceiling(x / _scale);
         }
 
         public static List<object[]> SegmentsDrawQueue = new List<object[]>();
@@ -176,70 +159,62 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
-            LookAt(new Point(0, 0));
-
             // туман войны
             // TODO
 
 
-            if (_form.gradCheckBox.Checked)
+
+            for (var j = 0; j < MyStrategy.TerrainType.Length; j++)
             {
-                // PP
-                // TODO
+                for (var i = 0; i < MyStrategy.TerrainType[0].Length; i++)
+                {
+                    var type = MyStrategy.TerrainType[i][j];
+                    Color? color = null;
+                    switch (type)
+                    {
+                        case TerrainType.Swamp:
+                            color = Color.Bisque;
+                            break;
+                        case TerrainType.Forest:
+                            color = Color.PaleGreen;
+                            break;
+                    }
+                    if (color != null)
+                        FillRect(color.Value, i*G.CellSize, j*G.CellSize, G.CellSize, G.CellSize);
+                }
             }
 
-            if (_form.cellsCheckBox.Checked)
-            {
-                for (var j = 0; j < MyStrategy.TerrainType.Length; j++)
-                {
-                    for (var i = 0; i < MyStrategy.TerrainType[0].Length; i++)
-                    {
-                        var type = MyStrategy.TerrainType[i][j];
-                        Color? color = null;
-                        switch (type)
-                        {
-                            case TerrainType.Swamp:
-                                color = Color.Bisque;
-                                break;
-                            case TerrainType.Forest:
-                                color = Color.PaleGreen;
-                                break;
-                        }
-                        if (color != null)
-                            FillRect(color.Value, i*G.CellSize, j*G.CellSize, G.CellSize, G.CellSize);
-                    }
-                }
 
-                for (var j = 0; j < MyStrategy.WeatherType.Length; j++)
+            for (var j = 0; j < MyStrategy.WeatherType.Length; j++)
+            {
+                for (var i = 0; i < MyStrategy.WeatherType[0].Length; i++)
                 {
-                    for (var i = 0; i < MyStrategy.WeatherType[0].Length; i++)
+                    var type = MyStrategy.WeatherType[i][j];
+                    Color? color = null;
+                    switch (type)
                     {
-                        var type = MyStrategy.WeatherType[i][j];
-                        Color? color = null;
-                        switch (type)
-                        {
-                            case WeatherType.Cloud:
-                                color = Color.LightSkyBlue;
-                                break;
-                            case WeatherType.Rain:
-                                color = Color.DodgerBlue;
-                                break;
-                        }
-                        if (color != null)
-                        {
-                            //DrawRect(color.Value, i*G.CellSize, j*G.CellSize, G.CellSize, G.CellSize, 2);
-                            //SolidBrush whiteBrush = new SolidBrush(Color.Red);
-                            //_graphics.FillEllipse(whiteBrush, 5, 10, 50, 30);
-                            //_graphics.FillEllipse(whiteBrush, 10, 5, 50, 30);
-                            //_graphics.FillEllipse(whiteBrush, 10, 20, 50, 30);
-                            //_graphics.FillEllipse(whiteBrush, 20, 20, 50, 30);
-                            //_graphics.FillEllipse(whiteBrush, 30, 5, 50, 30);
-                            //_graphics.FillEllipse(whiteBrush, 30, 30, 50, 30);
-                            //_graphics.FillEllipse(whiteBrush, 35, 25, 50, 30);
-                        }
+                        case WeatherType.Cloud:
+                            color = Color.LightSkyBlue;
+                            break;
+                        case WeatherType.Rain:
+                            color = Color.DodgerBlue;
+                            break;
+                    }
+                    if (color != null)
+                    {
+                        //DrawRect(color.Value, i*G.CellSize, j*G.CellSize, G.CellSize, G.CellSize, 2);
+                        //SolidBrush whiteBrush = new SolidBrush(Color.Red);
+                        //_graphics.FillEllipse(whiteBrush, 5, 10, 50, 30);
+                        //_graphics.FillEllipse(whiteBrush, 10, 5, 50, 30);
+                        //_graphics.FillEllipse(whiteBrush, 10, 20, 50, 30);
+                        //_graphics.FillEllipse(whiteBrush, 20, 20, 50, 30);
+                        //_graphics.FillEllipse(whiteBrush, 30, 5, 50, 30);
+                        //_graphics.FillEllipse(whiteBrush, 30, 30, 50, 30);
+                        //_graphics.FillEllipse(whiteBrush, 35, 25, 50, 30);
                     }
                 }
             }
+
 
             // vehicles
             foreach (var veh in VehiclesObserver.Vehicles)
@@ -268,10 +243,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
 
 
             // map ranges
-            DrawLine(Color.Black, 1, 1, 1, Const.MapSize - 1);
-            DrawLine(Color.Black, 1, Const.MapSize - 1, Const.MapSize - 1, Const.MapSize - 1);
-            DrawLine(Color.Black, Const.MapSize - 1, 1, Const.MapSize - 1, Const.MapSize - 1);
-            DrawLine(Color.Black, Const.MapSize - 1, 1, 1, 1);
+            DrawLine(Color.Black, 0, 0, 0, Const.MapSize);
+            DrawLine(Color.Black, 0, Const.MapSize, Const.MapSize, Const.MapSize);
+            DrawLine(Color.Black, Const.MapSize, 0, Const.MapSize, Const.MapSize);
+            DrawLine(Color.Black, Const.MapSize, 0, 0, 0);
 
             foreach (var seg in SegmentsDrawQueue)
             {
@@ -295,21 +270,48 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
 
         public static bool Pause = false;
 
-        public static void LookAt(Point p, double scale = -1)
+        private static Point _lootAt;
+
+        public static Point LookAt
         {
-            Zoom = scale;
+            set
+            {
+                _lootAt = value;
+                _lookY = value.Y - _scale*_form.panel.Height/2;
+                if (_lookY < 0)
+                    _lookY = 0;
+                if (_lookY > Const.MapSize - _scale*_form.panel.Height)
+                    _lookY = Const.MapSize - _scale*_form.panel.Height;
 
-            _lookY = p.Y - _scale*_form.panel.Height/2;
-            if (_lookY < 0)
-                _lookY = 0;
-            if (_lookY > Const.MapSize - _scale*_form.panel.Height)
-                _lookY = Const.MapSize - _scale*_form.panel.Height;
+                _lookX = value.X - _scale*_form.panel.Width/2;
+                if (_lookX < 0)
+                    _lookX = 0;
+                if (_lookX > Const.MapSize - _scale*_form.panel.Width)
+                    _lookX = Const.MapSize - _scale*_form.panel.Width;
+            }
+            get { return _lootAt; }
+        }
 
-            _lookX = p.X - _scale*_form.panel.Width/2;
-            if (_lookX < 0)
-                _lookX = 0;
-            if (_lookX > Const.MapSize - _scale*_form.panel.Width)
-                _lookX = Const.MapSize - _scale*_form.panel.Width;
+        private static double _lookX = 0, _lookY = 0, _scale = 1.5;
+
+        private static int _X(double x)
+        {
+            if (_lookX > 0)
+                x -= _lookX;
+            
+            return (int)(x / _scale);
+        }
+
+        private static int _Y(double y)
+        {
+            if (_lookY > 0)
+                y -= _lookY;
+            return (int)(y / _scale);
+        }
+
+        private static int _S(double x)
+        {
+            return (int)Math.Ceiling(x / _scale);
         }
     }
 }

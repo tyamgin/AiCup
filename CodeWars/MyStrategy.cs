@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
@@ -33,7 +34,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (World.TickIndex == 0)
             {
-                Visualizer.Visualizer.LookAt(new Point(0, 0));
+                Visualizer.Visualizer.LookAt = new Point(0, 0);
                 Visualizer.Visualizer.Zoom = 0.5;
             }
             Visualizer.Visualizer.Draw();
@@ -74,8 +75,27 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 move.Action = ActionType.Move;
                 move.X = world.Width / 2.0D;
-                move.Y = world.Height / 2.0D;
+                move.Y = world.Height / 4.0D;
             }
+
+            if (world.TickIndex % 100 == 0)
+            {
+                move.Action = ActionType.Rotate;
+                move.X = 320;
+                move.Y = 250;
+                move.Angle = Math.PI / 4;
+                move.MaxSpeed = 100;
+                move.MaxSpeed = 0.1;
+                return;
+            }
+
+            //if (world.TickIndex == 700)
+            //{
+            //    move.Action = ActionType.Move;
+            //    move.X = world.Width / 2.0D;
+            //    move.Y = world.Height / 2.0D;
+            //    move.MaxSpeed = 0.2;
+            //}
         }
     }
 }
