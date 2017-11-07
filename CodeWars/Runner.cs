@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-
+using System.Diagnostics;
+using System.Threading;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
@@ -8,6 +9,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
         private readonly string token;
 
         public static void Main(string[] args) {
+#if DEBUG
+            Process.Start("G:\\Projects\\AiCup\\CodeWars\\local_runner\\local-runner-sync.bat");
+            Thread.Sleep(2000);
+
+            //var otherStrategy = new Process
+            //{
+            //    StartInfo =
+            //    {
+            //        FileName = @"G:\Projects\AiCup\CodeWizards\bin\Release\csharp-cgdk.exe",
+            //        Arguments = "127.0.0.1 " + (31002) + " 0000000000000000",
+            //        CreateNoWindow = true
+            //    }
+            //};
+            //otherStrategy.Start();
+            //Thread.Sleep(100);
+#endif
+
             new Runner(args.Length == 3 ? args : new[] {"127.0.0.1", "31001", "0000000000000000"}).Run();
         }
 

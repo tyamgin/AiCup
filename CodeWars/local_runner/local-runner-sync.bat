@@ -24,4 +24,4 @@ if "%NUMBER_OF_PROCESSORS%" neq "" (
     )
 )
 
-start "" "%JAVA_BIN:"=%javaw" -Xms512m -Xmx1G%JAVA_PARAMETERS% -jar "local-runner.jar" local-runner-sync.properties local-runner-sync.default.properties %*
+start "" "%JAVA_BIN:"=%javaw" -Xms512m -Xmx1G%JAVA_PARAMETERS% -jar "G:\Projects\AiCup\CodeWars\local_runner\local-runner.jar" "G:\Projects\AiCup\CodeWars\local_runner\local-runner-sync.properties" "G:\Projects\AiCup\CodeWars\local_runner\local-runner-sync.default.properties" %*
