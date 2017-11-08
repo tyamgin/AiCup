@@ -256,6 +256,25 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
     }
 
+    public class Rect
+    {
+        public double X, Y, Width, Height;
+
+        public double X2
+        {
+            get { return X + Width; }
+            set { Width = value - X; }
+        }
+
+        public double Y2
+        {
+            get { return Y + Height; }
+            set { Height = value - Y; }
+        }
+
+        public Point Center => new Point((X + X2)/2, (Y + Y2)/2);
+    }
+
     public class Geom
     {
         /// <summary>

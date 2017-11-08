@@ -136,13 +136,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             throw new Exception("wrong x ranges");
         }
 
-        public class RectangularSelection
+        public class RectangularSelection : Rect
         {
-            public double X, Y, Width, Height;
+            public int Tick;
+        }
+
+        public class SelectionVector
+        {
+            public Point Start, End;
             public int Tick;
         }
 
         public static List<RectangularSelection> Selections = new List<RectangularSelection>();
+        public static List<SelectionVector> Vectors = new List<SelectionVector>(); 
 
         public static int DrawSince { get; set; } = 0;
 
@@ -238,8 +244,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 {
                     X = MyStrategy.ResultingMove.Left,
                     Y = MyStrategy.ResultingMove.Top,
-                    Width = MyStrategy.ResultingMove.Right - MyStrategy.ResultingMove.Left,
-                    Height = MyStrategy.ResultingMove.Bottom - MyStrategy.ResultingMove.Top,
+                    X2 = MyStrategy.ResultingMove.Right,
+                    Y2 = MyStrategy.ResultingMove.Bottom,
+                    Tick = MyStrategy.World.TickIndex,
+                });
+            }
+            if (MyStrategy.ResultingMove.Action == ActionType.Move)
+            {
+                var start = MyStrategy.GetUnitsAvg(VehiclesObserver.Vehicles.Where(x => x.IsSelected).ToArray());
+                Vectors.Add(new SelectionVector
+                {
+                    Start = start,
+                    End = start + new Point(MyStrategy.ResultingMove.X, MyStrategy.ResultingMove.Y),
                     Tick = MyStrategy.World.TickIndex,
                 });
             }
@@ -254,6 +270,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 if (tm + 1 >= selTicksWait)
                 {
                     Selections.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            var selTicksWait2 = 20;
+            for (var i = 0; i < Vectors.Count; i++)
+            {
+                var vec = Vectors[i];
+                var tm = MyStrategy.World.TickIndex - vec.Tick;
+                DrawLine(Color.Black, vec.Start.X, vec.Start.Y, vec.End.X, vec.End.Y, selTicksWait2 - tm);
+
+                if (tm + 1 >= selTicksWait2)
+                {
+                    Vectors.RemoveAt(i);
                     i--;
                 }
             }
