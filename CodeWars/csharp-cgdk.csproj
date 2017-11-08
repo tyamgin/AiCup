@@ -76,6 +76,7 @@
   <ItemGroup>
     <Compile Include="ACircularUnit.cs" />
     <Compile Include="AUnit.cs" />
+    <Compile Include="AVehicle.cs" />
     <Compile Include="Const.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="Model\ActionType.cs" />

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,11 +17,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static void Initialize(World world, Game game)
         {
             MapSize = world.Width; // Width == Height
+
+            _expect(game.ArrvDurability, 100);
+            _expect(game.FighterDurability, 100);
+            _expect(game.HelicopterDurability, 100);
+            _expect(game.IfvDurability, 100);
+            _expect(game.TankDurability, 100);
+        }
+
+        private static void _expect<T>(T source, T value)
+        {
+            if (!value.Equals(source))
+                throw new Exception("Expected " + source + " to equal " + value);
         }
     }
 
     class G
     {
         public static double CellSize = 32;
+        public static double MaxDurability = 100;
     }
+
+
 }

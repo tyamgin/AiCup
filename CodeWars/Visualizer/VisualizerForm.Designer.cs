@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VisualizerForm));
             this.panel = new System.Windows.Forms.PictureBox();
             this.buttonPause = new System.Windows.Forms.Button();
             this.buttonZoom = new System.Windows.Forms.Button();
@@ -109,6 +110,7 @@
             this.Controls.Add(this.buttonZoom);
             this.Controls.Add(this.buttonPause);
             this.Controls.Add(this.panel);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Name = "VisualizerForm";
             this.Text = "VisualizerForm";

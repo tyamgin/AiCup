@@ -2,15 +2,20 @@ using System;
 using System.Collections.Generic;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
     {
         public static World World;
+        public static Player Me;
+        public static Move ResultingMove;
 
         public static TerrainType[][] TerrainType;
         public static WeatherType[][] WeatherType;
+        public static AVehicle[] MyVehicles, OppVehicles;
 
         public void Move(Player me, World world, Game game, Move move)
         {
@@ -18,6 +23,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             // ...
 
             World = world;
+            Me = me;
+            ResultingMove = move;
 
 #if DEBUG
             while (Visualizer.Visualizer.Pause)
@@ -44,6 +51,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 timer.Start();
                 while (!Visualizer.Visualizer.Done/* || timer.ElapsedMilliseconds < 13*/)
                 {
+                    Thread.Sleep(10);
                 }
                 timer.Stop();
             }
@@ -61,6 +69,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             VehiclesObserver.Update();
+            MyVehicles = VehiclesObserver.Vehicles.Where(x => x.IsMy).ToArray();
+            OppVehicles = VehiclesObserver.Vehicles.Where(x => !x.IsMy).ToArray();
+
 
 
             if (world.TickIndex == 0)

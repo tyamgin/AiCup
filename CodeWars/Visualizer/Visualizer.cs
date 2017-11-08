@@ -65,6 +65,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             _graphics.DrawPie(new Pen(color), new Rectangle(_X(x - r), _Y(y - r), _S(2*r), _S(2*r)), (float)startAngle, (float)(endAngle - startAngle));
         }
 
+        private static void FillPie(Color color, double x, double y, double r, double startAngle, double endAngle)
+        {
+            startAngle = Geom.ToDegrees(startAngle);
+            endAngle = Geom.ToDegrees(endAngle);
+            _graphics.FillPie(new SolidBrush(color), new Rectangle(_X(x - r), _Y(y - r), _S(2 * r), _S(2 * r)), (float)startAngle, (float)(endAngle - startAngle));
+        }
+
         private static void DrawText(string text, double size, Brush brush, double x, double y)
         {
             var font = new Font("Comic Sans MS", _S(size));
@@ -129,6 +136,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             throw new Exception("wrong x ranges");
         }
 
+        public class RectangularSelection
+        {
+            public double X, Y, Width, Height;
+            public int Tick;
+        }
+
+        public static List<RectangularSelection> Selections = new List<RectangularSelection>();
+
         public static int DrawSince { get; set; } = 0;
 
         public static bool Done;
@@ -190,31 +205,58 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 for (var i = 0; i < MyStrategy.WeatherType[0].Length; i++)
                 {
                     var type = MyStrategy.WeatherType[i][j];
-                    Color? color = null;
-                    switch (type)
+
+                    var size = G.CellSize;
+                    var dx = size*0.5 + i * G.CellSize;
+                    var dy = size*0.45 + j * G.CellSize;
+                    var bigRad = size*0.25;
+                    var smallRad = size*0.17;
+                    var rainRad = size/20;
+
+                    var cloudColor = Color.LightBlue;
+                    if (type == WeatherType.Cloud || type == WeatherType.Rain)
                     {
-                        case WeatherType.Cloud:
-                            color = Color.LightSkyBlue;
-                            break;
-                        case WeatherType.Rain:
-                            color = Color.DodgerBlue;
-                            break;
+                        FillPie(cloudColor, dx, dy, bigRad, Math.PI, Math.PI*2);
+                        FillPie(cloudColor, dx - bigRad, dy, smallRad, 0, 2*Math.PI);
+                        FillPie(cloudColor, dx + bigRad, dy, smallRad, 0, 2*Math.PI);
+                        FillRect(cloudColor, dx - bigRad, dy, 2*bigRad, smallRad);
                     }
-                    if (color != null)
+                    if (type == WeatherType.Rain)
                     {
-                        //DrawRect(color.Value, i*G.CellSize, j*G.CellSize, G.CellSize, G.CellSize, 2);
-                        //SolidBrush whiteBrush = new SolidBrush(Color.Red);
-                        //_graphics.FillEllipse(whiteBrush, 5, 10, 50, 30);
-                        //_graphics.FillEllipse(whiteBrush, 10, 5, 50, 30);
-                        //_graphics.FillEllipse(whiteBrush, 10, 20, 50, 30);
-                        //_graphics.FillEllipse(whiteBrush, 20, 20, 50, 30);
-                        //_graphics.FillEllipse(whiteBrush, 30, 5, 50, 30);
-                        //_graphics.FillEllipse(whiteBrush, 30, 30, 50, 30);
-                        //_graphics.FillEllipse(whiteBrush, 35, 25, 50, 30);
+                        FillCircle(cloudColor, dx + size * 0.2, dy + bigRad + size * 0.02, rainRad);
+                        FillCircle(cloudColor, dx - size * 0.1, dy + bigRad + size * 0.02, rainRad);
+                        FillCircle(cloudColor, dx + size * 0.05, dy + bigRad + size * 0.10, rainRad);
+                        FillCircle(cloudColor, dx - size * 0.25, dy + bigRad + size * 0.10, rainRad);
                     }
                 }
             }
 
+            // selections
+            if (MyStrategy.ResultingMove.Right > 0 && MyStrategy.ResultingMove.Bottom > 0)
+            {
+                Selections.Add(new RectangularSelection
+                {
+                    X = MyStrategy.ResultingMove.Left,
+                    Y = MyStrategy.ResultingMove.Top,
+                    Width = MyStrategy.ResultingMove.Right - MyStrategy.ResultingMove.Left,
+                    Height = MyStrategy.ResultingMove.Bottom - MyStrategy.ResultingMove.Top,
+                    Tick = MyStrategy.World.TickIndex,
+                });
+            }
+
+            var selTicksWait = 10;
+            for (var i = 0; i < Selections.Count; i++)
+            {
+                var rect = Selections[i];
+                var tm = MyStrategy.World.TickIndex - rect.Tick;
+                DrawRect(Color.Black, rect.X, rect.Y, rect.Width, rect.Height, selTicksWait - tm);
+
+                if (tm + 1 >= selTicksWait)
+                {
+                    Selections.RemoveAt(i);
+                    i--;
+                }
+            }
 
             // vehicles
             foreach (var veh in VehiclesObserver.Vehicles)
@@ -238,7 +280,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                         color = Color.Orange;
                         break;
                 }
-                FillCircle(color, veh.X, veh.Y, veh.Radius);
+                DrawCircle(color, veh.X, veh.Y, veh.Radius, 1);
+                FillPie(color, veh.X, veh.Y, veh.Radius, 0, Math.PI * 2 * veh.Durability / G.MaxDurability);
+
+                if (veh.IsSelected)
+                    DrawCircle(color,  veh.X, veh.Y, veh.Radius + 1, 1);
+
+                if (!veh.IsMy)
+                    FillCircle(Color.Black, veh.X, veh.Y, 0.6);
             }
 
 

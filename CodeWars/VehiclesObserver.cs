@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public static Dictionary<long, Vehicle> VehicleById = new Dictionary<long, Vehicle>();
 
-        public static IEnumerable<Vehicle> Vehicles => VehicleById.Values;
+        public static AVehicle[] Vehicles;
 
         public static void Update()
         {
@@ -33,6 +33,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     VehicleById[vehicleId] = new Vehicle(VehicleById[vehicleId], vehicleUpdate);
                 }
             }
+            Vehicles = VehicleById.Values.Select(x => new AVehicle(x)).ToArray();
         }
     }
 }
