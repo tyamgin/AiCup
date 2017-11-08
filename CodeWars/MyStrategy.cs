@@ -128,7 +128,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return;
             }
 
-            if (dx < minD && dy < minD)
+            if (dx < minD * 1.2 && dy < minD * 1.2)
             {
                 if (world.TickIndex%200 == 170)
                 {
