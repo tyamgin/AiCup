@@ -79,7 +79,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var rectR = new Rect { X = rect.X + rect.Width / 2, Y = rect.Y, X2 = rect.X2, Y2 = rect.Y2 };
             var rectT = new Rect { X = rect.X, Y = rect.Y, X2 = rect.X2, Y2 = rect.Y + rect.Height / 2 };
             var rectB = new Rect { X = rect.X, Y = rect.Y + rect.Height / 2, X2 = rect.X2, Y2 = rect.Y2 };
-            var minD = 120 * MyVehicles.Length/ 500;
+            var minD = 120 * Math.Sqrt(MyVehicles.Length) / Math.Sqrt(500);
             var dx = rect.X2 - rect.X;
             if (dx > minD && world.TickIndex%200 == 0)
             {
