@@ -58,7 +58,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 #endif
         }
-
+		
         private void _move(Player me, World world, Game game, Move move)
         {
             Const.Initialize(world, game);
@@ -74,69 +74,59 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             OppVehicles = VehiclesObserver.Vehicles.Where(x => !x.IsMy).ToArray();
 
             var rect = GetUnitsBoundingRect(MyVehicles);
-            var massCenter = GetUnitsAvg(MyVehicles);
-            var rectL = new Rect { X = rect.X, Y = rect.Y, X2 = rect.X + rect.Width/2, Y2 = rect.Y2 };
-            var rectR = new Rect { X = rect.X + rect.Width / 2, Y = rect.Y, X2 = rect.X2, Y2 = rect.Y2 };
-            var rectT = new Rect { X = rect.X, Y = rect.Y, X2 = rect.X2, Y2 = rect.Y + rect.Height / 2 };
-            var rectB = new Rect { X = rect.X, Y = rect.Y + rect.Height / 2, X2 = rect.X2, Y2 = rect.Y2 };
-            var minD = 120 * Math.Sqrt(MyVehicles.Length) / Math.Sqrt(500);
-            var dx = rect.X2 - rect.X;
-            if (dx > minD && world.TickIndex%200 == 0)
-            {
-                ResultingMove.Action = ActionType.ClearAndSelect;
-                ApplyREct(rectL);
-                return;
-            }
-            if (dx > minD && world.TickIndex%200 == 1)
-            {
-                ResultingMove.Action = ActionType.Move;
-                var delta = rect.Center - rectL.Center;
-                ResultingMove.X = delta.X;
-                ResultingMove.Y = delta.Y;
-                return;
-            }
+            var rectL = new Rect { X = rect.X,                Y = rect.Y,                 X2 = rect.X + rect.Width/2, Y2 = rect.Y2                };
+            var rectR = new Rect { X = rect.X + rect.Width/2, Y = rect.Y,                 X2 = rect.X2,               Y2 = rect.Y2                };
+            var rectT = new Rect { X = rect.X,                Y = rect.Y,                 X2 = rect.X2,               Y2 = rect.Y + rect.Height/2 };
+            var rectB = new Rect { X = rect.X,                Y = rect.Y + rect.Height/2, X2 = rect.X2,               Y2 = rect.Y2                };
+			
+			var totalInterval = 160;
+			var subInterval = 25;
+			var curInterval = 0;
+			
+			if (_tryMoveRect(rect, rectL, rectR, totalInterval, curInterval * subInterval))
+			{
+				return;
+			}
+			curInterval++;
+			
+			if (_tryMoveRect(rect, rectT, rectB, totalInterval, curInterval * subInterval))
+			{
+				return;
+			}
+			curInterval++;
+			
+			if (_tryMoveRect(rect, rectR, rectL, totalInterval, curInterval * subInterval))
+			{
+				return;
+			}
+			curInterval++;
+			
+			if (_tryMoveRect(rect, rectB, rectT, totalInterval, curInterval * subInterval))
+			{
+				return;
+			}
+			curInterval++;
+			
 
-            var dy = rect.Y2 - rect.Y;
-            if (dy > minD && world.TickIndex % 200 == 50)
-            {
-                ResultingMove.Action = ActionType.ClearAndSelect;
-                ApplyREct(rectT);
-                return;
-            }
-            if (dy > minD && world.TickIndex % 200 == 51)
-            {
-                ResultingMove.Action = ActionType.Move;
-                var delta = rectB.Center - rect.Center;
-                ResultingMove.X = delta.X;
-                ResultingMove.Y = delta.Y;
-                return;
-            }
-
-            if (world.TickIndex % 200 == 100)
-            {
-                ResultingMove.Action = ActionType.ClearAndSelect;
-                ApplyREct(rect);
-                return;
-            }
-
-            if (world.TickIndex % 200 == 101)
-            {
-                ResultingMove.Action = ActionType.Rotate;
-                ResultingMove.X = rect.Center.X;
-                ResultingMove.Y = rect.Center.Y;
-                ResultingMove.Angle = Math.PI / 2;
-                return;
-            }
-
+			if (_tryMoveRect(rect, null, null, totalInterval, curInterval * subInterval, true))
+			{
+				return;
+			}
+			curInterval++;
+			
+			var massCenter = GetUnitsAvg(MyVehicles);
+			var minD = 110 * Math.Sqrt(MyVehicles.Length) / Math.Sqrt(500);
+			var dx = rect.X2 - rect.X;
+			var dy = rect.Y2 - rect.Y;
             if (dx < minD * 1.2 && dy < minD * 1.2)
             {
-                if (world.TickIndex%200 == 170)
+                if (world.TickIndex%totalInterval == curInterval * subInterval)
                 {
                     ResultingMove.Action = ActionType.ClearAndSelect;
                     ApplyREct(rect);
                     return;
                 }
-                if (world.TickIndex%200 == 171)
+                if (world.TickIndex%totalInterval == curInterval * subInterval + 1)
                 {
                     ResultingMove.Action = ActionType.Move;
                     var target = OppVehicles.OrderBy(x => x.GetDistanceTo2(massCenter)).FirstOrDefault();
