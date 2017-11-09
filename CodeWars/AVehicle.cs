@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -14,12 +10,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public double Durability;
         public bool IsSelected;
 
+        public Point Target;
+        public double Speed;
+
         public AVehicle(Vehicle unit) : base(unit)
         {
             IsMy = unit.PlayerId == MyStrategy.Me.Id;
             Type = unit.Type;
             Durability = unit.Durability;
             IsSelected = unit.IsSelected;
+            
         }
 
         public AVehicle(AVehicle unit) : base(unit)
@@ -28,6 +28,31 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Type = unit.Type;
             Durability = unit.Durability;
             IsSelected = unit.IsSelected;
+        }
+
+        bool Move(Func<ACircularUnit, bool> checkCollisions = null)
+        {
+            if (Target == null)
+                return true;
+
+            var vec = Target - this;
+            double length;
+            if (vec.Length > Speed)
+            {
+                length = vec.Length;
+            }
+            else
+            {
+                length = Speed;
+            }
+            var delta = vec.Normalized()*length;
+            //var prev = 
+            if (checkCollisions != null && checkCollisions(to))
+            {
+                
+            }
+
+            return false;
         }
     }
 }

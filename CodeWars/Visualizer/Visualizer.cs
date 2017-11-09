@@ -79,8 +79,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
         }
 
         public static List<object[]> SegmentsDrawQueue = new List<object[]>();
-        public static List<Tuple<Point, double>> DangerPoints;
-        public static Dictionary<long, Point[]> Projectiles = new Dictionary<long, Point[]>();
 
         public class Color01
         {
