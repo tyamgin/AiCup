@@ -84,7 +84,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     
                     RotationAngle -= angle;
                 }
-                var to = RotateClockwise(-angle, RotationCenter);
+                var to = RotateCounterClockwise(angle, RotationCenter);
                 delta = to - this;
             }
 

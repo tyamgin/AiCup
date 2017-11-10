@@ -183,6 +183,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return pt.RotateClockwise(angle) + center;
         }
 
+        public Point RotateCounterClockwise(double angle)
+        {
+            angle = Math.PI*2 - angle;
+            var cos = Math.Cos(angle);
+            var sin = Math.Sin(angle);
+            return new Point(cos * X + sin * Y, -sin * X + cos * Y);
+        }
+
+        public Point RotateCounterClockwise(double angle, Point center)
+        {
+            var pt = this - center;
+            return pt.RotateCounterClockwise(angle) + center;
+        }
+
         public double GetDistanceToCircle(ACircularUnit circle)
         {
             var distToCenter = GetDistanceTo(circle);

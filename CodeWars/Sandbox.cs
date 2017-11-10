@@ -51,6 +51,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                     break;
             }
+        }
+
+        public void DoTick()
+        {
             AVehicle.Move(Vehicles);
         }
     }

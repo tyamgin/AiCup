@@ -10,7 +10,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         private static Dictionary<long, Vehicle> _vehicleById = new Dictionary<long, Vehicle>();
         public static Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
-        public static Dictionary<long, AVehicle> VehicleById2 = new Dictionary<long, AVehicle>();
 
         public static AVehicle[] Vehicles = new AVehicle[0];
 
@@ -41,20 +40,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             foreach (var veh in _vehicleById.Values)
             {
-                var prev = VehicleById2.ContainsKey(veh.Id) ? VehicleById2[veh.Id] : null;
+                var prev = MoveObserver.BeforeMoveUnits.ContainsKey(veh.Id) ? MoveObserver.BeforeMoveUnits[veh.Id] : null;
                 var cur = VehicleById.ContainsKey(veh.Id) ? VehicleById[veh.Id] : null;
                 
                 var updatedVehicle = new AVehicle(veh);
 
                 if (updatedVehicle.IsMy)
                 {
-                    AVehicle aveh = cur;
-                    if (prev != null && !Geom.PointsEquals(prev, updatedVehicle)) ; // в local runner сдвинулся
-                    else if (!Geom.PointsEquals(cur, updatedVehicle)) // мой сдвинулся, а в local runner нет
-                        aveh = prev;
-
-                    if (aveh != null)
+                    if (prev != null)
                     {
+                        AVehicle aveh = new AVehicle(prev);
+                        if (!Geom.PointsEquals(prev, updatedVehicle)) // в local runner сдвинулся
+                            aveh.Move();
+                        if (!Geom.PointsEquals(aveh, updatedVehicle))
+                            Console.WriteLine("Looks vehicle updated wrong (X, Y)");
+
                         updatedVehicle.Speed = aveh.Speed;
                         updatedVehicle.Target = aveh.Target;
                         updatedVehicle.AngularSpeed = aveh.AngularSpeed;
@@ -92,11 +92,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (cur != null && updatedVehicle.IsSelected != cur.IsSelected)
                     Console.WriteLine("Looks vehicle updated wrong (IsSelected)");
             }
-
-            VehicleById2.Clear();
-
-            foreach (var veh in VehicleById.Values)
-                VehicleById2[veh.Id] = new AVehicle(veh);
 
             Vehicles = VehicleById.Values.ToArray();
 
