@@ -71,14 +71,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return Math.Abs(x - y) < Const.Eps;
         }
 
-        public static bool Less(double x, double y)
+        public static void GetCell(Point point, out int I, out int J)
         {
-            return x + Const.Eps < y;
-        }
-
-        public static bool PointsEqual(Point a, Point b)
-        {
-            return Equals(a.X, b.X) && Equals(a.Y, b.Y);
+            I = (int) (point.X/G.CellSize + Const.Eps);
+            J = (int) (point.Y/G.CellSize + Const.Eps);
         }
 
         public static void Dec(ref int value)

@@ -29,7 +29,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
             new Runner(args.Length == 3 ? args : new[] {"127.0.0.1", "31001", "0000000000000000"}).Run();
         }
 
-        private Runner(string[] args) {
+        private Runner(IReadOnlyList<string> args)
+        {
             remoteProcessClient = new RemoteProcessClient(args[0], int.Parse(args[1]));
             token = args[2];
         }

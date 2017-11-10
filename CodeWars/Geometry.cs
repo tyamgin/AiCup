@@ -177,6 +177,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return new Point(cos * X + sin * Y, -sin * X + cos * Y);
         }
 
+        public Point RotateClockwise(double angle, Point center)
+        {
+            var pt = this - center;
+            return pt.RotateClockwise(angle) + center;
+        }
+
         public double GetDistanceToCircle(ACircularUnit circle)
         {
             var distToCenter = GetDistanceTo(circle);
@@ -576,6 +582,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             return _findTangentPoints(center.X, center.Y, Radius, external.X, external.Y);
         }
+
+        public static bool DoublesEquals(double a, double b)
+        {
+            return Math.Abs(a - b) < Const.Eps;
+        }
+
+        public static bool PointsEquals(Point a, Point b)
+        {
+            return Math.Abs(a.X - b.X) < Const.Eps && Math.Abs(a.Y - b.Y) < Const.Eps;
+        }
+
+
     }
 }
 

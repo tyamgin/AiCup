@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ACircularUnit.cs" />
+    <Compile Include="AMove.cs" />
     <Compile Include="AUnit.cs" />
     <Compile Include="AVehicle.cs" />
     <Compile Include="Const.cs" />
@@ -96,10 +97,12 @@
     <Compile Include="Model\WeatherType.cs" />
     <Compile Include="Model\World.cs" />
     <Compile Include="IStrategy.cs" />
+    <Compile Include="MoveObserver.cs" />
     <Compile Include="MyStrategy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteProcessClient.cs" />
     <Compile Include="Runner.cs" />
+    <Compile Include="Sandbox.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="VehiclesObserver.cs" />
     <Compile Include="Visualizer\Visualizer.cs" />

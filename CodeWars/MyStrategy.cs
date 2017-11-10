@@ -12,7 +12,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public static World World;
         public static Player Me;
-        public static Move ResultingMove;
+        public static AMove ResultingMove;
 
         public static TerrainType[][] TerrainType;
         public static WeatherType[][] WeatherType;
@@ -25,7 +25,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             World = world;
             Me = me;
-            ResultingMove = move;
+            ResultingMove = new AMove();
 
 #if DEBUG
             while (Visualizer.Visualizer.Pause)
@@ -35,7 +35,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 #endif
 
             TimerStart();
-            _move(me, world, game, move);
+            _move(game);
+            ResultingMove.ApplyTo(move);
             TimerEndLog("All", 0);
 #if DEBUG
             Visualizer.Visualizer.CreateForm();
@@ -57,16 +58,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 timer.Stop();
             }
 #endif
+
+            MoveObserver.Update();
         }
 		
-        private void _move(Player me, World world, Game game, Move move)
+        private void _move(Game game)
         {
-            Const.Initialize(world, game);
+            Const.Initialize(World, game);
 
             if (TerrainType == null)
             {
-                TerrainType = world.TerrainByCellXY;
-                WeatherType = world.WeatherByCellXY;
+                TerrainType = World.TerrainByCellXY;
+                WeatherType = World.WeatherByCellXY;
             }
 
             VehiclesObserver.Update();
@@ -120,13 +123,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 			var dy = rect.Y2 - rect.Y;
             if (dx < minD * 1.2 && dy < minD * 1.2)
             {
-                if (world.TickIndex%totalInterval == curInterval * subInterval)
+                if (World.TickIndex%totalInterval == curInterval * subInterval)
                 {
                     ResultingMove.Action = ActionType.ClearAndSelect;
                     ApplyREct(rect);
                     return;
                 }
-                if (world.TickIndex%totalInterval == curInterval * subInterval + 1)
+                if (World.TickIndex%totalInterval == curInterval * subInterval + 1)
                 {
                     ResultingMove.Action = ActionType.Move;
                     var target = OppVehicles.OrderBy(x => x.GetDistanceTo2(massCenter)).FirstOrDefault();
