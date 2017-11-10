@@ -1,8 +1,5 @@
 package model;
 
-/**
- * Предоставляет доступ к различным игровым константам.
- */
 public class Game {
     private final long randomSeed;
     private final int tickCount;
@@ -212,657 +209,358 @@ public class Game {
         this.facilityHeight = facilityHeight;
     }
 
-    /**
-     * @return Возвращает некоторое число, которое ваша стратегия может использовать для инициализации генератора
-     * случайных чисел. Данное значение имеет рекомендательный характер, однако позволит более точно воспроизводить
-     * прошедшие игры.
-     */
     public long getRandomSeed() {
         return randomSeed;
     }
 
-    /**
-     * @return Возвращает базовую длительность игры в тиках. Реальная длительность может отличаться от этого значения в
-     * меньшую сторону. Эквивалентно {@code world.tickCount}.
-     */
     public int getTickCount() {
         return tickCount;
     }
 
-    /**
-     * @return Возвращает ширину карты.
-     */
     public double getWorldWidth() {
         return worldWidth;
     }
 
-    /**
-     * @return Возвращает высоту карты.
-     */
     public double getWorldHeight() {
         return worldHeight;
     }
 
-    /**
-     * @return Возвращает {@code true}, если и только если в данной игре включен режим частичной видимости.
-     */
     public boolean isFogOfWarEnabled() {
         return fogOfWarEnabled;
     }
 
-    /**
-     * @return Возвращает количество баллов, получаемое игроком в случае уничтожения всех юнитов противника.
-     */
     public int getVictoryScore() {
         return victoryScore;
     }
 
-    /**
-     * @return Возвращает количество баллов за захват сооружения.
-     */
     public int getFacilityCaptureScore() {
         return facilityCaptureScore;
     }
 
-    /**
-     * @return Возвращает количество баллов за уничтожение юнита противника.
-     */
     public int getVehicleEliminationScore() {
         return vehicleEliminationScore;
     }
 
-    /**
-     * @return Возвращает интервал, учитываемый в ограничении количества действий стратегии.
-     */
     public int getActionDetectionInterval() {
         return actionDetectionInterval;
     }
 
-    /**
-     * @return Возвращает базовое количество действий, которое может совершить стратегия за
-     * {@code actionDetectionInterval} последовательных тиков.
-     */
     public int getBaseActionCount() {
         return baseActionCount;
     }
 
-    /**
-     * @return Возвращает дополнительное количество действий за каждый захваченный центр управления
-     * ({@code FacilityType.CONTROL_CENTER}).
-     */
     public int getAdditionalActionCountPerControlCenter() {
         return additionalActionCountPerControlCenter;
     }
 
-    /**
-     * @return Возвращает максимально возможный индекс группы юнитов.
-     */
     public int getMaxUnitGroup() {
         return maxUnitGroup;
     }
 
-    /**
-     * @return Возвращает количество столбцов в картах местности и погоды.
-     */
     public int getTerrainWeatherMapColumnCount() {
         return terrainWeatherMapColumnCount;
     }
 
-    /**
-     * @return Возвращает количество строк в картах местности и погоды.
-     */
     public int getTerrainWeatherMapRowCount() {
         return terrainWeatherMapRowCount;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора наземной техники, находящейся на равнинной местности
-     * ({@code TerrainType.PLAIN}).
-     */
     public double getPlainTerrainVisionFactor() {
         return plainTerrainVisionFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора любой техники при обнаружении наземной техники противника,
-     * находящейся на равнинной местности ({@code TerrainType.PLAIN}).
-     */
     public double getPlainTerrainStealthFactor() {
         return plainTerrainStealthFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор максимальной скорости наземной техники, находящейся на равнинной местности
-     * ({@code TerrainType.PLAIN}).
-     */
     public double getPlainTerrainSpeedFactor() {
         return plainTerrainSpeedFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора наземной техники, находящейся в болотистой местности
-     * ({@code TerrainType.SWAMP}).
-     */
     public double getSwampTerrainVisionFactor() {
         return swampTerrainVisionFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора любой техники при обнаружении наземной техники противника,
-     * находящейся в болотистой местности ({@code TerrainType.SWAMP}).
-     */
     public double getSwampTerrainStealthFactor() {
         return swampTerrainStealthFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор максимальной скорости наземной техники, находящейся в болотистой местности
-     * ({@code TerrainType.SWAMP}).
-     */
     public double getSwampTerrainSpeedFactor() {
         return swampTerrainSpeedFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора наземной техники, находящейся в лесистой местности
-     * ({@code TerrainType.FOREST}).
-     */
     public double getForestTerrainVisionFactor() {
         return forestTerrainVisionFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора любой техники при обнаружении наземной техники противника,
-     * находящейся в лесистой местности ({@code TerrainType.FOREST}).
-     */
     public double getForestTerrainStealthFactor() {
         return forestTerrainStealthFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор максимальной скорости наземной техники, находящейся в лесистой местности
-     * ({@code TerrainType.FOREST}).
-     */
     public double getForestTerrainSpeedFactor() {
         return forestTerrainSpeedFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора воздушной техники, находящейся в области ясной погоды
-     * ({@code WeatherType.CLEAR}).
-     */
     public double getClearWeatherVisionFactor() {
         return clearWeatherVisionFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора любой техники при обнаружении воздушной техники противника,
-     * находящейся в области ясной погоды ({@code WeatherType.CLEAR}).
-     */
     public double getClearWeatherStealthFactor() {
         return clearWeatherStealthFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор максимальной скорости воздушной техники, находящейся в области ясной погоды
-     * ({@code WeatherType.CLEAR}).
-     */
     public double getClearWeatherSpeedFactor() {
         return clearWeatherSpeedFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора воздушной техники, находящейся в плотных облаках
-     * ({@code WeatherType.CLOUD}).
-     */
     public double getCloudWeatherVisionFactor() {
         return cloudWeatherVisionFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора любой техники при обнаружении воздушной техники противника,
-     * находящейся в плотных облаках ({@code WeatherType.CLOUD}).
-     */
     public double getCloudWeatherStealthFactor() {
         return cloudWeatherStealthFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор максимальной скорости воздушной техники, находящейся в плотных облаках
-     * ({@code WeatherType.CLOUD}).
-     */
     public double getCloudWeatherSpeedFactor() {
         return cloudWeatherSpeedFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора воздушной техники, находящейся в условиях сильного дождя
-     * ({@code WeatherType.RAIN}).
-     */
     public double getRainWeatherVisionFactor() {
         return rainWeatherVisionFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор радиуса обзора любой техники при обнаружении воздушной техники противника,
-     * находящейся в условиях сильного дождя ({@code WeatherType.RAIN}).
-     */
     public double getRainWeatherStealthFactor() {
         return rainWeatherStealthFactor;
     }
 
-    /**
-     * @return Возвращает мультипликатор максимальной скорости воздушной техники, находящейся в условиях сильного дождя
-     * ({@code WeatherType.RAIN}).
-     */
     public double getRainWeatherSpeedFactor() {
         return rainWeatherSpeedFactor;
     }
 
-    /**
-     * @return Возвращает радиус техники.
-     */
     public double getVehicleRadius() {
         return vehicleRadius;
     }
 
-    /**
-     * @return Возвращает максимальную прочность танка.
-     */
     public int getTankDurability() {
         return tankDurability;
     }
 
-    /**
-     * @return Возвращает максимальную скорость танка.
-     */
     public double getTankSpeed() {
         return tankSpeed;
     }
 
-    /**
-     * @return Возвращает базовый радиус обзора танка.
-     */
     public double getTankVisionRange() {
         return tankVisionRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки танка по наземным целям.
-     */
     public double getTankGroundAttackRange() {
         return tankGroundAttackRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки танка по воздушным целям.
-     */
     public double getTankAerialAttackRange() {
         return tankAerialAttackRange;
     }
 
-    /**
-     * @return Возвращает урон одной атаки танка по наземной технике.
-     */
     public int getTankGroundDamage() {
         return tankGroundDamage;
     }
 
-    /**
-     * @return Возвращает урон одной атаки танка по воздушной технике.
-     */
     public int getTankAerialDamage() {
         return tankAerialDamage;
     }
 
-    /**
-     * @return Возвращает защиту танка от атак наземной техники.
-     */
     public int getTankGroundDefence() {
         return tankGroundDefence;
     }
 
-    /**
-     * @return Возвращает защиту танка от атак воздушной техники.
-     */
     public int getTankAerialDefence() {
         return tankAerialDefence;
     }
 
-    /**
-     * @return Возвращает интервал в тиках между двумя последовательными атаками танка.
-     */
     public int getTankAttackCooldownTicks() {
         return tankAttackCooldownTicks;
     }
 
-    /**
-     * @return Возвращает количество тиков, необхожимое для производства одного танка на заводе
-     * ({@code FacilityType.VEHICLE_FACTORY}).
-     */
     public int getTankProductionCost() {
         return tankProductionCost;
     }
 
-    /**
-     * @return Возвращает максимальную прочность БМП.
-     */
     public int getIfvDurability() {
         return ifvDurability;
     }
 
-    /**
-     * @return Возвращает максимальную скорость БМП.
-     */
     public double getIfvSpeed() {
         return ifvSpeed;
     }
 
-    /**
-     * @return Возвращает базовый радиус обзора БМП.
-     */
     public double getIfvVisionRange() {
         return ifvVisionRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки БМП по наземным целям.
-     */
     public double getIfvGroundAttackRange() {
         return ifvGroundAttackRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки БМП по воздушным целям.
-     */
     public double getIfvAerialAttackRange() {
         return ifvAerialAttackRange;
     }
 
-    /**
-     * @return Возвращает урон одной атаки БМП по наземной технике.
-     */
     public int getIfvGroundDamage() {
         return ifvGroundDamage;
     }
 
-    /**
-     * @return Возвращает урон одной атаки БМП по воздушной технике.
-     */
     public int getIfvAerialDamage() {
         return ifvAerialDamage;
     }
 
-    /**
-     * @return Возвращает защиту БМП от атак наземной техники.
-     */
     public int getIfvGroundDefence() {
         return ifvGroundDefence;
     }
 
-    /**
-     * @return Возвращает защиту БМП от атак воздушной техники.
-     */
     public int getIfvAerialDefence() {
         return ifvAerialDefence;
     }
 
-    /**
-     * @return Возвращает интервал в тиках между двумя последовательными атаками БМП.
-     */
     public int getIfvAttackCooldownTicks() {
         return ifvAttackCooldownTicks;
     }
 
-    /**
-     * @return Возвращает количество тиков, необхожимое для производства одной БМП на заводе
-     * ({@code FacilityType.VEHICLE_FACTORY}).
-     */
     public int getIfvProductionCost() {
         return ifvProductionCost;
     }
 
-    /**
-     * @return Возвращает максимальную прочность БРЭМ.
-     */
     public int getArrvDurability() {
         return arrvDurability;
     }
 
-    /**
-     * @return Возвращает максимальную скорость БРЭМ.
-     */
     public double getArrvSpeed() {
         return arrvSpeed;
     }
 
-    /**
-     * @return Возвращает базовый радиус обзора БРЭМ.
-     */
     public double getArrvVisionRange() {
         return arrvVisionRange;
     }
 
-    /**
-     * @return Возвращает защиту БРЭМ от атак наземной техники.
-     */
     public int getArrvGroundDefence() {
         return arrvGroundDefence;
     }
 
-    /**
-     * @return Возвращает защиту БРЭМ от атак воздушной техники.
-     */
     public int getArrvAerialDefence() {
         return arrvAerialDefence;
     }
 
-    /**
-     * @return Возвращает количество тиков, необхожимое для производства одной БРЭМ на заводе
-     * ({@code FacilityType.VEHICLE_FACTORY}).
-     */
     public int getArrvProductionCost() {
         return arrvProductionCost;
     }
 
-    /**
-     * @return Возвращает максимальное расстояние (от центра до центра), на котором БРЭМ может ремонтировать
-     * дружественную технику.
-     */
     public double getArrvRepairRange() {
         return arrvRepairRange;
     }
 
-    /**
-     * @return Возвращает максимальное количество прочности, которое БРЭМ может восстановить дружественной технике за
-     * один тик.
-     */
     public double getArrvRepairSpeed() {
         return arrvRepairSpeed;
     }
 
-    /**
-     * @return Возвращает максимальную прочность ударного вертолёта.
-     */
     public int getHelicopterDurability() {
         return helicopterDurability;
     }
 
-    /**
-     * @return Возвращает максимальную скорость ударного вертолёта.
-     */
     public double getHelicopterSpeed() {
         return helicopterSpeed;
     }
 
-    /**
-     * @return Возвращает базовый радиус обзора ударного вертолёта.
-     */
     public double getHelicopterVisionRange() {
         return helicopterVisionRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки ударного вертолёта по наземным целям.
-     */
     public double getHelicopterGroundAttackRange() {
         return helicopterGroundAttackRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки ударного вертолёта по воздушным целям.
-     */
     public double getHelicopterAerialAttackRange() {
         return helicopterAerialAttackRange;
     }
 
-    /**
-     * @return Возвращает урон одной атаки ударного вертолёта по наземной технике.
-     */
     public int getHelicopterGroundDamage() {
         return helicopterGroundDamage;
     }
 
-    /**
-     * @return Возвращает урон одной атаки ударного вертолёта по воздушной технике.
-     */
     public int getHelicopterAerialDamage() {
         return helicopterAerialDamage;
     }
 
-    /**
-     * @return Возвращает защиту ударного вертолёта от атак наземной техники.
-     */
     public int getHelicopterGroundDefence() {
         return helicopterGroundDefence;
     }
 
-    /**
-     * @return Возвращает защиту ударного вертолёта от атак воздушной техники.
-     */
     public int getHelicopterAerialDefence() {
         return helicopterAerialDefence;
     }
 
-    /**
-     * @return Возвращает интервал в тиках между двумя последовательными атаками ударного вертолёта.
-     */
     public int getHelicopterAttackCooldownTicks() {
         return helicopterAttackCooldownTicks;
     }
 
-    /**
-     * @return Возвращает количество тиков, необхожимое для производства одного ударного вертолёта на заводе
-     * ({@code FacilityType.VEHICLE_FACTORY}).
-     */
     public int getHelicopterProductionCost() {
         return helicopterProductionCost;
     }
 
-    /**
-     * @return Возвращает максимальную прочность истребителя.
-     */
     public int getFighterDurability() {
         return fighterDurability;
     }
 
-    /**
-     * @return Возвращает максимальную скорость истребителя.
-     */
     public double getFighterSpeed() {
         return fighterSpeed;
     }
 
-    /**
-     * @return Возвращает базовый радиус обзора истребителя.
-     */
     public double getFighterVisionRange() {
         return fighterVisionRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки истребителя по наземным целям.
-     */
     public double getFighterGroundAttackRange() {
         return fighterGroundAttackRange;
     }
 
-    /**
-     * @return Возвращает дальность атаки истребителя по воздушным целям.
-     */
     public double getFighterAerialAttackRange() {
         return fighterAerialAttackRange;
     }
 
-    /**
-     * @return Возвращает урон одной атаки истребителя по наземной технике.
-     */
     public int getFighterGroundDamage() {
         return fighterGroundDamage;
     }
 
-    /**
-     * @return Возвращает урон одной атаки истребителя по воздушной технике.
-     */
     public int getFighterAerialDamage() {
         return fighterAerialDamage;
     }
 
-    /**
-     * @return Возвращает защиту истребителя от атак наземной техники.
-     */
     public int getFighterGroundDefence() {
         return fighterGroundDefence;
     }
 
-    /**
-     * @return Возвращает защиту истребителя от атак воздушной техники.
-     */
     public int getFighterAerialDefence() {
         return fighterAerialDefence;
     }
 
-    /**
-     * @return Возвращает интервал в тиках между двумя последовательными атаками истребителя.
-     */
     public int getFighterAttackCooldownTicks() {
         return fighterAttackCooldownTicks;
     }
 
-    /**
-     * @return Возвращает количество тиков, необхожимое для производства одного истребителя на заводе
-     * ({@code FacilityType.VEHICLE_FACTORY}).
-     */
     public int getFighterProductionCost() {
         return fighterProductionCost;
     }
 
-    /**
-     * @return Возвращает максимально возможную абсолютную величину индикатора захвата сооружения
-     * ({@code facility.capturePoints}).
-     */
     public double getMaxFacilityCapturePoints() {
         return maxFacilityCapturePoints;
     }
 
-    /**
-     * @return Возвращает скорость изменения индикатора захвата сооружения ({@code facility.capturePoints}) за каждую
-     * единицу техники, центр которой находится внутри сооружения.
-     */
     public double getFacilityCapturePointsPerVehiclePerTick() {
         return facilityCapturePointsPerVehiclePerTick;
     }
 
-    /**
-     * @return Возвращает ширину сооружения.
-     */
     public double getFacilityWidth() {
         return facilityWidth;
     }
 
-    /**
-     * @return Возвращает высоту сооружения.
-     */
     public double getFacilityHeight() {
         return facilityHeight;
     }

@@ -11,6 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
         private double x;
         private double y;
         private double angle;
+        private double factor;
         private double maxSpeed;
         private double maxAngularSpeed;
         private VehicleType? vehicleType;
@@ -59,6 +60,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
         public double Angle {
             get { return angle; }
             set { angle = value; }
+        }
+
+        public double Factor {
+            get { return factor; }
+            set { factor = value; }
         }
 
         public double MaxSpeed {

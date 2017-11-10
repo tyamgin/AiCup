@@ -43,7 +43,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
 
         public void WriteProtocolVersionMessage() {
             WriteEnum((sbyte?) MessageType.ProtocolVersion);
-            WriteInt(1);
+            WriteInt(2);
             writer.Flush();
         }
 
@@ -309,6 +309,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
             WriteDouble(move.X);
             WriteDouble(move.Y);
             WriteDouble(move.Angle);
+            WriteDouble(move.Factor);
             WriteDouble(move.MaxSpeed);
             WriteDouble(move.MaxAngularSpeed);
             WriteEnum((sbyte?) move.VehicleType);

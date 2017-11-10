@@ -17,8 +17,6 @@ public final class LocalTestRendererListener {
     private double width;
     private double height;
 
-    private Vehicle[] vehicles;
-
     public void beforeDrawScene(Graphics graphics, World world, Game game, int canvasWidth, int canvasHeight,
                                 double left, double top, double width, double height) {
         updateFields(graphics, world, game, canvasWidth, canvasHeight, left, top, width, height);
@@ -26,11 +24,7 @@ public final class LocalTestRendererListener {
         graphics.setColor(Color.BLACK);
         drawRect(100.0D, 150.0D, 900.0D, 950.0D);
 
-        if (vehicles == null) {
-            vehicles = world.getNewVehicles();
-        }
-
-        for (Vehicle vehicle : vehicles) {
+        for (Vehicle vehicle : world.getVehicles()) {
             double radius = vehicle.getRadius();
             double diameter = radius * 2.0D;
             drawRect(vehicle.getX() - radius, vehicle.getY() - radius, diameter, diameter);

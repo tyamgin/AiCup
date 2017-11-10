@@ -1,9 +1,5 @@
 @echo off
 
-echo Not implemented.
-pause
-exit 0
-
 call wipe.bat
 
 if not "%JAVA8_64_HOME%"=="" (

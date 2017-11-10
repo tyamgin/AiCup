@@ -1,8 +1,5 @@
 package model;
 
-/**
- * Базовый класс для определения круглых объектов. Содержит также все свойства юнита.
- */
 @SuppressWarnings({"AbstractClassWithoutAbstractMethods", "AbstractClassNeverImplemented"})
 public abstract class CircularUnit extends Unit {
     private final double radius;
@@ -13,9 +10,6 @@ public abstract class CircularUnit extends Unit {
         this.radius = radius;
     }
 
-    /**
-     * @return Возвращает радиус объекта.
-     */
     public double getRadius() {
         return radius;
     }
