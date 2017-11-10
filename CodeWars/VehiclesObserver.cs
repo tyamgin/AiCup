@@ -55,9 +55,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (!Geom.PointsEquals(aveh, updatedVehicle))
                             Console.WriteLine("Looks vehicle updated wrong (X, Y)");
 
-                        updatedVehicle.Speed = aveh.Speed;
-                        updatedVehicle.Target = aveh.Target;
-                        updatedVehicle.AngularSpeed = aveh.AngularSpeed;
+                        updatedVehicle.MoveSpeed = aveh.MoveSpeed;
+                        updatedVehicle.MoveTarget = aveh.MoveTarget;
+                        updatedVehicle.RotationAngularSpeed = aveh.RotationAngularSpeed;
                         updatedVehicle.RotationAngle = aveh.RotationAngle;
                         updatedVehicle.RotationCenter = aveh.RotationCenter;
                     }

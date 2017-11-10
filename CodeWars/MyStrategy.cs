@@ -86,23 +86,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 			var subInterval = 25;
 			var curInterval = 0;
 
-            //if (World.TickIndex == 0)
-            //{
-            //    ResultingMove.Action = ActionType.ClearAndSelect;
-            //    ApplyREct(rect);
-            //    return;
-            //}
-            //if (World.TickIndex == 1)
-            //{
-            //    ResultingMove.Action = ActionType.Rotate;
-            //    ResultingMove.Angle = Math.PI/4;
-            //    ResultingMove.X = 400;
-            //    ResultingMove.Y = 420;
-            //    return;
-            //}
-            //return;
+            if (World.TickIndex == 0)
+            {
+                ResultingMove.Action = ActionType.ClearAndSelect;
+                ApplyREct(rect);
+                return;
+            }
+            if (World.TickIndex == 1)
+            {
+                ResultingMove.Action = ActionType.Scale;
+                ResultingMove.X = 60;
+                ResultingMove.Y = 60;
+                ResultingMove.Factor = 0.5;
+                return;
+            }
+            return;
 
-			if (_tryMoveRect(rect, rectL, rectR, totalInterval, curInterval * subInterval))
+            if (_tryMoveRect(rect, rectL, rectR, totalInterval, curInterval * subInterval))
 			{
 				return;
 			}

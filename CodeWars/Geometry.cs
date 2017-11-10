@@ -15,12 +15,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
 
         /// <summary>
-        /// Вектор длины 1 того-же направления
+        /// Вектор длины 1 того-же направления, или (0, 0), если вектор нулевой
         /// </summary>
         /// <returns></returns>
         public Point Normalized()
         {
-            return new Point(X / Length, Y / Length);
+            var length = Length;
+            if (length < Const.Eps)
+                length = 1;
+            return new Point(X / length, Y / length);
         }
 
         /// <summary>

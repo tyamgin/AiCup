@@ -25,6 +25,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             move.MaxAngularSpeed = MaxAngularSpeed;
             move.VehicleType = VehicleType;
             move.FacilityId = FacilityId;
+            move.Factor = Factor;
         }
 
     }

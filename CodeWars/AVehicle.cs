@@ -12,11 +12,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public bool IsSelected;
         public double MaxSpeed; // TODO: computable property
 
-        public Point Target;
-        public double Speed;
+        public Point MoveTarget;
+        public double MoveSpeed;
         public Point RotationCenter;
         public double RotationAngle;
-        public double AngularSpeed;
+        public double RotationAngularSpeed;
 
         public AVehicle(Vehicle unit) : base(unit)
         {
@@ -35,11 +35,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsSelected = unit.IsSelected;
             MaxSpeed = unit.MaxSpeed;
 
-            Target = unit.Target;
-            Speed = unit.Speed;
+            MoveTarget = unit.MoveTarget;
+            MoveSpeed = unit.MoveSpeed;
             RotationCenter = unit.RotationCenter;
             RotationAngle = unit.RotationAngle;
-            AngularSpeed = unit.AngularSpeed;
+            RotationAngularSpeed = unit.RotationAngularSpeed;
         }
 
         private bool IsAerial => Type == VehicleType.Helicopter || Type == VehicleType.Fighter;
@@ -52,9 +52,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Point delta = null;
             var done = false;
 
-            if (Target != null)
+            if (MoveTarget != null)
             {
-                var vec = Target - this;
+                var vec = MoveTarget - this;
                 double length;
                 var speed = ActualSpeed;
 
@@ -105,11 +105,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 if (done)
                 {
-                    Target = null;
-                    Speed = 0;
+                    MoveTarget = null;
+                    MoveSpeed = 0;
                     RotationCenter = null;
                     RotationAngle = 0;
-                    AngularSpeed = 0;
+                    RotationAngularSpeed = 0;
                 }
             }
 
@@ -165,8 +165,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     else if (terrian == TerrainType.Forest)
                         speed *= G.ForestTerrainSpeedFactor;
                 }
-                if (Speed > 0 && Speed < speed)
-                    speed = Speed;
+                if (MoveSpeed > 0 && MoveSpeed < speed)
+                    speed = MoveSpeed;
                 return speed;
             }
         }
@@ -177,8 +177,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 var speed = ActualSpeed;
                 var angle = speed/GetDistanceTo(RotationCenter);
-                if (AngularSpeed > 0 && AngularSpeed < angle)
-                    angle = AngularSpeed;
+                if (RotationAngularSpeed > 0 && RotationAngularSpeed < angle)
+                    angle = RotationAngularSpeed;
                 return angle;
             }
         }

@@ -31,9 +31,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         if (!unit.IsSelected)
                             continue;
-                        unit.Speed = move.MaxSpeed;
-                        unit.Target = unit + new Point(move.X, move.Y);
-                        unit.AngularSpeed = 0;
+                        unit.MoveSpeed = move.MaxSpeed;
+                        unit.MoveTarget = unit + new Point(move.X, move.Y);
+                        unit.RotationAngularSpeed = 0;
                         unit.RotationAngle = 0;
                         unit.RotationCenter = null;
                     }
@@ -43,11 +43,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         if (!unit.IsSelected)
                             continue;
-                        unit.Speed = 0;
-                        unit.Target = null;
-                        unit.AngularSpeed = move.MaxAngularSpeed;
+                        unit.MoveSpeed = 0;
+                        unit.MoveTarget = null;
+                        unit.RotationAngularSpeed = move.MaxAngularSpeed;
                         unit.RotationAngle = move.Angle;
                         unit.RotationCenter = new Point(move.X, move.Y);
+                    }
+                    break;
+                case ActionType.Scale:
+                    foreach (var unit in Vehicles)
+                    {
+                        if (!unit.IsSelected)
+                            continue;
+                        unit.MoveSpeed = move.MaxSpeed;
+                        var scaleCenter = new Point(move.X, move.Y);
+                        unit.MoveTarget = (unit - scaleCenter) * move.Factor + scaleCenter;
+                        unit.RotationAngularSpeed = 0;
+                        unit.RotationAngle = 0;
+                        unit.RotationCenter = null;
                     }
                     break;
             }
