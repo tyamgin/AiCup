@@ -102,6 +102,73 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             //}
             //return;
 
+            if (World.TickIndex%10 == 0)
+            {
+                var minDanger = double.MaxValue;
+                var selMove = new AMove();
+
+                foreach (var vehType in new[] {VehicleType.Fighter, VehicleType.Helicopter})
+                {
+                    var selectedIds = string.Join(",", MyVehicles.Where(x => x.IsSelected)
+                        .Select(x => x.Id)
+                        .OrderBy(id => id)
+                        .Select(x => x.ToString()));
+
+                    var needToSelectIds = string.Join(",", MyVehicles.Where(x => x.Type == vehType)
+                        .Select(x => x.Id)
+                        .OrderBy(id => id)
+                        .Select(x => x.ToString()));
+
+                    var startEnv = new Sandbox
+                    {
+                        Vehicles = MyVehicles
+                            .Where(x => x.IsAerial)
+                            .Concat(OppVehicles)
+                            .Select(x => new AVehicle(x))
+                            .ToArray()
+                    };
+
+                    int ticksCount = 10;
+                    const double maxSpeed = 0;
+
+                    if (selectedIds != needToSelectIds)
+                    {
+                        var move = new AMove
+                        {
+                            Action = ActionType.ClearAndSelect,
+                            VehicleType = vehType,
+                        };
+                        startEnv.ApplyMove(move);
+                        startEnv.DoTick();
+                        ticksCount--;
+                    }
+
+                    foreach (var angle in Utility.Range(0, 2 * Math.PI, 12))
+                    {
+                        var env = new Sandbox
+                        {
+                            Vehicles = MyVehicles
+                                .Where(x => x.IsAerial)
+                                .Concat(OppVehicles)
+                                .Select(x => new AVehicle(x))
+                                .ToArray()
+                        };
+                        var move = new AMove();
+                        move.Action = ActionType.Move;
+                        move.Point = Point.ByAngle(angle) * MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount;
+                        move.MaxSpeed = maxSpeed;
+
+                        var danger = GetDanger(env, move, ticksCount);
+                        if (danger < minDanger)
+                        {
+                            minDanger = danger;
+                            selMove = move;
+                        }
+                    }
+                    ResultingMove = selMove;
+                }
+            }
+
 
             if (World.TickIndex == 0)
             {

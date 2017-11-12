@@ -12,6 +12,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public static double GetDanger(Sandbox env, AMove move, int ticksCount)
         {
+            
+
             var myDurabilityBefore = env.MyDurability;
             var oppDurabilityBefore = env.OppDurability;
             var myCenterBefore = GetAvg(env.MyVehicles);
