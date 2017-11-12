@@ -13,19 +13,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     public class Sandbox
     {
         private AVehicle[] _vehicles;
-        private List<AVehicle>[] _vehiclesByType =
+        private readonly List<AVehicle>[] _vehiclesByType =
         {
             new List<AVehicle>(),
             new List<AVehicle>()
         };
 
-        private QuadTree<AVehicle>[] _treesByType =
+        private readonly QuadTree<AVehicle>[] _treesByType =
         {
             new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps),
             new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps)
         };
 
-        private QuadTree<AVehicle>[] _treesByPlayer =
+        private readonly QuadTree<AVehicle>[] _treesByPlayer =
         {
             new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps),
             new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps)
@@ -67,6 +67,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public void ApplyMove(Move move)
         {
+            // TODO: проверки на валидность
+
             switch (move.Action)
             {
                 case ActionType.ClearAndSelect:
@@ -74,10 +76,42 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         if (IsMy != unit.IsMy)
                             continue;
+                        if (move.Group != 0)
+                        {
+                            unit.IsSelected = unit.HasGroup(move.Group);
+                        }
+                        else
+                        {
+                            unit.IsSelected = Geom.Between(move.Left, move.Right, unit.X) &&
+                                              Geom.Between(move.Top, move.Bottom, unit.Y) &&
+                                              (move.VehicleType == null || move.VehicleType == unit.Type);
+                        }
+                    }
+                    break;
+                case ActionType.AddToSelection:
+                    foreach (var unit in Vehicles)
+                    {
+                        if (IsMy != unit.IsMy)
+                            continue;
+                        if (move.Group != 0)
+                        {
+                            unit.IsSelected = unit.HasGroup(move.Group);
+                        }
+                        else
+                        {
+                            unit.IsSelected |= Geom.Between(move.Left, move.Right, unit.X) &&
+                                               Geom.Between(move.Top, move.Bottom, unit.Y) &&
+                                               (move.VehicleType == null || move.VehicleType == unit.Type);
+                        }
+                    }
+                    break;
+                case ActionType.Assign:
+                    foreach (var unit in Vehicles)
+                    {
+                        if (IsMy != unit.IsMy)
+                            continue;
 
-                        unit.IsSelected = Geom.Between(move.Left, move.Right, unit.X) &&
-                                          Geom.Between(move.Top, move.Bottom, unit.Y) &&
-                                          (move.VehicleType == null || move.VehicleType == unit.Type);
+                        unit.AddGroup(move.Group);
                     }
                     break;
                 case ActionType.Move:

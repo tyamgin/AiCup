@@ -12,6 +12,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public bool IsSelected;
         public double MaxSpeed; // TODO: computable property
         public int RemainingAttackCooldownTicks;
+        public uint Groups;
 
         public Point MoveTarget;
         public double MoveSpeed;
@@ -27,6 +28,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsSelected = unit.IsSelected;
             MaxSpeed = unit.MaxSpeed;
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
+            foreach (var group in unit.Groups)
+                AddGroup(group);
         }
 
         public AVehicle(AVehicle unit) : base(unit)
@@ -37,12 +40,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsSelected = unit.IsSelected;
             MaxSpeed = unit.MaxSpeed;
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
+            Groups = unit.Groups;
 
             MoveTarget = unit.MoveTarget;
             MoveSpeed = unit.MoveSpeed;
             RotationCenter = unit.RotationCenter;
             RotationAngle = unit.RotationAngle;
             RotationAngularSpeed = unit.RotationAngularSpeed;
+        }
+
+        public bool HasGroup(int groupId)
+        {
+            return (Groups & (1U << groupId)) != 0;
+        }
+
+        public void AddGroup(int groupId)
+        {
+            Groups |= 1U << groupId;
+        }
+
+        public void RemoveGroup(int groupId)
+        {
+            Groups &= (1U << groupId) ^ 0xFFFFFFFF;
         }
 
         public bool IsAerial => Type == VehicleType.Helicopter || Type == VehicleType.Fighter;
@@ -166,9 +185,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool IsAlive => Durability > Const.Eps;
 
-        public double GetAttackDamage(AVehicle veh)
+        public double GetAttackDamage(AVehicle veh, double additionalRadius = 0)
         {
-            if (GetDistanceTo2(veh) - Const.Eps > G.AttackRange2(Type, veh.Type))
+            var attackRange = Geom.Sqr(G.AttackRange[(int) Type, (int) veh.Type] + additionalRadius);
+
+            if (GetDistanceTo2(veh) - Const.Eps > attackRange)
                 return 0;
             var damage = G.AttackDamage[(int) Type, (int) veh.Type];
             if (damage >= veh.Durability)

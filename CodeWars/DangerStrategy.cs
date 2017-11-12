@@ -16,7 +16,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             var myDurabilityBefore = env.MyDurability;
             var oppDurabilityBefore = env.OppDurability;
-            var myCenterBefore = GetAvg(env.MyVehicles);
 
             env.ApplyMove(move);
             for (var i = 0; i < ticksCount; i++)
@@ -31,12 +30,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
             res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
 
-            var myCenter = GetAvg(env.MyVehicles);
-
-            res += env.MyVehicles.Where(m => m.IsSelected).Average(m => 
+            res += env.MyVehicles.Average(m => 
                 env.OppVehicles
                     .Select(x =>
-                    {
+                    {   
                         var myAttack = G.AttackDamage[(int) m.Type, (int) x.Type];
                         var ret = x.GetDistanceTo2(m)/200000;
                         if (myAttack < Const.Eps)
@@ -47,6 +44,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     .Concat(new []{0.0})
                     .Average()
             );
+
+            var additionalDanger = env.OppVehicles.Sum(opp =>
+            {
+                var additionalRadius = opp.ActualSpeed;
+                return env.MyVehicles.Max(m => opp.GetAttackDamage(m, additionalRadius));
+            });
+            res += additionalDanger/3;
 
             var rectF = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Fighter));
             var rectH = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Helicopter));
