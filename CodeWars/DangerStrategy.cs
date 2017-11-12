@@ -14,6 +14,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             var myDurabilityBefore = env.MyDurability;
             var oppDurabilityBefore = env.OppDurability;
+            var myCenterBefore = GetAvg(env.MyVehicles);
 
             env.ApplyMove(move);
             for (var i = 0; i < ticksCount; i++)
@@ -25,10 +26,25 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var oppDurabilityAfter = env.OppDurability;
 
             var res = (myDurabilityBefore - myDurabilityAfter) - (oppDurabilityBefore - oppDurabilityAfter);
+            res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
+            res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
 
             var myCenter = GetAvg(env.MyVehicles);
-            var closest = env.OppVehicles.ArgMin(x => myCenter.GetDistanceTo(x));
-            res += myCenter.GetDistanceTo(closest) / 100;
+
+            res += env.MyVehicles.Where(m => m.IsSelected).Average(m => 
+                env.OppVehicles
+                    .Select(x =>
+                    {
+                        var myAttack = G.AttackDamage[(int) m.Type, (int) x.Type];
+                        var ret = x.GetDistanceTo2(m)/200000;
+                        if (myAttack < Const.Eps)
+                            return 0;
+                        return ret/myAttack;
+                    })
+                    .Where(x => x > 0)
+                    .Concat(new []{0.0})
+                    .Average()
+            );
 
             var rectF = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Fighter));
             var rectH = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Helicopter));

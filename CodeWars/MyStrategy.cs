@@ -119,7 +119,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 const int ticksCount = 8;
                 const double maxSpeed = 0;
 
-                foreach (var angle in Utility.Range(0, 2 * Math.PI, 8))
+                foreach (var angle in Utility.Range(0, 2 * Math.PI, 12))
                 {
                     var env = new Sandbox
                     {

@@ -85,6 +85,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(game.TankAttackCooldownTicks, G.AttackCooldownTicks);
 
             _expect(game.VehicleRadius, G.VehicleRadius);
+
+            foreach (var a in G.AttackRange)
+                _expect(true, a <= G.MaxAttackRange);
         }
 
         private static void _expect<T>(T source, T value)
@@ -104,6 +107,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static readonly double ForestTerrainSpeedFactor = 0.8;
         public static readonly int AttackCooldownTicks = 60;
         public static readonly double VehicleRadius = 2;
+        public static readonly double MaxAttackRange = 20;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

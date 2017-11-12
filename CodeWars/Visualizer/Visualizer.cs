@@ -311,6 +311,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                         color = Color.Orange;
                         break;
                 }
+                if (veh.RemainingAttackCooldownTicks > 0)
+                    color = Color.FromArgb(150, color);
+
                 DrawCircle(color, veh.X, veh.Y, veh.Radius, 1);
                 FillPie(color, veh.X, veh.Y, veh.Radius, 0, Math.PI * 2 * veh.Durability / G.MaxDurability);
 
