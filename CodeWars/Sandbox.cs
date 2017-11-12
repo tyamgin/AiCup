@@ -49,12 +49,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 _vehicles = value;
                 _vehiclesByType[0].Clear();
                 _vehiclesByType[1].Clear();
-                _trees[0].clear();
-                _trees[1].clear();
+                _trees[0].Clear();
+                _trees[1].Clear();
                 foreach (var veh in _vehicles)
                 {
                     _at(veh.IsMy == IsMy).Add(veh);
-                    _trees[veh.IsAerial ? 1 : 0].add(veh);
+                    _trees[veh.IsAerial ? 1 : 0].Add(veh);
                 }
                 //_trees[0].check();
                 //_trees[1].check();
@@ -164,7 +164,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     tree.Remove(unit);
                     if (!unit.Move(x =>
                     {
-                        var nearest = tree.findNearest(x);
+                        var nearest = tree.FindNearest(x);
                         if (nearest == null || !nearest.IntersectsWith(x))
                             return false;
 
@@ -172,10 +172,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         return true;
                     }))
                     {
-                        tree.add(unit);
+                        tree.Add(unit);
                         continue;
                     }
-                    tree.add(unit);
+                    tree.Add(unit);
 
                     moved[i] = true;
                     anyMoved = true;

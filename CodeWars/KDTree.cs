@@ -9,203 +9,126 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class QuadTree<T> where T : Point
     {
-        private class Node<T>
+        #region Private Members
+        private class Node
         {
-            public T value;
+            public T Value;
 
-            public bool hasValueBelow;
+            public bool HasValueBelow;
 
-            public Node<T> leftTop;
-            public Node<T> rightTop;
-            public Node<T> leftBottom;
-            public Node<T> rightBottom;
+            public Node LeftTop;
+            public Node RightTop;
+            public Node LeftBottom;
+            public Node RightBottom;
 
-            public void initializeChildren()
+            public void InitializeChildren()
             {
-                if (leftTop == null)
+                if (LeftTop == null)
                 {
-                    leftTop = new Node<T>();
-                    rightTop = new Node<T>();
-                    leftBottom = new Node<T>();
-                    rightBottom = new Node<T>();
+                    LeftTop = new Node();
+                    RightTop = new Node();
+                    LeftBottom = new Node();
+                    RightBottom = new Node();
                 }
             }
         }
 
-        public static readonly double DEFAULT_EPSILON = 1.0E-6D;
+        private readonly Node _root = new Node();
 
-        private readonly Node<T> root = new Node<T>();
+        private readonly double _left;
+        private readonly double _top;
+        private readonly double _right;
+        private readonly double _bottom;
+        private readonly double _epsilon;
 
-        private readonly double left;
-        private readonly double top;
-        private readonly double right;
-        private readonly double bottom;
-
-        private readonly double epsilon;
-
-        public QuadTree(double left, double top, double right, double bottom, double epsilon)
+        private void _add(T value, double x, double y, Node node, double left, double top, double right, double bottom)
         {
-            this.left = left;
-            this.top = top;
-            this.right = right;
-            this.bottom = bottom;
-
-            this.epsilon = epsilon;
-        }
-
-        public void add(T value)
-        {
-            double x = value.X;
-            double y = value.Y;
-
-            if (x < left || y < top || x > right || y > bottom)
-            {
-                throw new ArgumentException(String.Format(
-                    "The point ({0}, {1}) is outside of bounding box ({2}, {3}, {4}, {5}).",
-                    x, y, left, top, right, bottom
-                    ));
-            }
-
-            add(value, x, y, root, left, top, right, bottom);
-        }
-
-        public void addAll(T[] values)
-        {
-            foreach (T value in values)
-            {
-                add(value);
-            }
-        }
-
-        public void addAll(IEnumerable<T> values)
-        {
-            foreach (T value in values)
-            {
-                add(value);
-            }
-        }
-
-        private void add(
-            T value, double x, double y, Node<T> node,
-            double left, double top, double right, double bottom
-            )
-        {
-            T currentValue = node.value;
+            var currentValue = node.Value;
 
             if (currentValue == null)
             {
-                if (node.hasValueBelow)
+                if (node.HasValueBelow)
                 {
-                    addAsChild(value, x, y, node, left, top, right, bottom);
+                    _addAsChild(value, x, y, node, left, top, right, bottom);
                 }
                 else
                 {
-                    node.value = value;
+                    node.Value = value;
                 }
             }
             else
             {
-                double currentX = currentValue.X;
-                double currentY = currentValue.Y;
+                var currentX = currentValue.X;
+                var currentY = currentValue.Y;
 
                 if (x.CompareTo(currentX) == 0 && y.CompareTo(currentY) == 0)
                 {
                     return;
                 }
 
-                node.value = null;
-                node.hasValueBelow = true;
-                node.initializeChildren();
+                node.Value = null;
+                node.HasValueBelow = true;
+                node.InitializeChildren();
 
-                addAsChild(currentValue, currentX, currentY, node, left, top, right, bottom);
-                addAsChild(value, x, y, node, left, top, right, bottom);
+                _addAsChild(currentValue, currentX, currentY, node, left, top, right, bottom);
+                _addAsChild(value, x, y, node, left, top, right, bottom);
             }
         }
 
-        private void addAsChild(
-            T value, double x, double y, Node<T> node,
-            double left, double top, double right, double bottom
-            )
+        private void _addAsChild(T value, double x, double y, Node node, double left, double top, double right, double bottom)
         {
-            double centerX = (left + right)/2.0D;
-            double centerY = (top + bottom)/2.0D;
+            var centerX = (left + right)/2.0D;
+            var centerY = (top + bottom)/2.0D;
 
             if (x < centerX)
             {
                 if (y < centerY)
                 {
-                    add(value, x, y, node.leftTop, left, top, centerX, centerY);
+                    _add(value, x, y, node.LeftTop, left, top, centerX, centerY);
                 }
                 else
                 {
-                    add(value, x, y, node.leftBottom, left, centerY, centerX, bottom);
+                    _add(value, x, y, node.LeftBottom, left, centerY, centerX, bottom);
                 }
             }
             else
             {
                 if (y < centerY)
                 {
-                    add(value, x, y, node.rightTop, centerX, top, right, centerY);
+                    _add(value, x, y, node.RightTop, centerX, top, right, centerY);
                 }
                 else
                 {
-                    add(value, x, y, node.rightBottom, centerX, centerY, right, bottom);
+                    _add(value, x, y, node.RightBottom, centerX, centerY, right, bottom);
                 }
             }
         }
 
 
-        public T findNearest(T value)
+        // Equal to call of FindNearest(..., Predicate<T> matcher) with (value -> true), but copied for performance reason
+
+        private T FindNearest(double x, double y, Node node, double left, double top, double right, double bottom)
         {
-            return findNearest(value.X, value.Y);
-        }
+            if (node.Value != null)
+                return node.Value;
 
-
-        public T findNearest(double x, double y)
-        {
-            return findNearest(x, y, root, left, top, right, bottom);
-        }
-
-
-        public T findNearest(T value, Predicate<T> matcher)
-        {
-            return findNearest(value.X, value.Y, matcher);
-        }
-
-
-        public T findNearest(double x, double y, Predicate<T> matcher)
-        {
-            return findNearest(x, y, root, left, top, right, bottom, matcher);
-        }
-
-        // Equal to call of findNearest(..., Predicate<T> matcher) with (value -> true), but copied for performance reason
-
-        private T findNearest(double x, double y, Node<T> node, double left, double top, double right, double bottom)
-        {
-            if (node.value != null)
-            {
-                return node.value;
-            }
-
-            if (!node.hasValueBelow)
-            {
+            if (!node.HasValueBelow)
                 return null;
-            }
 
-            double centerX = (left + right)/2.0D;
-            double centerY = (top + bottom)/2.0D;
+            var centerX = (left + right)/2.0D;
+            var centerY = (top + bottom)/2.0D;
 
             if (x < centerX)
             {
                 if (y < centerY)
                 {
-                    T nearestValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerX - x))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
                     {
-                        T otherValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -214,10 +137,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -226,10 +149,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.SumSqr(centerX - x, centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -241,13 +164,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    T nearestValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerX - x))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
                     {
-                        T otherValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -256,10 +179,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -268,10 +191,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.SumSqr(centerX - x, y - centerY))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -286,13 +209,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 if (y < centerY)
                 {
-                    T nearestValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(x - centerX))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
                     {
-                        T otherValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -301,10 +224,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -313,10 +236,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.SumSqr(x - centerX, centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -328,13 +251,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    T nearestValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(x - centerX))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
                     {
-                        T otherValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -343,10 +266,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -355,10 +278,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon > Geom.SumSqr(x - centerX, y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -371,36 +294,35 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private T findNearest(
-            double x, double y, Node<T> node,
+        private T _findNearest(
+            double x, double y, Node node,
             double left, double top, double right, double bottom, Predicate<T> matcher
-
             )
         {
-            if (node.value != null)
+            if (node.Value != null)
             {
-                return matcher(node.value) ? node.value : null;
+                return matcher(node.Value) ? node.Value : null;
             }
 
-            if (!node.hasValueBelow)
+            if (!node.HasValueBelow)
             {
                 return null;
             }
 
-            double centerX = (left + right)/2.0D;
-            double centerY = (top + bottom)/2.0D;
+            var centerX = (left + right)/2.0D;
+            var centerY = (top + bottom)/2.0D;
 
             if (x < centerX)
             {
                 if (y < centerY)
                 {
-                    T nearestValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY, matcher);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y, matcher);
+                    var nearestValue = _findNearest(x, y, node.LeftTop, left, top, centerX, centerY, matcher);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y, matcher);
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerX - x))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
                     {
-                        T otherValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.RightTop, centerX, top, right, centerY, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -409,10 +331,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -421,10 +343,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.SumSqr(centerX - x, centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.RightBottom, centerX, centerY, right, bottom, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -436,13 +358,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    T nearestValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom, matcher);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y, matcher);
+                    var nearestValue = _findNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom, matcher);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y, matcher);
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerX - x))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
                     {
-                        T otherValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.RightBottom, centerX, centerY, right, bottom, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -451,10 +373,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.LeftTop, left, top, centerX, centerY, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -463,10 +385,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.SumSqr(centerX - x, y - centerY))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.RightTop, centerX, top, right, centerY, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -481,13 +403,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 if (y < centerY)
                 {
-                    T nearestValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY, matcher);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y, matcher);
+                    var nearestValue = _findNearest(x, y, node.RightTop, centerX, top, right, centerY, matcher);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y, matcher);
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(x - centerX))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
                     {
-                        T otherValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.LeftTop, left, top, centerX, centerY, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -496,10 +418,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.Sqr(centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.RightBottom, centerX, centerY, right, bottom, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -508,10 +430,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon >= Geom.SumSqr(x - centerX, centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
                     {
-                        T otherValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -523,13 +445,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    T nearestValue = findNearest(x, y, node.rightBottom, centerX, centerY, right, bottom, matcher);
-                    double nearestSquaredDistance = getSquaredDistanceTo(nearestValue, x, y, matcher);
+                    var nearestValue = _findNearest(x, y, node.RightBottom, centerX, centerY, right, bottom, matcher);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y, matcher);
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(x - centerX))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
                     {
-                        T otherValue = findNearest(x, y, node.leftBottom, left, centerY, centerX, bottom, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -538,10 +460,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon > Geom.Sqr(y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.rightTop, centerX, top, right, centerY, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.RightTop, centerX, top, right, centerY, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -550,10 +472,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + epsilon > Geom.SumSqr(x - centerX, y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
                     {
-                        T otherValue = findNearest(x, y, node.leftTop, left, top, centerX, centerY, matcher);
-                        double otherSquaredDistance = getSquaredDistanceTo(otherValue, x, y, matcher);
+                        var otherValue = _findNearest(x, y, node.LeftTop, left, top, centerX, centerY, matcher);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, matcher);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -566,40 +488,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        /*public void check()
+        private static void _remove(double left, double top, double right, double bottom, Node node, T value)
         {
-            check(root);
-        }
-
-        private void check(Node<T> node)
-        {
-            if (node == null)
-                return;
-            if (node.value != null)
+            if (node.Value != null)
             {
-                if (node.leftTop != null || node.rightTop != null || node.leftBottom != null && node.rightBottom != null)
-                    throw new Exception();
-            }
-            else
-            {
-                check(node.leftTop);
-                check(node.rightTop);
-                check(node.leftBottom);
-                check(node.rightBottom);
-            }
-        }*/
-
-        private void _remove(double left, double top, double right, double bottom, Node<T> node, T value)
-        {
-            if (node.value != null)
-            {
-                if (node.value.Equals(value))
+                if (node.Value.Equals(value))
                 {
-                    node.value = null;
+                    node.Value = null;
                 }
                 return;
             }
-            if (!node.hasValueBelow)
+            if (!node.HasValueBelow)
             {
                 // value not found
                 return;
@@ -608,671 +507,718 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var x = value.X;
             var y = value.Y;
 
-            double centerX = (left + right) / 2.0D;
-            double centerY = (top + bottom) / 2.0D;
+            var centerX = (left + right) / 2.0D;
+            var centerY = (top + bottom) / 2.0D;
 
             if (y < centerY)
             {
                 if (x < centerX)
                 {
-                    _remove(left, top, centerX, centerY, node.leftTop, value);
+                    _remove(left, top, centerX, centerY, node.LeftTop, value);
                 }
                 else
                 {
-                    _remove(centerX, top, right, centerY, node.rightTop, value);
+                    _remove(centerX, top, right, centerY, node.RightTop, value);
                 }
             }
             else
             {
                 if (x < centerX)
                 {
-                    _remove(left, centerY, centerX, bottom, node.leftBottom, value);
+                    _remove(left, centerY, centerX, bottom, node.LeftBottom, value);
                 }
                 else
                 {
-                    _remove(centerX, centerY, right, bottom, node.rightBottom, value);
+                    _remove(centerX, centerY, right, bottom, node.RightBottom, value);
                 }
             }
 
-            node.hasValueBelow =
-                node.leftTop != null && (node.leftTop.hasValueBelow || node.leftTop.value != null) ||
-                node.rightTop != null && (node.rightTop.hasValueBelow || node.rightTop.value != null) ||
-                node.leftBottom != null && (node.leftBottom.hasValueBelow || node.leftBottom.value != null) ||
-                node.rightBottom != null && (node.rightBottom.hasValueBelow || node.rightBottom.value != null);
+            node.HasValueBelow =
+                node.LeftTop != null && (node.LeftTop.HasValueBelow || node.LeftTop.Value != null) ||
+                node.RightTop != null && (node.RightTop.HasValueBelow || node.RightTop.Value != null) ||
+                node.LeftBottom != null && (node.LeftBottom.HasValueBelow || node.LeftBottom.Value != null) ||
+                node.RightBottom != null && (node.RightBottom.HasValueBelow || node.RightBottom.Value != null);
 
-            if (!node.hasValueBelow && node.value == null)
-                node.leftTop = node.rightTop = node.leftBottom = node.rightBottom = null;
+            if (!node.HasValueBelow && node.Value == null)
+                node.LeftTop = node.RightTop = node.LeftBottom = node.RightBottom = null;
+        }
+
+        private void _findAllNearby(
+            double x, double y, double squaredDistance, List<T> values, Node node,
+            double left, double top, double right, double bottom
+            )
+        {
+            if (node.Value != null)
+            {
+                if (_getSquaredDistanceTo(node.Value, x, y) <= squaredDistance)
+                {
+                    values.Add(node.Value);
+                }
+                return;
+            }
+
+            if (!node.HasValueBelow)
+            {
+                return;
+            }
+
+            var centerX = (left + right)/2.0D;
+            var centerY = (top + bottom)/2.0D;
+
+            if (x < centerX)
+            {
+                if (y < centerY)
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY);
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom);
+                    }
+                }
+                else
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom);
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom);
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY);
+                    }
+                }
+            }
+            else
+            {
+                if (y < centerY)
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY);
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom);
+                    }
+                }
+                else
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom);
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom);
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY);
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY);
+                    }
+                }
+            }
+        }
+
+        private void _findAllNearby(
+            double x, double y, double squaredDistance, List<T> values, Node node,
+            double left, double top, double right, double bottom, Predicate<T> matcher
+            )
+        {
+            if (node.Value != null)
+            {
+                if (_getSquaredDistanceTo(node.Value, x, y, matcher) <= squaredDistance)
+                {
+                    values.Add(node.Value);
+                }
+                return;
+            }
+
+            if (!node.HasValueBelow)
+            {
+                return;
+            }
+
+            var centerX = (left + right)/2.0D;
+            var centerY = (top + bottom)/2.0D;
+
+            if (x < centerX)
+            {
+                if (y < centerY)
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY, matcher);
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY,
+                            matcher);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom,
+                            matcher);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom,
+                            matcher);
+                    }
+                }
+                else
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom,
+                        matcher);
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom,
+                            matcher);
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY, matcher);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY,
+                            matcher);
+                    }
+                }
+            }
+            else
+            {
+                if (y < centerY)
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY, matcher);
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY, matcher);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom,
+                            matcher);
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom,
+                            matcher);
+                    }
+                }
+                else
+                {
+                    _findAllNearby(x, y, squaredDistance, values, node.RightBottom, centerX, centerY, right, bottom,
+                        matcher);
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftBottom, left, centerY, centerX, bottom,
+                            matcher);
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.RightTop, centerX, top, right, centerY,
+                            matcher);
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
+                    {
+                        _findAllNearby(x, y, squaredDistance, values, node.LeftTop, left, top, centerX, centerY, matcher);
+                    }
+                }
+            }
+        }
+
+
+        // Equal to call of hasNearby(..., Predicate<T> matcher) with (value -> true), but copied for performance reason
+        private bool _hasNearby(
+            double x, double y, double squaredDistance, Node node,
+            double left, double top, double right, double bottom
+            )
+        {
+            if (node.Value != null)
+            {
+                return _getSquaredDistanceTo(node.Value, x, y) <= squaredDistance;
+            }
+
+            if (!node.HasValueBelow)
+            {
+                return false;
+            }
+
+            var centerX = (left + right)/2.0D;
+            var centerY = (top + bottom)/2.0D;
+
+            if (x < centerX)
+            {
+                if (y < centerY)
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+            }
+            else
+            {
+                if (y < centerY)
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        private bool _hasNearby(
+            double x, double y, double squaredDistance, Node node,
+            double left, double top, double right, double bottom, Predicate<T> matcher
+            )
+        {
+            if (node.Value != null)
+            {
+                return _getSquaredDistanceTo(node.Value, x, y, matcher) <= squaredDistance;
+            }
+
+            if (!node.HasValueBelow)
+            {
+                return false;
+            }
+
+            var centerX = (left + right)/2.0D;
+            var centerY = (top + bottom)/2.0D;
+
+            if (x < centerX)
+            {
+                if (y < centerY)
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY, matcher))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom, matcher))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+            }
+            else
+            {
+                if (y < centerY)
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY, matcher))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+                else
+                {
+                    if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom, matcher))
+                    {
+                        return true;
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    if (squaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
+                    {
+                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY, matcher))
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+            }
+        }
+
+        private static void _clear(Node node)
+        {
+            node.Value = default(T);
+
+            if (node.HasValueBelow)
+            {
+                node.HasValueBelow = false;
+
+                _clear(node.LeftTop);
+                _clear(node.RightTop);
+                _clear(node.LeftBottom);
+                _clear(node.RightBottom);
+            }
+        }
+
+        private static double _getSquaredDistanceTo(T value, double x, double y)
+        {
+            return value == null
+                ? double.PositiveInfinity
+                : Geom.SumSqr(value.X - x, value.Y - y);
+        }
+
+        private static double _getSquaredDistanceTo(T value, double x, double y, Predicate<T> matcher)
+        {
+            return value == null || !matcher(value)
+                ? double.PositiveInfinity
+                : Geom.SumSqr(value.X - x, value.Y - y);
+        }
+        #endregion
+
+
+        #region Public Members
+        public QuadTree(double left, double top, double right, double bottom, double epsilon)
+        {
+            this._left = left;
+            this._top = top;
+            this._right = right;
+            this._bottom = bottom;
+
+            this._epsilon = epsilon;
+        }
+
+        public void Add(T value)
+        {
+            var x = value.X;
+            var y = value.Y;
+
+            if (x < _left || y < _top || x > _right || y > _bottom)
+            {
+                throw new ArgumentException(
+                    $"The point ({x}, {y}) is outside of bounding box ({_left}, {_top}, {_right}, {_bottom}).");
+            }
+
+            _add(value, x, y, _root, _left, _top, _right, _bottom);
+        }
+
+        public void AddAll(IEnumerable<T> values)
+        {
+            foreach (var value in values)
+                Add(value);
+        }
+
+        public T FindNearest(T value)
+        {
+            return FindNearest(value.X, value.Y);
+        }
+
+        public T FindNearest(double x, double y)
+        {
+            return FindNearest(x, y, _root, _left, _top, _right, _bottom);
+        }
+
+        public T FindNearest(T value, Predicate<T> matcher)
+        {
+            return FindNearest(value.X, value.Y, matcher);
+        }
+
+        public T FindNearest(double x, double y, Predicate<T> matcher)
+        {
+            return _findNearest(x, y, _root, _left, _top, _right, _bottom, matcher);
         }
 
         public void Remove(T value)
         {
-            _remove(left, top, right, bottom, root, value);
+            _remove(_left, _top, _right, _bottom, _root, value);
         }
 
-
-        public List<T> findAllNearby(T value, double squaredDistance)
+        public List<T> FindAllNearby(T value, double squaredDistance)
         {
-            return findAllNearby(value.X, value.Y, squaredDistance);
+            return FindAllNearby(value.X, value.Y, squaredDistance);
         }
 
-
-        public List<T> findAllNearby(double x, double y, double squaredDistance)
+        public List<T> FindAllNearby(double x, double y, double squaredDistance)
         {
-            List<T> values = new List<T>();
-            findAllNearby(x, y, squaredDistance, values, root, left, top, right, bottom);
+            var values = new List<T>();
+            _findAllNearby(x, y, squaredDistance, values, _root, _left, _top, _right, _bottom);
             return values;
         }
 
-
-        public List<T> findAllNearby(T value, double squaredDistance, Predicate<T> matcher)
+        public List<T> FindAllNearby(T value, double squaredDistance, Predicate<T> matcher)
         {
-            return findAllNearby(value.X, value.Y, squaredDistance, matcher);
+            return FindAllNearby(value.X, value.Y, squaredDistance, matcher);
         }
 
-
-        public List<T> findAllNearby(double x, double y, double squaredDistance, Predicate<T> matcher)
+        public List<T> FindAllNearby(double x, double y, double squaredDistance, Predicate<T> matcher)
         {
-            List<T> values = new List<T>();
-            findAllNearby(x, y, squaredDistance, values, root, left, top, right, bottom, matcher);
+            var values = new List<T>();
+            _findAllNearby(x, y, squaredDistance, values, _root, _left, _top, _right, _bottom, matcher);
             return values;
         }
 
-        private void findAllNearby(
-            double x, double y, double squaredDistance, List<T> values, Node<T> node,
-            double left, double top, double right, double bottom
-            )
+        public bool HasNearby(T value, double squaredDistance)
         {
-            if (node.value != null)
-            {
-                if (getSquaredDistanceTo(node.value, x, y) <= squaredDistance)
-                {
-                    values.Add(node.value);
-                }
-                return;
-            }
-
-            if (!node.hasValueBelow)
-            {
-                return;
-            }
-
-            double centerX = (left + right)/2.0D;
-            double centerY = (top + bottom)/2.0D;
-
-            if (x < centerX)
-            {
-                if (y < centerY)
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY);
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom);
-                    }
-                }
-                else
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom);
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom);
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY);
-                    }
-                }
-            }
-            else
-            {
-                if (y < centerY)
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY);
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(x - centerX, centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom);
-                    }
-                }
-                else
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom);
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom);
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY);
-                    }
-
-                    if (squaredDistance + epsilon > Geom.SumSqr(x - centerX, y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY);
-                    }
-                }
-            }
+            return HasNearby(value.X, value.Y, squaredDistance);
         }
 
-        private void findAllNearby(
-            double x, double y, double squaredDistance, List<T> values, Node<T> node,
-            double left, double top, double right, double bottom, Predicate<T> matcher
-            )
+        public bool HasNearby(double x, double y, double squaredDistance)
         {
-            if (node.value != null)
-            {
-                if (getSquaredDistanceTo(node.value, x, y, matcher) <= squaredDistance)
-                {
-                    values.Add(node.value);
-                }
-                return;
-            }
-
-            if (!node.hasValueBelow)
-            {
-                return;
-            }
-
-            double centerX = (left + right)/2.0D;
-            double centerY = (top + bottom)/2.0D;
-
-            if (x < centerX)
-            {
-                if (y < centerY)
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY, matcher);
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY,
-                            matcher);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom,
-                            matcher);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom,
-                            matcher);
-                    }
-                }
-                else
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom,
-                        matcher);
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom,
-                            matcher);
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY, matcher);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY,
-                            matcher);
-                    }
-                }
-            }
-            else
-            {
-                if (y < centerY)
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY, matcher);
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY, matcher);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom,
-                            matcher);
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(x - centerX, centerY - y))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom,
-                            matcher);
-                    }
-                }
-                else
-                {
-                    findAllNearby(x, y, squaredDistance, values, node.rightBottom, centerX, centerY, right, bottom,
-                        matcher);
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftBottom, left, centerY, centerX, bottom,
-                            matcher);
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.rightTop, centerX, top, right, centerY,
-                            matcher);
-                    }
-
-                    if (squaredDistance + epsilon > Geom.SumSqr(x - centerX, y - centerY))
-                    {
-                        findAllNearby(x, y, squaredDistance, values, node.leftTop, left, top, centerX, centerY, matcher);
-                    }
-                }
-            }
+            return _hasNearby(x, y, squaredDistance, _root, _left, _top, _right, _bottom);
         }
 
-        public bool hasNearby(T value, double squaredDistance)
+        public bool HasNearby(T value, double squaredDistance, Predicate<T> matcher)
         {
-            return hasNearby(value.X, value.Y, squaredDistance);
+            return HasNearby(value.X, value.Y, squaredDistance, matcher);
         }
 
-        public bool hasNearby(double x, double y, double squaredDistance)
+        public bool HasNearby(double x, double y, double squaredDistance, Predicate<T> matcher)
         {
-            return hasNearby(x, y, squaredDistance, root, left, top, right, bottom);
+            return _hasNearby(x, y, squaredDistance, _root, _left, _top, _right, _bottom, matcher);
         }
 
-        public bool hasNearby(T value, double squaredDistance, Predicate<T> matcher)
+        public void Clear()
         {
-            return hasNearby(value.X, value.Y, squaredDistance, matcher);
+            _clear(_root);
         }
-
-        public bool hasNearby(double x, double y, double squaredDistance, Predicate<T> matcher)
-        {
-            return hasNearby(x, y, squaredDistance, root, left, top, right, bottom, matcher);
-        }
-
-        // Equal to call of hasNearby(..., Predicate<T> matcher) with (value -> true), but copied for performance reason
-        private bool hasNearby(
-            double x, double y, double squaredDistance, Node<T> node,
-            double left, double top, double right, double bottom
-            )
-        {
-            if (node.value != null)
-            {
-                return getSquaredDistanceTo(node.value, x, y) <= squaredDistance;
-            }
-
-            if (!node.hasValueBelow)
-            {
-                return false;
-            }
-
-            double centerX = (left + right)/2.0D;
-            double centerY = (top + bottom)/2.0D;
-
-            if (x < centerX)
-            {
-                if (y < centerY)
-                {
-                    if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-                else
-                {
-                    if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-            }
-            else
-            {
-                if (y < centerY)
-                {
-                    if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(x - centerX, centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-                else
-                {
-                    if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon > Geom.SumSqr(x - centerX, y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-            }
-        }
-
-        private bool hasNearby(
-            double x, double y, double squaredDistance, Node<T> node,
-            double left, double top, double right, double bottom, Predicate<T> matcher
-            )
-        {
-            if (node.value != null)
-            {
-                return getSquaredDistanceTo(node.value, x, y, matcher) <= squaredDistance;
-            }
-
-            if (!node.hasValueBelow)
-            {
-                return false;
-            }
-
-            double centerX = (left + right)/2.0D;
-            double centerY = (top + bottom)/2.0D;
-
-            if (x < centerX)
-            {
-                if (y < centerY)
-                {
-                    if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY, matcher))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-                else
-                {
-                    if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom, matcher))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(centerX - x, y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-            }
-            else
-            {
-                if (y < centerY)
-                {
-                    if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY, matcher))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon >= Geom.SumSqr(x - centerX, centerY - y))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-                else
-                {
-                    if (hasNearby(x, y, squaredDistance, node.rightBottom, centerX, centerY, right, bottom, matcher))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(x - centerX))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftBottom, left, centerY, centerX, bottom, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon > Geom.Sqr(y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.rightTop, centerX, top, right, centerY, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + epsilon > Geom.SumSqr(x - centerX, y - centerY))
-                    {
-                        if (hasNearby(x, y, squaredDistance, node.leftTop, left, top, centerX, centerY, matcher))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-            }
-        }
-
-        public void clear()
-        {
-            clear(root);
-        }
-
-        private static void clear<T>(Node<T> node)
-        {
-            node.value = default(T);
-
-            if (node.hasValueBelow)
-            {
-                node.hasValueBelow = false;
-
-                clear(node.leftTop);
-                clear(node.rightTop);
-                clear(node.leftBottom);
-                clear(node.rightBottom);
-            }
-        }
-
-        private double getSquaredDistanceTo(T value, double x, double y)
-        {
-            return value == null
-                ? Double.PositiveInfinity
-                : Geom.SumSqr(
-                    value.X - x, value.Y - y
-                    );
-        }
-
-        private double getSquaredDistanceTo(T value, double x, double y, Predicate<T> matcher)
-        {
-            return value == null || !matcher(value)
-                ? Double.PositiveInfinity
-                : Geom.SumSqr(
-                    value.X - x, value.Y - y
-                    );
-        }
+        #endregion
     }
 }
