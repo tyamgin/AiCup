@@ -86,21 +86,64 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 			var subInterval = 25;
 			var curInterval = 0;
 
-            if (World.TickIndex == 0)
-            {
-                ResultingMove.Action = ActionType.ClearAndSelect;
-                ApplyREct(rect);
-                return;
-            }
-            if (World.TickIndex == 1)
-            {
-                ResultingMove.Action = ActionType.Scale;
-                ResultingMove.X = 60;
-                ResultingMove.Y = 60;
-                ResultingMove.Factor = 0.5;
-                return;
-            }
-            return;
+            //if (World.TickIndex == 0)
+            //{
+            //    ResultingMove.Action = ActionType.ClearAndSelect;
+            //    ApplyREct(rectL);
+            //    return;
+            //}
+            //if (World.TickIndex == 1)
+            //{
+            //    ResultingMove.Action = ActionType.Move;
+            //    ResultingMove.X = 300 / 5;
+            //    ResultingMove.Y = 800 / 5;
+            //    ResultingMove.MaxSpeed = 0.222;
+            //    return;
+            //}
+            //return;
+
+
+            //if (World.TickIndex == 0)
+            //{
+            //    ResultingMove.Action = ActionType.ClearAndSelect;
+            //    ResultingMove.VehicleType = VehicleType.Fighter;
+            //    ResultingMove.Right = Const.MapSize;
+            //    ResultingMove.Bottom = Const.MapSize;
+            //    return;
+            //}
+
+            //if (World.TickIndex % 8 == 1)
+            //{
+            //    var minDanger = double.MaxValue;
+            //    var selMove = new AMove();
+            //    const int ticksCount = 8;
+            //    const double maxSpeed = 0;
+                
+            //    foreach (var angle in Utility.Range(0, 2*Math.PI, 8))
+            //    {
+            //        var env = new Sandbox
+            //        {
+            //            Vehicles = MyVehicles
+            //                .Where(x => x.IsAerial)
+            //                .Concat(OppVehicles)
+            //                .Select(x => new AVehicle(x))
+            //                .ToArray()
+            //        };
+            //        var move = new AMove();
+            //        move.Action = ActionType.Move;
+            //        move.Point = Point.ByAngle(angle)*MyVehicles.Where(x=>x.IsSelected).Max(x=>x.ActualSpeed)*ticksCount;
+            //        move.MaxSpeed = maxSpeed;
+
+            //        var danger = GetDanger(env, move, ticksCount);
+            //        if (danger < minDanger)
+            //        {
+            //            minDanger = danger;
+            //            selMove = move;
+            //        }
+            //    }
+            //    ResultingMove = selMove;
+            //}
+            //return;
 
             if (_tryMoveRect(rect, rectL, rectR, totalInterval, curInterval * subInterval))
 			{
@@ -133,7 +176,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 			}
 			curInterval++;
 			
-			var massCenter = GetUnitsAvg(MyVehicles);
+			var massCenter = GetAvg(MyVehicles);
 			var minD = 110 * Math.Sqrt(MyVehicles.Length) / Math.Sqrt(500);
 			var dx = rect.X2 - rect.X;
 			var dy = rect.Y2 - rect.Y;

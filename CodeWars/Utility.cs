@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
@@ -44,6 +46,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Console.WriteLine(msg);
 #endif
         }
+
+        public static WeatherType Weather(double x, double y)
+        {
+            int I, J;
+            Utility.GetCell(x, y, out I, out J);
+            return WeatherType[I][J];
+        }
+
+        public static TerrainType Terrain(double x, double y)
+        {
+            int I, J;
+            Utility.GetCell(x, y, out I, out J);
+            return TerrainType[I][J];
+        }
     }
 
     public class Utility
@@ -71,10 +87,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return Math.Abs(x - y) < Const.Eps;
         }
 
-        public static void GetCell(Point point, out int I, out int J)
+        public static void GetCell(double x, double y, out int I, out int J)
         {
-            I = (int) (point.X/G.CellSize + Const.Eps);
-            J = (int) (point.Y/G.CellSize + Const.Eps);
+            I = (int) ((x)/G.CellSize); // TODO: need Eps: http://russianaicup.ru/forum/index.php?topic=804.0
+            J = (int) ((y)/G.CellSize);
         }
 
         public static void Dec(ref int value)
@@ -118,6 +134,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
             }
             return res;
+        }
+
+        public static int ArgMax<T>(this IEnumerable<T> ie) where T : IComparable<T>
+        {
+            var res = 0;
+            var idx = 0;
+            var maxValue = default(T);
+            foreach (var x in ie)
+            {
+                if (idx == 0 || x.CompareTo(maxValue) > 0)
+                {
+                    res = idx;
+                    maxValue = x;
+                }
+                idx++;
+            }
+            return res;
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
+        {
+            foreach (var item in enumeration)
+                action(item);
         }
     }
 }

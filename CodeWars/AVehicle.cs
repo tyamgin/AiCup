@@ -11,6 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public double Durability;
         public bool IsSelected;
         public double MaxSpeed; // TODO: computable property
+        public int RemainingAttackCooldownTicks;
 
         public Point MoveTarget;
         public double MoveSpeed;
@@ -25,6 +26,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Durability = unit.Durability;
             IsSelected = unit.IsSelected;
             MaxSpeed = unit.MaxSpeed;
+            RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
         }
 
         public AVehicle(AVehicle unit) : base(unit)
@@ -34,6 +36,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Durability = unit.Durability;
             IsSelected = unit.IsSelected;
             MaxSpeed = unit.MaxSpeed;
+            RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
 
             MoveTarget = unit.MoveTarget;
             MoveSpeed = unit.MoveSpeed;
@@ -42,13 +45,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             RotationAngularSpeed = unit.RotationAngularSpeed;
         }
 
-        private bool IsAerial => Type == VehicleType.Helicopter || Type == VehicleType.Fighter;
+        public bool IsAerial => Type == VehicleType.Helicopter || Type == VehicleType.Fighter;
 
-        public bool Move(Func<ACircularUnit, bool> checkCollisions = null)
+        public bool Move(Func<AVehicle, bool> checkCollisions = null)
         {
-            var prevX = X;
-            var prevY = Y;
-            var prevRotationAngle = RotationAngle;
+            var newRotationAngle = RotationAngle;
+
             Point delta = null;
             var done = false;
 
@@ -82,7 +84,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (RotationAngle < 0)
                         angle = -angle;
                     
-                    RotationAngle -= angle;
+                    newRotationAngle -= angle;
                 }
                 var to = RotateCounterClockwise(angle, RotationCenter);
                 delta = to - this;
@@ -90,19 +92,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (delta != null)
             {
-                X += delta.X;
-                Y += delta.Y;
+                var selfCopy = new AVehicle(this);
+                selfCopy.X += delta.X;
+                selfCopy.Y += delta.Y;
+                selfCopy.RotationAngle = newRotationAngle;
+
                 if (X < Radius - Const.Eps || 
                     Y < Radius - Const.Eps || 
                     X > Const.MapSize - Radius + Const.Eps ||
                     Y > Const.MapSize - Radius + Const.Eps || 
-                    checkCollisions != null && checkCollisions(this))
+                    checkCollisions != null && checkCollisions(selfCopy))
                 {
-                    X = prevX;
-                    Y = prevY;
-                    RotationAngle = prevRotationAngle;
                     return false;
                 }
+
+                X += delta.X;
+                Y += delta.Y;
+                RotationAngle = newRotationAngle;
+
                 if (done)
                 {
                     MoveTarget = null;
@@ -113,33 +120,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
             }
 
+            Utility.Dec(ref RemainingAttackCooldownTicks);
 
             return true;
-        }
-
-        public static void Move(AVehicle[] units)
-        {
-            var moved = new bool[units.Length];
-            var movedCount = 0;
-            //units = units.OrderBy(x => -x.Id).ToArray();
-            while (movedCount < units.Length)
-            {
-                var anyMoved = false;
-                for (var i = 0; i < units.Length; i++)
-                {
-                    if (moved[i])
-                        continue;
-                    var isAerial = units[i].IsAerial;
-                    if (!units[i].Move(x => x.GetFirstIntersection(units.Where(u => u.IsAerial == isAerial)) != null))
-                        continue;
-                    moved[i] = true;
-                    anyMoved = true;
-                    movedCount++;
-                }
-
-                if (!anyMoved)
-                    break;
-            }
         }
 
         public double ActualSpeed
@@ -147,11 +130,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             get
             {
                 var speed = MaxSpeed;
-                int I, J;
-                Utility.GetCell(this, out I, out J);
                 if (IsAerial)
                 {
-                    var weather = MyStrategy.WeatherType[I][J];
+                    var weather = MyStrategy.Weather(X, Y);
                     if (weather == WeatherType.Cloud)
                         speed *= G.CloudWeatherSpeedFactor;
                     else if (weather == WeatherType.Rain)
@@ -159,7 +140,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    var terrian = MyStrategy.TerrainType[I][J];
+                    var terrian = MyStrategy.Terrain(X, Y);
                     if (terrian == TerrainType.Swamp)
                         speed *= G.SwampTerrainSpeedFactor;
                     else if (terrian == TerrainType.Forest)
@@ -181,6 +162,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     angle = RotationAngularSpeed;
                 return angle;
             }
+        }
+
+        public bool IsAlive => Durability > Const.Eps;
+
+        public double GetAttackDamage(AVehicle veh)
+        {
+            if (GetDistanceTo2(veh) - Const.Eps > G.AttackRange2(Type, veh.Type))
+                return 0;
+            var damage = G.AttackDamage[(int) Type, (int) veh.Type];
+            if (damage >= veh.Durability)
+                return veh.Durability;
+            return damage;
+        }
+
+        public void Attack(AVehicle veh)
+        {
+            if (RemainingAttackCooldownTicks > 0)
+                return;
+
+            var damage = GetAttackDamage(veh);
+            veh.Durability -= damage;
+            RemainingAttackCooldownTicks = G.AttackCooldownTicks;
         }
     }
 }

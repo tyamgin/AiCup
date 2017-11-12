@@ -28,5 +28,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             move.Factor = Factor;
         }
 
+        public Point Point
+        {
+            get { return new Point(X, Y); }
+            set
+            {
+                X = value.X;
+                Y = value.Y;
+            }
+        }
+
+        public void SetVector(Point from, Point to)
+        {
+            X = to.X - from.X;
+            Y = to.Y - from.Y;
+        }
     }
 }

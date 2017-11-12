@@ -95,6 +95,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             return Math.Atan2(Y, X);
         }
+        public static double GetDistanceTo2(double x1, double y1, double x2, double y2)
+        {
+            return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
+        }
 
         public double GetDistanceTo(double x, double y)
         {
@@ -278,21 +282,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
     public class Rect
     {
-        public double X, Y, Width, Height;
+        public double X, Y, X2, Y2;
 
-        public double X2
-        {
-            get { return X + Width; }
-            set { Width = value - X; }
-        }
+        public double Width => X2 - X;
 
-        public double Y2
-        {
-            get { return Y + Height; }
-            set { Height = value - Y; }
-        }
+        public double Height => Y2 - Y;
 
         public Point Center => new Point((X + X2)/2, (Y + Y2)/2);
+
+        public bool IntersectsWith(Rect rect)
+        {
+            return Geom.Intersect1D(X, X2, rect.X, rect.X2) && Geom.Intersect1D(Y, Y2, rect.Y, rect.Y2);
+        }
     }
 
     public class Geom
@@ -323,7 +324,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             rhs = temp;
         }
 
-        private static bool _intersect_1D(double a, double b, double c, double d)
+        public static bool Intersect1D(double a, double b, double c, double d)
         {
             if (a > b)
                 _swap(ref a, ref b);
@@ -349,8 +350,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         /// <returns></returns>
         public static bool SegmentsIntersect(Point start1, Point end1, Point start2, Point end2)
         {
-            return _intersect_1D(start1.X, end1.X, start2.X, end2.X)
-                   && _intersect_1D(start1.Y, end1.Y, start2.Y, end2.Y)
+            return Intersect1D(start1.X, end1.X, start2.X, end2.X)
+                   && Intersect1D(start1.Y, end1.Y, start2.Y, end2.Y)
                    && Sign(VectorProduct(start1, end1, start2)) * Sign(VectorProduct(start1, end1, end2)) <= 0
                    && Sign(VectorProduct(start2, end2, start1)) * Sign(VectorProduct(start2, end2, end1)) <= 0;
         }
@@ -410,6 +411,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             return x * x;
         }
+
+        public static double SumSqr(double numberA, double numberB)
+        {
+            return numberA * numberA + numberB * numberB;
+        }
+
 
         public static double Hypot(double x, double y)
         {

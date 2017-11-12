@@ -249,7 +249,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             }
             if (MyStrategy.ResultingMove.Action == ActionType.Move)
             {
-                var start = MyStrategy.GetUnitsAvg(VehiclesObserver.Vehicles.Where(x => x.IsSelected).ToArray());
+                var selectedVehicles = VehiclesObserver.Vehicles.Where(x => x.IsSelected).ToArray();
+                if (selectedVehicles.Length == 0)
+                    throw new Exception("Trying to move 0 vehicles");
+                var start = MyStrategy.GetAvg(selectedVehicles);
                 Vectors.Add(new SelectionVector
                 {
                     Start = start,
