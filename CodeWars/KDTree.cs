@@ -488,20 +488,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private static void _remove(double left, double top, double right, double bottom, Node node, T value)
+        private static bool _remove(double left, double top, double right, double bottom, Node node, T value)
         {
             if (node.Value != null)
             {
                 if (node.Value.Equals(value))
                 {
                     node.Value = null;
+                    return true;
                 }
-                return;
+                return false;
             }
             if (!node.HasValueBelow)
             {
                 // value not found
-                return;
+                return false;
             }
 
             var x = value.X;
@@ -510,37 +511,45 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var centerX = (left + right) / 2.0D;
             var centerY = (top + bottom) / 2.0D;
 
+            bool removed;
+
             if (y < centerY)
             {
                 if (x < centerX)
                 {
-                    _remove(left, top, centerX, centerY, node.LeftTop, value);
+                    removed = _remove(left, top, centerX, centerY, node.LeftTop, value);
                 }
                 else
                 {
-                    _remove(centerX, top, right, centerY, node.RightTop, value);
+                    removed = _remove(centerX, top, right, centerY, node.RightTop, value);
                 }
             }
             else
             {
                 if (x < centerX)
                 {
-                    _remove(left, centerY, centerX, bottom, node.LeftBottom, value);
+                    removed = _remove(left, centerY, centerX, bottom, node.LeftBottom, value);
                 }
                 else
                 {
-                    _remove(centerX, centerY, right, bottom, node.RightBottom, value);
+                    removed = _remove(centerX, centerY, right, bottom, node.RightBottom, value);
                 }
             }
 
-            node.HasValueBelow =
-                node.LeftTop != null && (node.LeftTop.HasValueBelow || node.LeftTop.Value != null) ||
-                node.RightTop != null && (node.RightTop.HasValueBelow || node.RightTop.Value != null) ||
-                node.LeftBottom != null && (node.LeftBottom.HasValueBelow || node.LeftBottom.Value != null) ||
-                node.RightBottom != null && (node.RightBottom.HasValueBelow || node.RightBottom.Value != null);
+            if (removed)
+            {
+                // normalize tree
+                node.HasValueBelow =
+                    node.LeftTop != null && (node.LeftTop.HasValueBelow || node.LeftTop.Value != null) ||
+                    node.RightTop != null && (node.RightTop.HasValueBelow || node.RightTop.Value != null) ||
+                    node.LeftBottom != null && (node.LeftBottom.HasValueBelow || node.LeftBottom.Value != null) ||
+                    node.RightBottom != null && (node.RightBottom.HasValueBelow || node.RightBottom.Value != null);
 
-            if (!node.HasValueBelow && node.Value == null)
-                node.LeftTop = node.RightTop = node.LeftBottom = node.RightBottom = null;
+                if (!node.HasValueBelow && node.Value == null)
+                    node.LeftTop = node.RightTop = node.LeftBottom = node.RightBottom = null;
+            }
+
+            return removed;
         }
 
         private void _findAllNearby(
@@ -1166,9 +1175,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return _findNearest(x, y, _root, _left, _top, _right, _bottom, matcher);
         }
 
-        public void Remove(T value)
+        public bool Remove(T value)
         {
-            _remove(_left, _top, _right, _bottom, _root, value);
+            return _remove(_left, _top, _right, _bottom, _root, value);
         }
 
         public List<T> FindAllNearby(T value, double squaredDistance)

@@ -161,7 +161,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var isAerial = unit.IsAerial;
                     var tree = _trees[isAerial ? 1 : 0];
 
-                    tree.Remove(unit);
+                    if (!tree.Remove(unit))
+                        throw new Exception("Vehicle Id=" + unit.Id + " not found");
+
                     if (!unit.Move(x =>
                     {
                         var nearest = tree.FindNearest(x);
