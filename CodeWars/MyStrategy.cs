@@ -208,7 +208,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             .Concat(OppVehicles)
                         ).Clone();
 
-                    int ticksCount = 10;
+                    int ticksCount = 6;
                     var avg = GetAvg(startEnv.Vehicles.Where(x => x.Type == vehType));
                     double maxSpeed = 0;// startEnv.OppVehicles.Min(x => x.GetDistanceTo2(avg)) < 70 && World.TickIndex < 2000 ? 0.4 : 0;
                     AMove selectionMove = null;
@@ -233,7 +233,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var move = new AMove
                         {
                             Action = ActionType.Move,
-                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * 5,
+                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * 6,
                             MaxSpeed = maxSpeed
                         };
 

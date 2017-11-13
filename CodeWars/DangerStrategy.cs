@@ -28,8 +28,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
             res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
 
-            var selectedRect = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.IsSelected));
-            res += Math.Sqrt(selectedRect.Area)*0.00005;
+            res += env.MyVehicles.Select(x => x.Type).Distinct().Average(type =>
+            {
+                var rect = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == type));
+                return Math.Sqrt(rect.Area)*0.00005;
+            });
 
             res += env.MyVehicles.Average(m => 
                 env.OppVehicles

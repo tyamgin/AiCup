@@ -8,6 +8,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static double Eps = 1e-9;
         public static int Infinity = 0x3f3f3f3f;
 
+        public static VehicleType[] AllTypes =
+        {
+            VehicleType.Arrv, VehicleType.Fighter, VehicleType.Helicopter, VehicleType.Ifv, VehicleType.Tank
+        };
 
         public static void Initialize(World world, Game game)
         {
