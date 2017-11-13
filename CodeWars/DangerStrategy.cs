@@ -12,10 +12,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public static double GetDanger(Sandbox env, AMove move, int ticksCount)
         {
-            
-
-            var myDurabilityBefore = env.MyDurability;
-            var oppDurabilityBefore = env.OppDurability;
+            var myDurabilityBefore = env.MyVehicles.Sum(x => x.FullDurability);
+            var oppDurabilityBefore = env.OppVehicles.Sum(x => x.FullDurability);
 
             env.ApplyMove(move);
             for (var i = 0; i < ticksCount; i++)
@@ -23,8 +21,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 env.DoTick();
             }
 
-            var myDurabilityAfter = env.MyDurability;
-            var oppDurabilityAfter = env.OppDurability;
+            var myDurabilityAfter = env.MyVehicles.Sum(x => x.FullDurability);
+            var oppDurabilityAfter = env.OppVehicles.Sum(x => x.FullDurability);
 
             var res = (myDurabilityBefore - myDurabilityAfter) - (oppDurabilityBefore - oppDurabilityAfter);
             res += env.OppVehicles.Count(x => !x.IsAlive) * 30;

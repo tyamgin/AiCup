@@ -8,7 +8,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public bool IsMy;
         public VehicleType Type;
-        public double Durability;
+        public int Durability;
         public bool IsSelected;
         public double MaxSpeed; // TODO: computable property
         public int RemainingAttackCooldownTicks;
@@ -19,6 +19,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public Point RotationCenter;
         public double RotationAngle;
         public double RotationAngularSpeed;
+        public int DurabilityPool;
 
         public AVehicle(Vehicle unit) : base(unit)
         {
@@ -47,6 +48,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             RotationCenter = unit.RotationCenter;
             RotationAngle = unit.RotationAngle;
             RotationAngularSpeed = unit.RotationAngularSpeed;
+        }
+
+        public double FullDurability => Durability + (double) DurabilityPool/G.ArrvRepairPoints;
+
+        public void Repair()
+        {
+            if (Durability == G.MaxDurability)
+                return;
+            DurabilityPool++;
+            if (DurabilityPool == G.ArrvRepairPoints)
+            {
+                Durability++;
+                DurabilityPool = 0;
+            }
         }
 
         public bool HasGroup(int groupId)
@@ -185,7 +200,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool IsAlive => Durability > Const.Eps;
 
-        public double GetAttackDamage(AVehicle veh, double additionalRadius = 0)
+        public int GetAttackDamage(AVehicle veh, double additionalRadius = 0)
         {
             var attackRange = Geom.Sqr(G.AttackRange[(int) Type, (int) veh.Type] + additionalRadius);
 

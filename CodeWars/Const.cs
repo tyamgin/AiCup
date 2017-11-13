@@ -89,6 +89,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             foreach (var a in G.AttackRange)
                 _expect(true, a <= G.MaxAttackRange);
+
+            _expect(1, game.ArrvRepairSpeed * G.ArrvRepairPoints);
+            _expect(game.ArrvRepairRange, G.ArrvRepairRange);
+            
         }
 
         private static void _expect<T>(T source, T value)
@@ -103,7 +107,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static readonly double MapSize = 1024;
         public static readonly double CellSize = 32;
         public static readonly int MaxUnitsCount = 1000;
-        public static readonly double MaxDurability = 100;
+        public static readonly int MaxDurability = 100;
         public static readonly double CloudWeatherSpeedFactor = 0.8;
         public static readonly double RainWeatherSpeedFactor = 0.6;
         public static readonly double SwampTerrainSpeedFactor = 0.6;
@@ -111,6 +115,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static readonly int AttackCooldownTicks = 60;
         public static readonly double VehicleRadius = 2;
         public static readonly double MaxAttackRange = 20;
+        public static readonly int ArrvRepairPoints = 10;
+        public static readonly double ArrvRepairRange = 10;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

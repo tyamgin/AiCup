@@ -176,30 +176,46 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     continue;
                 if (veh.RemainingAttackCooldownTicks > 0)
                     continue;
-                
+
+                if (veh.Type == VehicleType.Arrv && !veh.IsMy)
+                    continue; // TODO
+
+                var vehTree = _tree(veh.IsMy, veh.IsAerial);
+                var vehTree2 = _tree(veh.IsMy, !veh.IsAerial);
                 var oppTree = _tree(!veh.IsMy, veh.IsAerial);
                 var oppTree2 = _tree(!veh.IsMy, !veh.IsAerial);
 
-                var nearestOpponents = oppTree.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange);
-                if (veh.Type != VehicleType.Fighter)
-                    nearestOpponents.AddRange(oppTree2.FindAllNearby(veh, G.MaxAttackRange * G.MaxAttackRange));
+                var nearestInteractors = veh.Type == VehicleType.Arrv
+                    ? vehTree.FindAllNearby(veh, G.ArrvRepairRange*G.ArrvRepairRange)
+                    : oppTree.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange);
 
-                if (nearestOpponents.Count > 0)
+                if (veh.Type != VehicleType.Fighter)
+                    nearestInteractors.AddRange(oppTree2.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange));
+
+                if (veh.Type == VehicleType.Arrv)
+                    nearestInteractors.AddRange(vehTree2.FindAllNearby(veh, G.ArrvRepairRange*G.ArrvRepairRange));
+
+                if (nearestInteractors.Count > 0)
                 {
                     var probabilities = new List<double>();
                     var candidates = new List<AVehicle>();
 
-                    foreach (var oppVeh in nearestOpponents)
+                    foreach (var oppVeh in nearestInteractors)
                     {
-                        var damage = veh.GetAttackDamage(oppVeh);
-                        if (damage > 0)
+                        var damage = veh.Type == VehicleType.Arrv ? (G.MaxDurability - oppVeh.FullDurability) : veh.GetAttackDamage(oppVeh);
+                        if (damage > Const.Eps)
                         {
                             probabilities.Add(damage);
                             candidates.Add(oppVeh);
                         }
                     }
                     var choise = probabilities.ArgMax();
-                    veh.Attack(candidates[choise]);
+                    var choiseUnit = candidates[choise];
+
+                    if (veh.Type == VehicleType.Arrv)
+                        choiseUnit.Repair();
+                    else
+                        veh.Attack(choiseUnit);
                 }
             }
         }
@@ -273,8 +289,5 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _doMove();
             _doFight();
         }
-
-        public double MyDurability => MyVehicles.Sum(x => x.Durability);
-        public double OppDurability => OppVehicles.Sum(x => x.Durability);
     }
 }

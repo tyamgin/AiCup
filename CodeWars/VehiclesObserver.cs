@@ -60,6 +60,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         updatedVehicle.RotationAngularSpeed = aveh.RotationAngularSpeed;
                         updatedVehicle.RotationAngle = aveh.RotationAngle;
                         updatedVehicle.RotationCenter = aveh.RotationCenter;
+                        updatedVehicle.DurabilityPool = cur.DurabilityPool;
+                        //TODO: поддерживать DurabilityPool if (!updatedVehicle.IsMy)
                     }
 
                     // дополнительные проверки
