@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Globalization;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -28,14 +27,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return GetDistanceTo2(unit) < Geom.Sqr(Radius + unit.Radius);
         }
 
-        public ACircularUnit GetFirstIntersection(IEnumerable<ACircularUnit> units)
-        {
-            return units.FirstOrDefault(x => x.Id != Id && IntersectsWith(x));
-        }
-
         public override string ToString()
         {
-            return "(" + X.ToString().Replace(',', '.') + ", " + Y.ToString().Replace(',', '.') + "; " + Radius.ToString().Replace(',', '.') + ")";
+            return "(" + X.ToString(CultureInfo.InvariantCulture) + ", " + Y.ToString(CultureInfo.InvariantCulture) + "; " + Radius.ToString(CultureInfo.InvariantCulture) + ")";
         }
     }
 }

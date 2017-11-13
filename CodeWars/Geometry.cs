@@ -294,6 +294,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             return Geom.Intersect1D(X, X2, rect.X, rect.X2) && Geom.Intersect1D(Y, Y2, rect.Y, rect.Y2);
         }
+
+        public double Area => Width*Height;
     }
 
     public class Geom

@@ -28,6 +28,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
             res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
 
+            var selectedRect = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.IsSelected));
+            res += Math.Sqrt(selectedRect.Area)*0.00005;
+
             res += env.MyVehicles.Average(m => 
                 env.OppVehicles
                     .Select(x =>
@@ -48,7 +51,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var additionalRadius = opp.ActualSpeed;
                 return env.MyVehicles.Max(m => opp.GetAttackDamage(m, additionalRadius));
             });
-            res += additionalDanger/3;
+            res += additionalDanger/3.0;
 
             var rectF = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Fighter));
             var rectH = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Helicopter));

@@ -13,7 +13,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static void Update()
         {
             var move = MyStrategy.ResultingMove;
-            var sandbox = new Sandbox {Vehicles = VehiclesObserver.Vehicles};
+            var sandbox = new Sandbox(VehiclesObserver.Vehicles);
             sandbox.ApplyMove(move);
             BeforeMoveUnits.Clear();
             foreach (var veh in sandbox.Vehicles)

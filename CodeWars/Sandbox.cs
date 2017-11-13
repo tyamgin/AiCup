@@ -12,7 +12,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Sandbox
     {
-        private AVehicle[] _vehicles;
         private readonly List<AVehicle>[] _vehiclesByType =
         {
             new List<AVehicle>(),
@@ -58,25 +57,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public IEnumerable<AVehicle> OppVehicles => _at(false);
 
-        public AVehicle[] Vehicles
+        public readonly AVehicle[] Vehicles;
+
+        public Sandbox(IEnumerable<AVehicle> vehicles)
         {
-            get { return _vehicles; }
-            set
+            Vehicles = vehicles.ToArray();
+            _vehiclesByType[0].Clear();
+            _vehiclesByType[1].Clear();
+            _treesByType[0].Clear();
+            _treesByType[1].Clear();
+            _treesByPlayer[0].Clear();
+            _treesByPlayer[1].Clear();
+            foreach (var veh in Vehicles)
             {
-                _vehicles = value;
-                _vehiclesByType[0].Clear();
-                _vehiclesByType[1].Clear();
-                _treesByType[0].Clear();
-                _treesByType[1].Clear();
-                _treesByPlayer[0].Clear();
-                _treesByPlayer[1].Clear();
-                foreach (var veh in _vehicles)
-                {
-                    _at(veh.IsMy).Add(veh);
-                    _tree(veh.IsMy, veh.IsAerial).Add(veh);
-                }
-                FirstCollider1 = new AVehicle[_vehicles.Length];
+                _at(veh.IsMy).Add(veh);
+                _tree(veh.IsMy, veh.IsAerial).Add(veh);
             }
+            FirstCollider1 = new AVehicle[Vehicles.Length];
+        }
+
+        public Sandbox Clone()
+        {
+            return new Sandbox(Vehicles.Select(x => new AVehicle(x)));
         }
 
         public void ApplyMove(Move move)
@@ -195,20 +197,22 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (veh.Type == VehicleType.Arrv)
                     nearestInteractors.AddRange(vehTree2.FindAllNearby(veh, G.ArrvRepairRange*G.ArrvRepairRange));
 
-                if (nearestInteractors.Count > 0)
-                {
-                    var probabilities = new List<double>();
-                    var candidates = new List<AVehicle>();
+                
+                var probabilities = new List<double>();
+                var candidates = new List<AVehicle>();
 
-                    foreach (var oppVeh in nearestInteractors)
+                foreach (var oppVeh in nearestInteractors)
+                {
+                    var damage = veh.Type == VehicleType.Arrv ? (G.MaxDurability - oppVeh.FullDurability) : veh.GetAttackDamage(oppVeh);
+                    if (damage > Const.Eps)
                     {
-                        var damage = veh.Type == VehicleType.Arrv ? (G.MaxDurability - oppVeh.FullDurability) : veh.GetAttackDamage(oppVeh);
-                        if (damage > Const.Eps)
-                        {
-                            probabilities.Add(damage);
-                            candidates.Add(oppVeh);
-                        }
+                        probabilities.Add(damage);
+                        candidates.Add(oppVeh);
                     }
+                }
+
+                if (candidates.Count > 0)
+                {
                     var choise = probabilities.ArgMax();
                     var choiseUnit = candidates[choise];
 
