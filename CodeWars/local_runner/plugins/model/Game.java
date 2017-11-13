@@ -90,6 +90,11 @@ public class Game {
     private final double facilityCapturePointsPerVehiclePerTick;
     private final double facilityWidth;
     private final double facilityHeight;
+    private final int baseTacticalNuclearStrikeCooldown;
+    private final int tacticalNuclearStrikeCooldownDecreasePerControlCenter;
+    private final double maxTacticalNuclearStrikeDamage;
+    private final double tacticalNuclearStrikeRadius;
+    private final int tacticalNuclearStrikeDelay;
 
     @SuppressWarnings("OverlyLongMethod")
     public Game(
@@ -117,7 +122,9 @@ public class Game {
             double fighterVisionRange, double fighterGroundAttackRange, double fighterAerialAttackRange,
             int fighterGroundDamage, int fighterAerialDamage, int fighterGroundDefence, int fighterAerialDefence,
             int fighterAttackCooldownTicks, int fighterProductionCost, double maxFacilityCapturePoints,
-            double facilityCapturePointsPerVehiclePerTick, double facilityWidth, double facilityHeight) {
+            double facilityCapturePointsPerVehiclePerTick, double facilityWidth, double facilityHeight,
+            int baseTacticalNuclearStrikeCooldown, int tacticalNuclearStrikeCooldownDecreasePerControlCenter,
+            double maxTacticalNuclearStrikeDamage, double tacticalNuclearStrikeRadius, int tacticalNuclearStrikeDelay) {
         this.randomSeed = randomSeed;
         this.tickCount = tickCount;
         this.worldWidth = worldWidth;
@@ -207,6 +214,11 @@ public class Game {
         this.facilityCapturePointsPerVehiclePerTick = facilityCapturePointsPerVehiclePerTick;
         this.facilityWidth = facilityWidth;
         this.facilityHeight = facilityHeight;
+        this.baseTacticalNuclearStrikeCooldown = baseTacticalNuclearStrikeCooldown;
+        this.tacticalNuclearStrikeCooldownDecreasePerControlCenter = tacticalNuclearStrikeCooldownDecreasePerControlCenter;
+        this.maxTacticalNuclearStrikeDamage = maxTacticalNuclearStrikeDamage;
+        this.tacticalNuclearStrikeRadius = tacticalNuclearStrikeRadius;
+        this.tacticalNuclearStrikeDelay = tacticalNuclearStrikeDelay;
     }
 
     public long getRandomSeed() {

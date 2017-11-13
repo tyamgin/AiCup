@@ -26,6 +26,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             move.VehicleType = VehicleType;
             move.FacilityId = FacilityId;
             move.Factor = Factor;
+            move.VehicleId = VehicleId;
         }
 
         public Point Point

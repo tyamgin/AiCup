@@ -16,6 +16,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
         private double maxAngularSpeed;
         private VehicleType? vehicleType;
         private long facilityId = -1L;
+        private long vehicleId = -1L;
 
         public ActionType? Action {
             get { return action; }
@@ -85,6 +86,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
         public long FacilityId {
             get { return facilityId; }
             set { facilityId = value; }
+        }
+
+        public long VehicleId {
+            get { return vehicleId; }
+            set { vehicleId = value; }
         }
     }
 }

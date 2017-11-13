@@ -91,6 +91,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
         private readonly double facilityCapturePointsPerVehiclePerTick;
         private readonly double facilityWidth;
         private readonly double facilityHeight;
+        private readonly int baseTacticalNuclearStrikeCooldown;
+        private readonly int tacticalNuclearStrikeCooldownDecreasePerControlCenter;
+        private readonly double maxTacticalNuclearStrikeDamage;
+        private readonly double tacticalNuclearStrikeRadius;
+        private readonly int tacticalNuclearStrikeDelay;
 
         public Game(long randomSeed, int tickCount, double worldWidth, double worldHeight, bool isFogOfWarEnabled,
                 int victoryScore, int facilityCaptureScore, int vehicleEliminationScore, int actionDetectionInterval,
@@ -117,7 +122,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
                 double fighterAerialAttackRange, int fighterGroundDamage, int fighterAerialDamage,
                 int fighterGroundDefence, int fighterAerialDefence, int fighterAttackCooldownTicks,
                 int fighterProductionCost, double maxFacilityCapturePoints,
-                double facilityCapturePointsPerVehiclePerTick, double facilityWidth, double facilityHeight) {
+                double facilityCapturePointsPerVehiclePerTick, double facilityWidth, double facilityHeight,
+                int baseTacticalNuclearStrikeCooldown, int tacticalNuclearStrikeCooldownDecreasePerControlCenter,
+                double maxTacticalNuclearStrikeDamage, double tacticalNuclearStrikeRadius,
+                int tacticalNuclearStrikeDelay) {
             this.randomSeed = randomSeed;
             this.tickCount = tickCount;
             this.worldWidth = worldWidth;
@@ -207,6 +215,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
             this.facilityCapturePointsPerVehiclePerTick = facilityCapturePointsPerVehiclePerTick;
             this.facilityWidth = facilityWidth;
             this.facilityHeight = facilityHeight;
+            this.baseTacticalNuclearStrikeCooldown = baseTacticalNuclearStrikeCooldown;
+            this.tacticalNuclearStrikeCooldownDecreasePerControlCenter = tacticalNuclearStrikeCooldownDecreasePerControlCenter;
+            this.maxTacticalNuclearStrikeDamage = maxTacticalNuclearStrikeDamage;
+            this.tacticalNuclearStrikeRadius = tacticalNuclearStrikeRadius;
+            this.tacticalNuclearStrikeDelay = tacticalNuclearStrikeDelay;
         }
 
         public long RandomSeed => randomSeed;
@@ -298,5 +311,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
         public double FacilityCapturePointsPerVehiclePerTick => facilityCapturePointsPerVehiclePerTick;
         public double FacilityWidth => facilityWidth;
         public double FacilityHeight => facilityHeight;
+        public int BaseTacticalNuclearStrikeCooldown => baseTacticalNuclearStrikeCooldown;
+        public int TacticalNuclearStrikeCooldownDecreasePerControlCenter => tacticalNuclearStrikeCooldownDecreasePerControlCenter;
+        public double MaxTacticalNuclearStrikeDamage => maxTacticalNuclearStrikeDamage;
+        public double TacticalNuclearStrikeRadius => tacticalNuclearStrikeRadius;
+        public int TacticalNuclearStrikeDelay => tacticalNuclearStrikeDelay;
     }
 }
