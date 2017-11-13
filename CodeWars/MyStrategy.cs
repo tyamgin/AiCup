@@ -75,97 +75,97 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             VehiclesObserver.Update();
             MyVehicles = VehiclesObserver.Vehicles.Where(x => x.IsMy).ToArray();
             OppVehicles = VehiclesObserver.Vehicles.Where(x => !x.IsMy).ToArray();
+            
+            //var groupVehicles = MyVehicles.Where(x => !x.IsAerial).ToArray();
+            //var rect = GetUnitsBoundingRect(groupVehicles);
+            //var minD = 150 * Math.Sqrt(groupVehicles.Length) / Math.Sqrt(500);
 
-            var groupVehicles = MyVehicles.Where(x => !x.IsAerial).ToArray();
-            var rect = GetUnitsBoundingRect(groupVehicles);
-            var minD = 150 * Math.Sqrt(groupVehicles.Length) / Math.Sqrt(500);
-
-            if (World.TickIndex == 0)
-            {
-                ResultingMove.Action = ActionType.AddToSelection;
-                ResultingMove.VehicleType = VehicleType.Tank;
-                ResultingMove.Right = ResultingMove.Bottom = Const.MapSize;
-                return;
-            }
-            if (World.TickIndex == 1)
-            {
-                ResultingMove.Action = ActionType.AddToSelection;
-                ResultingMove.VehicleType = VehicleType.Ifv;
-                ResultingMove.Right = ResultingMove.Bottom = Const.MapSize;
-                return;
-            }
-            if (World.TickIndex == 2)
-            {
-                ResultingMove.Action = ActionType.AddToSelection;
-                ResultingMove.VehicleType = VehicleType.Arrv;
-                ResultingMove.Right = ResultingMove.Bottom = Const.MapSize;
-                return;
-            }
-            if (World.TickIndex == 3)
-            {
-                ResultingMove.Action = ActionType.Assign;
-                ResultingMove.Group = 1;
-                return;
-            }
-            if (World.TickIndex == 4)
-            {
-                ResultingMove.Action = ActionType.Rotate;
-                ResultingMove.Point = rect.Center;
-                ResultingMove.Angle = Math.PI;
-                return;
-            }
-            if (World.TickIndex < 60)
-                return;
+            //if (World.TickIndex == 0)
+            //{
+            //    ResultingMove.Action = ActionType.AddToSelection;
+            //    ResultingMove.VehicleType = VehicleType.Tank;
+            //    ResultingMove.Right = ResultingMove.Bottom = Const.MapSize;
+            //    return;
+            //}
+            //if (World.TickIndex == 1)
+            //{
+            //    ResultingMove.Action = ActionType.AddToSelection;
+            //    ResultingMove.VehicleType = VehicleType.Ifv;
+            //    ResultingMove.Right = ResultingMove.Bottom = Const.MapSize;
+            //    return;
+            //}
+            //if (World.TickIndex == 2)
+            //{
+            //    ResultingMove.Action = ActionType.AddToSelection;
+            //    ResultingMove.VehicleType = VehicleType.Arrv;
+            //    ResultingMove.Right = ResultingMove.Bottom = Const.MapSize;
+            //    return;
+            //}
+            //if (World.TickIndex == 3)
+            //{
+            //    ResultingMove.Action = ActionType.Assign;
+            //    ResultingMove.Group = 1;
+            //    return;
+            //}
+            //if (World.TickIndex == 4)
+            //{
+            //    ResultingMove.Action = ActionType.Rotate;
+            //    ResultingMove.Point = rect.Center;
+            //    ResultingMove.Angle = Math.PI;
+            //    return;
+            //}
+            //if (World.TickIndex < 60)
+            //    return;
 
 
-            var dx = rect.X2 - rect.X;
-            var dy = rect.Y2 - rect.Y;
+            //var dx = rect.X2 - rect.X;
+            //var dy = rect.Y2 - rect.Y;
                 
-            var need = dx > minD || dy > minD;
+            //var need = dx > minD || dy > minD;
 
 
-            var lim = 1000;
-            var interv = 80;
-            if (World.TickIndex > lim)
-                interv = 150;
+            //var lim = 1000;
+            //var interv = 80;
+            //if (World.TickIndex > lim)
+            //    interv = 150;
 
-            if (World.TickIndex%interv == interv/2-1)
-            {
-                ResultingMove.Action = ActionType.ClearAndSelect;
-                ResultingMove.Group = 1;
-                return;
-            }
+            //if (World.TickIndex%interv == interv/2-1)
+            //{
+            //    ResultingMove.Action = ActionType.ClearAndSelect;
+            //    ResultingMove.Group = 1;
+            //    return;
+            //}
 
 
-            if (need && World.TickIndex%interv == interv/2 && World.TickIndex > 200)
-            {
-                if (World.TickIndex%(interv*2) == interv/2)
-                {
-                    ResultingMove.Action = ActionType.Rotate;
-                    ResultingMove.Point = rect.Center;
-                    ResultingMove.Angle = Math.PI;
-                }
-                else
-                {
-                    ResultingMove.Action = ActionType.Scale;
-                    ResultingMove.Point = rect.Center;
-                    ResultingMove.Factor = 0.1;
-                }
-                return;
-            }
-            if (!need && World.TickIndex%interv == interv/2)
-            {
-                ResultingMove.Action = ActionType.Move;
-                var target = OppVehicles.OrderBy(x => x.GetDistanceTo2(rect.Center)).FirstOrDefault();
-                if (target != null)
-                {
-                    ResultingMove.SetVector(rect.Center, target);
-                }
-                ResultingMove.MaxSpeed = 0.2;
-                return;
-            }
+            //if (need && World.TickIndex%interv == interv/2 && World.TickIndex > 200)
+            //{
+            //    if (World.TickIndex%(interv*2) == interv/2)
+            //    {
+            //        ResultingMove.Action = ActionType.Rotate;
+            //        ResultingMove.Point = rect.Center;
+            //        ResultingMove.Angle = Math.PI;
+            //    }
+            //    else
+            //    {
+            //        ResultingMove.Action = ActionType.Scale;
+            //        ResultingMove.Point = rect.Center;
+            //        ResultingMove.Factor = 0.1;
+            //    }
+            //    return;
+            //}
+            //if (!need && World.TickIndex%interv == interv/2)
+            //{
+            //    ResultingMove.Action = ActionType.Move;
+            //    var target = OppVehicles.OrderBy(x => x.GetDistanceTo2(rect.Center)).FirstOrDefault();
+            //    if (target != null)
+            //    {
+            //        ResultingMove.SetVector(rect.Center, target);
+            //    }
+            //    ResultingMove.MaxSpeed = 0.2;
+            //    return;
+            //}
 
-            if (World.TickIndex >= lim && World.TickIndex % 10 == 0)
+            if (World.TickIndex >= 0/*lim*/ && World.TickIndex % 10 == 0)
             {
                 var minDanger = double.MaxValue;
                 var selMove = new AMove();
@@ -205,8 +205,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         {
                             Action = ActionType.ClearAndSelect,
                             VehicleType = vehType,
-                            Right = Const.MapSize,
-                            Bottom = Const.MapSize
+                            Right = G.MapSize,
+                            Bottom = G.MapSize
                         };
                         startEnv.ApplyMove(selectionMove);
                         startEnv.DoTick();

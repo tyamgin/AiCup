@@ -9,7 +9,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
         private readonly string token;
 
         public static void Main(string[] args) {
-//#if DEBUG
+#if DEBUG
             Process.Start("G:\\Projects\\AiCup\\CodeWars\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(2000);
 
@@ -24,7 +24,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
             };
             otherStrategy.Start();
             Thread.Sleep(100);
-//#endif
+#endif
 
             new Runner(args.Length == 3 ? args : new[] {"127.0.0.1", "31001", "0000000000000000"}).Run();
         }

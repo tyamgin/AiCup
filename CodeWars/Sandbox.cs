@@ -21,26 +21,42 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private readonly QuadTree<AVehicle>[] _treesByType =
         {
-            new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps),
-            new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps)
+            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
+            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
         };
 
         private readonly QuadTree<AVehicle>[] _treesByPlayer =
         {
-            new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps),
-            new QuadTree<AVehicle>(0, 0, Const.MapSize, Const.MapSize, Const.Eps)
+            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
+            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
+        };
+
+        private readonly QuadTree<AVehicle>[,] _trees = new QuadTree<AVehicle>[2, 2]
+        {
+            {
+                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
+                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
+            },
+            {
+                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
+                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
+            }
         };
 
         private List<AVehicle> _at(bool isMy)
         {
-            return _vehiclesByType[isMy == IsMy ? 1 : 0];
+            return _vehiclesByType[isMy ? 1 : 0];
+        }
+        private QuadTree<AVehicle> _tree(bool isMy, bool isAerial)
+        {
+            return _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
         }
 
-        public Dictionary<long, AVehicle> FirslCollider = new Dictionary<long, AVehicle>(); 
+        public AVehicle[] FirstCollider1;
 
-        public IEnumerable<AVehicle> MyVehicles => _at(IsMy);
+        public IEnumerable<AVehicle> MyVehicles => _at(true);
 
-        public IEnumerable<AVehicle> OppVehicles => _at(!IsMy);
+        public IEnumerable<AVehicle> OppVehicles => _at(false);
 
         public AVehicle[] Vehicles
         {
@@ -56,14 +72,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 _treesByPlayer[1].Clear();
                 foreach (var veh in _vehicles)
                 {
-                    _at(veh.IsMy == IsMy).Add(veh);
-                    _treesByType[veh.IsAerial ? 1 : 0].Add(veh);
-                    _treesByPlayer[veh.IsMy == IsMy ? 1 : 0].Add(veh);
+                    _at(veh.IsMy).Add(veh);
+                    _tree(veh.IsMy, veh.IsAerial).Add(veh);
                 }
+                FirstCollider1 = new AVehicle[_vehicles.Length];
             }
         }
-
-        public bool IsMy = true; // TODO
 
         public void ApplyMove(Move move)
         {
@@ -74,7 +88,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 case ActionType.ClearAndSelect:
                     foreach (var unit in Vehicles)
                     {
-                        if (IsMy != unit.IsMy)
+                        if (!unit.IsMy)
                             continue;
                         if (move.Group != 0)
                         {
@@ -91,7 +105,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 case ActionType.AddToSelection:
                     foreach (var unit in Vehicles)
                     {
-                        if (IsMy != unit.IsMy)
+                        if (!unit.IsMy)
                             continue;
                         if (move.Group != 0)
                         {
@@ -108,7 +122,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 case ActionType.Assign:
                     foreach (var unit in Vehicles)
                     {
-                        if (IsMy != unit.IsMy)
+                        if (!unit.IsMy)
                             continue;
 
                         unit.AddGroup(move.Group);
@@ -156,29 +170,34 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doFight()
         {
-            foreach (var veh in Vehicles)
+            foreach(var veh in Vehicles)
             {
                 if (!veh.IsAlive)
                     continue;
                 if (veh.RemainingAttackCooldownTicks > 0)
                     continue;
+                
+                var oppTree = _tree(!veh.IsMy, veh.IsAerial);
+                var oppTree2 = _tree(!veh.IsMy, !veh.IsAerial);
 
-                var probabilities = new List<double>();
-                var candidates = new List<AVehicle>();
+                var nearestOpponents = oppTree.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange);
+                if (veh.Type != VehicleType.Fighter)
+                    nearestOpponents.AddRange(oppTree2.FindAllNearby(veh, G.MaxAttackRange * G.MaxAttackRange));
 
-                var nearestOpponents = _treesByPlayer[veh.IsMy != IsMy ? 1 : 0].FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange);
-
-                foreach (var oppVeh in nearestOpponents)
+                if (nearestOpponents.Count > 0)
                 {
-                    var damage = veh.GetAttackDamage(oppVeh);
-                    if (damage > 0)
+                    var probabilities = new List<double>();
+                    var candidates = new List<AVehicle>();
+
+                    foreach (var oppVeh in nearestOpponents)
                     {
-                        probabilities.Add(damage);
-                        candidates.Add(oppVeh);
+                        var damage = veh.GetAttackDamage(oppVeh);
+                        if (damage > 0)
+                        {
+                            probabilities.Add(damage);
+                            candidates.Add(oppVeh);
+                        }
                     }
-                }
-                if (probabilities.Count > 0)
-                {
                     var choise = probabilities.ArgMax();
                     veh.Attack(candidates[choise]);
                 }
@@ -187,59 +206,70 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMove()
         {
-            FirslCollider.Clear();
-            var moved = new bool[Vehicles.Length];
-            var movedCount = 0;
+            var notMoved = Enumerable.Range(0, Vehicles.Length).ToArray();
+            var notMovedLength = notMoved.Length;
 
-            while (movedCount < Vehicles.Length)
+            while (notMovedLength > 0)
             {
-                var anyMoved = false;
-                for (var i = 0; i < Vehicles.Length; i++)
+                var notMovedNewLength = 0;
+
+                for (var i = 0; i < notMovedLength; i++)
                 {
-                    if (moved[i])
-                        continue;
-                    var unit = Vehicles[i];
-                    var treeByType = _treesByType[unit.IsAerial ? 1 : 0];
-                    var treeByPlayer = _treesByPlayer[unit.IsMy == IsMy ? 1 : 0];
+                    var idx = notMoved[i];
+                    var unit = Vehicles[idx];
+                    var unitTree = _tree(unit.IsMy, unit.IsAerial);
+                    var oppTree = _tree(!unit.IsMy, unit.IsAerial);
 
                     var removed = false;
                     var vehicleMoved = unit.Move(x =>
                     {
-                        if (!treeByType.Remove(unit))
-                            throw new Exception("Vehicle Id=" + unit.Id + " not found");
-                        if (!treeByPlayer.Remove(unit))
+                        if (!unitTree.Remove(unit))
                             throw new Exception("Vehicle Id=" + unit.Id + " not found");
                         removed = true;
 
-                        var nearest = treeByType.FindNearest(x);
-                        if (nearest == null || !nearest.IntersectsWith(x))
-                            return false;
+                        {
+                            var nearest = unitTree.FindNearest(x);
+                            if (nearest != null && nearest.IntersectsWith(x))
+                            {
+                                FirstCollider1[idx] = nearest;
+                                return true;
+                            }
+                        }
 
-                        FirslCollider[x.Id] = nearest;
-                        return true;
+                        if (!unit.IsAerial)
+                        {
+                            var nearest = oppTree.FindNearest(x);
+                            if (nearest != null && nearest.IntersectsWith(x))
+                            {
+                                FirstCollider1[idx] = nearest;
+                                return true;
+                            }
+                        }
+                        
+                        return false;
                     });
 
                     if (removed)
                     {
-                        treeByType.Add(unit);
-                        treeByPlayer.Add(unit);
+                        unitTree.Add(unit);
                     }
                     if (!vehicleMoved)
-                        continue;
-
-                    moved[i] = true;
-                    anyMoved = true;
-                    movedCount++;
+                    {
+                        notMoved[notMovedNewLength++] = idx;
+                    }
                 }
 
-                if (!anyMoved)
+                if (notMovedLength == notMovedNewLength)
                     break;
+                notMovedLength = notMovedNewLength;
             }
         }
 
 
         public void DoTick()
         {
+            for (var i = 0; i < FirstCollider1.Length; i++)
+                FirstCollider1[i] = null;
             _doMove();
             _doFight();
         }

@@ -46,19 +46,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             switch (e.KeyData)
             {
                 case Keys.Right:
-                    lookAt.X += Const.MapSize*Visualizer.Zoom * speed;
+                    lookAt.X += G.MapSize*Visualizer.Zoom * speed;
                     Visualizer.LookAt = lookAt;
                     break;
                 case Keys.Left:
-                    lookAt.X -= Const.MapSize * Visualizer.Zoom * speed;
+                    lookAt.X -= G.MapSize * Visualizer.Zoom * speed;
                     Visualizer.LookAt = lookAt;
                     break;
                 case Keys.Down:
-                    lookAt.Y += Const.MapSize * Visualizer.Zoom * speed;
+                    lookAt.Y += G.MapSize * Visualizer.Zoom * speed;
                     Visualizer.LookAt = lookAt;
                     break;
                 case Keys.Up:
-                    lookAt.Y -= Const.MapSize * Visualizer.Zoom * speed;
+                    lookAt.Y -= G.MapSize * Visualizer.Zoom * speed;
                     Visualizer.LookAt = lookAt;
                     break;
             }

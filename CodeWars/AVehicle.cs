@@ -118,8 +118,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 if (X < Radius - Const.Eps || 
                     Y < Radius - Const.Eps || 
-                    X > Const.MapSize - Radius + Const.Eps ||
-                    Y > Const.MapSize - Radius + Const.Eps || 
+                    X > G.MapSize - Radius + Const.Eps ||
+                    Y > G.MapSize - Radius + Const.Eps || 
                     checkCollisions != null && checkCollisions(selfCopy))
                 {
                     return false;

@@ -71,10 +71,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (rectF.IntersectsWith(rectH))
                     intersects = true;
             }
-            
-            foreach (var veh in MyVehicles)
-                if (env.FirslCollider.ContainsKey(veh.Id) && env.FirslCollider[veh.Id].Type != veh.Type)
+
+            for (var i = 0; i < env.Vehicles.Length; i++)
+            {
+                var veh = env.Vehicles[i];
+                if (env.FirstCollider1[i] != null && env.FirstCollider1[i].Type != veh.Type)
                     intersects = true;
+            }
             
             if (intersects)
                 res += 100;

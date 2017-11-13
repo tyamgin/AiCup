@@ -326,10 +326,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
 
 
             // map ranges
-            DrawLine(Color.Black, 0, 0, 0, Const.MapSize);
-            DrawLine(Color.Black, 0, Const.MapSize, Const.MapSize, Const.MapSize);
-            DrawLine(Color.Black, Const.MapSize, 0, Const.MapSize, Const.MapSize);
-            DrawLine(Color.Black, Const.MapSize, 0, 0, 0);
+            DrawLine(Color.Black, 0, 0, 0, G.MapSize);
+            DrawLine(Color.Black, 0, G.MapSize, G.MapSize, G.MapSize);
+            DrawLine(Color.Black, G.MapSize, 0, G.MapSize, G.MapSize);
+            DrawLine(Color.Black, G.MapSize, 0, 0, 0);
 
             foreach (var seg in SegmentsDrawQueue)
             {
@@ -363,14 +363,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 _lookY = value.Y - _scale*_form.panel.Height/2;
                 if (_lookY < 0)
                     _lookY = 0;
-                if (_lookY > Const.MapSize - _scale*_form.panel.Height)
-                    _lookY = Const.MapSize - _scale*_form.panel.Height;
+                if (_lookY > G.MapSize - _scale*_form.panel.Height)
+                    _lookY = G.MapSize - _scale*_form.panel.Height;
 
                 _lookX = value.X - _scale*_form.panel.Width/2;
                 if (_lookX < 0)
                     _lookX = 0;
-                if (_lookX > Const.MapSize - _scale*_form.panel.Width)
-                    _lookX = Const.MapSize - _scale*_form.panel.Width;
+                if (_lookX > G.MapSize - _scale*_form.panel.Width)
+                    _lookX = G.MapSize - _scale*_form.panel.Width;
             }
             get { return _lootAt; }
         }

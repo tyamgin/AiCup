@@ -7,11 +7,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public static double Eps = 1e-9;
         public static int Infinity = 0x3f3f3f3f;
-        public static double MapSize;
+
 
         public static void Initialize(World world, Game game)
         {
-            MapSize = world.Width; // Width == Height
+            _expect(world.Width, G.MapSize);
+            _expect(world.Height, G.MapSize);
 
             _expect(game.ArrvDurability, G.MaxDurability);
             _expect(game.FighterDurability, G.MaxDurability);
@@ -99,7 +100,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
     class G
     {
+        public static readonly double MapSize = 1024;
         public static readonly double CellSize = 32;
+        public static readonly int MaxUnitsCount = 1000;
         public static readonly double MaxDurability = 100;
         public static readonly double CloudWeatherSpeedFactor = 0.8;
         public static readonly double RainWeatherSpeedFactor = 0.6;
