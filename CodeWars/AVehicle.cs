@@ -131,10 +131,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 selfCopy.Y += delta.Y;
                 selfCopy.RotationAngle = newRotationAngle;
 
-                if (X < Radius - Const.Eps || 
-                    Y < Radius - Const.Eps || 
-                    X > G.MapSize - Radius + Const.Eps ||
-                    Y > G.MapSize - Radius + Const.Eps || 
+                if (selfCopy.X < Radius - Const.Eps ||
+                    selfCopy.Y < Radius - Const.Eps ||
+                    selfCopy.X > G.MapSize - Radius + Const.Eps ||
+                    selfCopy.Y > G.MapSize - Radius + Const.Eps || 
                     checkCollisions != null && checkCollisions(selfCopy))
                 {
                     return false;

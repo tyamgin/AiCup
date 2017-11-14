@@ -289,11 +289,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         removed = true;
 
                         {
-                            var nearest = unitTree.FindNearest(x);
+                            var allNearest = unitTree.FindAllNearby(x, Geom.Sqr(2*x.Radius));
+                            var nearest = allNearest.FirstOrDefault();
+
                             if (nearest != null)
                             {
                                 _upd(ref nearestWithMoved, x, nearest);
                                 if (nearestWithMoved.IntersectsWith(x))
+                                //if (nearest.IntersectsWith(x))
                                     return true;
                                 _upd(ref nearestWithNotMoved, unit, nearest);
                             }
@@ -301,11 +304,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                         if (!unit.IsAerial)
                         {
-                            var nearest = oppTree.FindNearest(x);
+                            var allNearest = oppTree.FindAllNearby(x, x.Radius * x.Radius);
+                            var nearest = allNearest.FirstOrDefault();
                             if (nearest != null)
                             {
                                 _upd(ref nearestWithMoved, x, nearest);
                                 if (nearestWithMoved.IntersectsWith(x))
+                                //if (nearest.IntersectsWith(x))
                                     return true;
                                 _upd(ref nearestWithNotMoved, unit, nearest);
                             }
@@ -336,6 +341,41 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 notMovedLength = notMovedNewLength;
             }
             //Console.WriteLine(1.0 * positive / total);
+        }
+
+        private void _doMoveDebug()
+        {
+            var moved = new bool[Vehicles.Length];
+            var movedCount = 0;
+
+            while (movedCount < Vehicles.Length)
+            {
+                var anyMoved = false;
+                for (var i = 0; i < Vehicles.Length; i++)
+                {
+                    if (moved[i])
+                        continue;
+                    var unit = Vehicles[i];
+
+                    if (
+                        !unit.Move(
+                            x =>
+                                Vehicles.Any(
+                                    opp =>
+                                        x.Id != opp.Id && x.IsAerial == opp.IsAerial && opp.IntersectsWith(x) &&
+                                        (!x.IsAerial || x.IsMy != opp.IsMy))))
+                    {
+                        continue;
+                    }
+
+                    moved[i] = true;
+                    anyMoved = true;
+                    movedCount++;
+                }
+
+                if (!anyMoved)
+                    break;
+            }
         }
 
         public void DoTick()

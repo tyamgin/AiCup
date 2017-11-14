@@ -124,6 +124,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {
+            //  Arrv Fighter Helicopter Ifv Tank
             {0, 0, 0, 0, 0},
             {0, 30, 60, 0, 0},
             {80, 10, 40, 20, 40},

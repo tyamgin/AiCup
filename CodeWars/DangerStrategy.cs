@@ -62,12 +62,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     intersects = true;
             }
 
-            for (var i = 0; i < env.Vehicles.Length; i++)
-            {
-                var veh = env.Vehicles[i];
-                if (env.FirstCollider1[i] != null && env.FirstCollider1[i].Type != veh.Type)
-                    intersects = true;
-            }
+            //for (var i = 0; i < env.Vehicles.Length; i++)
+            //{
+            //    var veh = env.Vehicles[i];
+            //    if (env.FirstCollider1[i] != null && env.FirstCollider1[i].Type != veh.Type)
+            //        intersects = true;
+            //}
             
             if (intersects)
                 res += 100;

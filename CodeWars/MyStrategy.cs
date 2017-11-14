@@ -79,6 +79,22 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MyVehicles = VehiclesObserver.Vehicles.Where(x => x.IsMy).ToArray();
             OppVehicles = VehiclesObserver.Vehicles.Where(x => !x.IsMy).ToArray();
 
+            //if (World.TickIndex == 0)
+            //{
+            //    ResultingMove.Action = ActionType.ClearAndSelect;
+            //    ResultingMove.Right = ResultingMove.Bottom = G.MapSize;
+            //    return;
+            //}
+
+            //if (World.TickIndex == 1)
+            //{
+            //    ResultingMove.Action = ActionType.Move;
+            //    ResultingMove.X = 1000;
+            //    ResultingMove.Y = 100;
+            //    return;
+            //}
+            //return;
+
             var tst = false;
             var lim = 0;
 
