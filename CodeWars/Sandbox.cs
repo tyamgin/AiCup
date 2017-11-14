@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Messaging;
@@ -52,6 +53,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         public AVehicle[] FirstCollider1;
+        private AVehicle[] _nearestCache;
 
         public IEnumerable<AVehicle> MyVehicles => _at(true);
 
@@ -74,6 +76,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 _tree(veh.IsMy, veh.IsAerial).Add(veh);
             }
             FirstCollider1 = new AVehicle[Vehicles.Length];
+            _nearestCache = new AVehicle[Vehicles.Length];
         }
 
         public Sandbox Clone()
@@ -170,6 +173,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        public List<AVehicle> GetOpponentFightNeigbours(AVehicle veh, double radius)
+        {
+            var oppTree = _tree(!veh.IsMy, veh.IsAerial);
+            var oppTree2 = _tree(!veh.IsMy, !veh.IsAerial);
+
+            var nearestInteractors = oppTree.FindAllNearby(veh, radius*radius);
+
+            if (veh.Type != VehicleType.Fighter)
+                nearestInteractors.AddRange(oppTree2.FindAllNearby(veh, radius*radius));
+
+            return nearestInteractors;
+        }
+
         private void _doFight()
         {
             foreach(var veh in Vehicles)
@@ -224,8 +240,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        void _upd(ref AVehicle result, AVehicle unit, AVehicle nearest)
+        {
+            if (nearest == null)
+                return;
+            if (result == null)
+            {
+                result = nearest;
+                return;
+            }
+            if (nearest.GetDistanceTo2(unit) < result.GetDistanceTo2(unit))
+                result = nearest;
+        }
+
         private void _doMove()
         {
+            var total = 0;
+            var positive = 0;
             var notMoved = Enumerable.Range(0, Vehicles.Length).ToArray();
             var notMovedLength = notMoved.Length;
 
@@ -240,29 +271,43 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var unitTree = _tree(unit.IsMy, unit.IsAerial);
                     var oppTree = _tree(!unit.IsMy, unit.IsAerial);
 
+                    var nearestWithNotMoved = _nearestCache[idx];
+                    var nearestWithMoved = nearestWithNotMoved;
+
                     var removed = false;
                     var vehicleMoved = unit.Move(x =>
                     {
+                        total++;
+                        if (nearestWithMoved != null && nearestWithMoved.IntersectsWith(x))
+                        {
+                            positive++;
+                            return true;
+                        }
+
                         if (!unitTree.Remove(unit))
                             throw new Exception("Vehicle Id=" + unit.Id + " not found");
                         removed = true;
 
                         {
                             var nearest = unitTree.FindNearest(x);
-                            if (nearest != null && nearest.IntersectsWith(x))
+                            if (nearest != null)
                             {
-                                FirstCollider1[idx] = nearest;
-                                return true;
+                                _upd(ref nearestWithMoved, x, nearest);
+                                if (nearestWithMoved.IntersectsWith(x))
+                                    return true;
+                                _upd(ref nearestWithNotMoved, unit, nearest);
                             }
                         }
 
                         if (!unit.IsAerial)
                         {
                             var nearest = oppTree.FindNearest(x);
-                            if (nearest != null && nearest.IntersectsWith(x))
+                            if (nearest != null)
                             {
-                                FirstCollider1[idx] = nearest;
-                                return true;
+                                _upd(ref nearestWithMoved, x, nearest);
+                                if (nearestWithMoved.IntersectsWith(x))
+                                    return true;
+                                _upd(ref nearestWithNotMoved, unit, nearest);
                             }
                         }
                         
@@ -275,7 +320,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                     if (!vehicleMoved)
                     {
+                        _upd(ref nearestWithNotMoved, unit, nearestWithMoved);
+                        _nearestCache[idx] = nearestWithNotMoved;
                         notMoved[notMovedNewLength++] = idx;
+                    }
+                    else
+                    {
+                        _upd(ref nearestWithMoved, unit, nearestWithNotMoved);
+                        _nearestCache[idx] = nearestWithMoved;
                     }
                 }
 
@@ -283,15 +335,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     break;
                 notMovedLength = notMovedNewLength;
             }
+            //Console.WriteLine(1.0 * positive / total);
         }
-
 
         public void DoTick()
         {
-            for (var i = 0; i < FirstCollider1.Length; i++)
-                FirstCollider1[i] = null;
+            Logger.CumulativeOperationStart("DoMove");
             _doMove();
+            Logger.CumulativeOperationEnd("DoMove");
+
+            Logger.CumulativeOperationStart("DoFight");
             _doFight();
+            Logger.CumulativeOperationEnd("DoFight");
+
+            for (var i = 0; i < FirstCollider1.Length; i++)
+                FirstCollider1[i] = _nearestCache[i] == null || !_nearestCache[i].IntersectsWith(Vehicles[i]) ? null : _nearestCache[i];
         }
     }
 }

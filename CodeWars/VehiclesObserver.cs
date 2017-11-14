@@ -98,7 +98,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Vehicles = VehicleById.Values.ToArray();
 
             if (errorsCount > 0)
-                MyStrategy.Log("Move errors count: " + errorsCount);
+                Logger.Log("Move errors count: " + errorsCount);
         }
     }
 }

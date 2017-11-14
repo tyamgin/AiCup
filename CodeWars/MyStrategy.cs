@@ -34,10 +34,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 #endif
 
-            TimerStart();
+            Logger.TimerStart();
             _move(game);
+            Logger.CumulativeOperationPrintAndReset(2);
             ResultingMove.ApplyTo(move);
-            TimerEndLog("All", 0);
+            Logger.TimerEndLog("All", 0);
 #if DEBUG
             Visualizer.Visualizer.CreateForm();
 
@@ -208,7 +209,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             .Concat(OppVehicles)
                         ).Clone();
 
-                    int ticksCount = 6;
+                    int ticksCount = 7;
                     var avg = GetAvg(startEnv.Vehicles.Where(x => x.Type == vehType));
                     double maxSpeed = 0;// startEnv.OppVehicles.Min(x => x.GetDistanceTo2(avg)) < 70 && World.TickIndex < 2000 ? 0.4 : 0;
                     AMove selectionMove = null;

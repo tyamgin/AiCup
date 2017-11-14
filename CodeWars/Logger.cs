@@ -1,0 +1,80 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+
+namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
+{
+    public class Logger
+    {
+        private static readonly List<Stopwatch> _timers = new List<Stopwatch>();
+
+        public static void TimerStart()
+        {
+#if DEBUG
+            var timer = new Stopwatch();
+            timer.Start();
+            _timers.Add(timer);
+#endif
+        }
+
+        public static long TimerStop()
+        {
+#if DEBUG
+            var res = _timers.Last();
+            res.Stop();
+            _timers.Pop();
+            return res.ElapsedMilliseconds;
+#else
+            return 0;
+#endif
+        }
+
+        public static void TimerEndLog(string caption, long limit = 30)
+        {
+#if DEBUG
+            var time = TimerStop();
+            if (time > limit)
+                Log(MyStrategy.World.TickIndex + ">" + new string('-', _timers.Count * 2) + " " + caption + ":" + time);
+#endif
+        }
+
+        public static void Log(object msg)
+        {
+#if DEBUG
+            Console.WriteLine(msg);
+#endif
+        }
+
+        private static Dictionary<string, Stopwatch> _tickTimers = new Dictionary<string, Stopwatch>();
+
+        public static void CumulativeOperationStart(string key)
+        {
+#if DEBUG
+            if (!_tickTimers.ContainsKey(key))
+                _tickTimers[key] = new Stopwatch();
+
+            _tickTimers[key].Start();
+#endif
+        }
+
+        public static void CumulativeOperationEnd(string key)
+        {
+#if DEBUG
+            _tickTimers[key].Stop();
+#endif
+        }
+
+        public static void CumulativeOperationPrintAndReset(long limit = 30)
+        {
+#if DEBUG
+            foreach (var item in _tickTimers)
+            {
+                var time = item.Value.ElapsedMilliseconds;
+                if (time >= limit)
+                    Log("[Cumulative] " + item.Key + ": " + time);
+                item.Value.Reset();
+            }
+#endif
+        }
+    }
+}

@@ -8,45 +8,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        private static readonly List<Stopwatch> _timers = new List<Stopwatch>();
-
-        public static void TimerStart()
-        {
-#if DEBUG
-            var timer = new Stopwatch();
-            timer.Start();
-            _timers.Add(timer);
-#endif
-        }
-
-        public static long TimerStop()
-        {
-#if DEBUG
-            var res = _timers.Last();
-            res.Stop();
-            _timers.Pop();
-            return res.ElapsedMilliseconds;
-#else
-            return 0;
-#endif
-        }
-
-        public static void TimerEndLog(string caption, long limit = 30)
-        {
-#if DEBUG
-            var time = TimerStop();
-            if (time > limit)
-                Log(World.TickIndex + ">" + new string('-', _timers.Count * 2) + " " + caption + ":" + time);
-#endif
-        }
-
-        public static void Log(object msg)
-        {
-#if DEBUG
-            Console.WriteLine(msg);
-#endif
-        }
-
         public static WeatherType Weather(double x, double y)
         {
             int I, J;

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -15,11 +11,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var myDurabilityBefore = env.MyVehicles.Sum(x => x.FullDurability);
             var oppDurabilityBefore = env.OppVehicles.Sum(x => x.FullDurability);
 
+            Logger.CumulativeOperationStart("Simulate n ticks");
             env.ApplyMove(move);
             for (var i = 0; i < ticksCount; i++)
             {
                 env.DoTick();
             }
+            Logger.CumulativeOperationEnd("Simulate n ticks");
+
+            Logger.CumulativeOperationStart("Danger1");
 
             var myDurabilityAfter = env.MyVehicles.Sum(x => x.FullDurability);
             var oppDurabilityAfter = env.OppVehicles.Sum(x => x.FullDurability);
@@ -34,25 +34,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return Math.Sqrt(rect.Area)*0.00005;
             });
 
-            res += env.MyVehicles.Average(m => 
-                env.OppVehicles
-                    .Select(x =>
-                    {   
-                        var myAttack = G.AttackDamage[(int) m.Type, (int) x.Type];
-                        var ret = x.GetDistanceTo2(m)/200000;
-                        if (myAttack < Const.Eps)
-                            return 0;
-                        return ret/myAttack;
-                    })
-                    .Where(x => x > 0)
-                    .Concat(new []{0.0})
-                    .Average()
-            );
-
             var additionalDanger = env.OppVehicles.Sum(opp =>
             {
                 var additionalRadius = opp.ActualSpeed;
-                return env.MyVehicles.Max(m => opp.GetAttackDamage(m, additionalRadius));
+                return env.GetOpponentFightNeigbours(opp, G.MaxAttackRange + additionalRadius).DefaultIfEmpty(null)
+                    .Max(m => m == null ? 0 :  opp.GetAttackDamage(m, additionalRadius));
             });
             res += additionalDanger/3.0;
 
@@ -85,6 +71,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             
             if (intersects)
                 res += 100;
+
+            Logger.CumulativeOperationEnd("Danger1");
+
+            Logger.CumulativeOperationStart("Danger2");
+
+            var s = 0.0;
+            var c = 0;
+            foreach (var my in env.MyVehicles)
+            {
+                if (my.Type == VehicleType.Arrv)
+                    continue;
+
+                foreach (var opp in env.OppVehicles)
+                {
+                    var myAttack = G.AttackDamage[(int)my.Type, (int)opp.Type];
+                    var ret = opp.GetDistanceTo2(my);
+                    s += ret * myAttack;
+                    c++;
+                }
+            }
+            res += s / c / 200000 / 10;
+
+            Logger.CumulativeOperationEnd("Danger2");
 
             return res;
         }
