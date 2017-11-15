@@ -28,9 +28,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
             res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
 
-            res += env.MyVehicles.Select(x => x.Type).Distinct().Average(type =>
+            var myTypes = env.MyVehicles.Select(x => x.Type).Distinct();
+
+            res += myTypes.Average(type =>
             {
-                var rect = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == type));
+                var rect = GetUnitsBoundingRect(env.GetVehicles(true, type));
                 return Math.Sqrt(rect.Area)*0.00005;
             });
 
@@ -42,8 +44,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             });
             res += additionalDanger/3.0;
 
-            var rectF = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Fighter));
-            var rectH = GetUnitsBoundingRect(env.MyVehicles.Where(x => x.Type == VehicleType.Helicopter));
+            var rectF = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Fighter));
+            var rectH = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Helicopter));
 
             var intersects = false;
             if (rectF.X <= rectF.X2 && rectH.X <= rectH.X2)
@@ -61,13 +63,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (rectF.IntersectsWith(rectH))
                     intersects = true;
             }
-
-            //for (var i = 0; i < env.Vehicles.Length; i++)
-            //{
-            //    var veh = env.Vehicles[i];
-            //    if (env.FirstCollider1[i] != null && env.FirstCollider1[i].Type != veh.Type)
-            //        intersects = true;
-            //}
             
             if (intersects)
                 res += 100;
@@ -78,17 +73,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             var s = 0.0;
             var c = 0;
-            foreach (var my in env.MyVehicles)
+            foreach (var type in myTypes)
             {
-                if (my.Type == VehicleType.Arrv)
+                if (type == VehicleType.Arrv)
                     continue;
 
+                var myGroup = env.GetVehicles(true, type);
+                var cen = GetAvg(myGroup);
                 foreach (var opp in env.OppVehicles)
                 {
-                    var myAttack = G.AttackDamage[(int)my.Type, (int)opp.Type];
-                    var ret = opp.GetDistanceTo2(my);
-                    s += ret * myAttack;
-                    c++;
+                    var myAttack = G.AttackDamage[(int)type, (int)opp.Type];
+                    var ret = opp.GetDistanceTo2(cen);
+                    s += ret * myAttack * myGroup.Count;
+                    c += myGroup.Count;
                 }
             }
             res += s / c / 200000 / 10;

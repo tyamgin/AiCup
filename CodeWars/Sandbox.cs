@@ -13,22 +13,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Sandbox
     {
-        private readonly List<AVehicle>[] _vehiclesByType =
+        private readonly List<AVehicle>[] _vehiclesByOwner =
         {
             new List<AVehicle>(),
             new List<AVehicle>()
         };
 
-        private readonly QuadTree<AVehicle>[] _treesByType =
+        private readonly List<AVehicle>[][] _vehiclesByOwnerAndType =
         {
-            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
-            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
-        };
-
-        private readonly QuadTree<AVehicle>[] _treesByPlayer =
-        {
-            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
-            new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
+            new [] { new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>() },
+            new [] { new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>() },
         };
 
         private readonly QuadTree<AVehicle>[,] _trees = new QuadTree<AVehicle>[2, 2]
@@ -43,16 +37,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         };
 
+        public List<AVehicle> GetVehicles(bool isMy, VehicleType type)
+        {
+            return _vehiclesByOwnerAndType[isMy ? 1 : 0][(int) type];
+        }
+
         private List<AVehicle> _at(bool isMy)
         {
-            return _vehiclesByType[isMy ? 1 : 0];
+            return _vehiclesByOwner[isMy ? 1 : 0];
         }
         private QuadTree<AVehicle> _tree(bool isMy, bool isAerial)
         {
             return _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
         }
 
-        public AVehicle[] FirstCollider1;
         private AVehicle[] _nearestCache;
 
         public IEnumerable<AVehicle> MyVehicles => _at(true);
@@ -64,18 +62,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public Sandbox(IEnumerable<AVehicle> vehicles)
         {
             Vehicles = vehicles.ToArray();
-            _vehiclesByType[0].Clear();
-            _vehiclesByType[1].Clear();
-            _treesByType[0].Clear();
-            _treesByType[1].Clear();
-            _treesByPlayer[0].Clear();
-            _treesByPlayer[1].Clear();
             foreach (var veh in Vehicles)
             {
                 _at(veh.IsMy).Add(veh);
                 _tree(veh.IsMy, veh.IsAerial).Add(veh);
+                _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int) veh.Type].Add(veh);
             }
-            FirstCollider1 = new AVehicle[Vehicles.Length];
             _nearestCache = new AVehicle[Vehicles.Length];
         }
 
@@ -304,7 +296,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                         if (!unit.IsAerial)
                         {
-                            var allNearest = oppTree.FindAllNearby(x, x.Radius * x.Radius);
+                            var allNearest = oppTree.FindAllNearby(x, Geom.Sqr(2*x.Radius));
                             var nearest = allNearest.FirstOrDefault();
                             if (nearest != null)
                             {
@@ -387,9 +379,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Logger.CumulativeOperationStart("DoFight");
             _doFight();
             Logger.CumulativeOperationEnd("DoFight");
-
-            for (var i = 0; i < FirstCollider1.Length; i++)
-                FirstCollider1[i] = _nearestCache[i] == null || !_nearestCache[i].IntersectsWith(Vehicles[i]) ? null : _nearestCache[i];
         }
     }
 }
