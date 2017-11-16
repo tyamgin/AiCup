@@ -76,6 +76,73 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        // 0 - ОК, работа завершена
+        // 1 - Удалилось - нужно вставить
+        // 2 - Элемент не найден
+        private int _changeXY(double left, double top, double right, double bottom, Node node)
+        {
+            if (node.Value != null)
+            {
+                if (node.Value.Equals(value))
+                {
+                    value.X = x;
+                    value.Y = y;
+                    if (x >= left && x < right && y >= top && y < bottom)
+                        return 0;
+
+                    node.Value = null;
+                    return 1;
+                }
+                return 0;
+            }
+            if (!node.HasValueBelow)
+            {
+                // value not found
+                return 2;
+            }
+
+            var centerX = (left + right) / 2.0D;
+            var centerY = (top + bottom) / 2.0D;
+
+            int done;
+
+            if (value.Y < centerY)
+            {
+                done = value.X < centerX 
+                    ? _changeXY(left, top, centerX, centerY, node.LeftTop) 
+                    : _changeXY(centerX, top, right, centerY, node.RightTop);
+            }
+            else
+            {
+                done = value.X < centerX 
+                    ? _changeXY(left, centerY, centerX, bottom, node.LeftBottom) 
+                    : _changeXY(centerX, centerY, right, bottom, node.RightBottom);
+            }
+
+            if (done == 1)
+            {
+                if (x >= left && x < right && y >= top && y < bottom)
+                {
+                    _add(value, x, y, node, left, top, right, bottom);
+                    return 0;
+                }
+
+                // normalize tree
+                node.HasValueBelow =
+                    node.LeftTop != null && (node.LeftTop.HasValueBelow || node.LeftTop.Value != null) ||
+                    node.RightTop != null && (node.RightTop.HasValueBelow || node.RightTop.Value != null) ||
+                    node.LeftBottom != null && (node.LeftBottom.HasValueBelow || node.LeftBottom.Value != null) ||
+                    node.RightBottom != null && (node.RightBottom.HasValueBelow || node.RightBottom.Value != null);
+
+                if (!node.HasValueBelow && node.Value == null)
+                    node.LeftTop = node.RightTop = node.LeftBottom = node.RightBottom = null;
+
+                return 1;
+            }
+            return done;
+        }
+
+
         private void _addAsChild(T value, double x, double y, Node node, double left, double top, double right, double bottom)
         {
             var centerX = (left + right)/2.0D;
@@ -556,6 +623,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private double x, y, squaredDistanceE;
         private long id;
         private List<T> values;
+        private T value;
 
         private T _findFirstNearby(Node node, double left, double top, double right, double bottom)
         {
@@ -1284,6 +1352,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public bool Remove(T value)
         {
             return _remove(_left, _top, _right, _bottom, _root, value);
+        }
+
+        public bool ChangeXY(T value, double x, double y)
+        {
+            this.value = value;
+            this.x = x;
+            this.y = y;
+            return _changeXY(_left, _top, _right, _bottom, _root) == 0;
         }
 
         public T FindFirstNearby(T value, double squaredDistance)

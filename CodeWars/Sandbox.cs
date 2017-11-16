@@ -302,7 +302,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var prevX = unit.X;
                     var prevY = unit.Y;
 
-                    var removed = false;
+                    //var removed = false;
                     var vehicleMoved = unit.Move(x =>
                     {
                         total++;
@@ -312,9 +312,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             return true;
                         }
 
-                        if (!unitTree.Remove(unit))
-                            throw new Exception("Vehicle Id=" + unit.Id + " not found");
-                        removed = true;
+                        //if (!unitTree.Remove(unit))
+                        //    throw new Exception("Vehicle Id=" + unit.Id + " not found");
+                        //removed = true;
 
                         //var matcher = _getIdMatcher(x.Id);
                         {
@@ -350,10 +350,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         return false;
                     });
 
-                    if (removed)
-                    {
-                        unitTree.Add(unit);
-                    }
+                    //if (removed)
+                    //{
+                    //    unitTree.Add(unit);
+                    //}
 
                     if (!vehicleMoved)
                     {
@@ -361,15 +361,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         _nearestCache[idx] = nearestWithNotMoved;
                         notMoved[notMovedNewLength++] = idx;
                     }
-                    else
+                    else if (!Geom.PointsEquals(prevX, prevY, unit.X, unit.Y))
                     {
-                        //Utility.Swap(ref prevX, ref unit.X);
-                        //Utility.Swap(ref prevY, ref unit.Y);
-                        //if (!unitTree.Remove(unit))
-                        //    throw new Exception("Can't remove unit " + unit.Id);
-                        //Utility.Swap(ref prevX, ref unit.X);
-                        //Utility.Swap(ref prevY, ref unit.Y);
-                        //unitTree.Add(unit);
+                        Utility.Swap(ref prevX, ref unit.X);
+                        Utility.Swap(ref prevY, ref unit.Y);
+                        if (!unitTree.ChangeXY(unit, prevX, prevY))
+                            throw new Exception("Can't change unit coordinates, id=" + unit.Id);
+
                         _upd(ref nearestWithMoved, unit, nearestWithNotMoved);
                         _nearestCache[idx] = nearestWithMoved;
                     }

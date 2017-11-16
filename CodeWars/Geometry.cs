@@ -618,6 +618,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return Math.Abs(a - b) < Const.Eps;
         }
 
+        public static bool PointsEquals(double ax, double ay, double bx, double by)
+        {
+            return Math.Abs(ax - bx) < Const.Eps && Math.Abs(ay - by) < Const.Eps;
+        }
+
         public static bool PointsEquals(Point a, Point b)
         {
             return Math.Abs(a.X - b.X) < Const.Eps && Math.Abs(a.Y - b.Y) < Const.Eps;
