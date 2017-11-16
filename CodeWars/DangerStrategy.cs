@@ -35,7 +35,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (vehs.Count == 0)
                     return 0;
                 var rect = GetUnitsBoundingRect(vehs);
-                return Math.Sqrt(rect.Area)*0.00005;
+                return Math.Sqrt(rect.Area)*0.002;
             });
 
             var additionalDanger = env.OppVehicles.Sum(opp =>
@@ -89,6 +89,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     continue;
 
                 var myGroup = env.GetVehicles(true, type);
+                if (myGroup.Count == 0)
+                    continue;
+
                 var cen = GetAvg(myGroup);
                 foreach (var opp in env.OppVehicles)
                 {

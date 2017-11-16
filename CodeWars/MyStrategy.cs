@@ -194,7 +194,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var move = new AMove
                         {
                             Action = ActionType.Move,
-                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * 7,
+                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * 10,
                             MaxSpeed = maxSpeed
                         };
 
