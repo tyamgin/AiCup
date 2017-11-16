@@ -1,6 +1,7 @@
 ﻿using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
@@ -304,6 +305,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 new Rect {X = X, Y = Y, X2 = X2, Y2 = (Y + Y2) / 2},
                 new Rect {X = X, Y = (Y + Y2) / 2, X2 = X2, Y2 = Y2},
             };
+        }
+
+        public bool ContainsPoint(Point point)
+        {
+            return 
+                X <= point.X && point.X <= X2 && 
+                Y <= point.Y && point.Y <= Y2; // TODO: need eps?
         }
     }
 

@@ -74,6 +74,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Action<double, double, double, double> add = (x, y, dx, dy) =>
             {
                 var rect = new Rect { X = x, Y = y, X2 = G.MapSize, Y2 = G.MapSize };
+
+                if (arrvs.Concat(tanks).Concat(ifvs).All(veh => !rect.ContainsPoint(veh)))
+                    return;
+
                 // TODO: skip if nothing
                 MoveQueue.Add(new AMove
                 {
