@@ -37,9 +37,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         };
 
+        public readonly List<AVehicle>[] MyVehiclesByGroup = new List<AVehicle>[2]
+        {
+            new List<AVehicle>(),
+            new List<AVehicle>() 
+        };
+
+        public readonly Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>(); 
+
         public List<AVehicle> GetVehicles(bool isMy, VehicleType type)
         {
             return _vehiclesByOwnerAndType[isMy ? 1 : 0][(int) type];
+        }
+
+        public List<AVehicle> GetVehicles(bool isMy, MyGroup group)
+        {
+            if (group.Type != null)
+                return _vehiclesByOwnerAndType[isMy ? 1 : 0][(int) group.Type];
+            if (group.Group == null)
+                return new List<AVehicle>();
+            if (!isMy)
+                throw new Exception("Trying to access not my group");
+            return MyVehiclesByGroup[(int) group.Group - 1];
         }
 
         private List<AVehicle> _at(bool isMy)
@@ -67,6 +86,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 _at(veh.IsMy).Add(veh);
                 _tree(veh.IsMy, veh.IsAerial).Add(veh);
                 _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int) veh.Type].Add(veh);
+                VehicleById[veh.Id] = veh;
+                if (veh.IsMy)
+                {
+                    if (veh.HasGroup(1))
+                        MyVehiclesByGroup[0].Add(veh);
+                    if (veh.HasGroup(2))
+                        MyVehiclesByGroup[1].Add(veh);
+                    // TODO
+                }
             }
             _nearestCache = new AVehicle[Vehicles.Length];
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -28,11 +29,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
             res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
 
-            var myTypes = env.MyVehicles.Select(x => x.Type).Distinct();
-
-            res += myTypes.Average(type =>
+            res += MyGroups.Average(type =>
             {
-                var rect = GetUnitsBoundingRect(env.GetVehicles(true, type));
+                var vehs = env.GetVehicles(true, type);
+                if (vehs.Count == 0)
+                    return 0;
+                var rect = GetUnitsBoundingRect(vehs);
                 return Math.Sqrt(rect.Area)*0.00005;
             });
 
@@ -73,8 +75,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             var s = 0.0;
             var c = 0;
-            foreach (var type in myTypes)
+            foreach (var gr in MyGroups)
             {
+                VehicleType type;
+                if (gr.Group == FirstFroup)
+                    type = VehicleType.Tank;
+                else if (gr.Group == SecondGroup)
+                    type = VehicleType.Ifv;
+                else
+                    type = (VehicleType) gr.Type;
+
                 if (type == VehicleType.Arrv)
                     continue;
 

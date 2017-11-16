@@ -16,7 +16,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static TerrainType[][] TerrainType;
         public static WeatherType[][] WeatherType;
-        public static AVehicle[] MyVehicles, OppVehicles;
+        public static Sandbox Environment;
 
         public void Move(Player me, World world, Game game, Move move)
         {
@@ -64,6 +64,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         private AMove nextMove;
+        private bool hasGroups = false;
+
+        public static int FirstFroup = 1;
+        public static int SecondGroup = 2;
+
+        public static MyGroup[] MyGroups =
+        {
+            new MyGroup(VehicleType.Fighter), new MyGroup(VehicleType.Helicopter),
+            new MyGroup(FirstFroup), new MyGroup(SecondGroup),
+        };
 
         private void _move(Game game)
         {
@@ -76,8 +86,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             VehiclesObserver.Update();
-            MyVehicles = VehiclesObserver.Vehicles.Where(x => x.IsMy).ToArray();
-            OppVehicles = VehiclesObserver.Vehicles.Where(x => !x.IsMy).ToArray();
+            Environment = new Sandbox(VehiclesObserver.Vehicles);
 
             //if (World.TickIndex == 0)
             //{
@@ -95,101 +104,41 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             //}
             //return;
 
-            var tst = false;
-            var lim = 0;
+            MoveFirstTicks();
+            var ret = !MoveQueue.Free || !FirstMovesComplete;
+            MoveQueue.Run();
+            if (ret)
+                return;
 
-            if (!tst)
+            if (!hasGroups)
             {
-                var groupVehicles = MyVehicles.Where(x => !x.IsAerial).ToArray();
-                var rect = GetUnitsBoundingRect(groupVehicles);
-                var minD = 150*Math.Sqrt(groupVehicles.Length)/Math.Sqrt(500);
-
-                if (World.TickIndex == 0)
+                hasGroups = true;
+                MoveQueue.Add(new AMove
                 {
-                    ResultingMove.Action = ActionType.AddToSelection;
-                    ResultingMove.VehicleType = VehicleType.Tank;
-                    ResultingMove.Right = ResultingMove.Bottom = G.MapSize;
-                    return;
-                }
-                if (World.TickIndex == 1)
+                    Action = ActionType.ClearAndSelect,
+                    Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Tank || x.Type == VehicleType.Arrv && tankArrvs.Contains(x.Id) )),
+                }, 0, 0);
+                MoveQueue.Add(new AMove
                 {
-                    ResultingMove.Action = ActionType.AddToSelection;
-                    ResultingMove.VehicleType = VehicleType.Ifv;
-                    ResultingMove.Right = ResultingMove.Bottom = G.MapSize;
-                    return;
-                }
-                if (World.TickIndex == 2)
+                    Action = ActionType.Assign,
+                    Group = FirstFroup,
+                }, 0, 0);
+                MoveQueue.Add(new AMove
                 {
-                    ResultingMove.Action = ActionType.AddToSelection;
-                    ResultingMove.VehicleType = VehicleType.Arrv;
-                    ResultingMove.Right = ResultingMove.Bottom = G.MapSize;
-                    return;
-                }
-                if (World.TickIndex == 3)
+                    Action = ActionType.ClearAndSelect,
+                    Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Ifv || x.Type == VehicleType.Arrv && ifvArrvs.Contains(x.Id))),
+                }, 0, 0);
+                MoveQueue.Add(new AMove
                 {
-                    ResultingMove.Action = ActionType.Assign;
-                    ResultingMove.Group = 1;
-                    return;
-                }
-                if (World.TickIndex == 4)
-                {
-                    ResultingMove.Action = ActionType.Rotate;
-                    ResultingMove.Point = rect.Center;
-                    ResultingMove.Angle = Math.PI;
-                    return;
-                }
-                if (World.TickIndex < 60)
-                    return;
-
-
-                var dx = rect.X2 - rect.X;
-                var dy = rect.Y2 - rect.Y;
-
-                var need = dx > minD || dy > minD;
-
-
-                lim = 1000;
-                var interv = 80;
-                if (World.TickIndex > lim)
-                    interv = 150;
-
-
-                if (World.TickIndex%interv == interv/2 - 1)
-                {
-                    ResultingMove.Action = ActionType.ClearAndSelect;
-                    ResultingMove.Group = 1;
-                    return;
-                }
-
-
-                if (need && World.TickIndex%interv == interv/2 && World.TickIndex > 200)
-                {
-                    if (World.TickIndex%(interv*2) == interv/2)
-                    {
-                        ResultingMove.Action = ActionType.Rotate;
-                        ResultingMove.Point = rect.Center;
-                        ResultingMove.Angle = Math.PI;
-                    }
-                    else
-                    {
-                        ResultingMove.Action = ActionType.Scale;
-                        ResultingMove.Point = rect.Center;
-                        ResultingMove.Factor = 0.1;
-                    }
-                    return;
-                }
-                if (!need && World.TickIndex%interv == interv/2)
-                {
-                    ResultingMove.Action = ActionType.Move;
-                    var target = OppVehicles.OrderBy(x => x.GetDistanceTo2(rect.Center)).FirstOrDefault();
-                    if (target != null)
-                    {
-                        ResultingMove.SetVector(rect.Center, target);
-                    }
-                    ResultingMove.MaxSpeed = 0.2;
-                    return;
-                }
+                    Action = ActionType.Assign,
+                    Group = SecondGroup,
+                }, 0, 0);
+                return;
             }
+
+            var tst = false;
+            var lim = 300;
+
 
             if (World.TickIndex >= lim && World.TickIndex % 10 == 1 && nextMove != null)
             {
@@ -204,30 +153,25 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var minDanger = double.MaxValue;
                 var selMove = new AMove();
 
-                foreach (var vehType in new[] { VehicleType.Fighter, VehicleType.Helicopter })
+                foreach (var group in MyGroups)
                 {
-                    if (MyVehicles.All(x => x.Type != vehType))
+                    if (Environment.GetVehicles(true, group).Count == 0)
                         continue;
 
-                    var selectedIds = string.Join(",", MyVehicles.Where(x => x.IsSelected)
+                    var selectedIds = string.Join(",", Environment.MyVehicles.Where(x => x.IsSelected)
                         .Select(x => x.Id)
                         .OrderBy(id => id)
                         .Select(x => x.ToString()));
 
-                    var needToSelectIds = string.Join(",", MyVehicles.Where(x => x.Type == vehType)
+                    var needToSelectIds = string.Join(",", Environment.GetVehicles(true, group)
                         .Select(x => x.Id)
                         .OrderBy(id => id)
                         .Select(x => x.ToString()));
 
-                    var startEnv = new Sandbox(
-                        MyVehicles
-                            .Where(x => x.IsAerial/* || x.Type == VehicleType.Arrv*/)
-                            .Concat(OppVehicles)
-                        ).Clone();
+                    var startEnv = new Sandbox(Environment.Vehicles).Clone();
 
-                    int ticksCount = 7;
-                    var avg = GetAvg(startEnv.Vehicles.Where(x => x.Type == vehType));
-                    double maxSpeed = 0;// startEnv.OppVehicles.Min(x => x.GetDistanceTo2(avg)) < 70 && World.TickIndex < 2000 ? 0.4 : 0;
+                    int ticksCount = 8;
+                    double maxSpeed = 0;
                     AMove selectionMove = null;
 
                     if (selectedIds != needToSelectIds)
@@ -235,7 +179,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         selectionMove = new AMove
                         {
                             Action = ActionType.ClearAndSelect,
-                            VehicleType = vehType,
+                            MyGroup = group,
                             Right = G.MapSize,
                             Bottom = G.MapSize
                         };
@@ -250,7 +194,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var move = new AMove
                         {
                             Action = ActionType.Move,
-                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * 6,
+                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * 10,
                             MaxSpeed = maxSpeed
                         };
 
@@ -262,7 +206,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    var typeRect = GetUnitsBoundingRect(startEnv.MyVehicles.Where(x => x.Type == vehType));
+                    var typeRect = GetUnitsBoundingRect(startEnv.GetVehicles(true, group));
                     foreach (var angle in Utility.Range(0, 2 * Math.PI, 4))
                     {
                         var env = startEnv.Clone();

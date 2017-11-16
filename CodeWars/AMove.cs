@@ -44,5 +44,37 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             X = to.X - from.X;
             Y = to.Y - from.Y;
         }
+
+        public Rect Rect
+        {
+            get
+            {
+                return new Rect
+                {
+                    X = Left,
+                    X2 = Right,
+                    Y = Top,
+                    Y2 = Bottom
+                };
+            }
+            set
+            {
+                Left = value.X;
+                Right = value.X2;
+                Top = value.Y;
+                Bottom = value.Y2;
+            }
+        }
+
+        public MyGroup MyGroup
+        {
+            set
+            {
+                if (value.Group != null)
+                    Group = (int) value.Group;
+                if (value.Type != null)
+                    VehicleType = value.Type;
+            }
+        }
     }
 }

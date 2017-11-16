@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -146,6 +147,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var r = AttackRange[(int) type1, (int) type2];
             return r*r;
         }
+
+        public static readonly Rect MapRect = new Rect {X = 0, Y = 0, X2 = MapSize, Y2 = MapSize};
     }
 
 

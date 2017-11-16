@@ -296,6 +296,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         public double Area => Width*Height;
+
+        public Rect[] SplitVertically()
+        {
+            return new[]
+            {
+                new Rect {X = X, Y = Y, X2 = X2, Y2 = (Y + Y2) / 2},
+                new Rect {X = X, Y = (Y + Y2) / 2, X2 = X2, Y2 = Y2},
+            };
+        }
     }
 
     public class Geom
@@ -319,19 +328,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return x < 0 ? -1 : 1;
         }
 
-        private static void _swap<T>(ref T lhs, ref T rhs)
-        {
-            var temp = lhs;
-            lhs = rhs;
-            rhs = temp;
-        }
+
 
         public static bool Intersect1D(double a, double b, double c, double d)
         {
             if (a > b)
-                _swap(ref a, ref b);
+                Utility.Swap(ref a, ref b);
             if (c > d)
-                _swap(ref c, ref d);
+                Utility.Swap(ref c, ref d);
             return Math.Max(a, c) <= Math.Min(b, d);
         }
 
@@ -428,7 +432,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static bool Between(double left, double right, double middle)
         {
             if (left > right)
-                _swap(ref left, ref right);
+                Utility.Swap(ref left, ref right);
             return left - Const.Eps <= middle && middle <= right + Const.Eps;
         }
 
@@ -618,8 +622,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             return Math.Abs(a.X - b.X) < Const.Eps && Math.Abs(a.Y - b.Y) < Const.Eps;
         }
-
-
     }
 }
 

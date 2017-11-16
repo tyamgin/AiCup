@@ -67,6 +67,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (rightInclusive)
                 yield return max;
         }
+
+        public static void Swap<T>(ref T lhs, ref T rhs)
+        {
+            var temp = lhs;
+            lhs = rhs;
+            rhs = temp;
+        }
     }
 
     public static class ListExtension
