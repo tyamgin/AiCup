@@ -45,7 +45,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private bool bottom2Moved = false;
         private bool right1Moved = false;
         private bool right2moved = false;
-        private bool started = false;
         private bool scaled = false;
         private int skipTicks = 0;
         private bool shifted = false;
@@ -61,9 +60,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 skipTicks--;
                 return;
             }
-
-            const int bt = 35;
-            
 
             var arrvs = Environment.GetVehicles(true, VehicleType.Arrv);
             var tanks = Environment.GetVehicles(true, VehicleType.Tank);

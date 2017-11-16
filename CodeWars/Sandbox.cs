@@ -13,6 +13,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Sandbox
     {
+        private static Predicate<AVehicle> _getIdMatcher(long id)
+        {
+            return vehicle => vehicle.Id != id;
+        }
+
         private readonly List<AVehicle>[] _vehiclesByOwner =
         {
             new List<AVehicle>(),
@@ -294,6 +299,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var nearestWithNotMoved = _nearestCache[idx];
                     var nearestWithMoved = nearestWithNotMoved;
 
+                    var prevX = unit.X;
+                    var prevY = unit.Y;
+
                     var removed = false;
                     var vehicleMoved = unit.Move(x =>
                     {
@@ -308,9 +316,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             throw new Exception("Vehicle Id=" + unit.Id + " not found");
                         removed = true;
 
+                        //var matcher = _getIdMatcher(x.Id);
                         {
-                            var allNearest = unitTree.FindAllNearby(x, Geom.Sqr(2*x.Radius));
-                            var nearest = allNearest.FirstOrDefault();
+                            //var allNearest = unitTree.FindAllNearby(x, Geom.Sqr(2*x.Radius));
+                            //var nearest = allNearest.FirstOrDefault();
+                            var nearest = unitTree.FindFirstNearby(x, Geom.Sqr(2 * x.Radius));
 
                             if (nearest != null)
                             {
@@ -324,8 +334,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                         if (!unit.IsAerial)
                         {
-                            var allNearest = oppTree.FindAllNearby(x, Geom.Sqr(2*x.Radius));
-                            var nearest = allNearest.FirstOrDefault();
+                            //var allNearest = oppTree.FindAllNearby(x, Geom.Sqr(2*x.Radius));
+                            //var nearest = allNearest.FirstOrDefault();
+                            var nearest = oppTree.FindFirstNearby(x, Geom.Sqr(2 * x.Radius));
                             if (nearest != null)
                             {
                                 _upd(ref nearestWithMoved, x, nearest);
@@ -343,6 +354,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         unitTree.Add(unit);
                     }
+
                     if (!vehicleMoved)
                     {
                         _upd(ref nearestWithNotMoved, unit, nearestWithMoved);
@@ -351,6 +363,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                     else
                     {
+                        //Utility.Swap(ref prevX, ref unit.X);
+                        //Utility.Swap(ref prevY, ref unit.Y);
+                        //if (!unitTree.Remove(unit))
+                        //    throw new Exception("Can't remove unit " + unit.Id);
+                        //Utility.Swap(ref prevX, ref unit.X);
+                        //Utility.Swap(ref prevY, ref unit.Y);
+                        //unitTree.Add(unit);
                         _upd(ref nearestWithMoved, unit, nearestWithNotMoved);
                         _nearestCache[idx] = nearestWithMoved;
                     }

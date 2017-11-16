@@ -73,6 +73,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             new MyGroup(VehicleType.Fighter), new MyGroup(VehicleType.Helicopter),
             new MyGroup(FirstFroup), new MyGroup(SecondGroup),
+            //new MyGroup(VehicleType.Ifv), new MyGroup(VehicleType.Tank), new MyGroup(VehicleType.Arrv),   
         };
 
         private void _move(Game game)
@@ -116,7 +117,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.ClearAndSelect,
-                    Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Tank || x.Type == VehicleType.Arrv && tankArrvs.Contains(x.Id) )),
+                    Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Tank || x.Type == VehicleType.Arrv && tankArrvs.Contains(x.Id))),
                 }, 0, 0);
                 MoveQueue.Add(new AMove
                 {
@@ -136,8 +137,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return;
             }
 
-            var tst = false;
-            var lim = 300;
+            var lim = 0;
 
 
             if (World.TickIndex >= lim && World.TickIndex % 10 == 1 && nextMove != null)

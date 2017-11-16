@@ -29,7 +29,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
             res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
 
-            res += MyGroups.Average(type =>
+            res += MyGroups.Sum(type =>
             {
                 var vehs = env.GetVehicles(true, type);
                 if (vehs.Count == 0)
