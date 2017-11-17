@@ -78,9 +78,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public readonly AVehicle[] Vehicles;
 
-        public Sandbox(IEnumerable<AVehicle> vehicles)
+        public Sandbox(IEnumerable<AVehicle> vehicles, bool clone = false)
         {
-            Vehicles = vehicles.ToArray();
+            if (clone)
+                Vehicles = vehicles.Select(x => new AVehicle(x)).ToArray();
+            else
+                Vehicles = vehicles.ToArray();
+
             foreach (var veh in Vehicles)
             {
                 _at(veh.IsMy).Add(veh);

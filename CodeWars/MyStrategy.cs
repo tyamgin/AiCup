@@ -160,7 +160,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         .OrderBy(id => id)
                         .Select(x => x.ToString()));
 
-                    var startEnv = new Sandbox(Environment.Vehicles).Clone();
+                    var startEnv = new Sandbox(Environment.Vehicles, clone: true);
 
                     int ticksCount = 7;
                     double maxSpeed = 0;
@@ -172,55 +172,55 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         {
                             Action = ActionType.ClearAndSelect,
                             MyGroup = group,
-                            Right = G.MapSize,
-                            Bottom = G.MapSize
+                            Rect = G.MapRect,
                         };
                         startEnv.ApplyMove(selectionMove);
                         startEnv.DoTick();
                         ticksCount--;
                     }
 
-                    foreach (var angle in Utility.Range(0, 2 * Math.PI, 12))
-                    {
-                        var env = startEnv.Clone();
-                        var move = new AMove
-                        {
-                            Action = ActionType.Move,
-                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * (group.Type == null ? 40 : 7),
-                            MaxSpeed = maxSpeed
-                        };
+                    var partialEnv = new Sandbox(startEnv.Vehicles.Where(x => !x.IsMy || !x.IsGroup(group)), clone: true);
 
-                        var danger = GetDanger(env, move, ticksCount);
-                        if (danger < minDanger)
-                        {
-                            minDanger = danger;
-                            if (selectionMove == null)
-                            {
-                                selMove = move;
-                                selNextMove = null;
-                            }
-                            else
-                            {
-                                selMove = selectionMove;
-                                selNextMove = move;
-                            }
-                        }
-                    }
+                    for (var i = 0; i < ticksCount; i++)
+                        partialEnv.DoTick();
 
                     var typeRect = GetUnitsBoundingRect(startEnv.GetVehicles(true, group));
-                    //foreach (var angle in Utility.Range(0, 2 * Math.PI, 4))
+
+                    var actions = Utility.Range(0, 2*Math.PI, 12).Select(angle => new AMove
                     {
-                        var env = startEnv.Clone();
-                        
-                        var move = new AMove
+                        Action = ActionType.Move,
+                        Point = Point.ByAngle(angle)*startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)*ticksCount*(group.Type == null ? 40 : 7),
+                        MaxSpeed = maxSpeed
+                    }).Concat(new[]
+                    {
+                        new AMove
                         {
                             Action = ActionType.Scale,
                             Factor = 0.1,
-                            Point = typeRect.Center,// + Point.ByAngle(angle) * (Math.Max(typeRect.Height, typeRect.Width)/2),
+                            Point = typeRect.Center,
                             MaxSpeed = maxSpeed
-                        };
+                        }
+                    });
 
-                        var danger = GetDanger(env, move, ticksCount);
+                    foreach (var move in actions)
+                    {
+                        var env = new Sandbox(partialEnv.Vehicles.Concat(startEnv.GetVehicles(true, group)), clone: true);
+                        foreach (var veh in env.Vehicles)
+                        {
+                            if (veh.IsMy && veh.IsGroup(group))
+                                continue;
+
+                            veh.ForgotTarget(); // чтобы не шли повторно
+                            if (veh.IsMy) // TODO: лечение
+                                veh.RemainingAttackCooldownTicks = G.AttackCooldownTicks; // чтобы не стреляли повторно
+                            else
+                            {
+                                if (veh.RemainingAttackCooldownTicks > 0)// у тех, кто стрелял давно, откатываем кд
+                                    veh.RemainingAttackCooldownTicks += ticksCount; // TODO: если кд только восстановилось
+                            }
+                        }
+
+                        var danger = GetDanger(Environment, env, move, ticksCount);
                         if (danger < minDanger)
                         {
                             minDanger = danger;

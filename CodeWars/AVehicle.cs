@@ -221,5 +221,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             veh.Durability -= damage;
             RemainingAttackCooldownTicks = G.AttackCooldownTicks;
         }
+
+        public void ForgotTarget()
+        {
+            MoveTarget = null;
+            MoveSpeed = 0;
+            RotationCenter = null;
+            RotationAngle = 0;
+            RotationAngularSpeed = 0;
+        }
+
+        public bool IsGroup(MyGroup group)
+        {
+            return group.Type == Type ||
+                group.Group != null && HasGroup((int) group.Group);
+        }
     }
 }
