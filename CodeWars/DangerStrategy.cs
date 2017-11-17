@@ -48,26 +48,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             var rectF = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Fighter));
             var rectH = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Helicopter));
+            var rectT = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(FirstFroup)));
+            var rectI = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(SecondGroup)));
 
-            var intersects = false;
-            if (rectF.X <= rectF.X2 && rectH.X <= rectH.X2)
+            foreach (var rectPair in new[] {new Tuple<Rect, Rect>(rectF, rectH), new Tuple<Rect, Rect>(rectT, rectI)})
             {
-                rectF.X -= G.VehicleRadius;
-                rectF.X2 += G.VehicleRadius;
-                rectF.Y -= G.VehicleRadius;
-                rectF.Y2 += G.VehicleRadius;
+                var r1 = rectPair.Item1;
+                var r2 = rectPair.Item2;
+                if (r1.IsFinite && r2.IsFinite)
+                {
+                    r1.ExtendedRadius(G.VehicleRadius*1.5);
+                    r2.ExtendedRadius(G.VehicleRadius*1.5);
 
-                rectH.X -= G.VehicleRadius;
-                rectH.X2 += G.VehicleRadius;
-                rectH.Y -= G.VehicleRadius;
-                rectH.Y2 += G.VehicleRadius;
-
-                if (rectF.IntersectsWith(rectH))
-                    intersects = true;
+                    if (r1.IntersectsWith(r2))
+                        res += 2000;
+                    else
+                    {
+                        r1.ExtendedRadius(G.VehicleRadius*1.5);
+                        r2.ExtendedRadius(G.VehicleRadius*1.5);
+                        if (r1.IntersectsWith(r2))
+                            res += 500;
+                    }
+                }
             }
-            
-            if (intersects)
-                res += 100;
 
             Logger.CumulativeOperationEnd("Danger1");
 
@@ -96,8 +99,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 foreach (var opp in env.OppVehicles)
                 {
                     var myAttack = G.AttackDamage[(int)type, (int)opp.Type];
+                    var oppAttack = G.AttackDamage[(int)opp.Type, (int)type];
                     var ret = opp.GetDistanceTo2(cen);
-                    s += ret * myAttack * myGroup.Count;
+                    s += ret * (myAttack - oppAttack / 2) * myGroup.Count;
                     c += myGroup.Count;
                 }
             }

@@ -63,7 +63,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MoveObserver.Update();
         }
 
-        private AMove nextMove;
         private bool hasGroups = false;
 
         public static int FirstFroup = 1;
@@ -137,21 +136,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return;
             }
 
-            var lim = 0;
-
-
-            if (World.TickIndex >= lim && World.TickIndex % 10 == 1 && nextMove != null)
-            {
-                ResultingMove = nextMove;
-                nextMove = null;
+            if (Me.RemainingActionCooldownTicks > 0)
                 return;
-            }
-            nextMove = null;
 
-            if (World.TickIndex >= lim && World.TickIndex % 10 == 0)
+            if (World.TickIndex % 10 == 0)
             {
                 var minDanger = double.MaxValue;
-                var selMove = new AMove();
+                AMove selMove = new AMove();
+                AMove selNextMove = null;
 
                 foreach (var group in MyGroups)
                 {
@@ -194,28 +186,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var move = new AMove
                         {
                             Action = ActionType.Move,
-                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * 10,
-                            MaxSpeed = maxSpeed
-                        };
-
-                        var danger = GetDanger(env, move, ticksCount);
-                        if (danger < minDanger)
-                        {
-                            minDanger = danger;
-                            selMove = selectionMove ?? move;
-                        }
-                    }
-
-                    var typeRect = GetUnitsBoundingRect(startEnv.GetVehicles(true, group));
-                    foreach (var angle in Utility.Range(0, 2 * Math.PI, 4))
-                    {
-                        var env = startEnv.Clone();
-                        
-                        var move = new AMove
-                        {
-                            Action = ActionType.Scale,
-                            Factor = 0.1,
-                            Point = typeRect.Center + Point.ByAngle(angle) * (Math.Max(typeRect.Height, typeRect.Width)/2),
+                            Point = Point.ByAngle(angle) * env.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) * ticksCount * (group.Type == null ? 40 : 7),
                             MaxSpeed = maxSpeed
                         };
 
@@ -226,89 +197,51 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             if (selectionMove == null)
                             {
                                 selMove = move;
+                                selNextMove = null;
                             }
                             else
                             {
                                 selMove = selectionMove;
-                                nextMove = move;
+                                selNextMove = move;
+                            }
+                        }
+                    }
+
+                    var typeRect = GetUnitsBoundingRect(startEnv.GetVehicles(true, group));
+                    //foreach (var angle in Utility.Range(0, 2 * Math.PI, 4))
+                    {
+                        var env = startEnv.Clone();
+                        
+                        var move = new AMove
+                        {
+                            Action = ActionType.Scale,
+                            Factor = 0.1,
+                            Point = typeRect.Center,// + Point.ByAngle(angle) * (Math.Max(typeRect.Height, typeRect.Width)/2),
+                            MaxSpeed = maxSpeed
+                        };
+
+                        var danger = GetDanger(env, move, ticksCount);
+                        if (danger < minDanger)
+                        {
+                            minDanger = danger;
+                            if (selectionMove == null)
+                            {
+                                selMove = move;
+                                selNextMove = null;
+                            }
+                            else
+                            {
+                                selMove = selectionMove;
+                                selNextMove = move;
                             }
                         }
                     }
                 }
                 ResultingMove = selMove;
+                if (selNextMove != null)
+                    MoveQueue.Add(selNextMove, 0, 0);
             }
 
-            return;
-
-   //         var rect = GetUnitsBoundingRect(MyVehicles);
-   //         var rectL = new Rect { X = rect.X, Y = rect.Y, X2 = rect.X + rect.Width / 2, Y2 = rect.Y2 };
-   //         var rectR = new Rect { X = rect.X + rect.Width / 2, Y = rect.Y, X2 = rect.X2, Y2 = rect.Y2 };
-   //         var rectT = new Rect { X = rect.X, Y = rect.Y, X2 = rect.X2, Y2 = rect.Y + rect.Height / 2 };
-   //         var rectB = new Rect { X = rect.X, Y = rect.Y + rect.Height / 2, X2 = rect.X2, Y2 = rect.Y2 };
-
-   //         var totalInterval = 160;
-   //         var subInterval = 25;
-   //         var curInterval = 0;
-
-
-
-   //         if (_tryMoveRect(rect, rectL, rectR, totalInterval, curInterval * subInterval))
-			//{
-			//	return;
-			//}
-			//curInterval++;
-			
-			//if (_tryMoveRect(rect, rectT, rectB, totalInterval, curInterval * subInterval))
-			//{
-			//	return;
-			//}
-			//curInterval++;
-			
-			//if (_tryMoveRect(rect, rectR, rectL, totalInterval, curInterval * subInterval))
-			//{
-			//	return;
-			//}
-			//curInterval++;
-			
-			//if (_tryMoveRect(rect, rectB, rectT, totalInterval, curInterval * subInterval))
-			//{
-			//	return;
-			//}
-			//curInterval++;
-			
-
-			//if (_tryMoveRect(rect, null, null, totalInterval, curInterval * subInterval, true))
-			//{
-			//	return;
-			//}
-			//curInterval++;
-			
-			//var massCenter = GetAvg(MyVehicles);
-			//var minD = 110 * Math.Sqrt(MyVehicles.Length) / Math.Sqrt(500);
-			//var dx = rect.X2 - rect.X;
-			//var dy = rect.Y2 - rect.Y;
-   //         if (dx < minD * 1.2 && dy < minD * 1.2)
-   //         {
-   //             if (World.TickIndex%totalInterval == curInterval * subInterval)
-   //             {
-   //                 ResultingMove.Action = ActionType.ClearAndSelect;
-   //                 ApplyREct(rect);
-   //                 return;
-   //             }
-   //             if (World.TickIndex%totalInterval == curInterval * subInterval + 1)
-   //             {
-   //                 ResultingMove.Action = ActionType.Move;
-   //                 var target = OppVehicles.OrderBy(x => x.GetDistanceTo2(massCenter)).FirstOrDefault();
-   //                 if (target != null)
-   //                 {
-   //                     var cng = target - massCenter;
-   //                     ResultingMove.X = cng.X;
-   //                     ResultingMove.Y = cng.Y;
-   //                 }
-   //                 ResultingMove.MaxSpeed = 0.2;
-   //                 return;
-   //             }
-   //         }
         }
     }
 }

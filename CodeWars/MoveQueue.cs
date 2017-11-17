@@ -31,7 +31,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return;
             }
 
-            if (_queue.Count == 0)
+            if (_queue.Count == 0 || MyStrategy.Me.RemainingActionCooldownTicks > 0)
                 return;
             var action = _queue[0];
             if (action.DelayBefore > 0)

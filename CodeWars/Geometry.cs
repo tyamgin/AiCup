@@ -307,12 +307,22 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             };
         }
 
+        public void ExtendedRadius(double additionalRadius)
+        {
+            X -= additionalRadius;
+            Y -= additionalRadius;
+            X2 += additionalRadius;
+            Y2 += additionalRadius;
+        }
+
         public bool ContainsPoint(Point point)
         {
             return 
                 X <= point.X && point.X <= X2 && 
                 Y <= point.Y && point.Y <= Y2; // TODO: need eps?
         }
+
+        public bool IsFinite => X <= X2 && Y <= Y2;
     }
 
     public class Geom
