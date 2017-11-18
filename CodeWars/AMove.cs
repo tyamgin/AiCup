@@ -76,5 +76,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     VehicleType = value.Type;
             }
         }
+
+        public override string ToString()
+        {
+            switch (Action)
+            {
+                case ActionType.Move:
+                    return ActionType.Move + " (" + X + ", " + Y + ")";
+                case ActionType.Rotate:
+                    return ActionType.Rotate + " (" + X + ", " + Y + "; " + Angle + ")";
+                case ActionType.ClearAndSelect:
+                    var groupStr = VehicleType?.ToString() ?? (Group != 0 ? Group.ToString() : "");
+                    return ActionType.ClearAndSelect + groupStr + " [" + Left + ", " + Right + "][" + Top + ", " + Bottom + "]";
+                case ActionType.TacticalNuclearStrike:
+                    return ActionType.TacticalNuclearStrike + "(" + X + ", " + Y + ") " + VehicleId;
+                default:
+                    //TODO
+                    return base.ToString();
+            }
+        }
     }
 }

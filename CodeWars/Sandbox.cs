@@ -439,7 +439,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (VehicleById.ContainsKey(nuclear.VehicleId)) // если нет информации о владельце, то оставлять бомбу
                 {
                     var owner = VehicleById[nuclear.VehicleId];
-                    if (!owner.IsAlive || owner.GetDistanceTo2(nuclear) + Const.Eps > G.TacticalNuclearStrikeRadius*G.TacticalNuclearStrikeRadius)
+                    if (!owner.IsAlive || owner.GetDistanceTo2(nuclear) + Const.Eps > Geom.Sqr(owner.ActualVisionRange))
                     {
                         needRemove = true;
                         nuclear.RemainingTicks = 0;

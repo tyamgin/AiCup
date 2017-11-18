@@ -15,4 +15,4 @@ if "%JAVA_HOME%" neq "" (
 )
 
 :java-start
-start "" "%JAVA_BIN:"=%java" -Xms128M -Xmx1G -cp ".;*;%~dp0/*" -jar repeater.jar %1
+"%JAVA_BIN:"=%java" -Xms1G -Xmx4G -cp ".;*;%~dp0/*" -jar repeater.jar %1

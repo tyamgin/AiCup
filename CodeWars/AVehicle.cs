@@ -231,7 +231,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var dist2 = GetDistanceTo2(nuclear);
             if (dist2 >= G.TacticalNuclearStrikeRadius * G.TacticalNuclearStrikeRadius)
                 return 0;
-            var damage = (int)((G.TacticalNuclearStrikeRadius - Math.Sqrt(dist2)) * G.MaxTacticalNuclearStrikeDamage);
+            var damage = (int)((1 - G.TacticalNuclearStrikeRadius / Math.Sqrt(dist2)) * G.MaxTacticalNuclearStrikeDamage);
             return Math.Min(damage, Durability);
         }
 
@@ -271,6 +271,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 return res;
             }
+        }
+
+        public override string ToString()
+        {
+            return "(" + X + ", " + Y + ") " + Type + " " + Durability + "%";
         }
     }
 }
