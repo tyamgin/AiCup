@@ -110,6 +110,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(game.ForestTerrainVisionFactor, G.ForestTerrainVisionFactor);
             _expect(game.RainWeatherVisionFactor, G.RainWeatherVisionFactor);
             _expect(game.SwampTerrainVisionFactor, 1);
+
+            _expect(game.ActionDetectionInterval, G.ActionDetectionInterval);
+            _expect(game.BaseActionCount, G.BaseActionCount);
+
+            _expect(game.AdditionalActionCountPerControlCenter, G.AdditionalActionCountPerControlCenter);
         }
 
         private static void _expect<T>(T source, T value)
@@ -140,6 +145,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const double CloudWeatherVisionFactor = 0.8;
         public const double ForestTerrainVisionFactor = 0.8;
         public const double RainWeatherVisionFactor = 0.6;
+
+        public const int ActionDetectionInterval = 60;
+        public const int BaseActionCount = 12;
+        public const int AdditionalActionCountPerControlCenter = 3;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

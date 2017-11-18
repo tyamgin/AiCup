@@ -32,7 +32,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Thread.Sleep(20);
             }
 #endif
-
             Logger.TimerStart();
             _move(game);
             Logger.CumulativeOperationPrintAndReset(2);
@@ -96,6 +95,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 .ToArray();
 
             VehiclesObserver.Update();
+            MoveObserver.Init();
             Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears);
 
             //if (World.TickIndex == 0)
