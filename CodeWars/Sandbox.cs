@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Authentication.ExtendedProtection;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -432,19 +433,30 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doNuclears()
         {
-            bool changed = false;
+            bool needRemove = false;
             foreach (var nuclear in Nuclears)
             {
+                if (VehicleById.ContainsKey(nuclear.VehicleId)) // если нет информации о владельце, то оставлять бомбу
+                {
+                    var owner = VehicleById[nuclear.VehicleId];
+                    if (!owner.IsAlive || owner.GetDistanceTo2(nuclear) + Const.Eps > G.TacticalNuclearStrikeRadius*G.TacticalNuclearStrikeRadius)
+                    {
+                        needRemove = true;
+                        nuclear.RemainingTicks = 0;
+                        continue;
+                    }
+                }
+
                 nuclear.RemainingTicks--;
                 if (nuclear.RemainingTicks == 0)
                 {
-                    changed = true;
+                    needRemove = true;
 
                     foreach (var target in GetAllNeigbours(nuclear.X, nuclear.Y, nuclear.Radius))
                         target.Durability -= target.GetNuclearDamage(nuclear);
                 }
             }
-            if (changed)
+            if (needRemove)
                 Nuclears = Nuclears.Where(x => x.RemainingTicks > 0).ToArray();
         }
 

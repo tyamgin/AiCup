@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -43,11 +42,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return x;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Equals(double x, double y)
         {
             return Math.Abs(x - y) < Const.Eps;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetCell(double x, double y, out int I, out int J)
         {
             I = (int) ((x)/G.CellSize); // TODO: need Eps: http://russianaicup.ru/forum/index.php?topic=804.0
@@ -68,6 +69,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 yield return max;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Swap<T>(ref T lhs, ref T rhs)
         {
             var temp = lhs;

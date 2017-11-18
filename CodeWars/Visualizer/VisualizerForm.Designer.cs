@@ -35,6 +35,7 @@
             this.buttonUnZoom = new System.Windows.Forms.Button();
             this.renderButton = new System.Windows.Forms.Button();
             this.tickLabel = new System.Windows.Forms.Label();
+            this.scoreLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.panel)).BeginInit();
             this.SuspendLayout();
             // 
@@ -51,7 +52,7 @@
             // 
             // buttonPause
             // 
-            this.buttonPause.Location = new System.Drawing.Point(2, 107);
+            this.buttonPause.Location = new System.Drawing.Point(2, 131);
             this.buttonPause.Name = "buttonPause";
             this.buttonPause.Size = new System.Drawing.Size(78, 55);
             this.buttonPause.TabIndex = 1;
@@ -61,7 +62,7 @@
             // 
             // buttonZoom
             // 
-            this.buttonZoom.Location = new System.Drawing.Point(2, 78);
+            this.buttonZoom.Location = new System.Drawing.Point(2, 102);
             this.buttonZoom.Name = "buttonZoom";
             this.buttonZoom.Size = new System.Drawing.Size(35, 23);
             this.buttonZoom.TabIndex = 2;
@@ -71,7 +72,7 @@
             // 
             // buttonUnZoom
             // 
-            this.buttonUnZoom.Location = new System.Drawing.Point(44, 78);
+            this.buttonUnZoom.Location = new System.Drawing.Point(43, 102);
             this.buttonUnZoom.Name = "buttonUnZoom";
             this.buttonUnZoom.Size = new System.Drawing.Size(36, 23);
             this.buttonUnZoom.TabIndex = 3;
@@ -81,7 +82,7 @@
             // 
             // renderButton
             // 
-            this.renderButton.Location = new System.Drawing.Point(2, 49);
+            this.renderButton.Location = new System.Drawing.Point(2, 73);
             this.renderButton.Name = "renderButton";
             this.renderButton.Size = new System.Drawing.Size(78, 23);
             this.renderButton.TabIndex = 4;
@@ -99,11 +100,22 @@
             this.tickLabel.TabIndex = 5;
             this.tickLabel.Text = "Tick";
             // 
+            // scoreLabel
+            // 
+            this.scoreLabel.AutoSize = true;
+            this.scoreLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.scoreLabel.Location = new System.Drawing.Point(8, 41);
+            this.scoreLabel.Name = "scoreLabel";
+            this.scoreLabel.Size = new System.Drawing.Size(39, 20);
+            this.scoreLabel.TabIndex = 6;
+            this.scoreLabel.Text = "0 : 0";
+            // 
             // VisualizerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1330, 912);
+            this.Controls.Add(this.scoreLabel);
             this.Controls.Add(this.tickLabel);
             this.Controls.Add(this.renderButton);
             this.Controls.Add(this.buttonUnZoom);
@@ -129,5 +141,6 @@
         private System.Windows.Forms.Button buttonUnZoom;
         private System.Windows.Forms.Button renderButton;
         public System.Windows.Forms.Label tickLabel;
+        public System.Windows.Forms.Label scoreLabel;
     }
 }

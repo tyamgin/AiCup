@@ -1,6 +1,7 @@
 ﻿using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -339,6 +340,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return (c.X - b.X) * (b.Y - a.Y) - (c.Y - b.Y) * (b.X - a.X);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int Sign(double x)
         {
             if (Math.Abs(x) < Const.Eps)
@@ -357,6 +359,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return Math.Max(a, c) <= Math.Min(b, d);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetABC(Point a, Point b, out double A, out double B, out double C)
         {
             A = a.Y - b.Y;
@@ -431,11 +434,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double Sqr(double x)
         {
             return x * x;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double SumSqr(double numberA, double numberB)
         {
             return numberA * numberA + numberB * numberB;
@@ -582,6 +587,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return angle;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double ToDegrees(double angle)
         {
             return angle * 180 / Math.PI;
@@ -631,16 +637,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return _findTangentPoints(center.X, center.Y, Radius, external.X, external.Y);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool DoublesEquals(double a, double b)
         {
             return Math.Abs(a - b) < Const.Eps;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool PointsEquals(double ax, double ay, double bx, double by)
         {
             return Math.Abs(ax - bx) < Const.Eps && Math.Abs(ay - by) < Const.Eps;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool PointsEquals(Point a, Point b)
         {
             return Math.Abs(a.X - b.X) < Const.Eps && Math.Abs(a.Y - b.Y) < Const.Eps;

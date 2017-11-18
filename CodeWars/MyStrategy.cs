@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     public partial class MyStrategy : IStrategy
     {
         public static World World;
-        public static Player Me;
+        public static Player Me, Opp;
         public static AMove ResultingMove;
 
         public static TerrainType[][] TerrainType;
@@ -20,17 +20,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public void Move(Player me, World world, Game game, Move move)
         {
-            // занулям чтобы случайно не использовать данные с предыдущего тика
-            // ...
-
             World = world;
             Me = me;
+            Opp = World.Players.FirstOrDefault(x => !x.IsMe);
             ResultingMove = new AMove();
 
 #if DEBUG
             while (Visualizer.Visualizer.Pause)
             {
                 // pause here
+                Thread.Sleep(20);
             }
 #endif
 
