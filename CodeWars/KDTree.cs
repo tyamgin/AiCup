@@ -34,13 +34,33 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private readonly Node _root = new Node();
+        private Node _root = new Node();
 
         private readonly double _left;
         private readonly double _top;
         private readonly double _right;
         private readonly double _bottom;
         private readonly double _epsilon;
+        private Func<T, T> _cloneFunc; 
+
+        private void _clone(Node src, out Node dest)
+        {
+            if (src == null)
+            {
+                dest = null;
+                return;
+            }
+            dest = new Node {HasValueBelow = src.HasValueBelow};
+            if (src.Value != null)
+                dest.Value = _cloneFunc(src.Value);
+            else
+            {
+                _clone(src.LeftTop, out dest.LeftTop);
+                _clone(src.LeftBottom, out dest.LeftBottom);
+                _clone(src.RightTop, out dest.RightTop);
+                _clone(src.RightBottom, out dest.RightBottom);
+            }
+        }
 
         private void _add(T value, Node node, double left, double top, double right, double bottom)
         {
@@ -805,31 +825,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
 
         #region Public Members
-        public QuadTree(double left, double top, double right, double bottom, double epsilon)
+        public QuadTree(double left, double top, double right, double bottom, double epsilon, Func<T, T> cloneFunc = null)
         {
             this._left = left;
             this._top = top;
             this._right = right;
             this._bottom = bottom;
-
             this._epsilon = epsilon;
+            this._cloneFunc = cloneFunc;
         }
 
         public void Add(T value)
         {
-            var x = value.X;
-            var y = value.Y;
-
-            if (x < _left || y < _top || x >= _right || y >= _bottom)
+            if (value.X < _left || value.Y < _top || value.X >= _right || value.Y >= _bottom)
             {
                 throw new ArgumentException(
-                    $"The point ({x}, {y}) is outside of bounding box ({_left}, {_top}, {_right}, {_bottom}).");
+                    $"The point ({value.X}, {value.Y}) is outside of bounding box ({_left}, {_top}, {_right}, {_bottom}).");
             }
 
             _add(value, _root, _left, _top, _right, _bottom);
         }
 
-        public void AddAll(IEnumerable<T> values)
+        public void AddRange(IEnumerable<T> values)
         {
             foreach (var value in values)
                 Add(value);
@@ -901,6 +918,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public void Clear()
         {
             _clear(_root);
+        }
+
+        public QuadTree<T> Clone()
+        {
+            var tree = new QuadTree<T>(_left, _top, _right, _bottom, _epsilon, _cloneFunc);
+            _clone(_root, out tree._root);
+            return tree;
         }
         #endregion
     }

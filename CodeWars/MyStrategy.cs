@@ -179,7 +179,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         ticksCount--;
                     }
 
-                    var partialEnv = new Sandbox(startEnv.Vehicles.Where(x => !x.IsMy || !x.IsGroup(group)), clone: true);
+                    var partialEnv = new Sandbox(startEnv.Vehicles.Where(x => !x.IsSelected), clone: true);
+                    partialEnv.CheckCollisionsWithOpponent = false;
 
                     for (var i = 0; i < ticksCount; i++)
                         partialEnv.DoTick();
@@ -204,23 +205,27 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     foreach (var move in actions)
                     {
-                        var env = new Sandbox(partialEnv.Vehicles.Concat(startEnv.GetVehicles(true, group)), clone: true);
+                        var env = new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)), clone: true);
+                        env.CheckCollisionsWithOpponent = false;
+
                         foreach (var veh in env.Vehicles)
                         {
                             if (veh.IsMy && veh.IsGroup(group))
                                 continue;
 
                             veh.ForgotTarget(); // чтобы не шли повторно
-                            if (veh.IsMy) // TODO: лечение
-                                veh.RemainingAttackCooldownTicks = G.AttackCooldownTicks; // чтобы не стреляли повторно
-                            else
-                            {
-                                if (veh.RemainingAttackCooldownTicks > 0)// у тех, кто стрелял давно, откатываем кд
-                                    veh.RemainingAttackCooldownTicks += ticksCount; // TODO: если кд только восстановилось
-                            }
+                            // TODO: лечение
+                            
+                            if (veh.RemainingAttackCooldownTicks > 0)// у тех, кто стрелял давно, откатываем кд
+                                veh.RemainingAttackCooldownTicks += ticksCount; // TODO: если кд только восстановилось
                         }
 
-                        var danger = GetDanger(Environment, env, move, ticksCount);
+                        env.ApplyMove(move);
+                        for (var i = 0; i < ticksCount; i++)
+                            env.DoTick();
+                        env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
+
+                        var danger = GetDanger(Environment, env);
                         if (danger < minDanger)
                         {
                             minDanger = danger;

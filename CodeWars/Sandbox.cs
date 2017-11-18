@@ -13,6 +13,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Sandbox
     {
+        public bool CheckCollisionsWithOpponent = true;
+
         private readonly List<AVehicle>[] _vehiclesByOwner =
         {
             new List<AVehicle>(),
@@ -25,17 +27,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             new [] { new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>() },
         };
 
-        private readonly QuadTree<AVehicle>[,] _trees = new QuadTree<AVehicle>[2, 2]
+        private static AVehicle _cloneVehicle(AVehicle vehicle)
         {
-            {
-                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
-                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
-            },
-            {
-                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps),
-                new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps)
-            }
-        };
+            return new AVehicle(vehicle);
+        }
+
+        private readonly QuadTree<AVehicle>[,] _trees = new QuadTree<AVehicle>[2, 2];
 
         public readonly List<AVehicle>[] MyVehiclesByGroup = new List<AVehicle>[2]
         {
@@ -67,44 +64,63 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
         private QuadTree<AVehicle> _tree(bool isMy, bool isAerial)
         {
-            return _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
+            var tree = _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
+            if (tree == null)
+            {
+                tree = new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps, _cloneVehicle);
+                tree.AddRange(_vehiclesByOwner[isMy ? 1 : 0].Where(x => x.IsAerial == isAerial));
+                _trees[isMy ? 1 : 0, isAerial ? 1 : 0] = tree;
+            }
+            return tree;
         }
 
-        private AVehicle[] _nearestCache;
+        private List<AVehicle> _nearestCache = new List<AVehicle>();
 
         public IEnumerable<AVehicle> MyVehicles => _at(true);
 
         public IEnumerable<AVehicle> OppVehicles => _at(false);
 
-        public readonly AVehicle[] Vehicles;
+        public readonly List<AVehicle> Vehicles = new List<AVehicle>();
 
         public Sandbox(IEnumerable<AVehicle> vehicles, bool clone = false)
         {
             if (clone)
-                Vehicles = vehicles.Select(x => new AVehicle(x)).ToArray();
-            else
-                Vehicles = vehicles.ToArray();
+                vehicles = vehicles.Select(x => new AVehicle(x));
 
-            foreach (var veh in Vehicles)
+            //_nearestCache.Capacity = 50;
+
+            AddRange(vehicles);
+        }
+
+        public void AddRange(IEnumerable<AVehicle> vehicles)
+        {
+            foreach (var veh in vehicles)
+                Add(veh);
+        }
+
+        public void Add(AVehicle veh)
+        {
+            Vehicles.Add(veh);
+            _nearestCache.Add(null);
+            _at(veh.IsMy).Add(veh);
+            _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int)veh.Type].Add(veh);
+            VehicleById[veh.Id] = veh;
+            if (veh.IsMy)
             {
-                _at(veh.IsMy).Add(veh);
-                _tree(veh.IsMy, veh.IsAerial).Add(veh);
-                _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int) veh.Type].Add(veh);
-                VehicleById[veh.Id] = veh;
-                if (veh.IsMy)
-                {
-                    if (veh.HasGroup(1))
-                        MyVehiclesByGroup[0].Add(veh);
-                    if (veh.HasGroup(2))
-                        MyVehiclesByGroup[1].Add(veh);
-                    // TODO
-                }
+                if (veh.HasGroup(1))
+                    MyVehiclesByGroup[0].Add(veh);
+                if (veh.HasGroup(2))
+                    MyVehiclesByGroup[1].Add(veh);
+                // TODO
             }
-            _nearestCache = new AVehicle[Vehicles.Length];
+            var tree = _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0];
+            if (tree != null)
+                tree.Add(veh);
         }
 
         public Sandbox Clone()
         {
+            // TODO: use QuadTree.Clone()
             return new Sandbox(Vehicles.Select(x => new AVehicle(x)));
         }
 
@@ -281,7 +297,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             var total = 0;
             var positive = 0;
-            var notMoved = Enumerable.Range(0, Vehicles.Length).ToArray();
+            var notMoved = Enumerable.Range(0, Vehicles.Count).ToArray();
             var notMovedLength = notMoved.Length;
 
             while (notMovedLength > 0)
@@ -322,7 +338,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             }
                         }
 
-                        if (!unit.IsAerial)
+                        if (!unit.IsAerial && CheckCollisionsWithOpponent)
                         {
                             var nearest = oppTree.FindFirstNearby(x, Geom.Sqr(2 * x.Radius));
                             if (nearest != null)
@@ -364,13 +380,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMoveDebug()
         {
-            var moved = new bool[Vehicles.Length];
+            var moved = new bool[Vehicles.Count];
             var movedCount = 0;
 
-            while (movedCount < Vehicles.Length)
+            while (movedCount < moved.Length)
             {
                 var anyMoved = false;
-                for (var i = 0; i < Vehicles.Length; i++)
+                for (var i = 0; i < moved.Length; i++)
                 {
                     if (moved[i])
                         continue;
@@ -381,8 +397,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             x =>
                                 Vehicles.Any(
                                     opp =>
-                                        x.Id != opp.Id && x.IsAerial == opp.IsAerial && opp.IntersectsWith(x) &&
-                                        (!x.IsAerial || x.IsMy != opp.IsMy))))
+                                    {
+                                        if (x.Id == opp.Id)
+                                            return false;
+                                        if (x.IsAerial != opp.IsAerial)
+                                            return false;
+
+                                        if ((x.IsAerial || !CheckCollisionsWithOpponent) && x.IsMy != opp.IsMy)
+                                            return false;
+
+                                        return opp.IntersectsWith(x);
+                                    })))
                     {
                         continue;
                     }

@@ -7,18 +7,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        public static double GetDanger(Sandbox startEnv, Sandbox env, AMove move, int ticksCount)
+        public static double GetDanger(Sandbox startEnv, Sandbox env)
         {
             var myDurabilityBefore = startEnv.MyVehicles.Sum(x => x.FullDurability);
             var oppDurabilityBefore = startEnv.OppVehicles.Sum(x => x.FullDurability);
-
-            Logger.CumulativeOperationStart("Simulate n ticks");
-            env.ApplyMove(move);
-            for (var i = 0; i < ticksCount; i++)
-            {
-                env.DoTick();
-            }
-            Logger.CumulativeOperationEnd("Simulate n ticks");
 
             Logger.CumulativeOperationStart("Danger1");
 
