@@ -51,6 +51,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             RotationCenter = unit.RotationCenter;
             RotationAngle = unit.RotationAngle;
             RotationAngularSpeed = unit.RotationAngularSpeed;
+            DurabilityPool = unit.DurabilityPool;
         }
 
         public double FullDurability => Durability + (double) DurabilityPool/G.ArrvRepairPoints;

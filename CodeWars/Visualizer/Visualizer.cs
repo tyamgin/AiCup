@@ -289,7 +289,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 }
             }
 
-            foreach (var nuclear in MyStrategy.Nuclears)
+            foreach (var nuclear in MyStrategy.Environment.Nuclears)
             {
                 DrawCircle(Color.OrangeRed, nuclear.X, nuclear.Y, nuclear.Radius, 1);
                 FillPie(Color.OrangeRed, nuclear.X, nuclear.Y, nuclear.Radius, 0, 1.0 * nuclear.RemainingTicks / G.TacticalNuclearStrikeDelay);

@@ -22,5 +22,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             VehicleId = vehicleId;
             RemainingTicks = remainingTicks;
         }
+
+        public ANuclear(ANuclear nuclear)
+        {
+            X = nuclear.X;
+            Y = nuclear.Y;
+            Radius = G.TacticalNuclearStrikeRadius;
+            IsMy = nuclear.IsMy;
+            VehicleId = nuclear.VehicleId;
+            RemainingTicks = nuclear.RemainingTicks;
+        }
     }
 }

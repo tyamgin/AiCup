@@ -334,5 +334,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             Type = type;
         }
+
+        public override string ToString()
+        {
+            if (Type != null)
+                return Type.ToString();
+            if (Group != null)
+                return Group.ToString();
+            return "";
+        }
     }
 }

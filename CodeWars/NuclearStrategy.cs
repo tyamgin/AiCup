@@ -24,7 +24,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             foreach (var veh in Environment.MyVehicles)
             {
                 var vr = veh.ActualVisionRange*0.9;
-                var targets = Environment.GetAllNeigbours(veh, vr + G.TacticalNuclearStrikeRadius);
+                var targets = Environment.GetAllNeigbours(veh.X, veh.Y, vr + G.TacticalNuclearStrikeRadius);
                 var cen = GetAvg(targets);
                 cen = veh + (cen - veh).Normalized()*Math.Min(vr, veh.GetDistanceTo(cen));
                 var nuclear = new ANuclear(cen.X, cen.Y, true, veh.Id, G.TacticalNuclearStrikeDelay);

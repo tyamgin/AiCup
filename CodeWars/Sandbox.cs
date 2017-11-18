@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Messaging;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -14,6 +8,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     public class Sandbox
     {
         public bool CheckCollisionsWithOpponent = true;
+
+        public ANuclear[] Nuclears;
 
         private readonly List<AVehicle>[] _vehiclesByOwner =
         {
@@ -82,13 +78,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public readonly List<AVehicle> Vehicles = new List<AVehicle>();
 
-        public Sandbox(IEnumerable<AVehicle> vehicles, bool clone = false)
+        public Sandbox(IEnumerable<AVehicle> vehicles, IEnumerable<ANuclear> nuclears, bool clone = false)
         {
             if (clone)
+            {
                 vehicles = vehicles.Select(x => new AVehicle(x));
+                nuclears = nuclears.Select(x => new ANuclear(x));
+            }
 
             //_nearestCache.Capacity = 50;
-
+            Nuclears = nuclears.ToArray();
             AddRange(vehicles);
         }
 
@@ -121,7 +120,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public Sandbox Clone()
         {
             // TODO: use QuadTree.Clone()
-            return new Sandbox(Vehicles.Select(x => new AVehicle(x)));
+            return new Sandbox(Vehicles.Select(x => new AVehicle(x)), Nuclears.Select(x => new ANuclear(x)));
         }
 
         public void ApplyMove(Move move)
@@ -213,13 +212,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public List<AVehicle> GetAllNeigbours(AVehicle veh, double radius)
+        public List<AVehicle> GetAllNeigbours(double x, double y, double radius)
         {
-            // NOTE: not include himself
-            var res = _tree(false, false).FindAllNearby(veh, radius*radius);
-            res.AddRange(_tree(false, true).FindAllNearby(veh, radius*radius));
-            res.AddRange(_tree(true, false).FindAllNearby(veh, radius*radius));
-            res.AddRange(_tree(true, true).FindAllNearby(veh, radius*radius));
+            var res = _tree(false, false).FindAllNearby(x, y, radius*radius, -1);
+            res.AddRange(_tree(false, true).FindAllNearby(x, y, radius*radius, -1));
+            res.AddRange(_tree(true, false).FindAllNearby(x, y, radius*radius, -1));
+            res.AddRange(_tree(true, true).FindAllNearby(x, y, radius*radius, -1));
             return res;
         }
 
@@ -432,6 +430,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        private void _doNuclears()
+        {
+            bool changed = false;
+            foreach (var nuclear in Nuclears)
+            {
+                nuclear.RemainingTicks--;
+                if (nuclear.RemainingTicks == 0)
+                {
+                    changed = true;
+
+                    foreach (var target in GetAllNeigbours(nuclear.X, nuclear.Y, nuclear.Radius))
+                        target.Durability -= target.GetNuclearDamage(nuclear);
+                }
+            }
+            if (changed)
+                Nuclears = Nuclears.Where(x => x.RemainingTicks > 0).ToArray();
+        }
+
         public void DoTick()
         {
             Logger.CumulativeOperationStart("DoMove");
@@ -441,6 +457,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Logger.CumulativeOperationStart("DoFight");
             _doFight();
             Logger.CumulativeOperationEnd("DoFight");
+
+            _doNuclears();
         }
     }
 }

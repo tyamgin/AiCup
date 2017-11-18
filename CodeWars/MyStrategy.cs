@@ -18,8 +18,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static WeatherType[][] WeatherType;
         public static Sandbox Environment;
 
-        public static ANuclear[] Nuclears;
-
         public void Move(Player me, World world, Game game, Move move)
         {
             // занулям чтобы случайно не использовать данные с предыдущего тика
@@ -87,7 +85,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 WeatherType = World.WeatherByCellXY;
             }
 
-            Nuclears = World.Players
+            var nuclears = World.Players
                 .Where(player => player.NextNuclearStrikeVehicleId != -1)
                 .Select(player => new ANuclear(
                     player.NextNuclearStrikeX,
@@ -99,7 +97,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 .ToArray();
 
             VehiclesObserver.Update();
-            Environment = new Sandbox(VehiclesObserver.Vehicles);
+            Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears);
 
             //if (World.TickIndex == 0)
             //{
@@ -159,7 +157,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return;
             }
 
-            if (World.TickIndex % 10 == 0)
+            if (World.TickIndex % 10 == 0 || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
                 var minDanger = double.MaxValue;
                 AMove selMove = new AMove();
@@ -180,7 +178,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         .OrderBy(id => id)
                         .Select(x => x.ToString()));
 
-                    var startEnv = new Sandbox(Environment.Vehicles, clone: true);
+                    var startEnv = Environment.Clone();
 
                     int ticksCount = 7;
                     double maxSpeed = 0;
@@ -199,7 +197,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         ticksCount--;
                     }
 
-                    var partialEnv = new Sandbox(startEnv.Vehicles.Where(x => !x.IsSelected), clone: true);
+                    var partialEnv = new Sandbox(startEnv.Vehicles.Where(x => !x.IsSelected), new ANuclear[] {}, clone: true);
                     partialEnv.CheckCollisionsWithOpponent = false;
 
                     for (var i = 0; i < ticksCount; i++)
@@ -212,20 +210,33 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Action = ActionType.Move,
                         Point = Point.ByAngle(angle)*startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)*ticksCount*(group.Type == null ? 40 : 7),
                         MaxSpeed = maxSpeed
-                    }).Concat(new[]
+                    })
+                    .Concat(Environment.Nuclears.Select(nuclear => new AMove
+                    {
+                        Action = ActionType.Scale,
+                        Factor = 1.5,
+                        Point = nuclear
+                    }))
+                    .Concat(new[]
                     {
                         new AMove
                         {
                             Action = ActionType.Scale,
                             Factor = 0.1,
                             Point = typeRect.Center,
-                            MaxSpeed = maxSpeed
-                        }
+                            MaxSpeed = maxSpeed,
+                        },
+                        new AMove
+                        {
+                            Action = ActionType.Rotate,
+                            Point = typeRect.Center,
+                            Angle = Math.PI / 4,
+                        },
                     });
 
                     foreach (var move in actions)
                     {
-                        var env = new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)), clone: true);
+                        var env = new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)), startEnv.Nuclears, clone: true);
                         env.CheckCollisionsWithOpponent = false;
 
                         foreach (var veh in env.Vehicles)

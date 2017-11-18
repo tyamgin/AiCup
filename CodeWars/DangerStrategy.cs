@@ -38,6 +38,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             });
             res += additionalDanger/3.0;
 
+            foreach (var nuclear in env.Nuclears)
+            {
+                foreach (var target in env.GetAllNeigbours(nuclear.X, nuclear.Y, nuclear.Radius))
+                {
+                    var damage = target.GetNuclearDamage(nuclear);
+                    if (target.IsMy)
+                        res += damage;
+                    else
+                        res -= damage;
+                }
+            }
+
             var rectF = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Fighter));
             var rectH = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Helicopter));
             var rectT = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(FirstFroup)));
