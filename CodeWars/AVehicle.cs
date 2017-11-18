@@ -11,6 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public int Durability;
         public bool IsSelected;
         public double MaxSpeed; // TODO: computable property
+        public double VisionRange; // TODO: computable property
         public int RemainingAttackCooldownTicks;
         public uint Groups;
 
@@ -29,6 +30,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsSelected = unit.IsSelected;
             MaxSpeed = unit.MaxSpeed;
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
+            VisionRange = unit.VisionRange;
             foreach (var group in unit.Groups)
                 AddGroup(group);
         }
@@ -41,6 +43,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsSelected = unit.IsSelected;
             MaxSpeed = unit.MaxSpeed;
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
+            VisionRange = unit.VisionRange;
             Groups = unit.Groups;
 
             MoveTarget = unit.MoveTarget;
@@ -117,7 +120,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     if (RotationAngle < 0)
                         angle = -angle;
-                    
+
                     newRotationAngle -= angle;
                 }
                 var to = RotateCounterClockwise(angle, RotationCenter);
@@ -134,7 +137,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (selfCopy.X < Radius - Const.Eps ||
                     selfCopy.Y < Radius - Const.Eps ||
                     selfCopy.X > G.MapSize - Radius + Const.Eps ||
-                    selfCopy.Y > G.MapSize - Radius + Const.Eps || 
+                    selfCopy.Y > G.MapSize - Radius + Const.Eps ||
                     checkCollisions != null && checkCollisions(selfCopy))
                 {
                     return false;
@@ -222,6 +225,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             RemainingAttackCooldownTicks = G.AttackCooldownTicks;
         }
 
+        public int GetNuclearDamage(ANuclear nuclear)
+        {
+            var dist2 = GetDistanceTo2(nuclear);
+            if (dist2 >= G.TacticalNuclearStrikeRadius * G.TacticalNuclearStrikeRadius)
+                return 0;
+            var damage = (int)((G.TacticalNuclearStrikeRadius - Math.Sqrt(dist2)) * G.MaxTacticalNuclearStrikeDamage);
+            return Math.Min(damage, Durability);
+        }
+
         public void ForgotTarget()
         {
             MoveTarget = null;
@@ -234,7 +246,30 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public bool IsGroup(MyGroup group)
         {
             return group.Type == Type ||
-                group.Group != null && HasGroup((int) group.Group);
+                   group.Group != null && HasGroup((int) group.Group);
+        }
+
+        public double ActualVisionRange
+        {
+            get
+            {
+                var res = VisionRange;
+                if (IsAerial)
+                {
+                    var weather = MyStrategy.Weather(X, Y);
+                    if (weather == WeatherType.Cloud)
+                        res *= G.CloudWeatherVisionFactor;
+                    else if (weather == WeatherType.Rain)
+                        res *= G.RainWeatherVisionFactor;
+                }
+                else
+                {
+                    var terrian = MyStrategy.Terrain(X, Y);
+                    if (terrian == TerrainType.Forest)
+                        res *= G.ForestTerrainVisionFactor;
+                }
+                return res;
+            }
         }
     }
 }

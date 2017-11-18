@@ -18,6 +18,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static WeatherType[][] WeatherType;
         public static Sandbox Environment;
 
+        public static ANuclear[] Nuclears;
+
         public void Move(Player me, World world, Game game, Move move)
         {
             // занулям чтобы случайно не использовать данные с предыдущего тика
@@ -85,6 +87,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 WeatherType = World.WeatherByCellXY;
             }
 
+            Nuclears = World.Players
+                .Where(player => player.NextNuclearStrikeVehicleId != -1)
+                .Select(player => new ANuclear(
+                    player.NextNuclearStrikeX,
+                    player.NextNuclearStrikeY,
+                    player.IsMe,
+                    player.NextNuclearStrikeVehicleId,
+                    player.NextNuclearStrikeTickIndex - World.TickIndex)
+                )
+                .ToArray();
+
             VehiclesObserver.Update();
             Environment = new Sandbox(VehiclesObserver.Vehicles);
 
@@ -138,6 +151,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
+
+            var nuclearMove = NuclearStrategy();
+            if (nuclearMove != null)
+            {
+                ResultingMove = nuclearMove;
+                return;
+            }
 
             if (World.TickIndex % 10 == 0)
             {

@@ -16,6 +16,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static void Initialize(World world, Game game)
         {
+            if (world.TickIndex != 0)
+                return;
+
             _expect(world.Width, G.MapSize);
             _expect(world.Height, G.MapSize);
 
@@ -97,7 +100,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             _expect(1, game.ArrvRepairSpeed * G.ArrvRepairPoints);
             _expect(game.ArrvRepairRange, G.ArrvRepairRange);
-            
+
+
+            _expect(game.TacticalNuclearStrikeRadius, G.TacticalNuclearStrikeRadius);
+            _expect(game.TacticalNuclearStrikeDelay, G.TacticalNuclearStrikeDelay);
+            _expect(game.MaxTacticalNuclearStrikeDamage, G.MaxTacticalNuclearStrikeDamage);
+
+            _expect(game.CloudWeatherVisionFactor, G.CloudWeatherVisionFactor);
+            _expect(game.ForestTerrainVisionFactor, G.ForestTerrainVisionFactor);
+            _expect(game.RainWeatherVisionFactor, G.RainWeatherVisionFactor);
+            _expect(game.SwampTerrainVisionFactor, 1);
         }
 
         private static void _expect<T>(T source, T value)
@@ -109,19 +121,25 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
     class G
     {
-        public static readonly double MapSize = 1024;
-        public static readonly double CellSize = 32;
-        public static readonly int MaxUnitsCount = 1000;
-        public static readonly int MaxDurability = 100;
-        public static readonly double CloudWeatherSpeedFactor = 0.8;
-        public static readonly double RainWeatherSpeedFactor = 0.6;
-        public static readonly double SwampTerrainSpeedFactor = 0.6;
-        public static readonly double ForestTerrainSpeedFactor = 0.8;
-        public static readonly int AttackCooldownTicks = 60;
-        public static readonly double VehicleRadius = 2;
-        public static readonly double MaxAttackRange = 20;
-        public static readonly int ArrvRepairPoints = 10;
-        public static readonly double ArrvRepairRange = 10;
+        public const double MapSize = 1024;
+        public const double CellSize = 32;
+        public const int MaxUnitsCount = 1000;
+        public const int MaxDurability = 100;
+        public const double CloudWeatherSpeedFactor = 0.8;
+        public const double RainWeatherSpeedFactor = 0.6;
+        public const double SwampTerrainSpeedFactor = 0.6;
+        public const double ForestTerrainSpeedFactor = 0.8;
+        public const int AttackCooldownTicks = 60;
+        public const double VehicleRadius = 2;
+        public const double MaxAttackRange = 20;
+        public const int ArrvRepairPoints = 10;
+        public const double ArrvRepairRange = 10;
+        public const int TacticalNuclearStrikeRadius = 50;
+        public const int TacticalNuclearStrikeDelay = 30;
+        public const int MaxTacticalNuclearStrikeDamage = 99;
+        public const double CloudWeatherVisionFactor = 0.8;
+        public const double ForestTerrainVisionFactor = 0.8;
+        public const double RainWeatherVisionFactor = 0.6;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

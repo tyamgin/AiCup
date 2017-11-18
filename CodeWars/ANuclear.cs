@@ -1,0 +1,26 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
+
+namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
+{
+    public class ANuclear : ACircularUnit
+    {
+        public bool IsMy;
+        public long VehicleId;
+        public int RemainingTicks;
+
+        public ANuclear(double x, double y, bool isMy, long vehicleId, int remainingTicks)
+        {
+            X = x;
+            Y = y;
+            Radius = G.TacticalNuclearStrikeRadius;
+            IsMy = isMy;
+            VehicleId = vehicleId;
+            RemainingTicks = remainingTicks;
+        }
+    }
+}

@@ -18,8 +18,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var oppDurabilityAfter = env.OppVehicles.Sum(x => x.FullDurability);
 
             var res = (myDurabilityBefore - myDurabilityAfter) - (oppDurabilityBefore - oppDurabilityAfter);
-            res += env.OppVehicles.Count(x => !x.IsAlive) * 30;
-            res -= env.MyVehicles.Count(x => !x.IsAlive) * 30;
+            res += env.OppVehicles.Count(x => !x.IsAlive) * 50;
+            res -= env.MyVehicles.Count(x => !x.IsAlive) * 100;
 
             res += MyGroups.Sum(type =>
             {

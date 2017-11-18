@@ -289,6 +289,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 }
             }
 
+            foreach (var nuclear in MyStrategy.Nuclears)
+            {
+                DrawCircle(Color.OrangeRed, nuclear.X, nuclear.Y, nuclear.Radius, 1);
+                FillPie(Color.OrangeRed, nuclear.X, nuclear.Y, nuclear.Radius, 0, 1.0 * nuclear.RemainingTicks / G.TacticalNuclearStrikeDelay);
+                var veh = VehiclesObserver.Vehicles.FirstOrDefault(x => x.Id == nuclear.VehicleId);
+                if (veh != null)
+                    FillCircle(Color.Black, veh.X, veh.Y, veh.Radius * 2);
+            }
+
             // vehicles
             foreach (var veh in VehiclesObserver.Vehicles)
             {

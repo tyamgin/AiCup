@@ -213,6 +213,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        public List<AVehicle> GetAllNeigbours(AVehicle veh, double radius)
+        {
+            // NOTE: not include himself
+            var res = _tree(false, false).FindAllNearby(veh, radius*radius);
+            res.AddRange(_tree(false, true).FindAllNearby(veh, radius*radius));
+            res.AddRange(_tree(true, false).FindAllNearby(veh, radius*radius));
+            res.AddRange(_tree(true, true).FindAllNearby(veh, radius*radius));
+            return res;
+        }
+
         public List<AVehicle> GetOpponentFightNeigbours(AVehicle veh, double radius)
         {
             var oppTree = _tree(!veh.IsMy, veh.IsAerial);
