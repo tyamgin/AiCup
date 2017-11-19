@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 
@@ -17,6 +18,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static TerrainType[][] TerrainType;
         public static WeatherType[][] WeatherType;
         public static Sandbox Environment;
+
+        public MyStrategy()
+        {
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+        }
 
         public void Move(Player me, World world, Game game, Move move)
         {
@@ -63,13 +69,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private bool hasGroups = false;
 
-        public static int FirstFroup = 1;
-        public static int SecondGroup = 2;
+        public static int TanksGroup = 1;
+        public static int IfvsGroup = 2;
 
         public static MyGroup[] MyGroups =
         {
             new MyGroup(VehicleType.Fighter), new MyGroup(VehicleType.Helicopter),
-            new MyGroup(FirstFroup), new MyGroup(SecondGroup),
+            new MyGroup(TanksGroup), new MyGroup(IfvsGroup),
             //new MyGroup(VehicleType.Ifv), new MyGroup(VehicleType.Tank), new MyGroup(VehicleType.Arrv),   
         };
 
@@ -131,7 +137,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Assign,
-                    Group = FirstFroup,
+                    Group = TanksGroup,
                 }, 0, 0);
                 MoveQueue.Add(new AMove
                 {
@@ -141,7 +147,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Assign,
-                    Group = SecondGroup,
+                    Group = IfvsGroup,
                 }, 0, 0);
                 return;
             }
@@ -149,16 +155,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
 
-            var nuclearMove = NuclearStrategy();
-            if (nuclearMove != null)
+            if (World.TickIndex % 10 == 0 
+                || MoveObserver.AvailableActions >= 4 
+                || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
-                ResultingMove = nuclearMove;
-                return;
-            }
+                var nuclearMove = NuclearStrategy();
+                if (nuclearMove != null)
+                {
+                    ResultingMove = nuclearMove;
+                    return;
+                }
 
-            if (World.TickIndex % 10 == 0 || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
-            {
-                var minDanger = double.MaxValue;
+                DangerResult selDanger = null;
                 AMove selMove = new AMove();
                 AMove selNextMove = null;
 
@@ -185,6 +193,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (selectedIds != needToSelectIds)
                     {
+                        if (MoveObserver.AvailableActions < 2)
+                            continue;
+
                         selectionMove = new AMove
                         {
                             Action = ActionType.ClearAndSelect,
@@ -256,9 +267,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
 
                         var danger = GetDanger(Environment, env);
-                        if (danger < minDanger)
+                        if (selDanger == null || danger.Score < selDanger.Score)
                         {
-                            minDanger = danger;
+                            selDanger = danger;
                             if (selectionMove == null)
                             {
                                 selMove = move;
@@ -276,7 +287,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (selNextMove != null)
                     MoveQueue.Add(selNextMove, 0, 0);
             }
-
         }
     }
 }

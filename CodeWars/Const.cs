@@ -6,8 +6,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     class Const
     {
-        public static double Eps = 1e-9;
-        public static int Infinity = 0x3f3f3f3f;
+        public const double Eps = 1e-9;
+        public const int Infinity = 0x3f3f3f3f;
+        public const double ClusteringMargin = 20; 
 
         public static VehicleType[] AllTypes =
         {

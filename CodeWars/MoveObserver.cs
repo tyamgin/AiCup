@@ -39,6 +39,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Rate += (historyItem.TickIndex - (tick - G.ActionDetectionInterval)) / (G.ActionDetectionInterval - 1.0);
             }
             Rate /= maxAvailableActions;
+
+            //Logger.Log("----------------------- Rate: " + Rate);
+            //Logger.Log("----------------------- Actions: " + AvailableActions);
         }
 
         public static void Update()
@@ -50,7 +53,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 BeforeMoveUnits[veh.Id] = new AVehicle(veh);
             MyStrategy.Environment.DoTick();
 
-            History.Add(new HistoryItem {TickIndex = MyStrategy.World.TickIndex, Move = move});
+            if (move.Action != null && move.Action != ActionType.None)
+                History.Add(new HistoryItem {TickIndex = MyStrategy.World.TickIndex, Move = move});
 
             if (move.Action != null && move.Action != ActionType.None && MyStrategy.Me.RemainingActionCooldownTicks > 0)
                 throw new Exception("Trying to do action when RemainingActionCooldownTicks=" + MyStrategy.Me.RemainingActionCooldownTicks);

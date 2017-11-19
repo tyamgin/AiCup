@@ -3,12 +3,14 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
-    public class QuadTree<T> where T : AUnit
+    public class QuadTree<T> : IEnumerable<T> where T : AUnit
     {
         #region Private Members
         private class Node
@@ -41,7 +43,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private readonly double _right;
         private readonly double _bottom;
         private readonly double _epsilon;
-        private Func<T, T> _cloneFunc; 
+        private Func<T, T> _cloneFunc;
+
+        private IEnumerable<T> _traverse(Node node)
+        {
+            if (node == null)
+                yield break;
+
+            if (node.Value != null)
+            {
+                yield return node.Value;
+            }
+            else
+            {
+                foreach (var r in _traverse(node.LeftTop))
+                    yield return r;
+                foreach (var r in _traverse(node.RightTop))
+                    yield return r;
+                foreach (var r in _traverse(node.LeftBottom))
+                    yield return r;
+                foreach (var r in _traverse(node.RightBottom))
+                    yield return r;
+            }
+        }
 
         private void _clone(Node src, out Node dest)
         {
@@ -365,13 +389,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private static bool _remove(double left, double top, double right, double bottom, Node node, T value)
+        private bool _remove(double left, double top, double right, double bottom, Node node, T value)
         {
             if (node.Value != null)
             {
                 if (node.Value.Equals(value))
                 {
                     node.Value = null;
+                    Count--;    
                     return true;
                 }
                 return false;
@@ -844,6 +869,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             _add(value, _root, _left, _top, _right, _bottom);
+            Count++;
         }
 
         public void AddRange(IEnumerable<T> values)
@@ -918,14 +944,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public void Clear()
         {
             _clear(_root);
+            Count = 0;
         }
 
         public QuadTree<T> Clone()
         {
             var tree = new QuadTree<T>(_left, _top, _right, _bottom, _epsilon, _cloneFunc);
             _clone(_root, out tree._root);
+            tree.Count = Count;
             return tree;
         }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _traverse(_root).GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public int Count = 0;
+
         #endregion
     }
 }

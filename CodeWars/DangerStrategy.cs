@@ -1,14 +1,69 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
-using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        public static double GetDanger(Sandbox startEnv, Sandbox env)
+        public class DangerResult
         {
+            public double MyDurabilityDiff;
+            public double OppDurabilityDiff;
+            public double MyDeadsCount;
+            public double OppDeadsCount;
+            public double SumRectanglesAreas;
+            public double SumMaxAlmostAttacks;
+            public double NuclearsPotentialDamage;
+            public double RectanglesIntersects1;
+            public double RectanglesIntersects2;
+            public List<Sandbox.Cluster> Clusters;
+            public List<Tuple<MyGroup, List<Tuple<double, double>>>> MoveToInfo = new List<Tuple<MyGroup, List<Tuple<double, double>>>>(); 
+
+            public double Score 
+            {
+                get
+                {
+                    var res = MyDurabilityDiff - OppDurabilityDiff;
+                    res += MyDeadsCount*100;
+                    res -= OppDeadsCount*100;
+                    res += SumRectanglesAreas*0.2;
+                    res += SumMaxAlmostAttacks/6;
+                    res += NuclearsPotentialDamage;
+                    res += RectanglesIntersects1*7000;
+                    res += RectanglesIntersects2*1000;
+                    res += MoveToSum*0.0001;
+                    return res;
+                }
+            }
+
+            public double GetMoveToSum(List<Tuple<double, double>> arr)
+            {
+                var res = double.MinValue;
+                foreach (var tpl in arr)
+                {
+                    res = Math.Max(res, tpl.Item2 * tpl.Item1);
+                }
+                return res;
+            }
+
+            public double[] MoveToSumByGroup
+            {
+                get { return MoveToInfo.Select(tpl => GetMoveToSum(tpl.Item2)).ToArray(); }
+            }
+
+            public double MoveToSum
+            {
+                get { return MoveToSumByGroup.Sum(); }
+            }
+        }
+
+        public static DangerResult GetDanger(Sandbox startEnv, Sandbox env)
+        {
+            var result = new DangerResult();
+
             var myDurabilityBefore = startEnv.MyVehicles.Sum(x => x.FullDurability);
             var oppDurabilityBefore = startEnv.OppVehicles.Sum(x => x.FullDurability);
 
@@ -17,26 +72,27 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var myDurabilityAfter = env.MyVehicles.Sum(x => x.FullDurability);
             var oppDurabilityAfter = env.OppVehicles.Sum(x => x.FullDurability);
 
-            var res = (myDurabilityBefore - myDurabilityAfter) - (oppDurabilityBefore - oppDurabilityAfter);
-            res += env.OppVehicles.Count(x => !x.IsAlive) * 100;
-            res -= env.MyVehicles.Count(x => !x.IsAlive) * 100;
+            result.MyDurabilityDiff = myDurabilityBefore - myDurabilityAfter;
+            result.OppDurabilityDiff = oppDurabilityBefore - oppDurabilityAfter;
 
-            res += MyGroups.Sum(type =>
+            result.MyDeadsCount = env.MyVehicles.Count(x => !x.IsAlive);
+            result.OppDeadsCount = env.OppVehicles.Count(x => !x.IsAlive);
+
+            result.SumRectanglesAreas = MyGroups.Sum(type =>
             {
                 var vehs = env.GetVehicles(true, type);
                 if (vehs.Count == 0)
                     return 0;
                 var rect = GetUnitsBoundingRect(vehs);
-                return Math.Sqrt(rect.Area)*0.002;
+                return Math.Sqrt(rect.Area);
             });
 
-            var additionalDanger = env.OppVehicles.Sum(opp =>
+            result.SumMaxAlmostAttacks = env.OppVehicles.Sum(opp =>
             {
                 var additionalRadius = opp.ActualSpeed;
                 return env.GetOpponentFightNeigbours(opp, G.MaxAttackRange + additionalRadius).DefaultIfEmpty(null)
                     .Max(m => m == null ? 0 :  opp.GetAttackDamage(m, additionalRadius));
             });
-            res += additionalDanger/3.0;
 
             foreach (var nuclear in env.Nuclears)
             {
@@ -44,16 +100,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     var damage = target.GetNuclearDamage(nuclear);
                     if (target.IsMy)
-                        res += damage;
+                        result.NuclearsPotentialDamage += damage;
                     else
-                        res -= damage;
+                        result.NuclearsPotentialDamage -= damage;
                 }
             }
 
             var rectF = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Fighter));
             var rectH = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Helicopter));
-            var rectT = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(FirstFroup)));
-            var rectI = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(SecondGroup)));
+            var rectT = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(TanksGroup)));
+            var rectI = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(IfvsGroup)));
 
             foreach (var rectPair in new[] {new Tuple<Rect, Rect>(rectF, rectH), new Tuple<Rect, Rect>(rectT, rectI)})
             {
@@ -65,29 +121,30 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     r2.ExtendedRadius(G.VehicleRadius*1.5);
 
                     if (r1.IntersectsWith(r2))
-                        res += 2000;
+                        result.RectanglesIntersects1++;
                     else
                     {
                         r1.ExtendedRadius(G.VehicleRadius*1.5);
                         r2.ExtendedRadius(G.VehicleRadius*1.5);
                         if (r1.IntersectsWith(r2))
-                            res += 500;
+                            result.RectanglesIntersects2++;
                     }
                 }
             }
 
             Logger.CumulativeOperationEnd("Danger1");
 
+            var clusters = env.GetClusters(false, Const.ClusteringMargin);
+            result.Clusters = clusters;
+
             Logger.CumulativeOperationStart("Danger2");
 
-            var s = 0.0;
-            var c = 0;
             foreach (var gr in MyGroups)
             {
                 VehicleType type;
-                if (gr.Group == FirstFroup)
+                if (gr.Group == TanksGroup)
                     type = VehicleType.Tank;
-                else if (gr.Group == SecondGroup)
+                else if (gr.Group == IfvsGroup)
                     type = VehicleType.Ifv;
                 else
                     type = (VehicleType) gr.Type;
@@ -100,20 +157,31 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     continue;
 
                 var cen = GetAvg(myGroup);
-                foreach (var opp in env.OppVehicles)
+
+                var lst = new List<Tuple<double, double>>();
+
+                foreach (var cl in clusters)
                 {
-                    var myAttack = G.AttackDamage[(int)type, (int)opp.Type];
-                    var oppAttack = G.AttackDamage[(int)opp.Type, (int)type];
-                    var ret = opp.GetDistanceTo2(cen);
-                    s += ret * (myAttack - oppAttack / 2) * myGroup.Count;
-                    c += myGroup.Count;
+                    var score = 0.0;
+                    foreach (var opp in cl.Vehicles)
+                    {
+                        var myAttack = G.AttackDamage[(int) type, (int) opp.Type];
+                        var oppAttack = G.AttackDamage[(int) opp.Type, (int) type];
+
+                        score += myAttack - oppAttack*0.9;
+                    }
+                    score *= 1.0 * myGroup.Count / cl.Vehicles.Count;
+                    var dist = cl.Avg.GetDistanceTo(cen);
+
+                    lst.Add(new Tuple<double, double>(score, dist));
                 }
+                
+                result.MoveToInfo.Add(new Tuple<MyGroup, List<Tuple<double, double>>>(gr, lst));
             }
-            res += s / c / 200000 / 10;
 
             Logger.CumulativeOperationEnd("Danger2");
 
-            return res;
+            return result;
         }
     }
 }

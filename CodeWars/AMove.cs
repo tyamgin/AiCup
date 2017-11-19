@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -82,12 +83,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             switch (Action)
             {
                 case ActionType.Move:
-                    return ActionType.Move + " (" + X + ", " + Y + ")";
+                    return ActionType.Move + " (" + X.ToString(CultureInfo.InvariantCulture) + ", " + Y + ")";
                 case ActionType.Rotate:
                     return ActionType.Rotate + " (" + X + ", " + Y + "; " + Angle + ")";
+                case ActionType.Scale:
+                    return ActionType.Scale + " (" + X + ", " + Y + "; " + Factor + ")";
                 case ActionType.ClearAndSelect:
                     var groupStr = VehicleType?.ToString() ?? (Group != 0 ? Group.ToString() : "");
-                    return ActionType.ClearAndSelect + groupStr + " [" + Left + ", " + Right + "][" + Top + ", " + Bottom + "]";
+                    return ActionType.ClearAndSelect + " " + groupStr + "[" + Left + ", " + Right + "][" + Top + ", " + Bottom + "]";
                 case ActionType.TacticalNuclearStrike:
                     return ActionType.TacticalNuclearStrike + "(" + X + ", " + Y + ") " + VehicleId;
                 default:

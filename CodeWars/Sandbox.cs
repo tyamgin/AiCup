@@ -8,9 +8,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Sandbox
     {
-        public bool CheckCollisionsWithOpponent = true;
-
         public ANuclear[] Nuclears;
+        public readonly Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
+        public bool CheckCollisionsWithOpponent = true;
 
         private readonly List<AVehicle>[] _vehiclesByOwner =
         {
@@ -24,20 +24,37 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             new [] { new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>(), new List<AVehicle>() },
         };
 
-        private static AVehicle _cloneVehicle(AVehicle vehicle)
-        {
-            return new AVehicle(vehicle);
-        }
-
         private readonly QuadTree<AVehicle>[,] _trees = new QuadTree<AVehicle>[2, 2];
 
-        public readonly List<AVehicle>[] MyVehiclesByGroup = new List<AVehicle>[2]
+        private readonly List<AVehicle>[] _myVehiclesByGroup = new List<AVehicle>[2]
         {
             new List<AVehicle>(),
             new List<AVehicle>() 
         };
 
-        public readonly Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>(); 
+        private List<AVehicle> _nearestCache = new List<AVehicle>();
+
+        private static AVehicle _cloneVehicle(AVehicle vehicle)
+        {
+            return new AVehicle(vehicle);
+        }
+
+        private List<AVehicle> _at(bool isMy)
+        {
+            return _vehiclesByOwner[isMy ? 1 : 0];
+        }
+
+        private QuadTree<AVehicle> _tree(bool isMy, bool isAerial)
+        {
+            var tree = _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
+            if (tree == null)
+            {
+                tree = new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps, _cloneVehicle);
+                tree.AddRange(_vehiclesByOwner[isMy ? 1 : 0].Where(x => x.IsAerial == isAerial));
+                _trees[isMy ? 1 : 0, isAerial ? 1 : 0] = tree;
+            }
+            return tree;
+        }
 
         public List<AVehicle> GetVehicles(bool isMy, VehicleType type)
         {
@@ -52,26 +69,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return new List<AVehicle>();
             if (!isMy)
                 throw new Exception("Trying to access not my group");
-            return MyVehiclesByGroup[(int) group.Group - 1];
+            return _myVehiclesByGroup[(int) group.Group - 1];
         }
-
-        private List<AVehicle> _at(bool isMy)
-        {
-            return _vehiclesByOwner[isMy ? 1 : 0];
-        }
-        private QuadTree<AVehicle> _tree(bool isMy, bool isAerial)
-        {
-            var tree = _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
-            if (tree == null)
-            {
-                tree = new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps, _cloneVehicle);
-                tree.AddRange(_vehiclesByOwner[isMy ? 1 : 0].Where(x => x.IsAerial == isAerial));
-                _trees[isMy ? 1 : 0, isAerial ? 1 : 0] = tree;
-            }
-            return tree;
-        }
-
-        private List<AVehicle> _nearestCache = new List<AVehicle>();
 
         public IEnumerable<AVehicle> MyVehicles => _at(true);
 
@@ -108,9 +107,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (veh.IsMy)
             {
                 if (veh.HasGroup(1))
-                    MyVehiclesByGroup[0].Add(veh);
+                    _myVehiclesByGroup[0].Add(veh);
                 if (veh.HasGroup(2))
-                    MyVehiclesByGroup[1].Add(veh);
+                    _myVehiclesByGroup[1].Add(veh);
                 // TODO
             }
             var tree = _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0];
@@ -471,6 +470,45 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Logger.CumulativeOperationEnd("DoFight");
 
             _doNuclears();
+        }
+
+        public class Cluster
+        {
+            public List<AVehicle> Vehicles;
+            public Point Avg;
+        }
+
+        public List<Cluster> GetClusters(bool isMy, double margin)
+        {
+            Logger.CumulativeOperationStart("Clustering");
+
+            var res = new List<Cluster>();
+
+            foreach (var isAerial in new[] { false, true })
+            {
+                var tree = _tree(isMy, isAerial).Clone();
+                while (tree.Count > 0)
+                {
+                    var val = tree.FirstOrDefault();
+                    var currentCluster = new List<AVehicle>();
+                    tree.Remove(val);
+                    currentCluster.Add(val);
+                    var processed = 0;
+                    while (processed < currentCluster.Count)
+                    {
+                        var pt = currentCluster[processed++];
+                        foreach (var nw in tree.FindAllNearby(pt, margin*margin))
+                        {
+                            tree.Remove(nw);
+                            currentCluster.Add(nw);
+                        }
+                    }
+                    res.Add(new Cluster {Vehicles = currentCluster, Avg = MyStrategy.GetAvg(currentCluster)});
+                }
+            }
+
+            Logger.CumulativeOperationEnd("Clustering");
+            return res;
         }
     }
 }

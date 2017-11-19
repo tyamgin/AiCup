@@ -11,8 +11,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         AMove NuclearStrategy()
         {
-            if (World.TickIndex%10 != 0)
-                return null;
             if (Me.RemainingNuclearStrikeCooldownTicks > 0)
                 return null;
 

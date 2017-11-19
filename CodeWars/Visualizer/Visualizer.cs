@@ -298,6 +298,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                     FillCircle(Color.Black, veh.X, veh.Y, veh.Radius * 2);
             }
 
+            // clusters
+            foreach (var cluster in MyStrategy.Environment.GetClusters(false, Const.ClusteringMargin))
+            {
+                var rect = MyStrategy.GetUnitsBoundingRect(cluster.Vehicles);
+                DrawRect(Color.Maroon, rect.X, rect.Y, rect.Width, rect.Height);
+            }
+
             // vehicles
             foreach (var veh in VehiclesObserver.Vehicles)
             {
