@@ -85,7 +85,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool IsAerial => Type == VehicleType.Helicopter || Type == VehicleType.Fighter;
 
-        public bool Move(Func<AVehicle, bool> checkCollisions = null)
+        public bool Move(Predicate<AVehicle> checkCollisions = null)
         {
             var newRotationAngle = RotationAngle;
 
