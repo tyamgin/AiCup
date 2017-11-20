@@ -32,7 +32,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             new List<AVehicle>() 
         };
 
-        private List<AVehicle> _nearestCache = new List<AVehicle>();
+        private AVehicle[] _nearestCache;
 
         private static AVehicle _cloneVehicle(AVehicle vehicle)
         {
@@ -76,7 +76,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public IEnumerable<AVehicle> OppVehicles => _at(false);
 
-        public readonly List<AVehicle> Vehicles = new List<AVehicle>();
+        public AVehicle[] Vehicles;
 
         public Sandbox(IEnumerable<AVehicle> vehicles, IEnumerable<ANuclear> nuclears, bool clone = false)
         {
@@ -91,30 +91,42 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             AddRange(vehicles);
         }
 
-        public void AddRange(IEnumerable<AVehicle> vehicles)
+        public void AddRange(IEnumerable<AVehicle> newVehicles)
         {
-            foreach (var veh in vehicles)
-                Add(veh);
-        }
-
-        public void Add(AVehicle veh)
-        {
-            Vehicles.Add(veh);
-            _nearestCache.Add(null);
-            _at(veh.IsMy).Add(veh);
-            _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int)veh.Type].Add(veh);
-            VehicleById[veh.Id] = veh;
-            if (veh.IsMy)
+            var vehicles = newVehicles.ToArray();
+            int offset;
+            if (Vehicles == null)
             {
-                if (veh.HasGroup(1))
-                    _myVehiclesByGroup[0].Add(veh);
-                if (veh.HasGroup(2))
-                    _myVehiclesByGroup[1].Add(veh);
-                // TODO
+                Vehicles = new AVehicle[vehicles.Length];
+                _nearestCache = new AVehicle[vehicles.Length];
+                offset = 0;
             }
-            var tree = _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0];
-            if (tree != null)
-                tree.Add(veh);
+            else
+            {
+                Array.Resize(ref Vehicles, Vehicles.Length + vehicles.Length);
+                Array.Resize(ref _nearestCache, Vehicles.Length + vehicles.Length);
+                offset = vehicles.Length;
+            }
+
+            for (var i = 0; i < vehicles.Length; i++)
+            {
+                var veh = vehicles[i];
+                Vehicles[offset + i] = veh;
+                _nearestCache[offset + i] = null;
+                
+                _at(veh.IsMy).Add(veh);
+                _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int)veh.Type].Add(veh);
+                VehicleById[veh.Id] = veh;
+                if (veh.IsMy)
+                {
+                    if (veh.HasGroup(1))
+                        _myVehiclesByGroup[0].Add(veh);
+                    if (veh.HasGroup(2))
+                        _myVehiclesByGroup[1].Add(veh);
+                    // TODO
+                }
+                _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0]?.Add(veh);
+            }
         }
 
         public Sandbox Clone()
@@ -290,7 +302,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMove()
         {
-            var notMoved = Enumerable.Range(0, Vehicles.Count).ToArray();
+            var notMoved = Enumerable.Range(0, Vehicles.Length).ToArray();
             var notMovedLength = notMoved.Length;
 
             while (notMovedLength > 0)
@@ -333,7 +345,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             }
                         }
 
-                        if (!unit.IsAerial && CheckCollisionsWithOpponent)
+                        if (!movedUnit.IsAerial && CheckCollisionsWithOpponent)
                         {
                             var nearest = oppTree.FindFirstNearby(movedUnit, Geom.Sqr(2 * movedUnit.Radius));
                             if (nearest != null)
@@ -376,7 +388,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMoveDebug()
         {
-            var moved = new bool[Vehicles.Count];
+            var moved = new bool[Vehicles.Length];
             var movedCount = 0;
 
             while (movedCount < moved.Length)

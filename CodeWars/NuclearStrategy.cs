@@ -48,7 +48,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             Logger.CumulativeOperationEnd("NuclearStrategy");
 
-            if (selTotalDamage >= 8000.0 * Environment.Vehicles.Count / 1000)
+            if (selTotalDamage >= 8000.0 * Environment.Vehicles.Length / 1000)
                 return selMove;
             return null;
         }
