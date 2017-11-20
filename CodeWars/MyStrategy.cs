@@ -1,11 +1,17 @@
 using System;
-using System.Collections.Generic;
-using System.Data;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
+
+/**
+ * TODO:
+ * - отталкивающие поля
+ * - nuclears - откладывать на следующий тик, бомбить маленькие группы тоже
+ * - добавить в перебор прямые ходы
+ * 
+ */
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
@@ -19,10 +25,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static WeatherType[][] WeatherType;
         public static Sandbox Environment;
 
+#if DEBUG
         public MyStrategy()
         {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
         }
+#endif
+
 
         public void Move(Player me, World world, Game game, Move move)
         {
@@ -76,7 +85,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             new MyGroup(VehicleType.Fighter), new MyGroup(VehicleType.Helicopter),
             new MyGroup(TanksGroup), new MyGroup(IfvsGroup),
-            //new MyGroup(VehicleType.Ifv), new MyGroup(VehicleType.Tank), new MyGroup(VehicleType.Arrv),   
         };
 
         private void _move(Game game)

@@ -288,23 +288,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        void _upd(ref AVehicle result, AVehicle unit, AVehicle nearest)
-        {
-            if (nearest == null)
-                return;
-            if (result == null)
-            {
-                result = nearest;
-                return;
-            }
-            if (nearest.GetDistanceTo2(unit) < result.GetDistanceTo2(unit))
-                result = nearest;
-        }
-
         private void _doMove()
         {
-            var total = 0;
-            var positive = 0;
             var notMoved = Enumerable.Range(0, Vehicles.Count).ToArray();
             var notMovedLength = notMoved.Length;
 
@@ -327,10 +312,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     var vehicleMoved = unit.Move(x =>
                     {
-                        total++;
                         if (nearestWithMoved != null && nearestWithMoved.IntersectsWith(x))
                         {
-                            positive++;
                             return true;
                         }
 
@@ -339,10 +322,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                             if (nearest != null)
                             {
-                                _upd(ref nearestWithMoved, x, nearest);
-                                if (nearestWithMoved.IntersectsWith(x))
+                                if (nearest.IntersectsWith(x))
+                                {
+                                    nearestWithMoved = nearest;
                                     return true;
-                                _upd(ref nearestWithNotMoved, unit, nearest);
+                                }
+                                if (nearestWithNotMoved == null ||
+                                    nearest.GetDistanceTo2(x) < nearestWithNotMoved.GetDistanceTo2(x))
+                                    nearestWithNotMoved = nearest;
                             }
                         }
 
@@ -351,10 +338,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             var nearest = oppTree.FindFirstNearby(x, Geom.Sqr(2 * x.Radius));
                             if (nearest != null)
                             {
-                                _upd(ref nearestWithMoved, x, nearest);
-                                if (nearestWithMoved.IntersectsWith(x))
+                                if (nearest.IntersectsWith(x))
+                                {
+                                    nearestWithMoved = nearest;
                                     return true;
-                                _upd(ref nearestWithNotMoved, unit, nearest);
+                                }
+                                if (nearestWithNotMoved == null ||
+                                    nearest.GetDistanceTo2(x) < nearestWithNotMoved.GetDistanceTo2(x))
+                                    nearestWithNotMoved = nearest;
                             }
                         }
                         
@@ -363,7 +354,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (!vehicleMoved)
                     {
-                        _upd(ref nearestWithNotMoved, unit, nearestWithMoved);
                         _nearestCache[idx] = nearestWithNotMoved;
                         notMoved[notMovedNewLength++] = idx;
                     }
@@ -374,7 +364,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (!unitTree.ChangeXY(unit, prevX, prevY))
                             throw new Exception("Can't change unit coordinates, id=" + unit.Id);
 
-                        _upd(ref nearestWithMoved, unit, nearestWithNotMoved);
                         _nearestCache[idx] = nearestWithMoved;
                     }
                 }
@@ -383,7 +372,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     break;
                 notMovedLength = notMovedNewLength;
             }
-            //Console.WriteLine(1.0 * positive / total);
         }
 
         private void _doMoveDebug()

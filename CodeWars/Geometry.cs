@@ -93,15 +93,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Y = point.Y;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetAngle()
         {
             return Math.Atan2(Y, X);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double GetDistanceTo2(double x1, double y1, double x2, double y2)
         {
             return (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDistanceTo(double x, double y)
         {
             return Math.Sqrt((X - x) * (X - x) + (Y - y) * (Y - y));
@@ -113,6 +117,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         /// <param name="x">x</param>
         /// <param name="y">y</param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDistanceTo2(double x, double y)
         {
             return (X - x) * (X - x) + (Y - y) * (Y - y);
@@ -123,6 +128,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDistanceTo(Unit unit)
         {
             return GetDistanceTo(unit.X, unit.Y);
@@ -133,6 +139,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDistanceTo(Point point)
         {
             return GetDistanceTo(point.X, point.Y);
@@ -143,11 +150,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDistanceTo2(Point point)
         {
             return GetDistanceTo2(point.X, point.Y);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(Unit other)
         {
             return Equals(other.X, other.Y);
@@ -174,6 +183,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return new Point(this);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Point ByAngle(double angle)
         {
             return new Point(Math.Cos(angle), Math.Sin(angle));

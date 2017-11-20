@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -21,6 +22,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual bool IntersectsWith(ACircularUnit unit)
         {
             // если касаются, то false

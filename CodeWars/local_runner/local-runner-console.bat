@@ -15,4 +15,4 @@ if "%JAVA_HOME%" neq "" (
 )
 
 :java-start
-"%JAVA_BIN:"=%java" -Xms512m -Xmx1G -jar "local-runner.jar" local-runner-console.properties local-runner-console.default.properties %*
+start "" "%JAVA_BIN:"=%java" -Xms512m -Xmx1G -jar "G:\Projects\AiCup\CodeWars\local_runner\local-runner.jar" "G:\Projects\AiCup\CodeWars\local_runner\local-runner-console.properties" "G:\Projects\AiCup\CodeWars\local_runner\local-runner-console.default.properties" %*
