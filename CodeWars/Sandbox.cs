@@ -310,42 +310,42 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var prevX = unit.X;
                     var prevY = unit.Y;
 
-                    var vehicleMoved = unit.Move(x =>
+                    var vehicleMoved = unit.Move(movedUnit =>
                     {
-                        if (nearestWithMoved != null && nearestWithMoved.IntersectsWith(x))
+                        if (nearestWithMoved != null && nearestWithMoved.IntersectsWith(movedUnit))
                         {
                             return true;
                         }
 
                         {
-                            var nearest = unitTree.FindFirstNearby(x, Geom.Sqr(2 * x.Radius));
+                            var nearest = unitTree.FindFirstNearby(movedUnit, Geom.Sqr(2 * movedUnit.Radius));
 
                             if (nearest != null)
                             {
-                                if (nearest.IntersectsWith(x))
+                                if (nearest.IntersectsWith(movedUnit))
                                 {
-                                    nearestWithMoved = nearest;
+                                    nearestWithNotMoved = nearest;
                                     return true;
                                 }
-                                if (nearestWithNotMoved == null ||
-                                    nearest.GetDistanceTo2(x) < nearestWithNotMoved.GetDistanceTo2(x))
-                                    nearestWithNotMoved = nearest;
+                                if (nearestWithMoved == null ||
+                                    nearest.GetDistanceTo2(movedUnit) < nearestWithMoved.GetDistanceTo2(movedUnit))
+                                    nearestWithMoved = nearest;
                             }
                         }
 
                         if (!unit.IsAerial && CheckCollisionsWithOpponent)
                         {
-                            var nearest = oppTree.FindFirstNearby(x, Geom.Sqr(2 * x.Radius));
+                            var nearest = oppTree.FindFirstNearby(movedUnit, Geom.Sqr(2 * movedUnit.Radius));
                             if (nearest != null)
                             {
-                                if (nearest.IntersectsWith(x))
+                                if (nearest.IntersectsWith(movedUnit))
                                 {
-                                    nearestWithMoved = nearest;
+                                    nearestWithNotMoved = nearest;
                                     return true;
                                 }
-                                if (nearestWithNotMoved == null ||
-                                    nearest.GetDistanceTo2(x) < nearestWithNotMoved.GetDistanceTo2(x))
-                                    nearestWithNotMoved = nearest;
+                                if (nearestWithMoved == null ||
+                                    nearest.GetDistanceTo2(movedUnit) < nearestWithMoved.GetDistanceTo2(movedUnit))
+                                    nearestWithMoved = nearest;
                             }
                         }
                         
