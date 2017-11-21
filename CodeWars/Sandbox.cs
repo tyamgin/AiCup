@@ -98,17 +98,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             int offset;
             if (Vehicles == null)
             {
+                offset = 0;
                 Vehicles = new AVehicle[vehicles.Length];
                 _nearestCache = new AVehicle[vehicles.Length];
                 _notMoved = new int[vehicles.Length];
-                offset = 0;
             }
             else
             {
-                Array.Resize(ref Vehicles, Vehicles.Length + vehicles.Length);
-                Array.Resize(ref _nearestCache, Vehicles.Length + vehicles.Length);
-                Array.Resize(ref _notMoved, Vehicles.Length + vehicles.Length);
-                offset = vehicles.Length;
+                offset = Vehicles.Length;
+                Array.Resize(ref Vehicles, offset + vehicles.Length);
+                Array.Resize(ref _nearestCache, offset + vehicles.Length);
+                Array.Resize(ref _notMoved, offset + vehicles.Length);
             }
 
             for (var i = 0; i < vehicles.Length; i++)
