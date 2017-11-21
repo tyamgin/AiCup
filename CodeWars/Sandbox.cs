@@ -256,7 +256,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (!veh.IsAlive)
                     continue;
                 if (veh.RemainingAttackCooldownTicks > 0)
+                {
+                    veh.RemainingAttackCooldownTicks--;
                     continue;
+                }
 
                 if (veh.Type == VehicleType.Arrv && !veh.IsMy)
                     continue; // TODO
@@ -305,10 +308,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMove()
         {
-            for (var i = 0; i < Vehicles.Length; i++)
-                _notMoved[i] = i;
+            var movedState = Vehicles.Select(x => default(AVehicle)).ToArray();
+            var notMovedLength = 0;
 
-            var notMovedLength = _notMoved.Length;
+            for (var i = 0; i < Vehicles.Length; i++)
+            {
+                var veh = Vehicles[i];
+                if (veh.MoveTarget == null && veh.RotationCenter == null)
+                {
+                    veh.Move();
+                    continue;
+                }
+                movedState[i] = new AVehicle(veh);
+                if (!movedState[i].Move())
+                {
+                    veh.CopyFrom(movedState[i]);
+                    continue;
+                }
+
+                _notMoved[notMovedLength++] = i;
+            }
 
             while (notMovedLength > 0)
             {
@@ -317,23 +336,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 for (var i = 0; i < notMovedLength; i++)
                 {
                     var idx = _notMoved[i];
-                    var unit = Vehicles[idx];
-                    var unitTree = _tree(unit.IsMy, unit.IsAerial);
-                    var oppTree = _tree(!unit.IsMy, unit.IsAerial);
+                    var movedUnit = movedState[idx];
+                    var unitTree = _tree(movedUnit.IsMy, movedUnit.IsAerial);
+                    var oppTree = _tree(!movedUnit.IsMy, movedUnit.IsAerial);
 
                     var nearestWithNotMoved = _nearestCache[idx];
                     var nearestWithMoved = nearestWithNotMoved;
 
-                    var prevX = unit.X;
-                    var prevY = unit.Y;
+                    var intersects = false;
 
-                    bool vehicleMoved = unit.Move(movedUnit =>
+                    do
                     {
                         if (nearestWithMoved != null && nearestWithMoved.IntersectsWith(movedUnit))
                         {
-                            return true;
+                            intersects = true;
+                            break;
                         }
-
+                 
                         {
                             var nearest = unitTree.FindFirstNearby(movedUnit, Geom.Sqr(2 * movedUnit.Radius));
 
@@ -342,7 +361,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 if (nearest.IntersectsWith(movedUnit))
                                 {
                                     nearestWithNotMoved = nearest;
-                                    return true;
+                                    intersects = true;
+                                    break;
                                 }
                                 if (nearestWithMoved == null ||
                                     nearest.GetDistanceTo2(movedUnit) < nearestWithMoved.GetDistanceTo2(movedUnit))
@@ -358,29 +378,36 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 if (nearest.IntersectsWith(movedUnit))
                                 {
                                     nearestWithNotMoved = nearest;
-                                    return true;
+                                    intersects = true;
+                                    break;
                                 }
                                 if (nearestWithMoved == null ||
                                     nearest.GetDistanceTo2(movedUnit) < nearestWithMoved.GetDistanceTo2(movedUnit))
                                     nearestWithMoved = nearest;
                             }
                         }
+                    } while (false);
 
-                        return false;
-                    });
-                    
-                    if (!vehicleMoved)
+                    if (intersects)
                     {
                         _nearestCache[idx] = nearestWithNotMoved;
                         _notMoved[notMovedNewLength++] = idx;
                     }
-                    else if (!Geom.PointsEquals(prevX, prevY, unit.X, unit.Y))
+                    else
                     {
-                        Utility.Swap(ref prevX, ref unit.X);
-                        Utility.Swap(ref prevY, ref unit.Y);
-                        if (!unitTree.ChangeXY(unit, prevX, prevY))
-                            throw new Exception("Can't change unit coordinates, id=" + unit.Id);
+                        var unit = Vehicles[idx];
+                        var prevX = unit.X;
+                        var prevY = unit.Y;
+                        unit.CopyFrom(movedUnit);
 
+                        if (!Geom.PointsEquals(prevX, prevY, movedUnit.X, movedUnit.Y))
+                        {
+                            unit.X = prevX;
+                            unit.Y = prevY;
+
+                            if (!unitTree.ChangeXY(unit, movedUnit.X, movedUnit.Y))
+                                throw new Exception("Can't change unit coordinates, id=" + unit.Id);
+                        }
                         _nearestCache[idx] = nearestWithMoved;
                     }
                 }

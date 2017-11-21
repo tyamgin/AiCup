@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -35,7 +36,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 AddGroup(group);
         }
 
-        public AVehicle(AVehicle unit) : base(unit)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void _copyFrom(AVehicle unit)
         {
             IsMy = unit.IsMy;
             Type = unit.Type;
@@ -52,6 +54,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             RotationAngle = unit.RotationAngle;
             RotationAngularSpeed = unit.RotationAngularSpeed;
             DurabilityPool = unit.DurabilityPool;
+        }
+
+        public void CopyFrom(AVehicle unit)
+        {
+            Radius = unit.Radius;
+            X = unit.X;
+            Y = unit.Y;
+            Id = unit.Id;
+            _copyFrom(unit);
+        }
+
+        public AVehicle(AVehicle unit) : base(unit)
+        {
+            _copyFrom(unit);
         }
 
         public double FullDurability => Durability + (double) DurabilityPool/G.ArrvRepairPoints;
@@ -157,9 +173,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     RotationAngularSpeed = 0;
                 }
             }
-
-            Utility.Dec(ref RemainingAttackCooldownTicks);
-
             return true;
         }
 
