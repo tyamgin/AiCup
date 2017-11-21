@@ -418,7 +418,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private void _doMoveDebug()
+        /*private void _doMoveDebug()
         {
             var moved = new bool[Vehicles.Length];
             var movedCount = 0;
@@ -460,7 +460,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (!anyMoved)
                     break;
             }
-        }
+        }*/
 
         private void _doNuclears()
         {

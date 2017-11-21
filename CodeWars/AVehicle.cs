@@ -101,29 +101,34 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool IsAerial => Type == VehicleType.Helicopter || Type == VehicleType.Fighter;
 
-        public bool Move(Predicate<AVehicle> checkCollisions = null)
+        public bool Move()
         {
             var newRotationAngle = RotationAngle;
 
-            Point delta = null;
+            double deltaX = 0;
+            double deltaY = 0;
             var done = false;
 
             if (MoveTarget != null)
             {
-                var vec = MoveTarget - this;
-                double length;
+                var vecX = MoveTarget.X - X;
+                var vecY = MoveTarget.Y - Y;
+                
                 var speed = ActualSpeed;
 
-                if (vec.Length <= speed)
+                var vecLen2 = vecX*vecX + vecY*vecY;
+                if (vecLen2 <= speed*speed)
                 {
                     done = true;
-                    length = vec.Length;
+                    deltaX = vecX;
+                    deltaY = vecY;
                 }
                 else
                 {
-                    length = speed;
+                    var factor = speed/Math.Sqrt(vecLen2);
+                    deltaX = vecX*factor;
+                    deltaY = vecY*factor;
                 }
-                delta = vec.Normalized()*length;
             }
             else if (RotationCenter != null)
             {
@@ -141,27 +146,22 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     newRotationAngle -= angle;
                 }
                 var to = RotateCounterClockwise(angle, RotationCenter);
-                delta = to - this;
+                deltaX = to.X - X;
+                deltaY = to.Y - Y;
             }
 
-            if (delta != null)
+            if (MoveTarget != null || RotationCenter != null)
             {
-                var selfCopy = new AVehicle(this);
-                selfCopy.X += delta.X;
-                selfCopy.Y += delta.Y;
-                selfCopy.RotationAngle = newRotationAngle;
-
-                if (selfCopy.X < Radius - Const.Eps ||
-                    selfCopy.Y < Radius - Const.Eps ||
-                    selfCopy.X > G.MapSize - Radius + Const.Eps ||
-                    selfCopy.Y > G.MapSize - Radius + Const.Eps ||
-                    checkCollisions != null && checkCollisions(selfCopy))
+                if (X + deltaX < Radius - Const.Eps ||
+                    Y + deltaY < Radius - Const.Eps ||
+                    X + deltaX > G.MapSize - Radius + Const.Eps ||
+                    Y + deltaY > G.MapSize - Radius + Const.Eps)
                 {
                     return false;
                 }
 
-                X += delta.X;
-                Y += delta.Y;
+                X += deltaX;
+                Y += deltaY;
                 RotationAngle = newRotationAngle;
 
                 if (done)
