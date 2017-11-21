@@ -250,6 +250,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             Point = typeRect.Center,
                             Angle = Math.PI / 4,
                         },
+                        new AMove
+                        {
+                            Action = ActionType.Rotate,
+                            Point = typeRect.Center,
+                            Angle = -Math.PI / 4,
+                        },
                     });
 
                     foreach (var move in actions)
