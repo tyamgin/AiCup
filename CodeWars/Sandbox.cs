@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Security.Authentication.ExtendedProtection;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
@@ -8,8 +9,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Sandbox
     {
+        public int TickIndex;
         public ANuclear[] Nuclears;
         public readonly Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
+
         public bool CheckCollisionsWithOpponent = true;
 
         private readonly List<AVehicle>[] _vehiclesByOwner =
@@ -34,6 +37,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private AVehicle[] _nearestCache;
         private int[] _notMoved;
+        private double[] _nearestFightersCacheDist;
+        private int[] _nearestFightersCacheTick;
 
         private static AVehicle _cloneVehicle(AVehicle vehicle)
         {
@@ -92,30 +97,37 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             AddRange(vehicles);
         }
 
+        private static int _resizeArray<T>(ref T[] arr, int size, T defaultValue = default(T))
+        {
+            if (arr == null)
+            {
+                arr = new T[size];
+                for (var i = 0; i < arr.Length; i++)
+                    arr[i] = defaultValue;
+                return 0;
+            }
+            if (arr.Length == size)
+                return 0;
+
+            var offset = arr.Length;
+            Array.Resize(ref arr, size);
+            for (var i = offset; i < arr.Length; i++)
+                arr[i] = defaultValue;
+
+            return offset;
+        }
+
         public void AddRange(IEnumerable<AVehicle> newVehicles)
         {
             var vehicles = newVehicles.ToArray();
-            int offset;
-            if (Vehicles == null)
-            {
-                offset = 0;
-                Vehicles = new AVehicle[vehicles.Length];
-                _nearestCache = new AVehicle[vehicles.Length];
-                _notMoved = new int[vehicles.Length];
-            }
-            else
-            {
-                offset = Vehicles.Length;
-                Array.Resize(ref Vehicles, offset + vehicles.Length);
-                Array.Resize(ref _nearestCache, offset + vehicles.Length);
-                Array.Resize(ref _notMoved, offset + vehicles.Length);
-            }
+            int offset = _resizeArray(ref Vehicles, (Vehicles?.Length ?? 0) + vehicles.Length);
 
             for (var i = 0; i < vehicles.Length; i++)
             {
                 var veh = vehicles[i];
                 Vehicles[offset + i] = veh;
-                _nearestCache[offset + i] = null;
+                _nearestFightersCacheDist = null;
+                _nearestFightersCacheTick = null; //TODO: maybe optimize
                 
                 _at(veh.IsMy).Add(veh);
                 _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int)veh.Type].Add(veh);
@@ -135,7 +147,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public Sandbox Clone()
         {
             // TODO: use QuadTree.Clone()
-            return new Sandbox(Vehicles.Select(x => new AVehicle(x)), Nuclears.Select(x => new ANuclear(x)));
+            return new Sandbox(Vehicles.Select(x => new AVehicle(x)), Nuclears.Select(x => new ANuclear(x)))
+            {
+                CheckCollisionsWithOpponent = CheckCollisionsWithOpponent,
+                TickIndex = TickIndex,
+            };
         }
 
         public void ApplyMove(Move move)
@@ -238,6 +254,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public List<AVehicle> GetOpponentFightNeigbours(AVehicle veh, double radius)
         {
+            if (veh.Type == VehicleType.Arrv)
+                return new List<AVehicle>();
+
             var oppTree = _tree(!veh.IsMy, veh.IsAerial);
             var oppTree2 = _tree(!veh.IsMy, !veh.IsAerial);
 
@@ -251,8 +270,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doFight()
         {
-            foreach(var veh in Vehicles)
+            _resizeArray(ref _nearestFightersCacheDist, Vehicles.Length, double.MaxValue/2);
+            _resizeArray(ref _nearestFightersCacheTick, Vehicles.Length, -1);
+
+            for (var i = 0; i < Vehicles.Length; i++)
             {
+                var veh = Vehicles[i];
                 if (!veh.IsAlive)
                     continue;
                 if (veh.RemainingAttackCooldownTicks > 0)
@@ -269,14 +292,34 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var oppTree = _tree(!veh.IsMy, veh.IsAerial);
                 var oppTree2 = _tree(!veh.IsMy, !veh.IsAerial);
 
+                if (_nearestFightersCacheTick[i] == -1 && veh.Type != VehicleType.Arrv)
+                {
+                    double maxDist = 7 * (G.MaxVehicleSpeed + veh.MaxSpeed) + G.MaxAttackRange;
+                    var interactors = new List<AVehicle>
+                    {
+                        oppTree.FindNearest(veh, maxDist*maxDist)
+                    };
+
+                    if (veh.Type != VehicleType.Fighter)
+                        interactors.Add(oppTree2.FindNearest(veh, maxDist * maxDist));
+
+                    _nearestFightersCacheDist[i] = interactors.Min(x => x?.GetDistanceTo(veh) ?? maxDist);
+                    _nearestFightersCacheTick[i] = TickIndex;
+                }
+
+                var irad = veh.Type == VehicleType.Arrv ? G.ArrvRepairRange : G.MaxAttackRange;
+
+                if (_nearestFightersCacheDist[i] - (TickIndex - _nearestFightersCacheTick[i]) * G.MaxVehicleSpeed > irad + Const.Eps)
+                    continue;
+
                 var nearestInteractors = veh.Type == VehicleType.Arrv
-                    ? vehTree.FindAllNearby(veh, G.ArrvRepairRange*G.ArrvRepairRange)
-                    : oppTree.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange);
+                    ? vehTree.FindAllNearby(veh, irad * irad)
+                    : oppTree.FindAllNearby(veh, irad * irad);
 
                 if (veh.Type == VehicleType.Arrv)
-                    nearestInteractors.AddRange(vehTree2.FindAllNearby(veh, G.ArrvRepairRange * G.ArrvRepairRange));
+                    nearestInteractors.AddRange(vehTree2.FindAllNearby(veh, irad * irad));
                 else if (veh.Type != VehicleType.Fighter)
-                    nearestInteractors.AddRange(oppTree2.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange));
+                    nearestInteractors.AddRange(oppTree2.FindAllNearby(veh, irad * irad));
                 
                 var probabilities = new List<double>();
                 var candidates = new List<AVehicle>();
@@ -306,6 +349,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMove()
         {
+            _resizeArray(ref _nearestCache, Vehicles.Length);
+            _resizeArray(ref _notMoved, Vehicles.Length);
+
             var movedState = Vehicles.Select(x => default(AVehicle)).ToArray();
             var notMovedLength = 0;
 
@@ -405,6 +451,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                             if (!unitTree.ChangeXY(unit, movedUnit.X, movedUnit.Y))
                                 throw new Exception("Can't change unit coordinates, id=" + unit.Id);
+
+                            if (_nearestFightersCacheTick != null && _nearestFightersCacheTick[idx] != -1)
+                                _nearestFightersCacheDist[idx] -= unit.GetDistanceTo(prevX, prevY);
                         }
                         _nearestCache[idx] = nearestWithMoved;
                     }
@@ -500,6 +549,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Logger.CumulativeOperationEnd("DoFight");
 
             _doNuclears();
+
+            TickIndex++;
         }
 
         public class Cluster

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
@@ -116,6 +117,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(game.BaseActionCount, G.BaseActionCount);
 
             _expect(game.AdditionalActionCountPerControlCenter, G.AdditionalActionCountPerControlCenter);
+
+            _expect(new [] { game.ArrvSpeed, game.FighterSpeed, game.HelicopterSpeed, game.IfvSpeed, game.TankSpeed }.Max(), G.MaxVehicleSpeed);
         }
 
         private static void _expect<T>(T source, T value)
@@ -146,7 +149,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const double CloudWeatherVisionFactor = 0.8;
         public const double ForestTerrainVisionFactor = 0.8;
         public const double RainWeatherVisionFactor = 0.6;
-
+        public const double MaxVehicleSpeed = 1.2;
         public const int ActionDetectionInterval = 60;
         public const int BaseActionCount = 12;
         public const int AdditionalActionCountPerControlCenter = 3;

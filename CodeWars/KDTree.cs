@@ -202,10 +202,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
 
-        private T FindNearest(double x, double y, Node node, double left, double top, double right, double bottom)
+        private T _findNearest(Node node, double left, double top, double right, double bottom)
         {
             if (node.Value != null)
-                return node.Value;
+            {
+                if (_getSquaredDistanceTo(node.Value, squaredDistance) <= squaredDistanceE)
+                    return node.Value;
+                return null;
+            }
 
             if (!node.HasValueBelow)
                 return null;
@@ -217,13 +221,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 if (y < centerY)
                 {
-                    var nearestValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
 
                     if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
                     {
-                        var otherValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.RightTop, centerX, top, right, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -234,8 +238,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
                     {
-                        var otherValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -246,8 +250,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
                     {
-                        var otherValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -259,13 +263,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    var nearestValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
 
                     if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
                     {
-                        var otherValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -276,8 +280,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
                     {
-                        var otherValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -288,8 +292,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
                     {
-                        var otherValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.RightTop, centerX, top, right, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -304,13 +308,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 if (y < centerY)
                 {
-                    var nearestValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = _findNearest(node.RightTop, centerX, top, right, centerY);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
 
                     if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
                     {
-                        var otherValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -321,8 +325,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
                     {
-                        var otherValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -333,8 +337,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
                     {
-                        var otherValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -346,13 +350,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    var nearestValue = FindNearest(x, y, node.RightBottom, centerX, centerY, right, bottom);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, x, y);
+                    var nearestValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
 
                     if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
                     {
-                        var otherValue = FindNearest(x, y, node.LeftBottom, left, centerY, centerX, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -363,8 +367,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
                     {
-                        var otherValue = FindNearest(x, y, node.RightTop, centerX, top, right, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.RightTop, centerX, top, right, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -375,8 +379,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (nearestSquaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
                     {
-                        var otherValue = FindNearest(x, y, node.LeftTop, left, top, centerX, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y);
+                        var otherValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -454,7 +458,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return removed;
         }
 
-        private double x, y, squaredDistanceE;
+        private double x, y, squaredDistance, squaredDistanceE;
         private long id;
         private List<T> values;
         private T value;
@@ -833,17 +837,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private double _getSquaredDistanceTo(T value)
+        private double _getSquaredDistanceTo(T value, double defaultValue = double.PositiveInfinity)
         {
             return value == null || value.Id == id
-                ? double.PositiveInfinity
+                ? defaultValue
                 : Geom.SumSqr(value.X - x, value.Y - y);
         }
 
-        private static double _getSquaredDistanceTo(T value, double x, double y)
+        private static double _getSquaredDistanceTo(T value, double x, double y, double defaultValue = double.PositiveInfinity)
         {
             return value == null
-                ? double.PositiveInfinity
+                ? defaultValue
                 : Geom.SumSqr(value.X - x, value.Y - y);
         }
         #endregion
@@ -878,14 +882,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Add(value);
         }
 
-        public T FindNearest(T value)
+        public T FindNearest(T value, double squaredRadius = double.PositiveInfinity)
         {
-            return FindNearest(value.X, value.Y);
+            return FindNearest(value.X, value.Y, squaredRadius);
         }
 
-        public T FindNearest(double x, double y)
+        public T FindNearest(double x, double y, double squaredRadius = double.PositiveInfinity)
         {
-            return FindNearest(x, y, _root, _left, _top, _right, _bottom);
+            this.x = x;
+            this.y = y;
+            this.squaredDistanceE = squaredRadius + _epsilon;
+            this.squaredDistance = squaredRadius;
+            return _findNearest( _root, _left, _top, _right, _bottom);
         }
 
         public bool Remove(T value)
