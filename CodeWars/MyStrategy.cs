@@ -275,10 +275,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 veh.RemainingAttackCooldownTicks += ticksCount; // TODO: если кд только восстановилось
                         }
 
+                        Logger.CumulativeOperationStart("End of simulation");
                         env.ApplyMove(move);
                         for (var i = 0; i < ticksCount; i++)
                             env.DoTick();
                         env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
+                        Logger.CumulativeOperationEnd("End of simulation");
 
                         var danger = GetDanger(Environment, env);
                         if (selDanger == null || danger.Score < selDanger.Score)

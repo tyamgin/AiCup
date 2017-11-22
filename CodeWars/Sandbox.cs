@@ -273,12 +273,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     ? vehTree.FindAllNearby(veh, G.ArrvRepairRange*G.ArrvRepairRange)
                     : oppTree.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange);
 
-                if (veh.Type != VehicleType.Fighter)
-                    nearestInteractors.AddRange(oppTree2.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange));
-
                 if (veh.Type == VehicleType.Arrv)
-                    nearestInteractors.AddRange(vehTree2.FindAllNearby(veh, G.ArrvRepairRange*G.ArrvRepairRange));
-
+                    nearestInteractors.AddRange(vehTree2.FindAllNearby(veh, G.ArrvRepairRange * G.ArrvRepairRange));
+                else if (veh.Type != VehicleType.Fighter)
+                    nearestInteractors.AddRange(oppTree2.FindAllNearby(veh, G.MaxAttackRange*G.MaxAttackRange));
                 
                 var probabilities = new List<double>();
                 var candidates = new List<AVehicle>();

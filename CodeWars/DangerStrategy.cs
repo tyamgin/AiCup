@@ -62,12 +62,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static DangerResult GetDanger(Sandbox startEnv, Sandbox env)
         {
+            Logger.CumulativeOperationStart("GetDanger");
+
             var result = new DangerResult();
+
+            Logger.CumulativeOperationStart("Danger1");
 
             var myDurabilityBefore = startEnv.MyVehicles.Sum(x => x.FullDurability);
             var oppDurabilityBefore = startEnv.OppVehicles.Sum(x => x.FullDurability);
-
-            Logger.CumulativeOperationStart("Danger1");
 
             var myDurabilityAfter = env.MyVehicles.Sum(x => x.FullDurability);
             var oppDurabilityAfter = env.OppVehicles.Sum(x => x.FullDurability);
@@ -180,6 +182,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             Logger.CumulativeOperationEnd("Danger2");
+
+            Logger.CumulativeOperationEnd("GetDanger");
 
             return result;
         }
