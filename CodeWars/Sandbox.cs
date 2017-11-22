@@ -553,17 +553,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             TickIndex++;
         }
 
-        public class Cluster
-        {
-            public List<AVehicle> Vehicles;
-            public Point Avg;
-        }
-
-        public List<Cluster> GetClusters(bool isMy, double margin)
+        public List<VehiclesCluster> GetClusters(bool isMy, double margin)
         {
             Logger.CumulativeOperationStart("Clustering");
 
-            var res = new List<Cluster>();
+            var res = new List<VehiclesCluster>();
 
             foreach (var isAerial in new[] { false, true })
             {
@@ -571,7 +565,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 while (tree.Count > 0)
                 {
                     var val = tree.FirstOrDefault();
-                    var currentCluster = new List<AVehicle>();
+                    var currentCluster = new VehiclesCluster();
                     tree.Remove(val);
                     currentCluster.Add(val);
                     var processed = 0;
@@ -584,12 +578,33 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             currentCluster.Add(nw);
                         }
                     }
-                    res.Add(new Cluster {Vehicles = currentCluster, Avg = MyStrategy.GetAvg(currentCluster)});
+                    currentCluster.CompleteCluster();
+                    res.Add(currentCluster);
                 }
             }
 
             Logger.CumulativeOperationEnd("Clustering");
             return res;
+        }
+    }
+
+    public class VehiclesCluster : List<AVehicle>
+    {
+        public Point Avg;
+        public double[] DurabilitySumByType = new double[5];
+        public int[] CountByType = new int[5];
+
+        public new void Add(AVehicle veh)
+        {
+            base.Add(veh);
+            var type = (int)veh.Type;
+            DurabilitySumByType[type] += veh.Durability;
+            CountByType[type]++;
+        }
+
+        public void CompleteCluster()
+        {
+            Avg = MyStrategy.GetAvg(this);
         }
     }
 }

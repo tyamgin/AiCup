@@ -19,7 +19,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             public double NuclearsPotentialDamage;
             public double RectanglesIntersects1;
             public double RectanglesIntersects2;
-            public List<Sandbox.Cluster> Clusters;
+            public List<VehiclesCluster> Clusters;
             public List<Tuple<MyGroup, List<Tuple<double, double>>>> MoveToInfo = new List<Tuple<MyGroup, List<Tuple<double, double>>>>(); 
 
             public double Score 
@@ -165,14 +165,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 foreach (var cl in clusters)
                 {
                     var score = 0.0;
-                    foreach (var opp in cl.Vehicles)
+                    foreach (var opp in cl)
                     {
                         var myAttack = G.AttackDamage[(int) type, (int) opp.Type];
                         var oppAttack = G.AttackDamage[(int) opp.Type, (int) type];
 
                         score += myAttack - oppAttack*0.9;
                     }
-                    score *= 1.0 * myGroup.Count / cl.Vehicles.Count;
+                    score *= 1.0 * myGroup.Count / cl.Count;
                     var dist = cl.Avg.GetDistanceTo(cen);
 
                     lst.Add(new Tuple<double, double>(score, dist));

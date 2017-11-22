@@ -301,7 +301,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             // clusters
             foreach (var cluster in MyStrategy.Environment.GetClusters(false, Const.ClusteringMargin))
             {
-                var rect = MyStrategy.GetUnitsBoundingRect(cluster.Vehicles);
+                var rect = MyStrategy.GetUnitsBoundingRect(cluster);
                 DrawRect(Color.Maroon, rect.X, rect.Y, rect.Width, rect.Height);
             }
 
