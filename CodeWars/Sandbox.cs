@@ -243,16 +243,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public List<AVehicle> GetAllNeigbours(double x, double y, double radius)
+        public List<AVehicle> GetAllNeighbours(double x, double y, double radius)
         {
-            var res = _tree(false, false).FindAllNearby(x, y, radius*radius, -1);
-            res.AddRange(_tree(false, true).FindAllNearby(x, y, radius*radius, -1));
-            res.AddRange(_tree(true, false).FindAllNearby(x, y, radius*radius, -1));
-            res.AddRange(_tree(true, true).FindAllNearby(x, y, radius*radius, -1));
+            var res = GetMyNeighbours(x, y, radius);
+            res.AddRange(GetOpponentNeighbours(x, y, radius));
             return res;
         }
 
-        public List<AVehicle> GetOpponentFightNeigbours(AVehicle veh, double radius)
+        public List<AVehicle> GetOpponentNeighbours(double x, double y, double radius)
+        {
+            var res = _tree(false, false).FindAllNearby(x, y, radius * radius, -1);
+            res.AddRange(_tree(false, true).FindAllNearby(x, y, radius * radius, -1));
+            return res;
+        }
+
+        public List<AVehicle> GetMyNeighbours(double x, double y, double radius)
+        {
+            var res = _tree(true, false).FindAllNearby(x, y, radius * radius, -1);
+            res.AddRange(_tree(true, true).FindAllNearby(x, y, radius * radius, -1));
+            return res;
+        }
+
+        public List<AVehicle> GetOpponentFightNeighbours(AVehicle veh, double radius)
         {
             if (veh.Type == VehicleType.Arrv)
                 return new List<AVehicle>();
@@ -530,7 +542,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     needRemove = true;
 
-                    foreach (var target in GetAllNeigbours(nuclear.X, nuclear.Y, nuclear.Radius))
+                    foreach (var target in GetAllNeighbours(nuclear.X, nuclear.Y, nuclear.Radius))
                         target.Durability -= target.GetNuclearDamage(nuclear);
                 }
             }

@@ -219,14 +219,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public int GetAttackDamage(AVehicle veh, double additionalRadius = 0)
         {
-            var attackRange = Geom.Sqr(G.AttackRange[(int) Type, (int) veh.Type] + additionalRadius);
-
-            if (GetDistanceTo2(veh) - Const.Eps > attackRange)
-                return 0;
-            var damage = G.AttackDamage[(int) Type, (int) veh.Type];
+            var damage = GetAttackDamage2(veh, additionalRadius);
             if (damage >= veh.Durability)
                 return veh.Durability;
             return damage;
+        }
+
+        public int GetAttackDamage2(AVehicle veh, double additionalRadius = 0)
+        {
+            var attackRange = Geom.Sqr(G.AttackRange[(int)Type, (int)veh.Type] + additionalRadius);
+
+            if (GetDistanceTo2(veh) - Const.Eps > attackRange)
+                return 0;
+            return G.AttackDamage[(int)Type, (int)veh.Type];
         }
 
         public void Attack(AVehicle veh)

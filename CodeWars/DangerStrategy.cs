@@ -92,13 +92,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             result.SumMaxAlmostAttacks = env.OppVehicles.Sum(opp =>
             {
                 var additionalRadius = opp.ActualSpeed;
-                return env.GetOpponentFightNeigbours(opp, G.MaxAttackRange + additionalRadius).DefaultIfEmpty(null)
-                    .Max(m => m == null ? 0 :  opp.GetAttackDamage(m, additionalRadius));
+                return env.GetOpponentFightNeighbours(opp, G.MaxAttackRange + additionalRadius * 3).DefaultIfEmpty(null)
+                    .Max(
+                        m =>
+                            m == null
+                                ? 0
+                                : opp.GetAttackDamage(m, additionalRadius) +
+                                  opp.GetAttackDamage(m, additionalRadius * 2) / 2 +
+                                  opp.GetAttackDamage(m, additionalRadius * 3) / 4);
             });
 
             foreach (var nuclear in env.Nuclears)
             {
-                foreach (var target in env.GetAllNeigbours(nuclear.X, nuclear.Y, nuclear.Radius))
+                foreach (var target in env.GetAllNeighbours(nuclear.X, nuclear.Y, nuclear.Radius))
                 {
                     var damage = target.GetNuclearDamage(nuclear);
                     if (target.IsMy)

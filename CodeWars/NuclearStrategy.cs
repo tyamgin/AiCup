@@ -22,28 +22,30 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             foreach (var veh in Environment.MyVehicles)
             {
                 var vr = veh.ActualVisionRange*0.9;
-                var targets = Environment.GetAllNeigbours(veh.X, veh.Y, vr + G.TacticalNuclearStrikeRadius);
+                var targets = Environment.GetOpponentNeighbours(veh.X, veh.Y, vr + G.TacticalNuclearStrikeRadius);
                 var cen = GetAvg(targets);
                 cen = veh + (cen - veh).Normalized()*Math.Min(vr, veh.GetDistanceTo(cen));
                 var nuclear = new ANuclear(cen.X, cen.Y, true, veh.Id, G.TacticalNuclearStrikeDelay);
 
-                var totalDamage = targets.Sum(x =>
+                var totalOpponentDamage = targets.Sum(x => x.GetNuclearDamage(nuclear));
+
+                if (totalOpponentDamage <= selTotalDamage)
+                    continue;
+
+                var totalDamage = totalOpponentDamage -
+                                  Environment.GetMyNeighbours(nuclear.X, nuclear.Y, nuclear.Radius)
+                                      .Sum(x => x.GetNuclearDamage(nuclear));
+
+                if (totalDamage <= selTotalDamage)
+                    continue;
+
+                selTotalDamage = totalDamage;
+                selMove = new AMove
                 {
-                    var d = x.GetNuclearDamage(nuclear);
-                    if (x.IsMy)
-                        return -d;
-                    return d;
-                });
-                if (totalDamage > selTotalDamage)
-                {
-                    selTotalDamage = totalDamage;
-                    selMove = new AMove
-                    {
-                        Action = ActionType.TacticalNuclearStrike,
-                        VehicleId = veh.Id,
-                        Point = cen,
-                    };
-                }
+                    Action = ActionType.TacticalNuclearStrike,
+                    VehicleId = veh.Id,
+                    Point = nuclear,
+                };
             }
 
             Logger.CumulativeOperationEnd("NuclearStrategy");
