@@ -78,9 +78,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return _myVehiclesByGroup[(int) group.Group - 1];
         }
 
-        public IEnumerable<AVehicle> MyVehicles => _at(true);
+        public List<AVehicle> MyVehicles => _at(true);
 
-        public IEnumerable<AVehicle> OppVehicles => _at(false);
+        public List<AVehicle> OppVehicles => _at(false);
 
         public AVehicle[] Vehicles;
 
