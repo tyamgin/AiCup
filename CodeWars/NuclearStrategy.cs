@@ -59,7 +59,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 };
             }
 
-            if (selMove == null || selTotalDamage >= damageBound2)
+            if (selMove == null)
+                return null;
+
+            if (selTotalDamage >= damageBound2)
                 return selMove;
 
             // нужно проверить, что в следующий тик не будет лучше
