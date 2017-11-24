@@ -35,7 +35,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return null;
 
             Logger.CumulativeOperationStart("NuclearStrategy");
+            var result = _nuclearStrategy();
+            Logger.CumulativeOperationEnd("NuclearStrategy");
+            return result;
+        }
 
+        AMove _nuclearStrategy()
+        {
             var damageBound2 = 8000.0*Environment.Vehicles.Length/1000;
             var damageBound1 = 3000.0*Environment.Vehicles.Length/1000;
 
@@ -77,8 +83,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (totalDamage > selTotalDamage)
                     return null; // будет лучше
             }
-
-            Logger.CumulativeOperationEnd("NuclearStrategy");
 
             return selMove;
         }

@@ -256,7 +256,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         MoveQueue.Add(new AMove
                         {
                             Action = ActionType.Move,
-                            Y = ifvsRect.Center.Y - (ifvArrvsRect.Center.Y - shift),
+                            Y = ifvsRect.Center.Y - (ifvArrvsRect.Center.Y),
                         });
                     }
 
@@ -270,7 +270,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         MoveQueue.Add(new AMove
                         {
                             Action = ActionType.Move,
-                            Y = tanksRect.Center.Y - (tankArrvsRect.Center.Y - shift),
+                            Y = tanksRect.Center.Y - (tankArrvsRect.Center.Y),
                         });
                     }
 

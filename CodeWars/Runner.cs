@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
                     CreateNoWindow = true
                 }
             };
-            //otherStrategy.Start();
+            otherStrategy.Start();
             Thread.Sleep(100);
 #endif
 
