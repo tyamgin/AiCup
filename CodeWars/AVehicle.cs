@@ -11,8 +11,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public VehicleType Type;
         public int Durability;
         public bool IsSelected;
-        public double MaxSpeed; // TODO: computable property
-        public double VisionRange; // TODO: computable property
         public int RemainingAttackCooldownTicks;
         public uint Groups;
 
@@ -29,9 +27,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Type = unit.Type;
             Durability = unit.Durability;
             IsSelected = unit.IsSelected;
-            MaxSpeed = unit.MaxSpeed;
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
-            VisionRange = unit.VisionRange;
             foreach (var group in unit.Groups)
                 AddGroup(group);
         }
@@ -43,9 +39,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Type = unit.Type;
             Durability = unit.Durability;
             IsSelected = unit.IsSelected;
-            MaxSpeed = unit.MaxSpeed;
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
-            VisionRange = unit.VisionRange;
             Groups = unit.Groups;
 
             MoveTarget = unit.MoveTarget;
@@ -180,7 +174,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             get
             {
-                var speed = MaxSpeed;
+                var speed = G.MaxSpeed[(int) Type];
                 if (IsAerial)
                 {
                     var weather = MyStrategy.Weather(X, Y);
@@ -272,7 +266,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             get
             {
-                var res = VisionRange;
+                var res = G.VisionRange[(int) Type];
                 if (IsAerial)
                 {
                     var weather = MyStrategy.Weather(X, Y);

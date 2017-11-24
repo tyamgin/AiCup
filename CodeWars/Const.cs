@@ -121,7 +121,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             _expect(game.AdditionalActionCountPerControlCenter, G.AdditionalActionCountPerControlCenter);
 
-            _expect(new [] { game.ArrvSpeed, game.FighterSpeed, game.HelicopterSpeed, game.IfvSpeed, game.TankSpeed }.Max(), G.MaxVehicleSpeed);
+            _expect(game.ArrvSpeed, G.MaxSpeed[(int) VehicleType.Arrv]);
+            _expect(game.FighterSpeed, G.MaxSpeed[(int)VehicleType.Fighter]);
+            _expect(game.HelicopterSpeed, G.MaxSpeed[(int)VehicleType.Helicopter]);
+            _expect(game.IfvSpeed, G.MaxSpeed[(int)VehicleType.Ifv]);
+            _expect(game.TankSpeed, G.MaxSpeed[(int)VehicleType.Tank]);
+
+            _expect(game.ArrvVisionRange, G.VisionRange[(int)VehicleType.Arrv]);
+            _expect(game.FighterVisionRange, G.VisionRange[(int)VehicleType.Fighter]);
+            _expect(game.HelicopterVisionRange, G.VisionRange[(int)VehicleType.Helicopter]);
+            _expect(game.IfvVisionRange, G.VisionRange[(int)VehicleType.Ifv]);
+            _expect(game.TankVisionRange, G.VisionRange[(int)VehicleType.Tank]);
+
+            _expect(G.MaxSpeed.Max(), G.MaxVehicleSpeed);
         }
 
         private static void _expect<T>(T source, T value)
@@ -175,6 +187,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {18, 20, 20, 18, 18},
             {20, 18, 18, 20, 20}
         };
+
+        public static readonly double[] MaxSpeed = {0.4, 1.2, 0.9, 0.4, 0.3};
+        public static readonly double[] VisionRange = {60, 120, 100, 80, 80};
 
         public static int AttackRange2(VehicleType type1, VehicleType type2)
         {

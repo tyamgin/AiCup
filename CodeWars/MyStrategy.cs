@@ -25,6 +25,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static WeatherType[][] WeatherType;
         public static Sandbox Environment;
 
+        Stopwatch _globalTimer = new Stopwatch();
+
+        ~MyStrategy()
+        {
+            _globalTimer.Stop();
+            Console.WriteLine("Total time: " + _globalTimer.ElapsedMilliseconds + " ms");
+        }
+
 #if DEBUG
         public MyStrategy()
         {
@@ -32,13 +40,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 #endif
 
-
         public void Move(Player me, World world, Game game, Move move)
         {
+            if (world.TickIndex == 0)
+                _globalTimer.Start();
+
             World = world;
             Me = me;
             Opp = world.GetOpponentPlayer();
             ResultingMove = new AMove();
+
 
 #if DEBUG
             while (Visualizer.Visualizer.Pause)
