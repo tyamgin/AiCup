@@ -12,33 +12,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        void MoveRect(Rect rect, Point to, double speed)
-        {
-            MoveQueue.Add(new AMove
-            {
-                Action = ActionType.ClearAndSelect,
-                Rect = rect
-            }, 0, 0);
-
-            var dx = to.X - rect.Center.X;
-            if (dx < Const.Eps)
-                dx += 4.05;
-            else
-                dx -= 4.05;
-            MoveQueue.Add(new AMove
-            {
-                Action = ActionType.Move,
-                X = dx,
-            }, 0, (int)(Math.Abs(dx) / speed) + 1);
-
-            var dy = to.Y - rect.Center.Y;
-            MoveQueue.Add(new AMove
-            {
-                Action = ActionType.Move,
-                Y = dy,
-            }, 0, (int)(Math.Abs(dy) / speed) + 1);
-        }
-
         private bool half1Moved = false;
         private bool half2Moved = false;
         private bool bottom1Moved = false;
@@ -78,12 +51,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (arrvs.Concat(tanks).Concat(ifvs).All(veh => !rect.ContainsPoint(veh)))
                     return;
 
-                // TODO: skip if nothing
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.ClearAndSelect,
                     Rect = rect
-                }, 0, 0);
+                });
 
                 skipTicks = 1;
 
@@ -92,7 +64,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     Action = ActionType.Move,
                     X = dx,
                     Y = dy
-                }, 0, 0);
+                });
             };
 
             var sh = 10;
@@ -150,39 +122,39 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Action = ActionType.ClearAndSelect,
                         VehicleType = VehicleType.Arrv,
                         Rect = G.MapRect,
-                    }, 0, 0);
+                    });
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Scale,
                         Point = arrvsRect.Center,
                         Factor = d,
-                    }, 0, 0);
+                    });
 
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.ClearAndSelect,
                         VehicleType = VehicleType.Tank,
                         Rect = G.MapRect,
-                    }, 0, 0);
+                    });
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Scale,
                         Point = tanksRect.Center,
                         Factor = d,
-                    }, 0, 0);
+                    });
 
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.ClearAndSelect,
                         VehicleType = VehicleType.Ifv,
                         Rect = G.MapRect,
-                    }, 0, 0);
+                    });
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Scale,
                         Point = ifvsRect.Center,
                         Factor = d,
-                    }, 0, 0);
+                    });
                 }
                 return;
             }
@@ -199,13 +171,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Action = ActionType.ClearAndSelect,
                         VehicleType = VehicleType.Arrv,
                         Rect = G.MapRect,
-                    }, 0, 0);
+                    });
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Move,
                         X = shift,
                         Y = shift,
-                    }, 0, 0);
+                    });
                     skipTicks = 1;
                 }
                 return;
@@ -246,12 +218,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             Action = ActionType.ClearAndSelect,
                             Rect = tankArrvsRect,
                             VehicleType = VehicleType.Arrv,
-                        }, 0, 0);
+                        });
                         MoveQueue.Add(new AMove
                         {
                             Action = ActionType.Move,
                             X = tanksRect.Center.X - (tankArrvsRect.Center.X - shift),
-                        }, 0, 0);
+                        });
                     }
                     {
                         MoveQueue.Add(new AMove
@@ -259,12 +231,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             Action = ActionType.ClearAndSelect,
                             Rect = ifvArrvsRect,
                             VehicleType = VehicleType.Arrv,
-                        }, 0, 0);
+                        });
                         MoveQueue.Add(new AMove
                         {
                             Action = ActionType.Move,
                             X = ifvsRect.Center.X - (ifvArrvsRect.Center.X - shift),
-                        }, 0, 0);
+                        });
                     }
                     skipTicks = 4;
                 }
@@ -285,7 +257,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         {
                             Action = ActionType.Move,
                             Y = ifvsRect.Center.Y - (ifvArrvsRect.Center.Y - shift),
-                        }, 0, 0);
+                        });
                     }
 
                     {
@@ -294,12 +266,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             Action = ActionType.ClearAndSelect,
                             Rect = tankArrvsRect,
                             VehicleType = VehicleType.Arrv,
-                        }, 0, 0);
+                        });
                         MoveQueue.Add(new AMove
                         {
                             Action = ActionType.Move,
                             Y = tanksRect.Center.Y - (tankArrvsRect.Center.Y - shift),
-                        }, 0, 0);
+                        });
                     }
 
                     skipTicks = 4;

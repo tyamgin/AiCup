@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -17,15 +16,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         public static readonly List<HistoryItem> History = new List<HistoryItem>();
+        public static int MaxAvailableActions;
         public static int AvailableActions;
         public static double Rate;
 
         public static void Init()
         {
-            var maxAvailableActions = 12 + MyStrategy.World.Facilities.Count(
+            MaxAvailableActions = G.BaseActionCount + MyStrategy.World.Facilities.Count(
                 x => x.Type == FacilityType.ControlCenter &&
                      x.OwnerPlayerId == MyStrategy.Me.Id)*G.AdditionalActionCountPerControlCenter;
-            AvailableActions = maxAvailableActions;
+            AvailableActions = MaxAvailableActions;
             Rate = 0;
 
             var tick = MyStrategy.World.TickIndex;
@@ -38,7 +38,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 AvailableActions--;
                 Rate += (historyItem.TickIndex - (tick - G.ActionDetectionInterval)) / (G.ActionDetectionInterval - 1.0);
             }
-            Rate /= maxAvailableActions;
+            Rate /= MaxAvailableActions;
 
             //Logger.Log("----------------------- Rate: " + Rate);
             //Logger.Log("----------------------- Actions: " + AvailableActions);
@@ -54,10 +54,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MyStrategy.Environment.DoTick();
 
             if (move.Action != null && move.Action != ActionType.None)
-                History.Add(new HistoryItem {TickIndex = MyStrategy.World.TickIndex, Move = move});
+                History.Add(new HistoryItem { TickIndex = MyStrategy.World.TickIndex, Move = move });
 
             if (move.Action != null && move.Action != ActionType.None && MyStrategy.Me.RemainingActionCooldownTicks > 0)
                 throw new Exception("Trying to do action when RemainingActionCooldownTicks=" + MyStrategy.Me.RemainingActionCooldownTicks);
         }
+
+        public static int ActionsBaseInterval => (G.ActionDetectionInterval + MaxAvailableActions - 1)/MaxAvailableActions*2;
     }
 }

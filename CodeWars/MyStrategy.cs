@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             World = world;
             Me = me;
-            Opp = World.Players.FirstOrDefault(x => !x.IsMe);
+            Opp = world.GetOpponentPlayer();
             ResultingMove = new AMove();
 
 #if DEBUG
@@ -141,31 +141,32 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     Action = ActionType.ClearAndSelect,
                     Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Tank || x.Type == VehicleType.Arrv && tankArrvs.Contains(x.Id))),
-                }, 0, 0);
+                });
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Assign,
                     Group = TanksGroup,
-                }, 0, 0);
+                });
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.ClearAndSelect,
                     Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Ifv || x.Type == VehicleType.Arrv && ifvArrvs.Contains(x.Id))),
-                }, 0, 0);
+                });
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Assign,
                     Group = IfvsGroup,
-                }, 0, 0);
+                });
                 return;
             }
 
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
 
-            if (World.TickIndex % 10 == 0 
+            if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
                 || MoveObserver.AvailableActions >= 4 
-                || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
+                || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2)
+                || Environment.Nuclears.Any(x => x.RemainingTicks == MoveObserver.ActionsBaseInterval / 2))
             {
                 var nuclearMove = NuclearStrategy();
                 if (nuclearMove != null)
@@ -195,8 +196,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     var startEnv = Environment.Clone();
 
-                    int ticksCount = 7;
-                    double maxSpeed = 0;
+                    var ticksCount = Const.ActionsBruteforceDepth;
+                    var maxSpeed = 0.0;
                     AMove selectionMove = null;
 
                     if (selectedIds != needToSelectIds)
@@ -215,13 +216,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         ticksCount--;
                     }
 
-                    var partialEnv = new Sandbox(startEnv.Vehicles.Where(x => !x.IsSelected), new ANuclear[] {}, clone: true);
-                    partialEnv.CheckCollisionsWithOpponent = false;
-
-                    for (var i = 0; i < ticksCount; i++)
-                        partialEnv.DoTick();
-
                     var typeRect = GetUnitsBoundingRect(startEnv.GetVehicles(true, group));
+
+                    Sandbox partialEnv = null;
+                    if (Environment.Nuclears.Length == 0)
+                    {
+                        partialEnv = new Sandbox(
+                            startEnv.Vehicles.Where(x => !x.IsSelected),
+                            new ANuclear[] {},
+                            clone: true
+                            );
+                        partialEnv.CheckCollisionsWithOpponent = false;
+
+                        for (var i = 0; i < ticksCount; i++)
+                            partialEnv.DoTick();
+                    }
 
                     var actions = Utility.Range(0, 2*Math.PI, 12).Select(angle => new AMove
                     {
@@ -260,26 +269,33 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     foreach (var move in actions)
                     {
-                        var env = new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)), startEnv.Nuclears, clone: true);
+                        Sandbox env = partialEnv != null
+                            ? new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)), startEnv.Nuclears, clone: true)
+                            : startEnv.Clone();
+
                         env.CheckCollisionsWithOpponent = false;
 
-                        foreach (var veh in env.Vehicles)
+                        if (partialEnv != null)
                         {
-                            if (veh.IsMy && veh.IsGroup(group))
-                                continue;
+                            foreach (var veh in env.Vehicles)
+                            {
+                                if (veh.IsMy && veh.IsGroup(group))
+                                    continue;
 
-                            veh.ForgotTarget(); // чтобы не шли повторно
-                            // TODO: лечение
-                            
-                            if (veh.RemainingAttackCooldownTicks > 0)// у тех, кто стрелял давно, откатываем кд
-                                veh.RemainingAttackCooldownTicks += ticksCount; // TODO: если кд только восстановилось
+                                veh.ForgotTarget(); // чтобы не шли повторно
+                                // TODO: лечение
+
+                                if (veh.RemainingAttackCooldownTicks > 0) // у тех, кто стрелял давно, откатываем кд
+                                    veh.RemainingAttackCooldownTicks += ticksCount; // TODO: если кд только восстановилось
+                            }
                         }
 
                         Logger.CumulativeOperationStart("End of simulation");
                         env.ApplyMove(move);
                         for (var i = 0; i < ticksCount; i++)
                             env.DoTick();
-                        env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
+                        if (partialEnv != null)
+                            env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
                         Logger.CumulativeOperationEnd("End of simulation");
 
                         var danger = GetDanger(Environment, env);
@@ -301,7 +317,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 ResultingMove = selMove;
                 if (selNextMove != null)
-                    MoveQueue.Add(selNextMove, 0, 0);
+                    MoveQueue.Add(selNextMove);
             }
         }
     }

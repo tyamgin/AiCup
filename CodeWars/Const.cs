@@ -9,7 +9,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public const double Eps = 1e-9;
         public const int Infinity = 0x3f3f3f3f;
-        public const double ClusteringMargin = 20; 
+
+        // Magic consts
+        public const double ClusteringMargin = 20;
+        public const int ActionsBruteforceDepth = 7;
 
         public static VehicleType[] AllTypes =
         {

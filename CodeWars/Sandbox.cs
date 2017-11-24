@@ -306,7 +306,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 if (_nearestFightersCacheTick[i] == -1 && veh.Type != VehicleType.Arrv)
                 {
-                    double maxDist = 7 * (G.MaxVehicleSpeed + veh.MaxSpeed) + G.MaxAttackRange;
+                    double maxDist = Const.ActionsBruteforceDepth * (G.MaxVehicleSpeed + veh.MaxSpeed) + G.MaxAttackRange;
                     var interactors = new List<AVehicle>
                     {
                         oppTree.FindNearest(veh, maxDist*maxDist)
