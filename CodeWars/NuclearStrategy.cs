@@ -67,7 +67,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             // нужно проверить, что в следующий тик не будет лучше
             var env = Environment.Clone();
-            env.DoTick();
+            env.DoTick(fight: false);
 
             foreach (var veh in env.MyVehicles)
             {

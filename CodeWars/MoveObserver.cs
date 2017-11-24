@@ -51,7 +51,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             BeforeMoveUnits.Clear();
             foreach (var veh in MyStrategy.Environment.Vehicles)
                 BeforeMoveUnits[veh.Id] = new AVehicle(veh);
-            MyStrategy.Environment.DoTick();
+            MyStrategy.Environment.DoTick(fight: false);
 
             if (move.Action != null && move.Action != ActionType.None)
                 History.Add(new HistoryItem { TickIndex = MyStrategy.World.TickIndex, Move = move });

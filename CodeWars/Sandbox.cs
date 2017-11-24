@@ -550,15 +550,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Nuclears = Nuclears.Where(x => x.RemainingTicks > 0).ToArray();
         }
 
-        public void DoTick()
+        public void DoTick(bool fight = true)
         {
             Logger.CumulativeOperationStart("DoMove");
             _doMove();
             Logger.CumulativeOperationEnd("DoMove");
 
-            Logger.CumulativeOperationStart("DoFight");
-            _doFight();
-            Logger.CumulativeOperationEnd("DoFight");
+            if (fight)
+            {
+                Logger.CumulativeOperationStart("DoFight");
+                _doFight();
+                Logger.CumulativeOperationEnd("DoFight");
+            }
 
             _doNuclears();
 
