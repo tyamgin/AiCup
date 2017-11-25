@@ -78,6 +78,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        public static AMove ClearAndSelectType(VehicleType type)
+        {
+            return new AMove {Action = ActionType.ClearAndSelect, Rect = G.MapRect, VehicleType = type};
+        }
+
         public override string ToString()
         {
             switch (Action)

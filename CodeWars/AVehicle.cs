@@ -111,7 +111,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var speed = ActualSpeed;
 
                 var vecLen2 = vecX*vecX + vecY*vecY;
-                if (vecLen2 <= speed*speed)
+                if (vecLen2 - Const.Eps <= speed*speed)
                 {
                     done = true;
                     deltaX = vecX;
@@ -127,7 +127,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             else if (RotationCenter != null)
             {
                 var angle = ActualAngularSpeed;
-                if (angle >= Math.Abs(RotationAngle))
+                if (angle + Const.Eps >= Math.Abs(RotationAngle))
                 {
                     done = true;
                     angle = RotationAngle;
@@ -284,6 +284,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return res;
             }
         }
+
+        public bool Stopped => MoveTarget == null && RotationCenter == null;
 
         public override string ToString()
         {

@@ -12,284 +12,317 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        private bool half1Moved = false;
-        private bool half2Moved = false;
-        private bool bottom1Moved = false;
-        private bool bottom2Moved = false;
-        private bool right1Moved = false;
-        private bool right2moved = false;
-        private bool scaled = false;
-        private int skipTicks = 0;
-        private bool shifted = false;
+        private class ActionsQueue
+        {
+            private class ActionQueueItem
+            {
+                public Func<Sandbox, Predicate<Sandbox>> Action;
+                public Predicate<Sandbox> EndCondition;
+            }
 
-        private long[] tankArrvs, ifvArrvs;
+            static List<ActionQueueItem> queue = new List<ActionQueueItem>(); 
 
-        public bool FirstMovesComplete = false;
+            public static void Add(Func<Sandbox, Predicate<Sandbox>> action)
+            {
+                queue.Add(new ActionQueueItem {Action = action});
+            }
+
+            public static void Process()
+            {
+                while (queue.Count > 0)
+                {
+                    if (!MoveQueue.Free)
+                        break;
+
+                    var item = queue[0];
+                    if (item.Action != null)
+                    {
+                        item.EndCondition = item.Action(Environment);
+                        item.Action = null;
+                    }
+                    if (item.EndCondition(Environment))
+                    {
+                        queue.RemoveAt(0);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+
+            public static bool Free => queue.Count == 0;
+
+            public static bool AllStoppedCondition(Sandbox env)
+            {
+                return env.MyVehicles.All(x => Geom.PointsEquals(x, MoveObserver.BeforeMoveUnits[x.Id]));
+            }
+        }
+
+
 
         void MoveFirstTicks()
         {
-            if (skipTicks > 0)
+            Action<double, double, double, double> expandSquares = (x, y, dx, dy) =>
             {
-                skipTicks--;
-                return;
-            }
-
-            var arrvs = Environment.GetVehicles(true, VehicleType.Arrv);
-            var tanks = Environment.GetVehicles(true, VehicleType.Tank);
-            var ifvs = Environment.GetVehicles(true, VehicleType.Ifv);
-
-            var arrvsRect = Utility.BoundingRect(arrvs);
-            var tanksRect = Utility.BoundingRect(tanks);
-            var ifvsRect = Utility.BoundingRect(ifvs);
-
-            var aVert = arrvsRect.SplitVertically();
-
-            Action<double, double, double, double> add = (x, y, dx, dy) =>
-            {
-                var rect = new Rect { X = x, Y = y, X2 = G.MapSize, Y2 = G.MapSize };
-
-                if (arrvs.Concat(tanks).Concat(ifvs).All(veh => !rect.ContainsPoint(veh)))
-                    return;
-
-                MoveQueue.Add(new AMove
+                ActionsQueue.Add(env =>
                 {
-                    Action = ActionType.ClearAndSelect,
-                    Rect = rect
-                });
+                    var rect = new Rect { X = x, Y = y, X2 = G.MapSize, Y2 = G.MapSize };
 
-                skipTicks = 1;
+                    var groundUnits = env.MyVehicles.Where(u => !u.IsAerial).ToArray();
+                    if (groundUnits.All(veh => !rect.ContainsPoint(veh)) || groundUnits.All(veh => rect.ContainsPoint(veh)))
+                        return e => true;
 
-                MoveQueue.Add(new AMove
-                {
-                    Action = ActionType.Move,
-                    X = dx,
-                    Y = dy
+                    MoveQueue.Add(new AMove
+                    {
+                        Action = ActionType.ClearAndSelect,
+                        Rect = rect
+                    });
+
+                    MoveQueue.Add(new AMove
+                    {
+                        Action = ActionType.Move,
+                        X = dx,
+                        Y = dy
+                    });
+
+                    return env2 =>
+                    {
+                        return env2.TickIndex > env.TickIndex &&
+                               env2.MyVehicles.Where(u => !u.IsAerial).All(u => u.Stopped);
+                    };
                 });
             };
 
             var sh = 10;
             var cs = G.CellSize * 2.5;
 
-            if (!bottom1Moved)
+            expandSquares(0, 2 * cs, 0, sh);
+            expandSquares(0, cs, 0, sh);
+            expandSquares(2 * cs, 0, sh, 0);
+            expandSquares(cs, 0, sh, 0);
+            
+            ActionsQueue.Add(env =>
             {
-                bottom1Moved = true;
-                add(0, 2 * cs, 0, sh);
-                return;
-            }
+                var arrvs = env.GetVehicles(true, VehicleType.Arrv);
+                var tanks = env.GetVehicles(true, VehicleType.Tank);
+                var ifvs = env.GetVehicles(true, VehicleType.Ifv);
 
-            var allStopped = Environment.MyVehicles.All(x => Geom.PointsEquals(x, MoveObserver.BeforeMoveUnits[x.Id]));
+                var arrvsRect = Utility.BoundingRect(arrvs);
+                var tanksRect = Utility.BoundingRect(tanks);
+                var ifvsRect = Utility.BoundingRect(ifvs);
 
-            if (!bottom2Moved)
-            {
-                if (allStopped)
+                var d = 1.38;
+                MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Arrv));
+                MoveQueue.Add(new AMove
                 {
-                    bottom2Moved = true;
-                    add(0, cs, 0, sh);
-                }
-                return;
-            }
+                    Action = ActionType.Scale,
+                    Point = arrvsRect.Center,
+                    Factor = d,
+                });
 
-            if (!right1Moved)
-            {
-                if (allStopped)
+                MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Tank));
+                MoveQueue.Add(new AMove
                 {
-                    right1Moved = true;
-                    add(2 * cs, 0, sh, 0);
-                }
-                return;
-            }
+                    Action = ActionType.Scale,
+                    Point = tanksRect.Center,
+                    Factor = d,
+                });
 
-            if (!right2moved)
-            {
-                if (allStopped)
+                MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Ifv));
+                MoveQueue.Add(new AMove
                 {
-                    right2moved = true;
-                    add(cs, 0, sh, 0);
-                }
-                return;
-            }
+                    Action = ActionType.Scale,
+                    Point = ifvsRect.Center,
+                    Factor = d,
+                });
 
-            if (!scaled)
-            {
-                if (allStopped)
+                return env2 =>
                 {
-                    scaled = true;
-                    skipTicks = 10;
-
-                    var d = 1.38;
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        VehicleType = VehicleType.Arrv,
-                        Rect = G.MapRect,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Point = arrvsRect.Center,
-                        Factor = d,
-                    });
-
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        VehicleType = VehicleType.Tank,
-                        Rect = G.MapRect,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Point = tanksRect.Center,
-                        Factor = d,
-                    });
-
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        VehicleType = VehicleType.Ifv,
-                        Rect = G.MapRect,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Point = ifvsRect.Center,
-                        Factor = d,
-                    });
-                }
-                return;
-            }
+                    return env2.TickIndex > env.TickIndex + 20 &&
+                           env2.MyVehicles.Where(u => !u.IsAerial).All(u => u.Stopped);
+                };
+            });
 
             var shift = 4.02;
 
-            if (!shifted)
+            ActionsQueue.Add(env =>
             {
-                if (allStopped)
+                MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Arrv));
+                MoveQueue.Add(new AMove
                 {
-                    shifted = true;
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        VehicleType = VehicleType.Arrv,
-                        Rect = G.MapRect,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        X = shift,
-                        Y = shift,
-                    });
-                    skipTicks = 1;
-                }
-                return;
-            }
+                    Action = ActionType.Move,
+                    X = shift,
+                    Y = shift,
+                });
 
-            if (!half1Moved)
+                return env2 =>
+                {
+                    return env2.TickIndex > env.TickIndex &&
+                           env2.GetVehicles(true, VehicleType.Arrv).All(u => u.Stopped);
+                };
+            });
+
+            ActionsQueue.Add(env =>
             {
-                if (allStopped)
+                var arrvs = env.GetVehicles(true, VehicleType.Arrv);
+                var tanks = env.GetVehicles(true, VehicleType.Tank);
+                var ifvs = env.GetVehicles(true, VehicleType.Ifv);
+
+                var arrvsRect = Utility.BoundingRect(arrvs);
+                var tanksRect = Utility.BoundingRect(tanks);
+                var ifvsRect = Utility.BoundingRect(ifvs);
+
+                var aVert = arrvsRect.SplitVertically();
+
+                var topArrvs = arrvs.Where(x => x.Y <= arrvsRect.Center.Y).Select(x => x.Id).ToArray();
+                var bottomArrvs = arrvs.Where(x => x.Y > arrvsRect.Center.Y).Select(x => x.Id).ToArray();
+
+                if (Math.Max(aVert[0].Center.GetDistanceTo2(tanksRect.Center),
+                    aVert[1].Center.GetDistanceTo2(ifvsRect.Center))
+                    <
+                    Math.Max(aVert[1].Center.GetDistanceTo2(tanksRect.Center),
+                        aVert[0].Center.GetDistanceTo2(ifvsRect.Center)))
                 {
-                    half1Moved = true;
-                    var topArrvs = arrvs.Where(x => x.Y <= arrvsRect.Center.Y).Select(x => x.Id).ToArray();
-                    var bottomArrvs = arrvs.Where(x => x.Y > arrvsRect.Center.Y).Select(x => x.Id).ToArray();
-
-                    if (Math.Max(aVert[0].Center.GetDistanceTo2(tanksRect.Center),
-                        aVert[1].Center.GetDistanceTo2(ifvsRect.Center))
-                        <
-                        Math.Max(aVert[1].Center.GetDistanceTo2(tanksRect.Center),
-                            aVert[0].Center.GetDistanceTo2(ifvsRect.Center)))
-                    {
-                        tankArrvs = topArrvs;
-                        ifvArrvs = bottomArrvs;
-                    }
-                    else
-                    {
-                        tankArrvs = bottomArrvs;
-                        ifvArrvs = topArrvs;
-                    }
-
-
-                    var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
-                    var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
-
-                    //if (tankArrvsRect.Center.GetDistanceTo2(tanksRect.Center)
-                    //    > ifvArrvsRect.Center.GetDistanceTo2(ifvsRect.Center))
-                    {
-                        MoveQueue.Add(new AMove
-                        {
-                            Action = ActionType.ClearAndSelect,
-                            Rect = tankArrvsRect,
-                            VehicleType = VehicleType.Arrv,
-                        });
-                        MoveQueue.Add(new AMove
-                        {
-                            Action = ActionType.Move,
-                            X = tanksRect.Center.X - (tankArrvsRect.Center.X - shift),
-                        });
-                    }
-                    {
-                        MoveQueue.Add(new AMove
-                        {
-                            Action = ActionType.ClearAndSelect,
-                            Rect = ifvArrvsRect,
-                            VehicleType = VehicleType.Arrv,
-                        });
-                        MoveQueue.Add(new AMove
-                        {
-                            Action = ActionType.Move,
-                            X = ifvsRect.Center.X - (ifvArrvsRect.Center.X - shift),
-                        });
-                    }
-                    skipTicks = 4;
+                    tankArrvs = topArrvs;
+                    ifvArrvs = bottomArrvs;
                 }
-                return;
-            }
+                else
+                {
+                    tankArrvs = bottomArrvs;
+                    ifvArrvs = topArrvs;
+                }
 
-            if (!half2Moved)
+
+                var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
+                var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
+
+
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.ClearAndSelect,
+                    Rect = tankArrvsRect,
+                    VehicleType = VehicleType.Arrv,
+                });
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.Move,
+                    X = tanksRect.Center.X - (tankArrvsRect.Center.X - shift),
+                });
+
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.ClearAndSelect,
+                    Rect = ifvArrvsRect,
+                    VehicleType = VehicleType.Arrv,
+                });
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.Move,
+                    X = ifvsRect.Center.X - (ifvArrvsRect.Center.X - shift),
+                });
+
+                return env2 =>
+                {
+                    return env2.TickIndex > env.TickIndex + 5 &&
+                           env2.GetVehicles(true, VehicleType.Arrv).All(u => u.Stopped);
+                };
+            });
+
+            ActionsQueue.Add(env =>
             {
-                if (allStopped)
+                var tanks = env.GetVehicles(true, VehicleType.Tank);
+                var ifvs = env.GetVehicles(true, VehicleType.Ifv);
+
+                var tanksRect = Utility.BoundingRect(tanks);
+                var ifvsRect = Utility.BoundingRect(ifvs);
+
+                var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => env.VehicleById[id]));
+                var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => env.VehicleById[id]));
+
+                var proportion = 0.55;
+
+                if (Math.Abs(ifvsRect.Center.X - tanksRect.Center.X) < 10 && ifvsRect.Center.GetDistanceTo(tanksRect.Center) < 100)
+                    proportion = 0.95;
+            
+                MoveQueue.Add(new AMove
                 {
-                    half2Moved = true;
+                    Action = ActionType.Move,
+                    Y = (ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * proportion,
+                });
 
-                    var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
-                    var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.ClearAndSelect,
+                    Rect = tankArrvsRect,
+                    VehicleType = VehicleType.Arrv,
+                });
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.Move,
+                    Y = (tanksRect.Center.Y - tankArrvsRect.Center.Y) * proportion,
+                });
 
-                    {
-                        MoveQueue.Add(new AMove
-                        {
-                            Action = ActionType.Move,
-                            Y = ifvsRect.Center.Y - (ifvArrvsRect.Center.Y),
-                        });
-                    }
+                MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Ifv));
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.Move,
+                    Y = -(ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * (1 - proportion),
+                });
 
-                    {
-                        MoveQueue.Add(new AMove
-                        {
-                            Action = ActionType.ClearAndSelect,
-                            Rect = tankArrvsRect,
-                            VehicleType = VehicleType.Arrv,
-                        });
-                        MoveQueue.Add(new AMove
-                        {
-                            Action = ActionType.Move,
-                            Y = tanksRect.Center.Y - (tankArrvsRect.Center.Y),
-                        });
-                    }
+                MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Tank));
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.Move,
+                    Y = -(tanksRect.Center.Y - tankArrvsRect.Center.Y) * (1 - proportion),
+                });
 
-                    skipTicks = 4;
-                }
-                return;
-            }
+                return env2 =>
+                {
+                    return env2.TickIndex > env.TickIndex + 30 &&
+                           env2.MyVehicles.Where(u => !u.IsAerial).All(u => u.Stopped);
+                };
+            });
 
-            if (half2Moved)
+            ActionsQueue.Add(env =>
             {
-                if (allStopped)
+                // tanks already selected
+                MoveQueue.Add(new AMove
                 {
-                    FirstMovesComplete = true;
-                }
-                return;
-            }
+                    Action = ActionType.AddToSelection,
+                    Rect = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Arrv).Where(x => tankArrvs.Contains(x.Id)))
+                });
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.Assign,
+                    Group = TanksGroup,
+                });
 
-            return; 
+                MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Ifv));
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.AddToSelection,
+                    Rect = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Arrv).Where(x => ifvArrvs.Contains(x.Id)))
+                });
+                MoveQueue.Add(new AMove
+                {
+                    Action = ActionType.Assign,
+                    Group = IfvsGroup,
+                });
+
+                return e => true;
+            });
+
+            ActionsQueue.Add(env =>
+            {
+                FirstMovesComplete = true;
+                return e => true;
+            });
         }
+
+        private long[] tankArrvs, ifvArrvs;
+
+        public bool FirstMovesComplete = false;
     }
 
     public class MyGroup

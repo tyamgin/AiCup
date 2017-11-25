@@ -89,7 +89,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MoveObserver.Update();
         }
 
-        private bool hasGroups = false;
+
 
         public static int TanksGroup = 1;
         public static int IfvsGroup = 2;
@@ -135,59 +135,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             VehiclesObserver.Update();
             MoveObserver.Init();
-            Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears);
+            Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears) {TickIndex = World.TickIndex};
             OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
 
-            //if (World.TickIndex == 0)
-            //{
-            //    ResultingMove.Action = ActionType.ClearAndSelect;
-            //    ResultingMove.Right = ResultingMove.Bottom = G.MapSize;
-            //    return;
-            //}
-
-            //if (World.TickIndex == 1)
-            //{
-            //    ResultingMove.Action = ActionType.Move;
-            //    ResultingMove.X = 1000;
-            //    ResultingMove.Y = 100;
-            //    return;
-            //}
-            //return;
-
-            MoveFirstTicks();
-            var ret = !MoveQueue.Free || !FirstMovesComplete;
+            if (World.TickIndex == 0)
+                MoveFirstTicks();
+            ActionsQueue.Process();
+            var ret = !MoveQueue.Free;
             MoveQueue.Run();
             if (ret)
                 return;
 
-            if (!hasGroups)
-            {
-                hasGroups = true;
-                MoveQueue.Add(new AMove
-                {
-                    Action = ActionType.ClearAndSelect,
-                    Rect = Utility.BoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Tank || x.Type == VehicleType.Arrv && tankArrvs.Contains(x.Id))),
-                });
-                MoveQueue.Add(new AMove
-                {
-                    Action = ActionType.Assign,
-                    Group = TanksGroup,
-                });
-                MoveQueue.Add(new AMove
-                {
-                    Action = ActionType.ClearAndSelect,
-                    Rect = Utility.BoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Ifv || x.Type == VehicleType.Arrv && ifvArrvs.Contains(x.Id))),
-                });
-                MoveQueue.Add(new AMove
-                {
-                    Action = ActionType.Assign,
-                    Group = IfvsGroup,
-                });
+            if (!FirstMovesComplete)
                 return;
-            }
 
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
+
 
             if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
                 || MoveObserver.AvailableActions >= 4 
