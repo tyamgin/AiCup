@@ -5,8 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
@@ -44,6 +43,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private readonly double _bottom;
         private readonly double _epsilon;
         private Func<T, T> _cloneFunc;
+
+        // arguments
+        private double _x, _y, _squaredDistance, _squaredDistanceE;
+        private long _id;
+        private List<T> _values;
+        private T _value;
 
         private IEnumerable<T> _traverse(Node node)
         {
@@ -142,11 +147,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             if (node.Value != null)
             {
-                if (node.Value.Equals(value))
+                if (node.Value.Equals(_value))
                 {
-                    value.X = x;
-                    value.Y = y;
-                    if (x >= left && x < right && y >= top && y < bottom)
+                    _value.X = _x;
+                    _value.Y = _y;
+                    if (_x >= left && _x < right && _y >= top && _y < bottom)
                         return 0;
 
                     node.Value = null;
@@ -165,24 +170,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             int done;
 
-            if (value.Y < centerY)
+            if (_value.Y < centerY)
             {
-                done = value.X < centerX
+                done = _value.X < centerX
                     ? _changeXY(left, top, centerX, centerY, node.LeftTop)
                     : _changeXY(centerX, top, right, centerY, node.RightTop);
             }
             else
             {
-                done = value.X < centerX
+                done = _value.X < centerX
                     ? _changeXY(left, centerY, centerX, bottom, node.LeftBottom)
                     : _changeXY(centerX, centerY, right, bottom, node.RightBottom);
             }
 
             if (done == 1)
             {
-                if (x >= left && x < right && y >= top && y < bottom)
+                if (_x >= left && _x < right && _y >= top && _y < bottom)
                 {
-                    _add(value, node, left, top, right, bottom);
+                    _add(_value, node, left, top, right, bottom);
                     return 0;
                 }
 
@@ -206,7 +211,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             if (node.Value != null)
             {
-                if (_getSquaredDistanceTo(node.Value, squaredDistance) <= squaredDistanceE)
+                if (_getSquaredDistanceTo(node.Value, _squaredDistance) <= _squaredDistanceE)
                     return node.Value;
                 return null;
             }
@@ -217,17 +222,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var centerX = (left + right)/2.0D;
             var centerY = (top + bottom)/2.0D;
 
-            if (x < centerX)
+            if (_x < centerX)
             {
-                if (y < centerY)
+                if (_y < centerY)
                 {
                     var nearestValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, _squaredDistance);
 
-                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - _x))
                     {
                         var otherValue = _findNearest(node.RightTop, centerX, top, right, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -236,10 +241,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - _y))
                     {
                         var otherValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -248,10 +253,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - _x, centerY - _y))
                     {
                         var otherValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -264,12 +269,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 else
                 {
                     var nearestValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, _squaredDistance);
 
-                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - x))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerX - _x))
                     {
                         var otherValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, x, y, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _x, _y, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -278,10 +283,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(_y - centerY))
                     {
                         var otherValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -290,10 +295,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(centerX - _x, _y - centerY))
                     {
                         var otherValue = _findNearest(node.RightTop, centerX, top, right, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -306,15 +311,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
             else
             {
-                if (y < centerY)
+                if (_y < centerY)
                 {
                     var nearestValue = _findNearest(node.RightTop, centerX, top, right, centerY);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, _squaredDistance);
 
-                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(_x - centerX))
                     {
                         var otherValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -323,10 +328,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.Sqr(centerY - _y))
                     {
                         var otherValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -335,10 +340,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
+                    if (nearestSquaredDistance + _epsilon >= Geom.SumSqr(_x - centerX, centerY - _y))
                     {
                         var otherValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -351,12 +356,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 else
                 {
                     var nearestValue = _findNearest(node.RightBottom, centerX, centerY, right, bottom);
-                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, squaredDistance);
+                    var nearestSquaredDistance = _getSquaredDistanceTo(nearestValue, _squaredDistance);
 
-                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(x - centerX))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(_x - centerX))
                     {
                         var otherValue = _findNearest(node.LeftBottom, left, centerY, centerX, bottom);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -365,10 +370,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.Sqr(_y - centerY))
                     {
                         var otherValue = _findNearest(node.RightTop, centerX, top, right, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -377,10 +382,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
 
-                    if (nearestSquaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
+                    if (nearestSquaredDistance + _epsilon > Geom.SumSqr(_x - centerX, _y - centerY))
                     {
                         var otherValue = _findNearest(node.LeftTop, left, top, centerX, centerY);
-                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, squaredDistance);
+                        var otherSquaredDistance = _getSquaredDistanceTo(otherValue, _squaredDistance);
 
                         if (otherSquaredDistance < nearestSquaredDistance)
                         {
@@ -458,16 +463,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return removed;
         }
 
-        private double x, y, squaredDistance, squaredDistanceE;
-        private long id;
-        private List<T> values;
-        private T value;
-
         private T _findFirstNearby(Node node, double left, double top, double right, double bottom)
         {
             if (node.Value != null)
             {
-                if (_getSquaredDistanceTo(node.Value) <= squaredDistanceE)
+                if (_getSquaredDistanceTo(node.Value) <= _squaredDistanceE)
                     return node.Value;
                 return null;
             }
@@ -479,23 +479,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var centerY = (top + bottom) / 2.0D;
             T result;
 
-            if (x < centerX)
+            if (_x < centerX)
             {
-                if (y < centerY)
+                if (_y < centerY)
                 {
                     result = _findFirstNearby(node.LeftTop, left, top, centerX, centerY);
 
-                    if (result == null && squaredDistanceE >= Geom.Sqr(centerX - x))
+                    if (result == null && _squaredDistanceE >= Geom.Sqr(centerX - _x))
                     {
                         result = _findFirstNearby(node.RightTop, centerX, top, right, centerY);
                     }
 
-                    if (result == null && squaredDistanceE >= Geom.Sqr(centerY - y))
+                    if (result == null && _squaredDistanceE >= Geom.Sqr(centerY - _y))
                     {
                         result = _findFirstNearby(node.LeftBottom, left, centerY, centerX, bottom);
                     }
 
-                    if (result == null && squaredDistanceE >= Geom.SumSqr(centerX - x, centerY - y))
+                    if (result == null && _squaredDistanceE >= Geom.SumSqr(centerX - _x, centerY - _y))
                     {
                         result = _findFirstNearby(node.RightBottom, centerX, centerY, right, bottom);
                     }
@@ -504,17 +504,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     result = _findFirstNearby(node.LeftBottom, left, centerY, centerX, bottom);
 
-                    if (result == null && squaredDistanceE >= Geom.Sqr(centerX - x))
+                    if (result == null && _squaredDistanceE >= Geom.Sqr(centerX - _x))
                     {
                         result = _findFirstNearby(node.RightBottom, centerX, centerY, right, bottom);
                     }
 
-                    if (result == null && squaredDistanceE > Geom.Sqr(y - centerY))
+                    if (result == null && _squaredDistanceE > Geom.Sqr(_y - centerY))
                     {
                         result = _findFirstNearby(node.LeftTop, left, top, centerX, centerY);
                     }
 
-                    if (result == null && squaredDistanceE >= Geom.SumSqr(centerX - x, y - centerY))
+                    if (result == null && _squaredDistanceE >= Geom.SumSqr(centerX - _x, _y - centerY))
                     {
                         result = _findFirstNearby(node.RightTop, centerX, top, right, centerY);
                     }
@@ -522,21 +522,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
             else
             {
-                if (y < centerY)
+                if (_y < centerY)
                 {
                     result = _findFirstNearby(node.RightTop, centerX, top, right, centerY);
 
-                    if (result == null && squaredDistanceE > Geom.Sqr(x - centerX))
+                    if (result == null && _squaredDistanceE > Geom.Sqr(_x - centerX))
                     {
                         result = _findFirstNearby(node.LeftTop, left, top, centerX, centerY);
                     }
 
-                    if (result == null && squaredDistanceE >= Geom.Sqr(centerY - y))
+                    if (result == null && _squaredDistanceE >= Geom.Sqr(centerY - _y))
                     {
                         result = _findFirstNearby(node.RightBottom, centerX, centerY, right, bottom);
                     }
 
-                    if (result == null && squaredDistanceE >= Geom.SumSqr(x - centerX, centerY - y))
+                    if (result == null && _squaredDistanceE >= Geom.SumSqr(_x - centerX, centerY - _y))
                     {
                         result = _findFirstNearby(node.LeftBottom, left, centerY, centerX, bottom);
                     }
@@ -545,17 +545,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     result = _findFirstNearby(node.RightBottom, centerX, centerY, right, bottom);
 
-                    if (result == null && squaredDistanceE > Geom.Sqr(x - centerX))
+                    if (result == null && _squaredDistanceE > Geom.Sqr(_x - centerX))
                     {
                         result = _findFirstNearby(node.LeftBottom, left, centerY, centerX, bottom);
                     }
 
-                    if (result == null && squaredDistanceE > Geom.Sqr(y - centerY))
+                    if (result == null && _squaredDistanceE > Geom.Sqr(_y - centerY))
                     {
                         result = _findFirstNearby(node.RightTop, centerX, top, right, centerY);
                     }
 
-                    if (result == null && squaredDistanceE > Geom.SumSqr(x - centerX, y - centerY))
+                    if (result == null && _squaredDistanceE > Geom.SumSqr(_x - centerX, _y - centerY))
                     {
                         result = _findFirstNearby(node.LeftTop, left, top, centerX, centerY);
                     }
@@ -568,8 +568,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             if (node.Value != null)
             {
-                if (_getSquaredDistanceTo(node.Value) <= squaredDistanceE)
-                    values.Add(node.Value);
+                if (_getSquaredDistanceTo(node.Value) <= _squaredDistanceE)
+                    _values.Add(node.Value);
                 return;
             }
 
@@ -579,23 +579,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var centerX = (left + right)/2.0D;
             var centerY = (top + bottom)/2.0D;
 
-            if (x < centerX)
+            if (_x < centerX)
             {
-                if (y < centerY)
+                if (_y < centerY)
                 {
                     _findAllNearby(node.LeftTop, left, top, centerX, centerY);
 
-                    if (squaredDistanceE >= Geom.Sqr(centerX - x))
+                    if (_squaredDistanceE >= Geom.Sqr(centerX - _x))
                     {
                         _findAllNearby(node.RightTop, centerX, top, right, centerY);
                     }
 
-                    if (squaredDistanceE >= Geom.Sqr(centerY - y))
+                    if (_squaredDistanceE >= Geom.Sqr(centerY - _y))
                     {
                         _findAllNearby(node.LeftBottom, left, centerY, centerX, bottom);
                     }
 
-                    if (squaredDistanceE >= Geom.SumSqr(centerX - x, centerY - y))
+                    if (_squaredDistanceE >= Geom.SumSqr(centerX - _x, centerY - _y))
                     {
                         _findAllNearby(node.RightBottom, centerX, centerY, right, bottom);
                     }
@@ -604,17 +604,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     _findAllNearby(node.LeftBottom, left, centerY, centerX, bottom);
 
-                    if (squaredDistanceE >= Geom.Sqr(centerX - x))
+                    if (_squaredDistanceE >= Geom.Sqr(centerX - _x))
                     {
                         _findAllNearby(node.RightBottom, centerX, centerY, right, bottom);
                     }
 
-                    if (squaredDistanceE > Geom.Sqr(y - centerY))
+                    if (_squaredDistanceE > Geom.Sqr(_y - centerY))
                     {
                         _findAllNearby(node.LeftTop, left, top, centerX, centerY);
                     }
 
-                    if (squaredDistanceE >= Geom.SumSqr(centerX - x, y - centerY))
+                    if (_squaredDistanceE >= Geom.SumSqr(centerX - _x, _y - centerY))
                     {
                         _findAllNearby(node.RightTop, centerX, top, right, centerY);
                     }
@@ -622,21 +622,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
             else
             {
-                if (y < centerY)
+                if (_y < centerY)
                 {
                     _findAllNearby(node.RightTop, centerX, top, right, centerY);
 
-                    if (squaredDistanceE > Geom.Sqr(x - centerX))
+                    if (_squaredDistanceE > Geom.Sqr(_x - centerX))
                     {
                         _findAllNearby(node.LeftTop, left, top, centerX, centerY);
                     }
 
-                    if (squaredDistanceE >= Geom.Sqr(centerY - y))
+                    if (_squaredDistanceE >= Geom.Sqr(centerY - _y))
                     {
                         _findAllNearby(node.RightBottom, centerX, centerY, right, bottom);
                     }
 
-                    if (squaredDistanceE >= Geom.SumSqr(x - centerX, centerY - y))
+                    if (_squaredDistanceE >= Geom.SumSqr(_x - centerX, centerY - _y))
                     {
                         _findAllNearby(node.LeftBottom, left, centerY, centerX, bottom);
                     }
@@ -645,179 +645,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     _findAllNearby(node.RightBottom, centerX, centerY, right, bottom);
 
-                    if (squaredDistanceE > Geom.Sqr(x - centerX))
+                    if (_squaredDistanceE > Geom.Sqr(_x - centerX))
                     {
                         _findAllNearby(node.LeftBottom, left, centerY, centerX, bottom);
                     }
 
-                    if (squaredDistanceE > Geom.Sqr(y - centerY))
+                    if (_squaredDistanceE > Geom.Sqr(_y - centerY))
                     {
                         _findAllNearby(node.RightTop, centerX, top, right, centerY);
                     }
 
-                    if (squaredDistanceE > Geom.SumSqr(x - centerX, y - centerY))
+                    if (_squaredDistanceE > Geom.SumSqr(_x - centerX, _y - centerY))
                     {
                         _findAllNearby(node.LeftTop, left, top, centerX, centerY);
                     }
-                }
-            }
-        }
-
-
-        private bool _hasNearby(
-            double x, double y, double squaredDistance, Node node,
-            double left, double top, double right, double bottom
-            )
-        {
-            if (node.Value != null)
-            {
-                return _getSquaredDistanceTo(node.Value, x, y) <= squaredDistance;
-            }
-
-            if (!node.HasValueBelow)
-            {
-                return false;
-            }
-
-            var centerX = (left + right)/2.0D;
-            var centerY = (top + bottom)/2.0D;
-
-            if (x < centerX)
-            {
-                if (y < centerY)
-                {
-                    if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, centerY - y))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-                else
-                {
-                    if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + _epsilon >= Geom.Sqr(centerX - x))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon >= Geom.SumSqr(centerX - x, y - centerY))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-            }
-            else
-            {
-                if (y < centerY)
-                {
-                    if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon >= Geom.Sqr(centerY - y))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon >= Geom.SumSqr(x - centerX, centerY - y))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-                else
-                {
-                    if (_hasNearby(x, y, squaredDistance, node.RightBottom, centerX, centerY, right, bottom))
-                    {
-                        return true;
-                    }
-
-                    if (squaredDistance + _epsilon > Geom.Sqr(x - centerX))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.LeftBottom, left, centerY, centerX, bottom))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon > Geom.Sqr(y - centerY))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.RightTop, centerX, top, right, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    if (squaredDistance + _epsilon > Geom.SumSqr(x - centerX, y - centerY))
-                    {
-                        if (_hasNearby(x, y, squaredDistance, node.LeftTop, left, top, centerX, centerY))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
                 }
             }
         }
@@ -839,9 +680,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private double _getSquaredDistanceTo(T value, double defaultValue = double.PositiveInfinity)
         {
-            return value == null || value.Id == id
+            return value == null || value.Id == _id
                 ? defaultValue
-                : Geom.SumSqr(value.X - x, value.Y - y);
+                : Geom.SumSqr(value.X - _x, value.Y - _y);
         }
 
         private static double _getSquaredDistanceTo(T value, double x, double y, double defaultValue = double.PositiveInfinity)
@@ -882,6 +723,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Add(value);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T FindNearest(T value, double squaredRadius = double.PositiveInfinity)
         {
             return FindNearest(value.X, value.Y, squaredRadius);
@@ -889,26 +731,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public T FindNearest(double x, double y, double squaredRadius = double.PositiveInfinity)
         {
-            this.x = x;
-            this.y = y;
-            this.squaredDistanceE = squaredRadius + _epsilon;
-            this.squaredDistance = squaredRadius;
+            this._x = x;
+            this._y = y;
+            this._squaredDistanceE = squaredRadius + _epsilon;
+            this._squaredDistance = squaredRadius;
             return _findNearest( _root, _left, _top, _right, _bottom);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Remove(T value)
         {
             return _remove(_left, _top, _right, _bottom, _root, value);
         }
 
-        public bool ChangeXY(T value, double x, double y)
+        public bool ChangeXY(T value, double newX, double newY)
         {
-            this.value = value;
-            this.x = x;
-            this.y = y;
+            this._value = value;
+            this._x = newX;
+            this._y = newY;
             return _changeXY(_left, _top, _right, _bottom, _root) == 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T FindFirstNearby(T value, double squaredDistance)
         {
             return FindFirstNearby(value.X, value.Y, squaredDistance, value.Id);
@@ -916,13 +760,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public T FindFirstNearby(double x, double y, double squaredDistance, long id)
         {
-            this.x = x;
-            this.y = y;
-            this.squaredDistanceE = squaredDistance + _epsilon;
-            this.id = id;
+            this._x = x;
+            this._y = y;
+            this._squaredDistanceE = squaredDistance + _epsilon;
+            this._id = id;
             return _findFirstNearby(_root, _left, _top, _right, _bottom);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public List<T> FindAllNearby(T value, double squaredDistance)
         {
             return FindAllNearby(value.X, value.Y, squaredDistance, value.Id);
@@ -930,25 +775,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public List<T> FindAllNearby(double x, double y, double squaredDistance, long id)
         {
-            this.values = new List<T>();
-            this.x = x;
-            this.y = y;
-            this.squaredDistanceE = squaredDistance + _epsilon;
-            this.id = id;
+            this._values = new List<T>();
+            this._x = x;
+            this._y = y;
+            this._squaredDistanceE = squaredDistance + _epsilon;
+            this._id = id;
             _findAllNearby(_root, _left, _top, _right, _bottom);
-            return values;
+            return _values;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasNearby(T value, double squaredDistance)
         {
-            return HasNearby(value.X, value.Y, squaredDistance);
+            return FindFirstNearby(value, squaredDistance) != null;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool HasNearby(double x, double y, double squaredDistance)
         {
-            return _hasNearby(x, y, squaredDistance, _root, _left, _top, _right, _bottom);
+            return FindFirstNearby(x, y, squaredDistance, -1) != null;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             _clear(_root);
@@ -963,11 +811,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return tree;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerator<T> GetEnumerator()
         {
             return _traverse(_root).GetEnumerator();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();

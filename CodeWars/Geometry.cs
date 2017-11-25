@@ -178,6 +178,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static Point One => new Point(1, 1).Normalized();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Point Clone()
         {
             return new Point(this);

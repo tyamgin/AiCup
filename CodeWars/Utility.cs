@@ -55,6 +55,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             J = (int) ((y)/G.CellSize);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Dec(ref int value)
         {
             if (value > 0)
@@ -121,12 +122,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 idx++;
             }
             return res;
-        }
-
-        public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
-        {
-            foreach (var item in enumeration)
-                action(item);
         }
     }
 }

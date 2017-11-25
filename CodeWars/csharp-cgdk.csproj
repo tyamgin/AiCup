@@ -84,7 +84,7 @@
     <Compile Include="FirstMovesStrategy.cs" />
     <Compile Include="FirstStrategy.cs" />
     <Compile Include="Geometry.cs" />
-    <Compile Include="KDTree.cs" />
+    <Compile Include="QuadTree.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Model\ActionType.cs" />
     <Compile Include="Model\CircularUnit.cs" />
