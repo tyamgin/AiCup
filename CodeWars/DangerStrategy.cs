@@ -85,7 +85,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var vehs = env.GetVehicles(true, type);
                 if (vehs.Count == 0)
                     return 0;
-                var rect = GetUnitsBoundingRect(vehs);
+                var rect = Utility.BoundingRect(vehs);
                 return Math.Sqrt(rect.Area);
             });
 
@@ -114,10 +114,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
             }
 
-            var rectF = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Fighter));
-            var rectH = GetUnitsBoundingRect(env.GetVehicles(true, VehicleType.Helicopter));
-            var rectT = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(TanksGroup)));
-            var rectI = GetUnitsBoundingRect(env.GetVehicles(true, new MyGroup(IfvsGroup)));
+            var rectF = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Fighter));
+            var rectH = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Helicopter));
+            var rectT = Utility.BoundingRect(env.GetVehicles(true, new MyGroup(TanksGroup)));
+            var rectI = Utility.BoundingRect(env.GetVehicles(true, new MyGroup(IfvsGroup)));
 
             foreach (var rectPair in new[] {new Tuple<Rect, Rect>(rectF, rectH), new Tuple<Rect, Rect>(rectT, rectI)})
             {
@@ -164,7 +164,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (myGroup.Count == 0)
                     continue;
 
-                var cen = GetAvg(myGroup);
+                var cen = Utility.Average(myGroup);
 
                 var lst = new List<Tuple<double, double>>();
 

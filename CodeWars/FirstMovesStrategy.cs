@@ -38,9 +38,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var tanks = Environment.GetVehicles(true, VehicleType.Tank);
             var ifvs = Environment.GetVehicles(true, VehicleType.Ifv);
 
-            var arrvsRect = GetUnitsBoundingRect(arrvs);
-            var tanksRect = GetUnitsBoundingRect(tanks);
-            var ifvsRect = GetUnitsBoundingRect(ifvs);
+            var arrvsRect = Utility.BoundingRect(arrvs);
+            var tanksRect = Utility.BoundingRect(tanks);
+            var ifvsRect = Utility.BoundingRect(ifvs);
 
             var aVert = arrvsRect.SplitVertically();
 
@@ -207,8 +207,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
 
 
-                    var tankArrvsRect = GetUnitsBoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
-                    var ifvArrvsRect = GetUnitsBoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
+                    var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
+                    var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
 
                     //if (tankArrvsRect.Center.GetDistanceTo2(tanksRect.Center)
                     //    > ifvArrvsRect.Center.GetDistanceTo2(ifvsRect.Center))
@@ -249,8 +249,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     half2Moved = true;
 
-                    var tankArrvsRect = GetUnitsBoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
-                    var ifvArrvsRect = GetUnitsBoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
+                    var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
+                    var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
 
                     {
                         MoveQueue.Add(new AMove

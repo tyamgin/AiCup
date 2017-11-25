@@ -252,7 +252,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 var selectedVehicles = VehiclesObserver.Vehicles.Where(x => x.IsSelected).ToArray();
                 if (selectedVehicles.Length == 0)
                     throw new Exception("Trying to move 0 vehicles");
-                var start = MyStrategy.GetAvg(selectedVehicles);
+                var start = Utility.Average(selectedVehicles);
                 Vectors.Add(new SelectionVector
                 {
                     Start = start,
@@ -301,7 +301,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             // clusters
             foreach (var cluster in MyStrategy.Environment.GetClusters(false, Const.ClusteringMargin))
             {
-                var rect = MyStrategy.GetUnitsBoundingRect(cluster);
+                var rect = Utility.BoundingRect(cluster);
                 DrawRect(Color.Maroon, rect.X, rect.Y, rect.Width, rect.Height);
             }
 

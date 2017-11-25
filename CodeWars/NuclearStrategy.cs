@@ -13,7 +13,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             var vr = veh.ActualVisionRange * 0.9;
             var targets = env.GetOpponentNeighbours(veh.X, veh.Y, vr + G.TacticalNuclearStrikeRadius);
-            var cen = GetAvg(targets);
+            var cen = Utility.Average(targets);
             cen = veh + (cen - veh).Normalized() * Math.Min(vr, veh.GetDistanceTo(cen));
             var nuclear = new ANuclear(cen.X, cen.Y, true, veh.Id, G.TacticalNuclearStrikeDelay);
             nuclearResult = nuclear;

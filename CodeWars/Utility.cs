@@ -77,6 +77,47 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             lhs = rhs;
             rhs = temp;
         }
+
+        public static Point Average<T>(IEnumerable<T> units) where T : Point
+        {
+            var sum = Point.Zero;
+            var count = 0;
+            foreach (var unit in units)
+            {
+                sum.X += unit.X;
+                sum.Y += unit.Y;
+                count++;
+            }
+            return sum / count;
+        }
+
+        public static Rect BoundingRect <T>(IEnumerable<T> units) where T : Point
+        {
+            var minX = double.MaxValue;
+            var maxX = double.MinValue;
+            var minY = double.MaxValue;
+            var maxY = double.MinValue;
+
+            foreach (var unit in units)
+            {
+                if (unit.X < minX)
+                    minX = unit.X;
+                if (unit.Y < minY)
+                    minY = unit.Y;
+                if (unit.X > maxX)
+                    maxX = unit.X;
+                if (unit.Y > maxY)
+                    maxY = unit.Y;
+            }
+
+            return new Rect
+            {
+                X = minX,
+                Y = minY,
+                X2 = maxX,
+                Y2 = maxY,
+            };
+        }
     }
 
     public static class ListExtension

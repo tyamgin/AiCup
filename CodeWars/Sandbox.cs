@@ -619,7 +619,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public void CompleteCluster()
         {
-            Avg = MyStrategy.GetAvg(this);
+            Avg = Utility.Average(this);
         }
     }
 }

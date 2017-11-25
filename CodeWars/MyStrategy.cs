@@ -150,7 +150,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.ClearAndSelect,
-                    Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Tank || x.Type == VehicleType.Arrv && tankArrvs.Contains(x.Id))),
+                    Rect = Utility.BoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Tank || x.Type == VehicleType.Arrv && tankArrvs.Contains(x.Id))),
                 });
                 MoveQueue.Add(new AMove
                 {
@@ -160,7 +160,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.ClearAndSelect,
-                    Rect = GetUnitsBoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Ifv || x.Type == VehicleType.Arrv && ifvArrvs.Contains(x.Id))),
+                    Rect = Utility.BoundingRect(Environment.MyVehicles.Where(x => x.Type == VehicleType.Ifv || x.Type == VehicleType.Arrv && ifvArrvs.Contains(x.Id))),
                 });
                 MoveQueue.Add(new AMove
                 {
@@ -226,7 +226,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         ticksCount--;
                     }
 
-                    var typeRect = GetUnitsBoundingRect(startEnv.GetVehicles(true, group));
+                    var typeRect = Utility.BoundingRect(startEnv.GetVehicles(true, group));
 
                     Sandbox partialEnv = null;
                     if (Environment.Nuclears.Length == 0)

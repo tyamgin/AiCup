@@ -82,7 +82,6 @@
     <Compile Include="Const.cs" />
     <Compile Include="DangerStrategy.cs" />
     <Compile Include="FirstMovesStrategy.cs" />
-    <Compile Include="FirstStrategy.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Logger.cs" />
