@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System.Diagnostics;
 using System.Globalization;
@@ -7,9 +8,10 @@ using System.Threading;
 
 /**
  * TODO:
- * - отталкивающие поля
- * - добавить в перебор прямые ходы
- * 
+ * - неправильная сумма полей
+ * - лечение в ПП
+ * - прятать вертолеты от самолетов
+ * - оптимизировать начальное построение
  */
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -23,6 +25,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static TerrainType[][] TerrainType;
         public static WeatherType[][] WeatherType;
         public static Sandbox Environment;
+        public static List<VehiclesCluster> OppClusters;
 
         Stopwatch _globalTimer = new Stopwatch();
 
@@ -97,6 +100,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             new MyGroup(TanksGroup), new MyGroup(IfvsGroup),
         };
 
+        static VehicleType GroupFighter(MyGroup group)
+        {
+            VehicleType type;
+            if (group.Group == TanksGroup)
+                type = VehicleType.Tank;
+            else if (group.Group == IfvsGroup)
+                type = VehicleType.Ifv;
+            else
+                type = (VehicleType)group.Type;
+            return type;
+        }
+
         private void _move(Game game)
         {
             Const.Initialize(World, game);
@@ -121,6 +136,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             VehiclesObserver.Update();
             MoveObserver.Init();
             Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears);
+            OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
 
             //if (World.TickIndex == 0)
             //{
@@ -194,15 +210,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (Environment.GetVehicles(true, group).Count == 0)
                         continue;
 
-                    var selectedIds = string.Join(",", Environment.MyVehicles.Where(x => x.IsSelected)
-                        .Select(x => x.Id)
-                        .OrderBy(id => id)
-                        .Select(x => x.ToString()));
-
-                    var needToSelectIds = string.Join(",", Environment.GetVehicles(true, group)
-                        .Select(x => x.Id)
-                        .OrderBy(id => id)
-                        .Select(x => x.ToString()));
+                    var selectedIds = Utility.UnitsHash(Environment.MyVehicles.Where(x => x.IsSelected));
+                    var needToSelectIds = Utility.UnitsHash(Environment.GetVehicles(true, group));
 
                     var startEnv = Environment.Clone();
 
@@ -242,40 +251,78 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             partialEnv.DoTick();
                     }
 
+                    List<Point> pos = new List<Point>(), neg = new List<Point>();
+                    var myType = GroupFighter(group);
+                    for (var clIdx = 0; clIdx < OppClusters.Count; clIdx++)
+                    {
+                        var cl = OppClusters[clIdx];
+                        foreach (var oppType in Const.AllTypes)
+                        {
+                            if (cl.CountByType[(int) oppType] > 0)
+                            {
+                                var avg = Utility.Average(cl.Where(x => x.Type == oppType));
+                                if (G.AttackDamage[(int) myType, (int) oppType] > 0)
+                                    pos.Add(avg);
+                                else if (G.AttackDamage[(int) oppType, (int) myType] > 0)
+                                    neg.Add(avg);
+                            }
+                        }
+                    }
+
                     var actions = Utility.Range(0, 2*Math.PI, 12).Select(angle => new AMove
                     {
                         Action = ActionType.Move,
-                        Point = Point.ByAngle(angle)*startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)*ticksCount*(group.Type == null ? 40 : 7),
+                        Point =
+                            Point.ByAngle(angle)*startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)*
+                            ticksCount*(group.Type == null ? 40 : 7),
                         MaxSpeed = maxSpeed
                     })
-                    .Concat(Environment.Nuclears.Select(nuclear => new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Factor = 1.5,
-                        Point = nuclear
-                    }))
-                    .Concat(new[]
-                    {
-                        new AMove
+                        .Concat(Environment.Nuclears.Select(nuclear => new AMove
                         {
                             Action = ActionType.Scale,
-                            Factor = 0.1,
-                            Point = typeRect.Center,
-                            MaxSpeed = maxSpeed,
-                        },
-                        new AMove
+                            Factor = 1.5,
+                            Point = nuclear
+                        }))
+                        .Concat(new[]
                         {
-                            Action = ActionType.Rotate,
-                            Point = typeRect.Center,
-                            Angle = Math.PI / 4,
-                        },
-                        new AMove
-                        {
-                            Action = ActionType.Rotate,
-                            Point = typeRect.Center,
-                            Angle = -Math.PI / 4,
-                        },
-                    });
+                            new AMove
+                            {
+                                Action = ActionType.Scale,
+                                Factor = 0.1,
+                                Point = typeRect.Center,
+                                MaxSpeed = maxSpeed,
+                            },
+                            new AMove
+                            {
+                                Action = ActionType.Rotate,
+                                Point = typeRect.Center,
+                                Angle = Math.PI/4,
+                            },
+                            new AMove
+                            {
+                                Action = ActionType.Rotate,
+                                Point = typeRect.Center,
+                                Angle = -Math.PI/4,
+                            },
+                        })
+                        .Concat(
+                            pos.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
+                                .Take(2)
+                                .Select(cen => new AMove
+                                {
+                                    Action = ActionType.Move,
+                                    Point = cen - typeRect.Center
+                                }))
+                        .Concat(
+                            neg.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
+                                .Take(1)
+                                .Select(cen => new AMove
+                                {
+                                    Action = ActionType.Move,
+                                    Point = (typeRect.Center - cen).Take(150)
+                                }));
+
+
 
                     foreach (var move in actions)
                     {

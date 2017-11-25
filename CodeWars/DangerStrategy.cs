@@ -149,16 +149,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             foreach (var gr in MyGroups)
             {
-                VehicleType type;
-                if (gr.Group == TanksGroup)
-                    type = VehicleType.Tank;
-                else if (gr.Group == IfvsGroup)
-                    type = VehicleType.Ifv;
-                else
-                    type = (VehicleType) gr.Type;
-
-                if (type == VehicleType.Arrv)
-                    continue;
+                VehicleType type = GroupFighter(gr);
 
                 var myGroup = env.GetVehicles(true, type);
                 if (myGroup.Count == 0)

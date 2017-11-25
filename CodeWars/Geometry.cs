@@ -29,6 +29,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         /// <summary>
+        /// Вектор длины newLength того-же направления, или (0, 0), если вектор нулевой
+        /// </summary>
+        /// <param name="newLength">newLength</param>
+        /// <returns></returns>
+        public Point Take(double newLength)
+        {
+            var length = Length;
+            if (length < Const.Eps)
+                length = 1;
+            return new Point(X / length * newLength, Y / length * newLength);
+        }
+
+        /// <summary>
         /// Скалярное произведение a и b
         /// </summary>
         /// <param name="a">a</param>

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
@@ -117,6 +118,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 X2 = maxX,
                 Y2 = maxY,
             };
+        }
+
+        public static string UnitsHash<T>(IEnumerable<T> units) where T : AUnit
+        {
+            return string.Join(",", units
+                .Select(x => x.Id)
+                .OrderBy(id => id)
+                .Select(x => x.ToString()));
         }
     }
 
