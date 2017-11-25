@@ -240,15 +240,25 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => env.VehicleById[id]));
                 var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => env.VehicleById[id]));
 
-                var proportion = 0.55;
+                var proportionI = 0.55;
+                var proportionT = 0.55;
 
-                if (Math.Abs(ifvsRect.Center.X - tanksRect.Center.X) < 10 && ifvsRect.Center.GetDistanceTo(tanksRect.Center) < 100)
-                    proportion = 0.95;
-            
+                if (Math.Abs(ifvsRect.Center.X - tanksRect.Center.X) < 10 &&
+                    ifvsRect.Center.GetDistanceTo(tanksRect.Center) < 100)
+                {
+                    proportionI = 0.95;
+                    proportionT = 0.95;
+                }
+
+                if (ifvArrvsRect.Center.Y < 30 && ifvArrvsRect.Center.GetDistanceTo(ifvsRect.Center) < 20)
+                    proportionI = 0.95;
+                if (tankArrvsRect.Center.Y < 30 && tankArrvsRect.Center.GetDistanceTo(tanksRect.Center) < 20)
+                    proportionI = 0.95;
+
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Move,
-                    Y = (ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * proportion,
+                    Y = (ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * proportionI,
                 });
 
                 MoveQueue.Add(new AMove
@@ -260,21 +270,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Move,
-                    Y = (tanksRect.Center.Y - tankArrvsRect.Center.Y) * proportion,
+                    Y = (tanksRect.Center.Y - tankArrvsRect.Center.Y) * proportionT,
                 });
 
                 MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Ifv));
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Move,
-                    Y = -(ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * (1 - proportion),
+                    Y = -(ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * (1 - proportionI),
                 });
 
                 MoveQueue.Add(AMove.ClearAndSelectType(VehicleType.Tank));
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.Move,
-                    Y = -(tanksRect.Center.Y - tankArrvsRect.Center.Y) * (1 - proportion),
+                    Y = -(tanksRect.Center.Y - tankArrvsRect.Center.Y) * (1 - proportionT),
                 });
 
                 return env2 =>
@@ -290,6 +300,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.AddToSelection,
+                    VehicleType = VehicleType.Arrv,
                     Rect = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Arrv).Where(x => tankArrvs.Contains(x.Id)))
                 });
                 MoveQueue.Add(new AMove
@@ -302,6 +313,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 MoveQueue.Add(new AMove
                 {
                     Action = ActionType.AddToSelection,
+                    VehicleType = VehicleType.Arrv,
                     Rect = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Arrv).Where(x => ifvArrvs.Contains(x.Id)))
                 });
                 MoveQueue.Add(new AMove
