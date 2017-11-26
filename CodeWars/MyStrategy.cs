@@ -116,9 +116,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         Tuple<AMove, AMove, double> DoMain(bool opt)
         {
-            DangerResult selDanger = null;
+            var baseTicksCount = Const.ActionsBruteforceDepth;
+            if (Environment.Nuclears.Length > 0)
+                baseTicksCount *= 2;
+
             AMove selMove = new AMove();
             AMove selNextMove = null;
+
+            var env1 = Environment.Clone();
+            for (var i = 0; i < baseTicksCount; i++)
+                env1.DoTick();
+            DangerResult selDanger = GetDanger(Environment, env1);
 
             foreach (var group in MyGroups)
             {
@@ -129,10 +137,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var needToSelectIds = Utility.UnitsHash(Environment.GetVehicles(true, group));
 
                 var startEnv = Environment.Clone();
-
-                var ticksCount = Const.ActionsBruteforceDepth;
-                if (Environment.Nuclears.Length > 0)
-                    ticksCount *= 2;
+                var ticksCount = baseTicksCount;
 
                 AMove selectionMove = null;
 

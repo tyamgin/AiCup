@@ -141,6 +141,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             list.RemoveAt(list.Count - 1);
         }
 
+        public static IEnumerable<T> ConcatSingle<T>(this IEnumerable<T> enumerable, T value)
+        {
+            return enumerable.Concat(new[] { value });
+        }
+
         public static T ArgMin<T>(this IEnumerable<T> ie, Func<T, double> func)
         {
             var minValue = double.MaxValue;
