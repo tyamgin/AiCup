@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
@@ -29,24 +30,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var res = MyDurabilityDiff - OppDurabilityDiff;
                     res += MyDeadsCount*100;
                     res -= OppDeadsCount*100;
-                    res += SumRectanglesAreas*0.2;
+                    res += SumRectanglesAreas*0.001;
                     res += SumMaxAlmostAttacks/6;
                     res += NuclearsPotentialDamage;
                     res += RectanglesIntersects1*7000;
                     res += RectanglesIntersects2*1000;
-                    res += MoveToSum*0.0001;
+                    res += MoveToSum;
                     return res;
                 }
             }
 
             public double GetMoveToSum(List<Tuple<double, double>> arr)
             {
-                var res = double.MinValue;
-                foreach (var tpl in arr)
-                {
-                    res = Math.Max(res, tpl.Item2 * tpl.Item1);
-                }
-                return res;
+                return arr.Sum(x => x.Item1*x.Item2);
             }
 
             public double[] MoveToSumByGroup
@@ -60,8 +56,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        private const double ExpX1 = 1;
+        private const double ExpY1 = 10;
+        private const double ExpX2 = 1024;
+        private const double ExpY2 = 0.002;
+        private static double ExpB, ExpA;
+
+
         public static DangerResult GetDanger(Sandbox startEnv, Sandbox env)
         {
+            ExpB = Math.Log(ExpY1/ExpY2) / (ExpX2 - ExpX1);
+            ExpA = ExpY1/Math.Exp(-ExpB*ExpX1);
+
             Logger.CumulativeOperationStart("GetDanger");
 
             var result = new DangerResult();
@@ -161,18 +167,34 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 foreach (var cl in clusters)
                 {
-                    var score = 0.0;
-                    foreach (var opp in cl)
+                    for (var oppType = 0; oppType < 5; oppType++)
                     {
-                        var myAttack = G.AttackDamage[(int) type, (int) opp.Type];
-                        var oppAttack = G.AttackDamage[(int) opp.Type, (int) type];
+                        if (cl.CountByType[oppType] == 0)
+                            continue;
 
-                        score += myAttack - oppAttack*0.9;
+                        var myAttack = G.AttackDamage[(int) type, oppType];
+                        var oppAttack = G.AttackDamage[oppType, (int)type];
+
+                        var avg = Utility.Average(cl.VehicleType((VehicleType) oppType));
+                        var dist = avg.GetDistanceTo(cen);
+
+                        var score = (myAttack - oppAttack*0.5)*myGroup.Count/cl.CountByType[oppType];
+                       
+                        lst.Add(new Tuple<double, double>(score, ExpA - ExpA * Math.Exp(-ExpB * dist)));
                     }
-                    score *= 1.0 * myGroup.Count / cl.Count;
-                    var dist = cl.Avg.GetDistanceTo(cen);
 
-                    lst.Add(new Tuple<double, double>(score, dist));
+                    //var score = 0.0;
+                    //foreach (var opp in cl)
+                    //{
+                    //    var myAttack = G.AttackDamage[(int) type, (int) opp.Type];
+                    //    var oppAttack = G.AttackDamage[(int) opp.Type, (int) type];
+
+                    //    score += myAttack - oppAttack*0.9;
+                    //}
+                    //score *= 1.0 * myGroup.Count / cl.Count;
+                    //var dist = cl.Avg.GetDistanceTo(cen);
+
+                    //lst.Add(new Tuple<double, double>(score, dist));
                 }
                 
                 result.MoveToInfo.Add(new Tuple<MyGroup, List<Tuple<double, double>>>(gr, lst));

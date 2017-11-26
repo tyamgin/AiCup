@@ -66,7 +66,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static IEnumerable<double> Range(double min, double max, int segments, bool rightInclusive = true)
         {
             for (var i = 0; i < segments; i++)
-                yield return (max - min) / segments * i + min;
+                yield return (max - min)/segments*i + min;
             if (rightInclusive)
                 yield return max;
         }
@@ -89,10 +89,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 sum.Y += unit.Y;
                 count++;
             }
-            return sum / count;
+            return sum/count;
         }
 
-        public static Rect BoundingRect <T>(IEnumerable<T> units) where T : Point
+        public static Rect BoundingRect<T>(IEnumerable<T> units) where T : Point
         {
             var minX = double.MaxValue;
             var maxX = double.MinValue;
@@ -172,6 +172,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 idx++;
             }
             return res;
+        }
+    }
+
+    public static class AVehicleListExtension
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IEnumerable<AVehicle> VehicleType(this IEnumerable<AVehicle> ie, VehicleType type)
+        {
+            return ie.Where(x => x.Type == type);
         }
     }
 }
