@@ -11,7 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         // Magic consts
         public const double ClusteringMargin = 20;
-        public const int ActionsBruteforceDepth = 9;
+        public const int ActionsBruteforceDepth = 10;
 
         public static VehicleType[] AllTypes =
         {
