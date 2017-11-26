@@ -248,7 +248,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (ifvArrvsRect.Center.Y < 30 && ifvArrvsRect.Center.GetDistanceTo(ifvsRect.Center) < 20)
                     proportionI = 0.95;
                 if (tankArrvsRect.Center.Y < 30 && tankArrvsRect.Center.GetDistanceTo(tanksRect.Center) < 20)
-                    proportionI = 0.95;
+                    proportionT = 0.95;
 
                 MoveQueue.Add(new AMove
                 {
