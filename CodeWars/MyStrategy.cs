@@ -131,6 +131,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var startEnv = Environment.Clone();
 
                 var ticksCount = Const.ActionsBruteforceDepth;
+                if (Environment.Nuclears.Length > 0)
+                    ticksCount *= 2;
+
                 AMove selectionMove = null;
 
                 if (selectedIds != needToSelectIds)
@@ -355,8 +358,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
                 || MoveObserver.AvailableActions >= 4 
-                || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2)
-                || Environment.Nuclears.Any(x => x.RemainingTicks == MoveObserver.ActionsBaseInterval / 2))
+                || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
                 var nuclearMove = NuclearStrategy();
                 if (nuclearMove != null)
