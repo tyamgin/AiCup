@@ -120,17 +120,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             _expect(game.AdditionalActionCountPerControlCenter, G.AdditionalActionCountPerControlCenter);
 
-            _expect(game.ArrvSpeed, G.MaxSpeed[(int) VehicleType.Arrv]);
-            _expect(game.FighterSpeed, G.MaxSpeed[(int)VehicleType.Fighter]);
-            _expect(game.HelicopterSpeed, G.MaxSpeed[(int)VehicleType.Helicopter]);
-            _expect(game.IfvSpeed, G.MaxSpeed[(int)VehicleType.Ifv]);
-            _expect(game.TankSpeed, G.MaxSpeed[(int)VehicleType.Tank]);
+            _expect(game.ArrvSpeed, G.MaxSpeed[arrv]);
+            _expect(game.FighterSpeed, G.MaxSpeed[fighter]);
+            _expect(game.HelicopterSpeed, G.MaxSpeed[helicopter]);
+            _expect(game.IfvSpeed, G.MaxSpeed[ifv]);
+            _expect(game.TankSpeed, G.MaxSpeed[tank]);
 
-            _expect(game.ArrvVisionRange, G.VisionRange[(int)VehicleType.Arrv]);
-            _expect(game.FighterVisionRange, G.VisionRange[(int)VehicleType.Fighter]);
-            _expect(game.HelicopterVisionRange, G.VisionRange[(int)VehicleType.Helicopter]);
-            _expect(game.IfvVisionRange, G.VisionRange[(int)VehicleType.Ifv]);
-            _expect(game.TankVisionRange, G.VisionRange[(int)VehicleType.Tank]);
+            _expect(game.ArrvVisionRange, G.VisionRange[arrv]);
+            _expect(game.FighterVisionRange, G.VisionRange[fighter]);
+            _expect(game.HelicopterVisionRange, G.VisionRange[helicopter]);
+            _expect(game.IfvVisionRange, G.VisionRange[ifv]);
+            _expect(game.TankVisionRange, G.VisionRange[tank]);
 
             _expect(G.MaxSpeed.Max(), G.MaxVehicleSpeed);
         }
@@ -188,13 +188,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         };
 
         public static readonly double[] MaxSpeed = {0.4, 1.2, 0.9, 0.4, 0.3};
-        public static readonly double[] VisionRange = {60, 120, 100, 80, 80};
 
-        public static int AttackRange2(VehicleType type1, VehicleType type2)
-        {
-            var r = AttackRange[(int) type1, (int) type2];
-            return r*r;
-        }
+        public static readonly double[] VisionRange = {60, 120, 100, 80, 80};
 
         public static readonly Rect MapRect = new Rect {X = 0, Y = 0, X2 = MapSize, Y2 = MapSize};
     }

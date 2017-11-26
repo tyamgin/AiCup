@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Forms.VisualStyles;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -194,8 +189,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
 
-                var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => Environment.VehicleById[id]));
-                var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => Environment.VehicleById[id]));
+                var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => env.VehicleById[id]));
+                var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => env.VehicleById[id]));
 
 
                 MoveQueue.Add(new AMove

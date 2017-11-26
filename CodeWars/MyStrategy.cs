@@ -180,7 +180,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var startEnv = Environment.Clone();
 
                     var ticksCount = Const.ActionsBruteforceDepth;
-                    var maxSpeed = 0.0;
                     AMove selectionMove = null;
 
                     if (selectedIds != needToSelectIds)
@@ -239,7 +238,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Point =
                             Point.ByAngle(angle)*startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)*
                             ticksCount*(group.Type == null ? 40 : 7),
-                        MaxSpeed = maxSpeed
+                        MaxSpeed = group.Group == TanksGroup
+                            ? Math.Min(G.MaxSpeed[(int) VehicleType.Tank], G.MaxSpeed[(int) VehicleType.Arrv])
+                            : group.Group == IfvsGroup
+                                ? Math.Min(G.MaxSpeed[(int) VehicleType.Ifv], G.MaxSpeed[(int) VehicleType.Arrv])
+                                : 0
                     })
                         .Concat(Environment.Nuclears.Select(nuclear => new AMove
                         {
@@ -254,7 +257,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 Action = ActionType.Scale,
                                 Factor = 0.1,
                                 Point = typeRect.Center,
-                                MaxSpeed = maxSpeed,
                             },
                             new AMove
                             {
