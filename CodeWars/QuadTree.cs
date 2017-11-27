@@ -157,11 +157,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     node.Value = null;
                     return 1;
                 }
-                return 0;
+                return 2;
             }
             if (!node.HasValueBelow)
             {
-                // value not found
                 return 2;
             }
 

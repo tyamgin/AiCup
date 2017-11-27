@@ -182,7 +182,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         if (cl.CountByType[(int)oppType] > 0)
                         {
-                            var avg = Utility.Average(cl.Where(x => x.Type == oppType));
+                            var avg = Utility.Average(cl.VehicleType(oppType));
                             if (G.AttackDamage[(int)myType, (int)oppType] > 0)
                                 pos.Add(avg);
                             else if (G.AttackDamage[(int)oppType, (int)myType] > 0)
@@ -218,8 +218,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     Logger.CumulativeOperationStart("End of simulation");
                     env.ApplyMove(move);
-                    for (var i = 0; i < ticksCount; i++)
-                        env.DoTick();
+                    env.DoTicksApprox(ticksCount, moveApprox: move.Action == ActionType.Move);
+                    
                     if (partialEnv != null)
                         env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
                     Logger.CumulativeOperationEnd("End of simulation");

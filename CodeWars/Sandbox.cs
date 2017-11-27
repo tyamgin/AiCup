@@ -568,6 +568,55 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             TickIndex++;
         }
 
+        public void DoTicksApprox(int ticksCount, bool moveApprox)
+        {
+            //ticksCount = 1;
+            //var prev = moveApprox ? Vehicles.Select(x => new Point(x)).ToArray() : null;
+
+            for (var t = 0; t < ticksCount; t++)
+            {
+                if (moveApprox)
+                {
+                    foreach (var veh in Vehicles)
+                    {
+                        var prevX = veh.X;
+                        var prevY = veh.Y;
+                        veh.Move();
+                        var moveX = veh.X;
+                        var moveY = veh.Y;
+                        veh.X = prevX;
+                        veh.Y = prevY;
+
+                        if (!Geom.PointsEquals(prevX, prevY, moveX, moveY))
+                        {
+                            var unitTree = _tree(veh.IsMy, veh.IsAerial);    
+
+                            if (!unitTree.ChangeXY(veh, moveX, moveY))
+                                throw new Exception("Can't change unit coordinates, id=" + veh.Id);
+                        }
+                    }
+                }
+                else
+                {
+                    Logger.CumulativeOperationStart("DoMove");
+                    _doMove();
+                    Logger.CumulativeOperationEnd("DoMove");
+                }
+
+                if (t == ticksCount - 1)
+                {
+                    // TODO: FIXME! arrvs repair apply ticksCount times
+                    Logger.CumulativeOperationStart("DoFight");
+                    _doFight();
+                    Logger.CumulativeOperationEnd("DoFight");
+                }
+
+                _doNuclears();
+
+                TickIndex++;
+            }
+        }
+
         public List<VehiclesCluster> GetClusters(bool isMy, double margin)
         {
             Logger.CumulativeOperationStart("Clustering");
