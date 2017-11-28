@@ -72,6 +72,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             var result = new DangerResult();
 
+            Logger.CumulativeOperationStart("Danger0");
+
+            result.SumMaxAlmostAttacks = env.OppVehicles.Sum(opp =>
+            {
+                var additionalRadius = opp.ActualSpeed;
+                return env.GetOpponentFightNeighbours(opp, G.MaxAttackRange + additionalRadius * 5).DefaultIfEmpty(null)
+                    .Max(
+                        m =>
+                            m == null
+                                ? 0
+                                : opp.GetAttackDamage(m, additionalRadius) +
+                                  opp.GetAttackDamage(m, additionalRadius * 2) / 2 +
+                                  opp.GetAttackDamage(m, additionalRadius * 3) / 4 +
+                                  opp.GetAttackDamage(m, additionalRadius * 4) / 8 +
+                                  opp.GetAttackDamage(m, additionalRadius * 5) / 16
+                                  );
+            });
+
+            Logger.CumulativeOperationEnd("Danger0");
+
             Logger.CumulativeOperationStart("Danger1");
 
             var myDurabilityBefore = startEnv.MyVehicles.Sum(x => x.FullDurability);
@@ -95,22 +115,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return Math.Sqrt(rect.Area);
             });
 
-            result.SumMaxAlmostAttacks = env.OppVehicles.Sum(opp =>
-            {
-                var additionalRadius = opp.ActualSpeed;
-                return env.GetOpponentFightNeighbours(opp, G.MaxAttackRange + additionalRadius * 5).DefaultIfEmpty(null)
-                    .Max(
-                        m =>
-                            m == null
-                                ? 0
-                                : opp.GetAttackDamage(m, additionalRadius) +
-                                  opp.GetAttackDamage(m, additionalRadius * 2) / 2 +
-                                  opp.GetAttackDamage(m, additionalRadius * 3) / 4 +
-                                  opp.GetAttackDamage(m, additionalRadius * 4) / 8 +
-                                  opp.GetAttackDamage(m, additionalRadius * 5) / 16
-                                  );
-            });
-
             foreach (var nuclear in env.Nuclears)
             {
                 foreach (var target in env.GetAllNeighbours(nuclear.X, nuclear.Y, nuclear.Radius))
@@ -123,28 +127,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
             }
 
-            var rectF = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Fighter));
-            var rectH = Utility.BoundingRect(env.GetVehicles(true, VehicleType.Helicopter));
-            var rectT = Utility.BoundingRect(env.GetVehicles(true, new MyGroup(TanksGroup)));
-            var rectI = Utility.BoundingRect(env.GetVehicles(true, new MyGroup(IfvsGroup)));
-
-            foreach (var rectPair in new[] {new Tuple<Rect, Rect>(rectF, rectH), new Tuple<Rect, Rect>(rectT, rectI)})
+            for (var j = 0; j < MyGroups.Length; j++)
             {
-                var r1 = rectPair.Item1;
-                var r2 = rectPair.Item2;
-                if (r1.IsFinite && r2.IsFinite)
+                for (var i = 0; i < j; i++)
                 {
-                    r1.ExtendedRadius(G.VehicleRadius*1.5);
-                    r2.ExtendedRadius(G.VehicleRadius*1.5);
+                    if (Utility.IsAerial(GroupFighter(MyGroups[j])) != Utility.IsAerial(GroupFighter(MyGroups[i])))
+                        continue;
+                    var r1 = Utility.BoundingRect(env.GetVehicles(true, MyGroups[i]));
+                    var r2 = Utility.BoundingRect(env.GetVehicles(true, MyGroups[j]));
 
-                    if (r1.IntersectsWith(r2))
-                        result.RectanglesIntersects1++;
-                    else
+                    if (r1.IsFinite && r2.IsFinite)
                     {
-                        r1.ExtendedRadius(G.VehicleRadius*1.5);
-                        r2.ExtendedRadius(G.VehicleRadius*1.5);
+                        r1.ExtendedRadius(G.VehicleRadius * 1.5);
+                        r2.ExtendedRadius(G.VehicleRadius * 1.5);
+
                         if (r1.IntersectsWith(r2))
-                            result.RectanglesIntersects2++;
+                            result.RectanglesIntersects1++;
+                        else
+                        {
+                            r1.ExtendedRadius(G.VehicleRadius * 1.5);
+                            r2.ExtendedRadius(G.VehicleRadius * 1.5);
+                            if (r1.IntersectsWith(r2))
+                                result.RectanglesIntersects2++;
+                        }
                     }
                 }
             }
@@ -185,19 +190,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                        
                         lst.Add(new Tuple<double, double>(score, ExpA - ExpA * Math.Exp(-ExpB * dist)));
                     }
-
-                    //var score = 0.0;
-                    //foreach (var opp in cl)
-                    //{
-                    //    var myAttack = G.AttackDamage[(int) type, (int) opp.Type];
-                    //    var oppAttack = G.AttackDamage[(int) opp.Type, (int) type];
-
-                    //    score += myAttack - oppAttack*0.9;
-                    //}
-                    //score *= 1.0 * myGroup.Count / cl.Count;
-                    //var dist = cl.Avg.GetDistanceTo(cen);
-
-                    //lst.Add(new Tuple<double, double>(score, dist));
                 }
                 
                 result.MoveToInfo.Add(new Tuple<MyGroup, List<Tuple<double, double>>>(gr, lst));

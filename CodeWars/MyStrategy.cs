@@ -92,26 +92,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
 
-
         public static int TanksGroup = 1;
         public static int IfvsGroup = 2;
+        public static int[] HelicoptersGroups = {3, 4, 5, 6};
+        public const int MaxGroup = 6;
 
-        public static MyGroup[] MyGroups =
-        {
-            new MyGroup(VehicleType.Fighter), new MyGroup(VehicleType.Helicopter),
-            new MyGroup(TanksGroup), new MyGroup(IfvsGroup),
-        };
+        public static MyGroup[] MyGroups;
 
         static VehicleType GroupFighter(MyGroup group)
         {
-            VehicleType type;
-            if (group.Group == TanksGroup)
-                type = VehicleType.Tank;
-            else if (group.Group == IfvsGroup)
-                type = VehicleType.Ifv;
-            else
-                type = (VehicleType)group.Type;
-            return type;
+            if (group.Type != null)
+                return (VehicleType) group.Type;
+            if (group.Group == null)
+                throw new Exception("Trying to use invalid group");
+            var g = (int) group.Group;
+
+            if (g == TanksGroup)
+                return VehicleType.Tank;
+            if (g == IfvsGroup)
+                return VehicleType.Ifv;
+            if (HelicoptersGroups.Contains(g))
+                return VehicleType.Helicopter;
+
+            throw new Exception("Trying to use invalid group (unknown group)");
         }
 
         Tuple<AMove, AMove, double> DoMain(bool opt)
@@ -354,15 +357,35 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (ret)
                 return;
 
-            if (!FirstMovesComplete)
+            if (!CanGoFighters)
                 return;
 
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
 
+            CanGoHelicopters = CanGoHelicopters ||
+                               HelicoptersGroups.All(g => Environment.GetVehicles(true, g).Count > 0);
+
+            MyGroups = new[]
+            {
+                new MyGroup(VehicleType.Fighter),
+            };
+            if (CanGoHelicopters)
+            {
+                MyGroups = MyGroups
+                    .Concat(HelicoptersGroups.Select(g => new MyGroup(g)))
+                    .ToArray();
+            }
+            if (FirstMovesComplete)
+            {
+                MyGroups = MyGroups
+                    .ConcatSingle(new MyGroup(TanksGroup))
+                    .ConcatSingle(new MyGroup(IfvsGroup))
+                    .ToArray();
+            }
 
             if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
-                || MoveObserver.AvailableActions >= 4 
+                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete
                 || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
                 var nuclearMove = NuclearStrategy();

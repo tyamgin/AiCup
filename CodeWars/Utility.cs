@@ -127,6 +127,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 .OrderBy(id => id)
                 .Select(x => x.ToString()));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsAerial(VehicleType type)
+        {
+            return type == VehicleType.Fighter || type == VehicleType.Helicopter;
+        }
     }
 
     public static class ListExtension

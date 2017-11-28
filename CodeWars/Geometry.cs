@@ -332,6 +332,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             };
         }
 
+        public Rect[] Split4X()
+        {
+            var x = (X + X2)/2;
+            var y = (Y + Y2)/2;
+            return new[]
+            {
+                new Rect {X = X, Y = Y, X2 = x, Y2 = y},
+                new Rect {X = x, Y = Y, X2 = X2, Y2 = y},
+                new Rect {X = X, Y = y, X2 = x, Y2 = Y2},
+                new Rect {X = x, Y = y, X2 = X2, Y2 = Y2},
+            };
+        }
+
         public void ExtendedRadius(double additionalRadius)
         {
             X -= additionalRadius;

@@ -29,10 +29,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private readonly QuadTree<AVehicle>[,] _trees = new QuadTree<AVehicle>[2, 2];
 
-        private readonly List<AVehicle>[] _myVehiclesByGroup = new List<AVehicle>[2]
+        private readonly List<AVehicle>[] _myVehiclesByGroup = new List<AVehicle>[MyStrategy.MaxGroup]
         {
             new List<AVehicle>(),
-            new List<AVehicle>() 
+            new List<AVehicle>(),
+            new List<AVehicle>(),
+            new List<AVehicle>(),
+            new List<AVehicle>(),
+            new List<AVehicle>(),
         };
 
         private AVehicle[] _nearestCache;
@@ -65,6 +69,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public List<AVehicle> GetVehicles(bool isMy, VehicleType type)
         {
             return _vehiclesByOwnerAndType[isMy ? 1 : 0][(int) type];
+        }
+
+        public List<AVehicle> GetVehicles(bool isMy, int group)
+        {
+            return GetVehicles(isMy, new MyGroup(group));
         }
 
         public List<AVehicle> GetVehicles(bool isMy, MyGroup group)
@@ -134,11 +143,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 VehicleById[veh.Id] = veh;
                 if (veh.IsMy)
                 {
-                    if (veh.HasGroup(1))
-                        _myVehiclesByGroup[0].Add(veh);
-                    if (veh.HasGroup(2))
-                        _myVehiclesByGroup[1].Add(veh);
-                    // TODO
+                    for (var g = 1; g <= MyStrategy.MaxGroup; g++)
+                        if (veh.HasGroup(g))
+                            _myVehiclesByGroup[g - 1].Add(veh);
                 }
                 _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0]?.Add(veh);
             }
@@ -617,7 +624,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public List<VehiclesCluster> GetClusters(bool isMy, double margin)
+        public List<VehiclesCluster> GetClustersOld(bool isMy, double margin)
         {
             Logger.CumulativeOperationStart("Clustering");
 
@@ -648,6 +655,56 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             Logger.CumulativeOperationEnd("Clustering");
+            return res;
+        }
+
+        public List<VehiclesCluster> GetClusters(bool isMy, double margin)
+        {
+            Logger.CumulativeOperationStart("Clustering2");
+
+            var res = new List<VehiclesCluster>();
+            var opened = new List<VehiclesCluster>();
+
+            foreach (var type in Const.AllTypes)
+            {
+                var vehicles = GetVehicles(isMy, type).OrderBy(x => x.X).ThenBy(x => x.Y);
+                foreach (var cur in vehicles)
+                {
+                    bool found = false;
+                    for (var i = opened.Count - 1; i >= 0; i--)
+                    {
+                        var c = opened[i];
+                        if (c.Last().X + margin < cur.X)
+                        {
+                            res.Add(c);
+                            opened.RemoveAt(i);
+                            continue;
+                        }
+
+                        for (var j = 0; j < 10 && j < c.Count; j++)
+                        {
+                            var nr = c[c.Count - 1 - j].GetDistanceTo2(cur) < margin*margin;
+                            if (nr)
+                            {
+                                c.Add(cur);
+                                found = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!found)
+                    {
+                        var emptyCl = new VehiclesCluster();
+                        emptyCl.Add(cur);
+                        opened.Add(emptyCl);
+                    }
+                }
+                res.AddRange(opened);
+                opened.Clear();
+            }
+
+            Logger.CumulativeOperationEnd("Clustering2");
             return res;
         }
     }
