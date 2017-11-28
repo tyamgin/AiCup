@@ -671,7 +671,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 foreach (var cur in vehicles)
                 {
                     bool found = false;
-                    for (var i = opened.Count - 1; i >= 0; i--)
+                    for (var i = opened.Count - 1; i >= 0 && !found; i--)
                     {
                         var c = opened[i];
                         if (c.Last().X + margin < cur.X)

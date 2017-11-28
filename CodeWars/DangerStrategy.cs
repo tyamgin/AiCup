@@ -27,7 +27,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 get
                 {
-                    var res = MyDurabilityDiff*1.2 - OppDurabilityDiff;
+                    var res = MyDurabilityDiff*1.25 - OppDurabilityDiff;
                     res += MyDeadsCount*100;
                     res -= OppDeadsCount*60;
                     res += SumRectanglesAreas*0.001;
@@ -35,7 +35,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     res += NuclearsPotentialDamage;
                     res += RectanglesIntersects1*7000;
                     res += RectanglesIntersects2*1000;
-                    res += MoveToSum;
+                    res += MoveToSum/3;
                     return res;
                 }
             }
@@ -68,17 +68,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var result = myVehicles.Sum(m =>
             {
                 var additionalRadius = m.ActualSpeed;
-                return env.GetOpponentFightNeighbours(m, G.MaxAttackRange + additionalRadius * 5).DefaultIfEmpty(null)
+                return env.GetOpponentFightNeighbours(m, G.MaxAttackRange + additionalRadius*5).DefaultIfEmpty(null)
                     .Max(
                         opp =>
                             opp == null
                                 ? 0
-                                : opp.GetAttackDamage(m, additionalRadius) +
-                                  opp.GetAttackDamage(m, additionalRadius * 2) / 2 +
-                                  opp.GetAttackDamage(m, additionalRadius * 3) / 4 +
-                                  opp.GetAttackDamage(m, additionalRadius * 4) / 8 +
-                                  opp.GetAttackDamage(m, additionalRadius * 5) / 16
-                                  );
+                                : (opp.GetAttackDamage(m, additionalRadius) +
+                                   opp.GetAttackDamage(m, additionalRadius*2)/2 +
+                                   opp.GetAttackDamage(m, additionalRadius*3)/4 +
+                                   opp.GetAttackDamage(m, additionalRadius*4)/8 +
+                                   opp.GetAttackDamage(m, additionalRadius*5)/16
+                                    )*
+                                  (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
+                                      ? 1.0*opp.Durability/G.MaxDurability
+                                      : 1));
             });
             Logger.CumulativeOperationEnd("Danger0");
             return result;
@@ -183,6 +186,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 var lst = new List<Tuple<double, double>>();
 
+                var myRatio = 1.0*myGroup.Count/env.MyVehicles.Count;
+
                 foreach (var cl in clusters)
                 {
                     for (var oppType = 0; oppType < 5; oppType++)
@@ -197,12 +202,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var dist = avg.GetDistanceTo(cen);
 
                         var score = (myAttack - oppAttack*0.49);
-                        //if (score >= 0)
-                        //    score = score*myGroup.Count/cl.CountByType[oppType];
-                        //else
-                            score = score*cl.CountByType[oppType]/ myGroup.Count;
+                        
+                        score = score*cl.CountByType[oppType]*myRatio;
 
-                        lst.Add(new Tuple<double, double>(score, ExpA - ExpA * Math.Exp(-ExpB * dist)));
+                        var e = -(myAttack == 0 && dist < 120 ? 0 : ExpA *Math.Exp(-ExpB*dist));
+
+                        lst.Add(new Tuple<double, double>(score, e));
                     }
                 }
                 
