@@ -133,6 +133,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(game.TankVisionRange, G.VisionRange[tank]);
 
             _expect(G.MaxSpeed.Max(), G.MaxVehicleSpeed);
+
+            G.IsFacilitiesEnabled = world.Facilities.Length > 0;
         }
 
         private static void _expect<T>(T source, T value)
@@ -167,6 +169,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const int ActionDetectionInterval = 60;
         public const int BaseActionCount = 12;
         public const int AdditionalActionCountPerControlCenter = 3;
+        public static bool IsFacilitiesEnabled = false;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

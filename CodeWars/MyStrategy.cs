@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
-using System.Windows.Forms;
 
 /**
  * TODO:
@@ -91,11 +90,22 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MoveObserver.Update();
         }
 
-
-        public static int TanksGroup = 1;
-        public static int IfvsGroup = 2;
-        public static int[] HelicoptersGroups = {3, 4, 5, 6};
+        public const int FightersGroup = 1;
+        public const int HelicoptersGroup = 2;
+        public const int TanksGroup = 3;
+        public const int IfvsGroup = 4;
+        public const int ArrvsGroup = 5;
         public const int MaxGroup = 6;
+
+        public static VehicleType[] GroupLeaders =
+        {
+            VehicleType.Fighter,////
+            VehicleType.Fighter,
+            VehicleType.Helicopter,
+            VehicleType.Tank,
+            VehicleType.Ifv,
+            VehicleType.Arrv,
+        };
 
         public static MyGroup[] MyGroups;
 
@@ -107,14 +117,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 throw new Exception("Trying to use invalid group");
             var g = (int) group.Group;
 
-            if (g == TanksGroup)
-                return VehicleType.Tank;
-            if (g == IfvsGroup)
-                return VehicleType.Ifv;
-            if (HelicoptersGroups.Contains(g))
-                return VehicleType.Helicopter;
-
-            throw new Exception("Trying to use invalid group (unknown group)");
+            return GroupLeaders[g];
         }
 
         Tuple<AMove, AMove, double> DoMain(bool opt)
@@ -163,6 +166,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var typeRect = Utility.BoundingRect(startEnv.GetVehicles(true, group));
 
                 Sandbox partialEnv = null;
+                var sumMaxAlmostAttacksCache = -1.0;
                 if (Environment.Nuclears.Length == 0)
                 {
                     partialEnv = new Sandbox(
@@ -174,6 +178,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     for (var i = 0; i < ticksCount; i++)
                         partialEnv.DoTick();
+                    sumMaxAlmostAttacksCache = GetSumMaxAlmostAttacks(partialEnv, partialEnv.MyVehicles);
                 }
 
                 List<Point> pos = new List<Point>(), neg = new List<Point>();
@@ -222,12 +227,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     Logger.CumulativeOperationStart("End of simulation");
                     env.ApplyMove(move);
                     env.DoTicksApprox(ticksCount, moveApprox: move.Action == ActionType.Move);
-                    
+
+                    var cache = sumMaxAlmostAttacksCache;
                     if (partialEnv != null)
+                    {
                         env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
+                        cache += GetSumMaxAlmostAttacks(env,
+                            env.MyVehicles.Where(x => x.IsGroup(group)));
+                    }
                     Logger.CumulativeOperationEnd("End of simulation");
 
-                    var danger = GetDanger(Environment, env);
+                    var danger = GetDanger(Environment, env, cache);
                     if (selDanger == null || danger.Score < selDanger.Score)
                     {
                         selDanger = danger;
@@ -363,17 +373,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
 
-            CanGoHelicopters = CanGoHelicopters ||
-                               HelicoptersGroups.All(g => Environment.GetVehicles(true, g).Count > 0);
-
             MyGroups = new[]
             {
-                new MyGroup(VehicleType.Fighter),
+                new MyGroup(FightersGroup),
             };
             if (CanGoHelicopters)
             {
                 MyGroups = MyGroups
-                    .Concat(HelicoptersGroups.Select(g => new MyGroup(g)))
+                    .ConcatSingle(new MyGroup(HelicoptersGroup))
                     .ToArray();
             }
             if (FirstMovesComplete)
@@ -382,6 +389,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     .ConcatSingle(new MyGroup(TanksGroup))
                     .ConcatSingle(new MyGroup(IfvsGroup))
                     .ToArray();
+                if (G.IsFacilitiesEnabled)
+                {
+                    MyGroups = MyGroups
+                    .ConcatSingle(new MyGroup(ArrvsGroup))
+                    .ToArray();
+                }
             }
 
             if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
