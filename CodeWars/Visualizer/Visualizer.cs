@@ -235,6 +235,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 }
             }
 
+            foreach (var facility in MyStrategy.Environment.Facilities)
+            {
+                var color = facility.IsMy ? Color.Blue : facility.IsOpp ? Color.Orange : Color.DarkGray;
+                FillRect(color, facility.X, facility.Y, facility.Width, facility.Height);
+
+                var x = facility.X + facility.Width / 2;
+                var y = facility.Y + facility.Height / 2;
+                var r = facility.Height / 2;
+                if (facility.CapturePoints > 0)
+                {
+                    FillCircle(Color.DarkGray, x, y, r);
+                    FillPie(Color.White, x, y, r, 0, 2 * Math.PI * (G.MaxFacilityCapturePoints - facility.CapturePoints) / G.MaxFacilityCapturePoints);
+                }
+                else if (facility.CapturePoints < 0)
+                {
+                    FillCircle(Color.DarkGray, x, y, r);
+                    FillPie(Color.White, x, y, r, 0, 2 * Math.PI * (facility.CapturePoints + G.MaxFacilityCapturePoints) / G.MaxFacilityCapturePoints);
+                }
+            }
+
             // selections
             if (MyStrategy.ResultingMove.Right > 0 && MyStrategy.ResultingMove.Bottom > 0)
             {

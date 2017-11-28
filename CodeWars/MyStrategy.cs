@@ -172,6 +172,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     partialEnv = new Sandbox(
                         startEnv.Vehicles.Where(x => !x.IsSelected),
                         new ANuclear[] { },
+                        new AFacility[] { },
                         clone: true
                         );
                     partialEnv.CheckCollisionsWithOpponent = false;
@@ -203,7 +204,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     Sandbox env = partialEnv != null
                         ? new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)),
-                            startEnv.Nuclears, clone: true)
+                            startEnv.Nuclears, startEnv.Facilities, clone: true)
                         : startEnv.Clone();
 
                     env.CheckCollisionsWithOpponent = false;
@@ -354,9 +355,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 )
                 .ToArray();
 
+            var facilities = World.Facilities
+                .Select(x => new AFacility(x))
+                .ToArray();
+
             VehiclesObserver.Update();
             MoveObserver.Init();
-            Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears) {TickIndex = World.TickIndex};
+            Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears, facilities) {TickIndex = World.TickIndex};
             OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
 
             if (World.TickIndex == 0)

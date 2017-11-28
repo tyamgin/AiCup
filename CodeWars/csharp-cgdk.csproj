@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ACircularUnit.cs" />
+    <Compile Include="AFacility.cs" />
     <Compile Include="AMove.cs" />
     <Compile Include="ANuclear.cs" />
     <Compile Include="AUnit.cs" />

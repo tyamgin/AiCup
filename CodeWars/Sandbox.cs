@@ -11,6 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public int TickIndex;
         public ANuclear[] Nuclears;
+        public AFacility[] Facilities;
         public readonly Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
 
         public bool CheckCollisionsWithOpponent = true;
@@ -93,43 +94,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public AVehicle[] Vehicles;
 
-        public Sandbox(IEnumerable<AVehicle> vehicles, IEnumerable<ANuclear> nuclears, bool clone = false)
+        public Sandbox(IEnumerable<AVehicle> vehicles, IEnumerable<ANuclear> nuclears, IEnumerable<AFacility> facilities, bool clone = false)
         {
             if (clone)
             {
                 vehicles = vehicles.Select(x => new AVehicle(x));
                 nuclears = nuclears.Select(x => new ANuclear(x));
+                facilities = facilities.Select(x => new AFacility(x));
             }
 
-            //_nearestCache.Capacity = 50;
             Nuclears = nuclears.ToArray();
+            Facilities = facilities.ToArray();
             AddRange(vehicles);
-        }
-
-        private static int _resizeArray<T>(ref T[] arr, int size, T defaultValue = default(T))
-        {
-            if (arr == null)
-            {
-                arr = new T[size];
-                for (var i = 0; i < arr.Length; i++)
-                    arr[i] = defaultValue;
-                return 0;
-            }
-            if (arr.Length == size)
-                return 0;
-
-            var offset = arr.Length;
-            Array.Resize(ref arr, size);
-            for (var i = offset; i < arr.Length; i++)
-                arr[i] = defaultValue;
-
-            return offset;
         }
 
         public void AddRange(IEnumerable<AVehicle> newVehicles)
         {
             var vehicles = newVehicles.ToArray();
-            int offset = _resizeArray(ref Vehicles, (Vehicles?.Length ?? 0) + vehicles.Length);
+            int offset = Utility.ResizeArray(ref Vehicles, (Vehicles?.Length ?? 0) + vehicles.Length);
 
             for (var i = 0; i < vehicles.Length; i++)
             {
@@ -154,7 +136,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public Sandbox Clone()
         {
             // TODO: use QuadTree.Clone()
-            return new Sandbox(Vehicles.Select(x => new AVehicle(x)), Nuclears.Select(x => new ANuclear(x)))
+            return new Sandbox(
+                Vehicles.Select(x => new AVehicle(x)),
+                Nuclears.Select(x => new ANuclear(x)),
+                Facilities.Select(x => new AFacility(x)))
             {
                 CheckCollisionsWithOpponent = CheckCollisionsWithOpponent,
                 TickIndex = TickIndex,
@@ -289,8 +274,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doFight()
         {
-            _resizeArray(ref _nearestFightersCacheDist, Vehicles.Length, double.MaxValue/2);
-            _resizeArray(ref _nearestFightersCacheTick, Vehicles.Length, -1);
+            Utility.ResizeArray(ref _nearestFightersCacheDist, Vehicles.Length, double.MaxValue/2);
+            Utility.ResizeArray(ref _nearestFightersCacheTick, Vehicles.Length, -1);
 
             for (var i = 0; i < Vehicles.Length; i++)
             {
@@ -368,8 +353,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMove()
         {
-            _resizeArray(ref _nearestCache, Vehicles.Length);
-            _resizeArray(ref _notMoved, Vehicles.Length);
+            Utility.ResizeArray(ref _nearestCache, Vehicles.Length);
+            Utility.ResizeArray(ref _notMoved, Vehicles.Length);
 
             var movedState = Vehicles.Select(x => default(AVehicle)).ToArray();
             var notMovedLength = 0;

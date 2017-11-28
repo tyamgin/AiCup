@@ -79,6 +79,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             rhs = temp;
         }
 
+        public static int ResizeArray<T>(ref T[] arr, int size, T defaultValue = default(T))
+        {
+            if (arr == null)
+            {
+                arr = new T[size];
+                for (var i = 0; i < arr.Length; i++)
+                    arr[i] = defaultValue;
+                return 0;
+            }
+            if (arr.Length == size)
+                return 0;
+
+            var offset = arr.Length;
+            Array.Resize(ref arr, size);
+            for (var i = offset; i < arr.Length; i++)
+                arr[i] = defaultValue;
+
+            return offset;
+        }
+
         public static Point Average<T>(IEnumerable<T> units) where T : Point
         {
             var sum = Point.Zero;

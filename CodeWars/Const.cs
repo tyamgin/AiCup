@@ -134,6 +134,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             _expect(G.MaxSpeed.Max(), G.MaxVehicleSpeed);
 
+            _expect(game.FacilityHeight, G.FacilitySize);
+            _expect(game.FacilityWidth, G.FacilitySize);
+            _expect(game.MaxFacilityCapturePoints, G.MaxFacilityCapturePoints);
+
             G.IsFacilitiesEnabled = world.Facilities.Length > 0;
         }
 
@@ -170,6 +174,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const int BaseActionCount = 12;
         public const int AdditionalActionCountPerControlCenter = 3;
         public static bool IsFacilitiesEnabled = false;
+        public static double FacilitySize = 64;
+        public static double MaxFacilityCapturePoints = 100;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

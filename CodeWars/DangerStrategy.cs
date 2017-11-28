@@ -167,6 +167,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
             }
 
+
+
             Logger.CumulativeOperationEnd("Danger1");
 
             var clusters = env.GetClusters(false, Const.ClusteringMargin);
