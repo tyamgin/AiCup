@@ -13,6 +13,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public bool IsSelected;
         public int RemainingAttackCooldownTicks;
         public uint Groups;
+        public bool CanChargeFacility;
 
         public Point MoveTarget;
         public double MoveSpeed;
@@ -30,6 +31,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
             foreach (var group in unit.Groups)
                 AddGroup(group);
+            CanChargeFacility = !unit.IsAerial;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,6 +43,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsSelected = unit.IsSelected;
             RemainingAttackCooldownTicks = unit.RemainingAttackCooldownTicks;
             Groups = unit.Groups;
+            CanChargeFacility = unit.CanChargeFacility;
 
             MoveTarget = unit.MoveTarget;
             MoveSpeed = unit.MoveSpeed;

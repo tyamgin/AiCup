@@ -20,6 +20,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             public double NuclearsPotentialDamage;
             public double RectanglesIntersects1;
             public double RectanglesIntersects2;
+            public double FacilitiesPointsDiff;
+            public List<List<Tuple<double, double>>> MoveToFacilitiesInfo = new List<List<Tuple<double, double>>>();
+            public Dictionary<int, Point> TargetFacility = new Dictionary<int, Point>(); 
             public List<VehiclesCluster> Clusters;
             public List<Tuple<MyGroup, List<Tuple<double, double>>>> MoveToInfo = new List<Tuple<MyGroup, List<Tuple<double, double>>>>(); 
 
@@ -27,15 +30,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 get
                 {
-                    var res = MyDurabilityDiff*1.25 - OppDurabilityDiff;
+                    var res = MyDurabilityDiff*1.15 - OppDurabilityDiff;
                     res += MyDeadsCount*100;
                     res -= OppDeadsCount*60;
-                    res += SumRectanglesAreas*0.001;
-                    res += SumMaxAlmostAttacks/4;
+                    res += SumRectanglesAreas*0.003;
+                    res += SumMaxAlmostAttacks/3;
                     res += NuclearsPotentialDamage;
                     res += RectanglesIntersects1*7000;
                     res += RectanglesIntersects2*1000;
                     res += MoveToSum/3;
+                    res += FacilitiesPointsDiff;
+                    res += MoveToFacilitySum*110;
                     return res;
                 }
             }
@@ -53,6 +58,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             public double MoveToSum
             {
                 get { return MoveToSumByGroup.Sum(); }
+            }
+
+            public double[] MoveToFacilityByGroup
+            {
+                get { return MoveToFacilitiesInfo.Select(lst => lst.Sum(x => x.Item1*x.Item2)).ToArray(); }
+            }
+
+            public double MoveToFacilitySum
+            {
+                get { return MoveToFacilityByGroup.Sum(); }
             }
         }
 
@@ -81,7 +96,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                     )*
                                   (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
                                       ? 1.0*opp.Durability/G.MaxDurability
-                                      : 1));
+                                      : 1)*(m.Type==opp.Type?0.35:1));
             });
             Logger.CumulativeOperationEnd("Danger0");
             return result;
@@ -119,6 +134,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             result.MyDeadsCount = env.MyVehicles.Count(x => !x.IsAlive);
             result.OppDeadsCount = env.OppVehicles.Count(x => !x.IsAlive);
 
+            result.FacilitiesPointsDiff = startEnv.Facilities.Sum(x => x.CapturePoints) - env.Facilities.Sum(x => x.CapturePoints);
+
+            // scale groups
             result.SumRectanglesAreas = MyGroups.Sum(type =>
             {
                 var vehs = env.GetVehicles(true, type);
@@ -128,6 +146,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return Math.Sqrt(rect.Area);
             });
 
+            // nuclears
             foreach (var nuclear in env.Nuclears)
             {
                 foreach (var target in env.GetAllNeighbours(nuclear.X, nuclear.Y, nuclear.Radius))
@@ -140,11 +159,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
             }
 
+            // groups intersections
             for (var j = 0; j < MyGroups.Length; j++)
             {
                 for (var i = 0; i < j; i++)
                 {
-                    if (Utility.IsAerial(GroupFighter(MyGroups[j])) != Utility.IsAerial(GroupFighter(MyGroups[i])))
+                    if (Utility.IsAerial(GetGroupLeader(MyGroups[j])) != Utility.IsAerial(GetGroupLeader(MyGroups[i])))
                         continue;
                     var r1 = Utility.BoundingRect(env.GetVehicles(true, MyGroups[i]));
                     var r2 = Utility.BoundingRect(env.GetVehicles(true, MyGroups[j]));
@@ -175,10 +195,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             result.Clusters = clusters;
 
             Logger.CumulativeOperationStart("Danger2");
+            var groundGroupsCenters = new List<Point>();
+            var groundGroups = new List<List<AVehicle>>();
+            var groundGroupsId = new List<int?>();
 
             foreach (var gr in MyGroups)
             {
-                VehicleType type = GroupFighter(gr);
+                VehicleType type = GetGroupLeader(gr);
 
                 var myGroup = env.GetVehicles(true, type);
                 if (myGroup.Count == 0)
@@ -212,8 +235,48 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         lst.Add(new Tuple<double, double>(score, e));
                     }
                 }
-                
                 result.MoveToInfo.Add(new Tuple<MyGroup, List<Tuple<double, double>>>(gr, lst));
+
+                if (!Utility.IsAerial(type))
+                {
+                    groundGroups.Add(myGroup);
+                    groundGroupsCenters.Add(cen);
+                    groundGroupsId.Add(gr.Group);
+                }
+            }
+
+            var targetFacilities = env.Facilities.Where(x => !x.IsMy).ToArray();
+            if (groundGroups.Count > 0 && targetFacilities.Length > 0)
+            {
+                
+                var mat = new double[groundGroups.Count][];
+                for (var i = 0; i < groundGroups.Count; i++)
+                {
+                    mat[i] = new double[targetFacilities.Length];
+                    for (var j = 0; j < targetFacilities.Length; j++)
+                        mat[i][j] = groundGroupsCenters[i].GetDistanceTo(targetFacilities[j].Center);
+                }
+                var asg = HungarianAssignment.Minimize(mat);
+                for (var i = 0; i < groundGroups.Count; i++)
+                {
+                    var myGroup = groundGroups[i];
+                    var cen = groundGroupsCenters[i];
+                    var myRatio = 1.0*myGroup.Count/env.MyVehicles.Count;
+
+                    var flist = new List<Tuple<double, double>>();
+
+                    if (asg[i] == -1)
+                        continue;
+                    var facility = targetFacilities[asg[i]];
+                    if (groundGroupsId[i] != null)
+                        result.TargetFacility[(int) groundGroupsId[i]] = facility.Center;
+                    
+                    var dist = cen.GetDistanceTo(facility.Center);
+                    var score = -myRatio;
+                    flist.Add(new Tuple<double, double>(score, ExpA*Math.Exp(-ExpB*dist)));    
+                    
+                    result.MoveToFacilitiesInfo.Add(flist);
+                }
             }
 
             Logger.CumulativeOperationEnd("Danger2");

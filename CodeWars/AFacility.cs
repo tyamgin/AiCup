@@ -37,6 +37,35 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Y2 = Y + G.FacilitySize;
         }
 
+        public void Charge(AVehicle veh)
+        {
+            if (!veh.CanChargeFacility)
+                return;
+
+            if (veh.IsMy)
+            {
+                if (CapturePoints < G.MaxFacilityCapturePoints && ContainsPoint(veh))
+                {
+                    CapturePoints += G.FacilityCapturePointsPerVehiclePerTick;
+                    if (CapturePoints > G.MaxFacilityCapturePoints)
+                        CapturePoints = G.MaxFacilityCapturePoints;
+                }
+            }
+            else
+            {
+                if (CapturePoints > -G.MaxFacilityCapturePoints && ContainsPoint(veh))
+                {
+                    CapturePoints -= G.FacilityCapturePointsPerVehiclePerTick;
+                    if (CapturePoints < -G.MaxFacilityCapturePoints)
+                        CapturePoints = -G.MaxFacilityCapturePoints;
+                }
+            }
+        }
+
         public bool IsNeutral => !IsMy && !IsOpp;
+
+        public bool IsCompletelyMy => Geom.DoublesEquals(CapturePoints, G.MaxFacilityCapturePoints);
+
+        public bool IsCompletelyOpp => Geom.DoublesEquals(CapturePoints, -G.MaxFacilityCapturePoints);
     }
 }

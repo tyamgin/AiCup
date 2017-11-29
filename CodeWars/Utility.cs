@@ -21,6 +21,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Utility.GetCell(x, y, out I, out J);
             return TerrainType[I][J];
         }
+
+        public static int FacilityIndex(double x, double y)
+        {
+            int I, J;
+            Utility.GetCell(x, y, out I, out J);
+            return FacilityIdx[I][J];
+        }
     }
 
     public class Utility

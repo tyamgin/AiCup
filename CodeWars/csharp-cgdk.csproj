@@ -84,6 +84,7 @@
     <Compile Include="DangerStrategy.cs" />
     <Compile Include="FirstMovesStrategy.cs" />
     <Compile Include="Geometry.cs" />
+    <Compile Include="Hungarian.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Model\ActionType.cs" />

@@ -12,6 +12,8 @@ using System.Threading;
  * - лечение в ПП
  * - прятать вертолеты от самолетов
  * - оптимизировать начальное построение
+ * 
+ * - ядерка: перебрать несколько центров, учитывать уклонения
  */
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -24,6 +26,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static TerrainType[][] TerrainType;
         public static WeatherType[][] WeatherType;
+        public static int[][] FacilityIdx;
         public static Sandbox Environment;
         public static List<VehiclesCluster> OppClusters;
 
@@ -109,7 +112,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static MyGroup[] MyGroups;
 
-        static VehicleType GroupFighter(MyGroup group)
+        static VehicleType GetGroupLeader(MyGroup group)
         {
             if (group.Type != null)
                 return (VehicleType) group.Type;
@@ -119,6 +122,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             return GroupLeaders[g];
         }
+
+
 
         Tuple<AMove, AMove, double> DoMain(bool opt)
         {
@@ -133,6 +138,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             for (var i = 0; i < baseTicksCount; i++)
                 env1.DoTick();
             DangerResult selDanger = GetDanger(Environment, env1);
+            var targetFacilities = selDanger.TargetFacility;
 
             foreach (var group in MyGroups)
             {
@@ -172,7 +178,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     partialEnv = new Sandbox(
                         startEnv.Vehicles.Where(x => !x.IsSelected),
                         new ANuclear[] { },
-                        new AFacility[] { },
+                        startEnv.Facilities,
                         clone: true
                         );
                     partialEnv.CheckCollisionsWithOpponent = false;
@@ -183,7 +189,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 List<Point> pos = new List<Point>(), neg = new List<Point>();
-                var myType = GroupFighter(group);
+                var myType = GetGroupLeader(group);
                 for (var clIdx = 0; clIdx < OppClusters.Count; clIdx++)
                 {
                     var cl = OppClusters[clIdx];
@@ -204,7 +210,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     Sandbox env = partialEnv != null
                         ? new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)),
-                            startEnv.Nuclears, startEnv.Facilities, clone: true)
+                            startEnv.Nuclears, partialEnv.Facilities, clone: true)
                         : startEnv.Clone();
 
                     env.CheckCollisionsWithOpponent = false;
@@ -217,6 +223,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 continue;
 
                             veh.ForgotTarget(); // чтобы не шли повторно
+                            veh.CanChargeFacility = false; // чтобы не захватывали повторно
                             // TODO: лечение
 
                             if (veh.RemainingAttackCooldownTicks > 0) // у тех, кто стрелял давно, откатываем кд
@@ -329,6 +336,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     checkAction(move);
                 }
+
+                if (group.Group != null && targetFacilities.ContainsKey((int) group.Group))
+                {
+                    checkAction(new AMove
+                    {
+                        Action = ActionType.Move,
+                        Point = targetFacilities[(int)group.Group] - typeRect.Center,
+                    });
+                }
             }
 
             return new Tuple<AMove, AMove, double>(selMove, selNextMove, selDanger.Score);
@@ -338,10 +354,27 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             Const.Initialize(World, game);
 
+            var facilities = World.Facilities
+                .Select(x => new AFacility(x))
+                .OrderBy(x => x.Id)
+                .ToArray();
+
             if (TerrainType == null)
             {
                 TerrainType = World.TerrainByCellXY;
                 WeatherType = World.WeatherByCellXY;
+                FacilityIdx = new int[TerrainType.Length][];
+                for (var i = 0; i < TerrainType.Length; i++)
+                {
+                    FacilityIdx[i] = new int[TerrainType[i].Length];
+                    for (var j = 0; j < TerrainType[i].Length; j++)
+                    {
+                        FacilityIdx[i][j] = -1;
+                        for (var k = 0; k < facilities.Length; k++)
+                            if (facilities[k].ContainsPoint(new Point((i + 0.5)*G.CellSize, (j + 0.5)*G.CellSize)))
+                                FacilityIdx[i][j] = k;
+                    }
+                }
             }
 
             var nuclears = World.Players
@@ -353,10 +386,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     player.NextNuclearStrikeVehicleId,
                     player.NextNuclearStrikeTickIndex - World.TickIndex)
                 )
-                .ToArray();
-
-            var facilities = World.Facilities
-                .Select(x => new AFacility(x))
                 .ToArray();
 
             VehiclesObserver.Update();
@@ -403,7 +432,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
-                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete
+                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete && World.TickIndex >= NoMoveLastTick + MoveObserver.ActionsBaseInterval
                 || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
                 var nuclearMove = NuclearStrategy();
@@ -414,6 +443,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 var mainNew = DoMain(true);
+
+                if (mainNew.Item1.Action == null || mainNew.Item1.Action == ActionType.None)
+                    NoMoveLastTick = World.TickIndex;
                 //var mainOld = DoMain(false);
 
                 //if (!Geom.DoublesEquals(mainNew.Item3, mainOld.Item3))
@@ -425,6 +457,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     MoveQueue.Add(mainNew.Item2);
             }
         }
+
+        private int NoMoveLastTick = -10000;
 
         private static int errs = 0;
         private static int ccnt = 0;

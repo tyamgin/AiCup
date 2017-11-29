@@ -469,50 +469,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        /*private void _doMoveDebug()
-        {
-            var moved = new bool[Vehicles.Length];
-            var movedCount = 0;
-
-            while (movedCount < moved.Length)
-            {
-                var anyMoved = false;
-                for (var i = 0; i < moved.Length; i++)
-                {
-                    if (moved[i])
-                        continue;
-                    var unit = Vehicles[i];
-
-                    if (
-                        !unit.Move(
-                            x =>
-                                Vehicles.Any(
-                                    opp =>
-                                    {
-                                        if (x.Id == opp.Id)
-                                            return false;
-                                        if (x.IsAerial != opp.IsAerial)
-                                            return false;
-
-                                        if ((x.IsAerial || !CheckCollisionsWithOpponent) && x.IsMy != opp.IsMy)
-                                            return false;
-
-                                        return opp.IntersectsWith(x);
-                                    })))
-                    {
-                        continue;
-                    }
-
-                    moved[i] = true;
-                    anyMoved = true;
-                    movedCount++;
-                }
-
-                if (!anyMoved)
-                    break;
-            }
-        }*/
-
         private void _doNuclears()
         {
             bool needRemove = false;
@@ -542,6 +498,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Nuclears = Nuclears.Where(x => x.RemainingTicks > 0).ToArray();
         }
 
+        private void _doFacilities()
+        {
+            if (Facilities.Length == 0)
+                return;
+
+            Logger.CumulativeOperationStart("DoFacilities");
+            foreach (var veh in Vehicles)
+            {
+                if (!veh.CanChargeFacility)
+                    continue;
+
+                var facilityIdx = MyStrategy.FacilityIndex(veh.X, veh.Y);
+                if (facilityIdx != -1)
+                    Facilities[facilityIdx].Charge(veh);
+            }
+            Logger.CumulativeOperationEnd("DoFacilities");
+        }
+
         public void DoTick(bool fight = true)
         {
             Logger.CumulativeOperationStart("DoMove");
@@ -556,15 +530,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             _doNuclears();
+            _doFacilities();
 
             TickIndex++;
         }
 
         public void DoTicksApprox(int ticksCount, bool moveApprox)
         {
-            //ticksCount = 1;
-            //var prev = moveApprox ? Vehicles.Select(x => new Point(x)).ToArray() : null;
-
             for (var t = 0; t < ticksCount; t++)
             {
                 if (moveApprox)
@@ -604,6 +576,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 _doNuclears();
+                _doFacilities();
 
                 TickIndex++;
             }
