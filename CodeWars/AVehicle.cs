@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
@@ -51,6 +52,22 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             RotationAngle = unit.RotationAngle;
             RotationAngularSpeed = unit.RotationAngularSpeed;
             DurabilityPool = unit.DurabilityPool;
+        }
+
+        public IEnumerable<int> GroupsList
+        {
+            get
+            {
+                var groupId = 0;
+                var mask = Groups;
+                while (mask != 0)
+                {
+                    if ((mask & 1) != 0)
+                        yield return groupId;
+                    mask >>= 1;
+                    groupId++;
+                }
+            }
         }
 
         public void CopyFrom(AVehicle unit)

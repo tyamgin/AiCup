@@ -116,13 +116,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             ActionsQueue.Add(env =>
             {
-                var groups = new[] { TanksGroup, IfvsGroup, HelicoptersGroup, FightersGroup };
+                var groups = new[] {GroupsManager.StartingTanksGroupId, GroupsManager.StartingIfvsGroupId, GroupsManager.StartingHelicoptersGroupId, GroupsManager.StartingFightersGroupId };
                 if (G.IsFacilitiesEnabled)
-                    groups = groups.ConcatSingle(ArrvsGroup).ToArray();
+                    groups = groups.ConcatSingle(GroupsManager.StartingArrvsGroupId).ToArray();
 
                 foreach (var group in groups)
                 {
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(GroupLeaders[group]));
+                    _selectIfNotSelected(env, AMove.ClearAndSelectType(GroupsManager.GroupLeaders[group]));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Assign,
@@ -134,10 +134,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             ActionsQueue.Add(env =>
             {
-                CanGoFighters = true;
-                CanGoHelicopters = true;
+                GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingFightersGroupId));
+                GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingHelicoptersGroupId));
+                
                 if (G.IsFacilitiesEnabled)
                 {
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingArrvsGroupId));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId));
                     FirstMovesComplete = true;
                 }
                 return e => true;
@@ -357,7 +361,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Assign,
-                        Group = TanksGroup,
+                        Group = GroupsManager.StartingTanksGroupId,
                     });
 
                     MoveQueue.Add(new AMove
@@ -370,7 +374,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Assign,
-                        Group = IfvsGroup,
+                        Group = GroupsManager.StartingIfvsGroupId,
                     });
 
                     return e => true;
@@ -379,6 +383,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 ActionsQueue.Add(env =>
                 {
                     FirstMovesComplete = true;
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId));
                     return e => true;
                 });
 
@@ -388,8 +394,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private long[] tankArrvs, ifvArrvs;
 
         public bool FirstMovesComplete;
-        public bool CanGoFighters;
-        public bool CanGoHelicopters;
     }
 
     public class MyGroup

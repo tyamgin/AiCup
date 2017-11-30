@@ -81,6 +81,7 @@
     <Compile Include="AUnit.cs" />
     <Compile Include="AVehicle.cs" />
     <Compile Include="Const.cs" />
+    <Compile Include="GroupsManager.cs" />
     <Compile Include="MyStrategyDanger.cs" />
     <Compile Include="MyStrategyFirstMoves.cs" />
     <Compile Include="Geometry.cs" />

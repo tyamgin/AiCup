@@ -92,37 +92,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MoveObserver.Update();
         }
 
-        public const int FightersGroup = 1;
-        public const int HelicoptersGroup = 2;
-        public const int TanksGroup = 3;
-        public const int IfvsGroup = 4;
-        public const int ArrvsGroup = 5;
-        public const int MaxGroup = 6;
-
-        public static VehicleType[] GroupLeaders =
-        {
-            VehicleType.Fighter,////
-            VehicleType.Fighter,
-            VehicleType.Helicopter,
-            VehicleType.Tank,
-            VehicleType.Ifv,
-            VehicleType.Arrv,
-        };
-
-        public static List<MyGroup> MyGroups = new List<MyGroup>();
-
-        static VehicleType GetGroupLeader(MyGroup group)
-        {
-            if (group.Type != null)
-                return (VehicleType) group.Type;
-            if (group.Group == null)
-                throw new Exception("Trying to use invalid group");
-            var g = (int) group.Group;
-
-            return GroupLeaders[g];
-        }
-
-
 
         Tuple<AMove, AMove, double> DoMain(bool opt)
         {
@@ -139,11 +108,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             DangerResult selDanger = GetDanger(Environment, env1);
             var targetFacilities = selDanger.TargetFacility;
 
-            foreach (var group in MyGroups)
+            foreach (var group in GroupsManager.MyGroups)
             {
-                if (Environment.GetVehicles(true, group).Count == 0)
-                    continue;
-
                 var selectedIds = Utility.UnitsHash(Environment.MyVehicles.Where(x => x.IsSelected));
                 var needToSelectIds = Utility.UnitsHash(Environment.GetVehicles(true, group));
 
@@ -197,7 +163,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 List<Point> pos = new List<Point>(), neg = new List<Point>();
-                var myType = GetGroupLeader(group);
+                var myType = GroupsManager.GroupLeader(group);
                 for (var clIdx = 0; clIdx < OppClusters.Count; clIdx++)
                 {
                     var cl = OppClusters[clIdx];
@@ -278,9 +244,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Point.ByAngle(2*Math.PI/12*idx)*
                         startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)*
                         ticksCount*(group.Type == null ? 40 : 7),
-                    MaxSpeed = group.Group == TanksGroup
+                    MaxSpeed = group.Group == GroupsManager.StartingTanksGroupId
                         ? Math.Min(G.MaxSpeed[(int) VehicleType.Tank], G.MaxSpeed[(int) VehicleType.Arrv])
-                        : group.Group == IfvsGroup
+                        : group.Group == GroupsManager.StartingIfvsGroupId
                             ? Math.Min(G.MaxSpeed[(int) VehicleType.Ifv], G.MaxSpeed[(int) VehicleType.Arrv])
                             : 0
                 };
@@ -363,6 +329,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Const.Initialize(World, game);
             Initialize();
 
+            GroupsManager.Update(Environment);
+
             if (World.TickIndex == 0)
                 MoveFirstTicks();
             ActionsQueue.Process();
@@ -371,29 +339,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (ret)
                 return;
 
-            if (!CanGoFighters)
-                return;
-
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
 
-            MyGroups.Clear();
-            MyGroups.Add(new MyGroup(FightersGroup));
-
-            if (CanGoHelicopters)
-            {
-                MyGroups.Add(new MyGroup(HelicoptersGroup));
-            }
-            if (FirstMovesComplete)
-            {
-                MyGroups.Add(new MyGroup(TanksGroup));
-                MyGroups.Add(new MyGroup(IfvsGroup));
-
-                if (G.IsFacilitiesEnabled)
-                {
-                    MyGroups.Add(new MyGroup(ArrvsGroup));
-                }
-            }
+            if (GroupsManager.MyGroups.Count == 0)
+                return;
 
             if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
                 || MoveObserver.AvailableActions >= 4 && FirstMovesComplete && World.TickIndex >= _noMoveLastTick + MoveObserver.ActionsBaseInterval
@@ -420,9 +370,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (ResultingMove == null || ResultingMove.Action == null || ResultingMove.Action == ActionType.None)
             {
-                var facilitiesMove = FacilitiesStrategy();
-                if (facilitiesMove != null)
-                    ResultingMove = facilitiesMove;
+                if (FirstMovesComplete)
+                {
+                    var facilitiesMove = FacilitiesStrategy();
+                    if (facilitiesMove != null)
+                    {
+                        ResultingMove = facilitiesMove[0];
+                        for (var i = 1; i < facilitiesMove.Length; i++)
+                        {
+                            MoveQueue.Add(facilitiesMove[i]);
+                            if (facilitiesMove[i].Action == ActionType.Assign)
+                                GroupsManager.AddPendingGroup(new MyGroup(facilitiesMove[i].Group), ResultingMove.VehicleType.Value);
+                        }
+                    }
+                }
             }
         }
 

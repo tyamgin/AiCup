@@ -30,15 +30,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private readonly QuadTree<AVehicle>[,] _trees = new QuadTree<AVehicle>[2, 2];
 
-        private readonly List<AVehicle>[] _myVehiclesByGroup = new List<AVehicle>[MyStrategy.MaxGroup]
-        {
-            new List<AVehicle>(),
-            new List<AVehicle>(),
-            new List<AVehicle>(),
-            new List<AVehicle>(),
-            new List<AVehicle>(),
-            new List<AVehicle>(),
-        };
+        private readonly List<List<AVehicle>> _myVehiclesByGroup = new List<List<AVehicle>>();
 
         private AVehicle[] _nearestCache;
         private int[] _notMoved;
@@ -127,9 +119,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 VehicleById[veh.Id] = veh;
                 if (veh.IsMy)
                 {
-                    for (var g = 1; g <= MyStrategy.MaxGroup; g++)
-                        if (veh.HasGroup(g))
-                            _myVehiclesByGroup[g - 1].Add(veh);
+                    foreach (var g in veh.GroupsList)
+                    {
+                        while (_myVehiclesByGroup.Count < g)
+                            _myVehiclesByGroup.Add(new List<AVehicle>());
+                        _myVehiclesByGroup[g - 1].Add(veh);
+                    }
                 }
                 _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0]?.Add(veh);
             }

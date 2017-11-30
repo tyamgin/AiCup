@@ -27,7 +27,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(hungTest[0], -1);
             _expect(hungTest[1], 1);
             _expect(hungTest[2], 0);
-
+            
             _expect(world.Width, G.MapSize);
             _expect(world.Height, G.MapSize);
 
@@ -144,6 +144,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(game.MaxFacilityCapturePoints, G.MaxFacilityCapturePoints);
             _expect(game.FacilityCapturePointsPerVehiclePerTick, G.FacilityCapturePointsPerVehiclePerTick);
 
+            _expect(game.MaxUnitGroup, G.MaxUnitGroup);
+
             G.IsFacilitiesEnabled = world.Facilities.Length > 0;
         }
 
@@ -183,6 +185,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const double FacilitySize = 64;
         public const double MaxFacilityCapturePoints = 100;
         public const double FacilityCapturePointsPerVehiclePerTick = 0.005;
+        public const int MaxUnitGroup = 100;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

@@ -187,6 +187,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
             return res;
         }
+
+        public static long MinimalExcluded(this IEnumerable<long> ie, long startingValue)
+        {
+            var set = new HashSet<long>();
+            foreach (var x in ie)
+                set.Add(x);
+            while (set.Contains(startingValue))
+                startingValue++;
+            return startingValue;
+        }
     }
 
     public static class AVehicleListExtension
