@@ -152,6 +152,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var ticksCount = baseTicksCount;
 
                 AMove selectionMove = null;
+                var availableActions = MoveObserver.AvailableActions;
 
                 if (selectedIds != needToSelectIds)
                 {
@@ -166,8 +167,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     };
                     startEnv.ApplyMove(selectionMove);
                     startEnv.DoTick();
+                    availableActions--;
                     ticksCount--;
                 }
+                availableActions--;
+
+                // availableActions теперь - это сколько действий останется после выполнения текущего тика
+                // должно остаться хотябы 2, или 1, если обладатель ядерки selected
+                var myNuclear = startEnv.Nuclears.FirstOrDefault(n => n.IsMy);
+                if (myNuclear != null && availableActions < 2 - (startEnv.VehicleById[myNuclear.VehicleId].IsSelected ? 1 : 0))
+                    continue;
 
                 var typeRect = Utility.BoundingRect(startEnv.GetVehicles(true, group));
 
