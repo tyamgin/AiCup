@@ -256,7 +256,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     for (var j = 0; j < targetFacilities.Length; j++)
                         mat[i][j] = groundGroupsCenters[i].GetDistanceTo(targetFacilities[j].Center);
                 }
-                var asg = HungarianAssignment.Minimize(mat);
+                var asg = HungarianAssignment.Minimize(mat, 2*G.MapSize);
                 for (var i = 0; i < groundGroups.Count; i++)
                 {
                     var myGroup = groundGroups[i];

@@ -3,26 +3,43 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     class HungarianAssignment
     {
-        public static int[] Minimize(double[][] a)
+        public static int[] Minimize(double[][] a, double dummyInfinity)
         {
             int n = a.Length,
                 m = a[0].Length;
 
-            a = new[] { Enumerable.Repeat(0.0, m + 1).ToArray() }.Concat(a).ToArray();
+            var arrN = n + 1;
+            var arrM = m + 1;
+            if (arrN > arrM)
+            {
+                arrM = arrN;
+                if (dummyInfinity * n >= double.PositiveInfinity)
+                    throw new Exception("Dummy infinity is too large");
+            }
 
-            for (var i = 1; i < a.Length; i++)
-                a[i] = new[] { 0.0 }.Concat(a[i]).ToArray();
+            a = new[] { Enumerable.Repeat(0.0, m).ToArray() }.Concat(a).ToArray();
 
-            return _solve(n, m, a);
+            for (var i = 0; i < a.Length; i++)
+                a[i] = new[] { 0.0 }.Concat(a[i]).Concat(Enumerable.Repeat(dummyInfinity, arrM - m - 1)).ToArray();
+
+            var result = _solve(a);
+            for (var i = 0; i < result.Length; i++)
+                if (result[i] >= m)
+                    result[i] = -1;
+            return result;
         }
 
-        private static int[] _solve(int n, int m, double[][] a)
+        private static int[] _solve(double[][] a)
         {
+            var n = a.Length - 1;
+            var m = a[0].Length - 1;
+
             var u = new double[n + 1];
             var v = new double[m + 1];
 
@@ -41,7 +58,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 do
                 {
                     used[j0] = true;
-                    int i0 = p[j0], j1 = 0;
+                    int i0 = p[j0], j1 = -1;
                     var delta = double.PositiveInfinity;
                     for (int j = 1; j <= m; j++)
                     {

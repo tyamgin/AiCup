@@ -23,6 +23,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (world.TickIndex != 0)
                 return;
 
+            var hungTest = HungarianAssignment.Minimize(new double[3][] { new []{3.0, 10}, new [] {10.0, 2}, new [] {1.0, 10}, }, 2*G.MapSize);
+            _expect(hungTest[0], -1);
+            _expect(hungTest[1], 1);
+            _expect(hungTest[2], 0);
+
             _expect(world.Width, G.MapSize);
             _expect(world.Height, G.MapSize);
 
