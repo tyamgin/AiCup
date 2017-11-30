@@ -92,7 +92,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public List<AVehicle> OppVehicles => _at(false);
 
-        public IEnumerable<AFacility> MyFacilities => Facilities.Where(x => x.IsMy);
+        public IEnumerable<AFacility> MyVehicleFactories => Facilities.Where(x => x.IsMy && x.Type == FacilityType.VehicleFactory);
 
         public AVehicle[] Vehicles;
 

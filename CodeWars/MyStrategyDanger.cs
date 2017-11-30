@@ -203,7 +203,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 VehicleType type = GetGroupLeader(gr);
 
-                var myGroup = env.GetVehicles(true, type);
+                var myGroup = env.GetVehicles(true, gr);
                 if (myGroup.Count == 0)
                     continue;
 

@@ -419,7 +419,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     MoveQueue.Add(mainNew.Item2);
             }
 
-            
+            if (ResultingMove == null || ResultingMove.Action == null || ResultingMove.Action == ActionType.None)
+            {
+                var facilitiesMove = FacilitiesStrategy();
+                if (facilitiesMove != null)
+                    ResultingMove = facilitiesMove;
+            }
         }
 
         private int _noMoveLastTick = -Const.Infinity;

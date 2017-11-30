@@ -8,6 +8,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public bool IsMy, IsOpp;
         public FacilityType Type;
         public double CapturePoints;
+        public int ProductionProgress;
+        public VehicleType? VehicleType;
 
         public AFacility(Facility facility)
         {
@@ -18,6 +20,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsOpp = facility.OwnerPlayerId == MyStrategy.Opp.Id;
             Type = facility.Type;
             CapturePoints = facility.CapturePoints;
+            ProductionProgress = facility.ProductionProgress;
+            VehicleType = facility.VehicleType;
 
             X2 = X + G.FacilitySize;
             Y2 = Y + G.FacilitySize;
@@ -32,6 +36,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             IsOpp = facility.IsOpp;
             Type = facility.Type;
             CapturePoints = facility.CapturePoints;
+            ProductionProgress = facility.ProductionProgress;
+            VehicleType = facility.VehicleType;
 
             X2 = X + G.FacilitySize;
             Y2 = Y + G.FacilitySize;
