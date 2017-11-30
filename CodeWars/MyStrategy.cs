@@ -110,7 +110,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             VehicleType.Arrv,
         };
 
-        public static MyGroup[] MyGroups;
+        public static List<MyGroup> MyGroups = new List<MyGroup>();
 
         static VehicleType GetGroupLeader(MyGroup group)
         {
@@ -362,45 +362,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private void _move(Game game)
         {
             Const.Initialize(World, game);
-
-            var facilities = World.Facilities
-                .Select(x => new AFacility(x))
-                .OrderBy(x => x.Id)
-                .ToArray();
-
-            if (TerrainType == null)
-            {
-                TerrainType = World.TerrainByCellXY;
-                WeatherType = World.WeatherByCellXY;
-                FacilityIdx = new int[TerrainType.Length][];
-                for (var i = 0; i < TerrainType.Length; i++)
-                {
-                    FacilityIdx[i] = new int[TerrainType[i].Length];
-                    for (var j = 0; j < TerrainType[i].Length; j++)
-                    {
-                        FacilityIdx[i][j] = -1;
-                        for (var k = 0; k < facilities.Length; k++)
-                            if (facilities[k].ContainsPoint(new Point((i + 0.5)*G.CellSize, (j + 0.5)*G.CellSize)))
-                                FacilityIdx[i][j] = k;
-                    }
-                }
-            }
-
-            var nuclears = World.Players
-                .Where(player => player.NextNuclearStrikeVehicleId != -1)
-                .Select(player => new ANuclear(
-                    player.NextNuclearStrikeX,
-                    player.NextNuclearStrikeY,
-                    player.IsMe,
-                    player.NextNuclearStrikeVehicleId,
-                    player.NextNuclearStrikeTickIndex - World.TickIndex)
-                )
-                .ToArray();
-
-            VehiclesObserver.Update();
-            MoveObserver.Init();
-            Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears, facilities) {TickIndex = World.TickIndex};
-            OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
+            Initialize();
 
             if (World.TickIndex == 0)
                 MoveFirstTicks();
@@ -416,32 +378,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (Me.RemainingActionCooldownTicks > 0)
                 return;
 
-            MyGroups = new[]
-            {
-                new MyGroup(FightersGroup),
-            };
+            MyGroups.Clear();
+            MyGroups.Add(new MyGroup(FightersGroup));
+
             if (CanGoHelicopters)
             {
-                MyGroups = MyGroups
-                    .ConcatSingle(new MyGroup(HelicoptersGroup))
-                    .ToArray();
+                MyGroups.Add(new MyGroup(HelicoptersGroup));
             }
             if (FirstMovesComplete)
             {
-                MyGroups = MyGroups
-                    .ConcatSingle(new MyGroup(TanksGroup))
-                    .ConcatSingle(new MyGroup(IfvsGroup))
-                    .ToArray();
+                MyGroups.Add(new MyGroup(TanksGroup));
+                MyGroups.Add(new MyGroup(IfvsGroup));
+
                 if (G.IsFacilitiesEnabled)
                 {
-                    MyGroups = MyGroups
-                    .ConcatSingle(new MyGroup(ArrvsGroup))
-                    .ToArray();
+                    MyGroups.Add(new MyGroup(ArrvsGroup));
                 }
             }
 
             if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
-                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete && World.TickIndex >= NoMoveLastTick + MoveObserver.ActionsBaseInterval
+                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete && World.TickIndex >= _noMoveLastTick + MoveObserver.ActionsBaseInterval
                 || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
                 var nuclearMove = NuclearStrategy();
@@ -454,11 +410,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var mainNew = DoMain(true);
 
                 if (mainNew.Item1.Action == null || mainNew.Item1.Action == ActionType.None)
-                    NoMoveLastTick = World.TickIndex;
-                //var mainOld = DoMain(false);
-
-                //if (!Geom.DoublesEquals(mainNew.Item3, mainOld.Item3))
-                //    errs++;
+                    _noMoveLastTick = World.TickIndex;
+                
                 ccnt++;
 
                 ResultingMove = mainNew.Item1;
@@ -467,7 +420,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private int NoMoveLastTick = -10000;
+        private int _noMoveLastTick = -Const.Infinity;
 
         private static int errs = 0;
         private static int ccnt = 0;

@@ -160,7 +160,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             // groups intersections
-            for (var j = 0; j < MyGroups.Length; j++)
+            for (var j = 0; j < MyGroups.Count; j++)
             {
                 for (var i = 0; i < j; i++)
                 {
