@@ -641,7 +641,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             continue;
                         }
 
-                        for (var j = 0; j < 10 && j < c.Count; j++)
+                        for (var j = 0; j < 20 && j < c.Count; j++)
                         {
                             var nr = c[c.Count - 1 - j].GetDistanceTo2(cur) < margin*margin;
                             if (nr)

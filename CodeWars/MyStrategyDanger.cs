@@ -22,8 +22,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             public double RectanglesIntersects2;
             public double FacilitiesPointsDiff;
             public List<List<Tuple<double, double>>> MoveToFacilitiesInfo = new List<List<Tuple<double, double>>>();
-            public Dictionary<int, Point> TargetFacility = new Dictionary<int, Point>(); 
-            public List<VehiclesCluster> Clusters;
+            public Dictionary<int, Point> TargetFacility = new Dictionary<int, Point>();
             public List<Tuple<MyGroup, List<Tuple<double, double>>>> MoveToInfo = new List<Tuple<MyGroup, List<Tuple<double, double>>>>(); 
 
             public double Score 
@@ -191,8 +190,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             Logger.CumulativeOperationEnd("Danger1");
 
-            var clusters = env.GetClusters(false, Const.ClusteringMargin);
-            result.Clusters = clusters;
+            var clusters = OppClusters; // NOTE: юниты врага считаются неподвижными, поэтому берем инстансы из основного Environment
 
             Logger.CumulativeOperationStart("Danger2");
             var groundGroupsCenters = new List<Point>();
