@@ -31,12 +31,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         AMove NuclearStrategy()
         {
-            if (Me.RemainingNuclearStrikeCooldownTicks > 0)
-                return null;
-
-            Logger.CumulativeOperationStart("NuclearStrategy");
-            var result = _nuclearStrategy();
-            Logger.CumulativeOperationEnd("NuclearStrategy");
+            AMove result = null;
+            if (Me.RemainingNuclearStrikeCooldownTicks == 0)
+            {
+                Logger.CumulativeOperationStart("NuclearStrategy");
+                result = _nuclearStrategy();
+                Logger.CumulativeOperationEnd("NuclearStrategy");
+            }
             return result;
         }
 
@@ -66,12 +67,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 
             if (selMove == null)
+            {
+                _prevNuclearTotalDamage = 0;
                 return null;
+            }
 
             if (selTotalDamage >= damageBound2)
+            {
+                _prevNuclearTotalDamage = 0;
                 return selMove;
+            }
 
             // нужно проверить, что в следующий тик не будет лучше
+            
+            // предыдущее предсказание не оправдалось:
+            if (selTotalDamage < _prevNuclearTotalDamage)
+            {
+                _prevNuclearTotalDamage = 0;
+                return selMove;
+            }
+
             var env = Environment.Clone();
             env.DoTick(fight: false);
 
@@ -81,10 +96,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var totalDamage = asdf(veh, env, selTotalDamage, out nuclear);
 
                 if (totalDamage > selTotalDamage)
+                {
+                    _prevNuclearTotalDamage = totalDamage;
                     return null; // будет лучше
+                }
             }
 
+            _prevNuclearTotalDamage = 0;
             return selMove;
         }
+
+        private double _prevNuclearTotalDamage;
     }
 }
