@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
@@ -44,6 +45,27 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MoveObserver.Init();
             Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears, facilities) { TickIndex = World.TickIndex };
             OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
+        }
+
+        public static WeatherType Weather(double x, double y)
+        {
+            int I, J;
+            Utility.GetCell(x, y, out I, out J);
+            return WeatherType[I][J];
+        }
+
+        public static TerrainType Terrain(double x, double y)
+        {
+            int I, J;
+            Utility.GetCell(x, y, out I, out J);
+            return TerrainType[I][J];
+        }
+
+        public static int FacilityIndex(double x, double y)
+        {
+            int I, J;
+            Utility.GetCell(x, y, out I, out J);
+            return FacilityIdx[I][J];
         }
     }
 }

@@ -92,6 +92,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public List<AVehicle> OppVehicles => _at(false);
 
+        public IEnumerable<AFacility> MyFacilities => Facilities.Where(x => x.IsMy);
+
         public AVehicle[] Vehicles;
 
         public Sandbox(IEnumerable<AVehicle> vehicles, IEnumerable<ANuclear> nuclears, IEnumerable<AFacility> facilities, bool clone = false)

@@ -81,10 +81,11 @@
     <Compile Include="AUnit.cs" />
     <Compile Include="AVehicle.cs" />
     <Compile Include="Const.cs" />
-    <Compile Include="DangerStrategy.cs" />
-    <Compile Include="FirstMovesStrategy.cs" />
+    <Compile Include="MyStrategyDanger.cs" />
+    <Compile Include="MyStrategyFirstMoves.cs" />
     <Compile Include="Geometry.cs" />
     <Compile Include="Hungarian.cs" />
+    <Compile Include="MyStrategyFacilities.cs" />
     <Compile Include="MyStrategyInit.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Logger.cs" />
@@ -107,7 +108,7 @@
     <Compile Include="MoveObserver.cs" />
     <Compile Include="MoveQueue.cs" />
     <Compile Include="MyStrategy.cs" />
-    <Compile Include="NuclearStrategy.cs" />
+    <Compile Include="MyStrategyNuclears.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RemoteProcessClient.cs" />
     <Compile Include="Runner.cs" />

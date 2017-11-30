@@ -418,6 +418,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (mainNew.Item2 != null)
                     MoveQueue.Add(mainNew.Item2);
             }
+
+            
         }
 
         private int _noMoveLastTick = -Const.Infinity;
