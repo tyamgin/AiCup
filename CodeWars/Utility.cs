@@ -62,6 +62,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             rhs = temp;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int TrueFactor(bool value)
+        {
+            return value ? 1 : -1;
+        }
+
         public static int ResizeArray<T>(ref T[] arr, int size, T defaultValue = default(T))
         {
             if (arr == null)

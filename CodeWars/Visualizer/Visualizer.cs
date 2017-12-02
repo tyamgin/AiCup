@@ -243,15 +243,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 var x = facility.X + facility.Width / 2;
                 var y = facility.Y + facility.Height / 2;
                 var r = facility.Height / 2;
+                FillCircle(Color.DarkGray, x, y, r);
                 if (facility.CapturePoints > 0)
                 {
-                    FillCircle(Color.DarkGray, x, y, r);
-                    FillPie(Color.White, x, y, r, 0, 2 * Math.PI * (G.MaxFacilityCapturePoints - facility.CapturePoints) / G.MaxFacilityCapturePoints);
+                    FillPie(Color.Blue, x, y, r, 0, 2 * Math.PI * facility.CapturePoints / G.MaxFacilityCapturePoints);
                 }
                 else if (facility.CapturePoints < 0)
                 {
-                    FillCircle(Color.DarkGray, x, y, r);
-                    FillPie(Color.White, x, y, r, 0, 2 * Math.PI * (facility.CapturePoints + G.MaxFacilityCapturePoints) / G.MaxFacilityCapturePoints);
+                    FillPie(Color.Orange, x, y, r, 0, 2 * Math.PI * -facility.CapturePoints / G.MaxFacilityCapturePoints);
                 }
             }
 
@@ -323,6 +322,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             {
                 var rect = Utility.BoundingRect(cluster);
                 DrawRect(Color.Maroon, rect.X, rect.Y, rect.Width, rect.Height);
+            }
+
+            foreach (var cluster in MyStrategy.MyUngroupedClusters)
+            {
+                if (cluster.Count >= MyStrategy.NewGroupMinSize)
+                {
+                    var rect = Utility.BoundingRect(cluster);
+                    DrawRect(Color.GreenYellow, rect.X, rect.Y, rect.Width, rect.Height, 2);
+                }
             }
 
             // vehicles

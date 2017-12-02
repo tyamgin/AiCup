@@ -42,11 +42,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return new AVehicle(vehicle);
         }
 
-        private List<AVehicle> _at(bool isMy)
-        {
-            return _vehiclesByOwner[isMy ? 1 : 0];
-        }
-
         private QuadTree<AVehicle> _tree(bool isMy, bool isAerial)
         {
             var tree = _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
@@ -59,6 +54,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return tree;
         }
 
+        public void AddVehicleGroup(AVehicle veh, int groupId)
+        {
+            if (veh.HasGroup(groupId))
+                return;
+            veh.AddGroup(groupId);
+            if (veh.IsMy)
+            {
+                while (_myVehiclesByGroup.Count < groupId)
+                    _myVehiclesByGroup.Add(new List<AVehicle>());
+                _myVehiclesByGroup[groupId - 1].Add(veh);
+            }
+        }
+
         public List<AVehicle> GetVehicles(bool isMy, VehicleType type)
         {
             return _vehiclesByOwnerAndType[isMy ? 1 : 0][(int) type];
@@ -66,23 +74,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public List<AVehicle> GetVehicles(bool isMy, int group)
         {
-            return GetVehicles(isMy, new MyGroup(group));
+            if (!isMy)
+                throw new Exception("Trying to access not my group");
+
+            var groupIdx = group - 1;
+            if (groupIdx < _myVehiclesByGroup.Count)
+                return _myVehiclesByGroup[groupIdx];
+
+            return new List<AVehicle>();
         }
 
         public List<AVehicle> GetVehicles(bool isMy, MyGroup group)
         {
-            if (group.Type != null)
-                return _vehiclesByOwnerAndType[isMy ? 1 : 0][(int) group.Type];
-            if (group.Group == null)
-                return new List<AVehicle>();
-            if (!isMy)
-                throw new Exception("Trying to access not my group");
-            return _myVehiclesByGroup[(int) group.Group - 1];
+            return GetVehicles(isMy, group.Group);
         }
 
-        public List<AVehicle> MyVehicles => _at(true);
+        public List<AVehicle> MyVehicles => _vehiclesByOwner[1];
 
-        public List<AVehicle> OppVehicles => _at(false);
+        public List<AVehicle> OppVehicles => _vehiclesByOwner[0];
 
         public IEnumerable<AFacility> MyVehicleFactories => Facilities.Where(x => x.IsMy && x.Type == FacilityType.VehicleFactory);
 
@@ -113,8 +122,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Vehicles[offset + i] = veh;
                 _nearestFightersCacheDist = null;
                 _nearestFightersCacheTick = null; //TODO: maybe optimize
-                
-                _at(veh.IsMy).Add(veh);
+
+                _vehiclesByOwner[veh.IsMy ? 1 : 0].Add(veh);
                 _vehiclesByOwnerAndType[veh.IsMy ? 1 : 0][(int)veh.Type].Add(veh);
                 VehicleById[veh.Id] = veh;
                 if (veh.IsMy)
@@ -532,28 +541,60 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             TickIndex++;
         }
 
+        static AVehicle[] _prevStateCache = new AVehicle[10000];
+
         public void DoTicksApprox(int ticksCount, bool moveApprox)
         {
+            var canMove = true;
             for (var t = 0; t < ticksCount; t++)
             {
                 if (moveApprox)
                 {
-                    foreach (var veh in Vehicles)
+                    if (canMove)
                     {
-                        var prevX = veh.X;
-                        var prevY = veh.Y;
-                        veh.Move();
-                        var moveX = veh.X;
-                        var moveY = veh.Y;
-                        veh.X = prevX;
-                        veh.Y = prevY;
+                        _tree(false, false); // fill cache
+                        _tree(false, true);
+                        _tree(true, false);
+                        _tree(true, true);
 
-                        if (!Geom.PointsEquals(prevX, prevY, moveX, moveY))
+                        Action<AVehicle, double, double> update = (veh, prevX, prevY) =>
                         {
-                            var unitTree = _tree(veh.IsMy, veh.IsAerial);    
+                            var moveX = veh.X;
+                            var moveY = veh.Y;
+                            if (!Geom.PointsEquals(prevX, prevY, moveX, moveY))
+                            {
+                                veh.X = prevX;
+                                veh.Y = prevY;
+                                var unitTree = _tree(veh.IsMy, veh.IsAerial);
 
-                            if (!unitTree.ChangeXY(veh, moveX, moveY))
-                                throw new Exception("Can't change unit coordinates, id=" + veh.Id);
+                                if (!unitTree.ChangeXY(veh, moveX, moveY))
+                                    throw new Exception("Can't change unit coordinates, id=" + veh.Id);
+                            }
+                        };
+
+                        for (var i = 0; i < Vehicles.Length; i++)
+                        {
+                            var veh = Vehicles[i];
+                            if (_prevStateCache[i] == null)
+                                _prevStateCache[i] = new AVehicle(veh);
+                            else
+                                _prevStateCache[i].CopyFrom(veh);
+
+                            if (!veh.Move())
+                            {
+                                // откатываем изменения
+                                for (var j = 0; j < i; j++)
+                                {
+                                    var prevX = Vehicles[j].X;
+                                    var prevY = Vehicles[j].Y;
+                                    Vehicles[j].CopyFrom(_prevStateCache[j]);
+                                    update(Vehicles[j], prevX, prevY);
+                                }
+                                canMove = false;
+                                break;
+                            }
+                            
+                            update(veh, _prevStateCache[i].X, _prevStateCache[i].Y);
                         }
                     }
                 }
@@ -657,6 +698,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 res.AddRange(opened);
                 opened.Clear();
+
+                foreach (var cl in res)
+                    cl.CompleteCluster();
             }
 
             Logger.CumulativeOperationEnd("Clustering2");
@@ -667,6 +711,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     public class VehiclesCluster : List<AVehicle>
     {
         public Point Avg;
+        public Rect BoundingRect;
         public double[] DurabilitySumByType = new double[5];
         public int[] CountByType = new int[5];
 
@@ -681,6 +726,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public void CompleteCluster()
         {
             Avg = Utility.Average(this);
+            BoundingRect = Utility.BoundingRect(this);
         }
     }
 }

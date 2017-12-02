@@ -12,6 +12,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         // Magic consts
         public const double ClusteringMargin = 20;
         public const int ActionsBruteforceDepth = 10;
+        public static bool MixArrvsWithGrounds;
 
         public static VehicleType[] AllTypes =
         {
@@ -147,6 +148,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(game.MaxUnitGroup, G.MaxUnitGroup);
 
             G.IsFacilitiesEnabled = world.Facilities.Length > 0;
+            MixArrvsWithGrounds = !G.IsFacilitiesEnabled;
         }
 
         private static void _expect<T>(T source, T value)

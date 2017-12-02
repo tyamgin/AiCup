@@ -345,7 +345,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             };
         }
 
-        public void ExtendedRadius(double additionalRadius)
+        public void ExtendRadius(double additionalRadius)
         {
             X -= additionalRadius;
             Y -= additionalRadius;
@@ -358,6 +358,22 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return 
                 X <= point.X && point.X <= X2 && 
                 Y <= point.Y && point.Y <= Y2; // TODO: need eps?
+        }
+
+        public Rect Clone()
+        {
+            return new Rect
+            {
+                X = X,
+                Y = Y,
+                X2 = X2,
+                Y2 = Y2,
+            };
+        }
+
+        public override string ToString()
+        {
+            return "[" + X + ", " + X2 + "][" + Y + ", " + Y2 + "]";
         }
 
         public bool IsFinite => X <= X2 && Y <= Y2;

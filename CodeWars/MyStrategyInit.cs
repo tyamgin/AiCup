@@ -5,7 +5,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        public void Initialize()
+        public static int NewGroupMinSize;
+
+        public static void Initialize()
         {
             var facilities = World.Facilities
                .Select(x => new AFacility(x))
@@ -45,6 +47,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MoveObserver.Init();
             Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears, facilities) { TickIndex = World.TickIndex };
             OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
+
+            NewGroupMinSize = (int)(Environment.MyVehicles.Count*11/500.0);
+
+            var newVehicles = Environment.MyVehicles.Where(x => x.Groups == 0).ToArray();
+            
+            var ungroupedEnv = new Sandbox(
+                newVehicles,
+                new ANuclear[] { },
+                new AFacility[] { },
+                clone: true
+                );
+
+            MyUngroupedClusters = ungroupedEnv.GetClusters(true, Const.ClusteringMargin * 2);
         }
 
         public static WeatherType Weather(double x, double y)

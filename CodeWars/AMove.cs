@@ -67,22 +67,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public MyGroup MyGroup
-        {
-            set
-            {
-                if (value.Group != null)
-                    Group = (int) value.Group;
-                if (value.Type != null)
-                    VehicleType = value.Type;
-            }
-        }
-
-        public static AMove ClearAndSelectType(VehicleType type)
-        {
-            return new AMove {Action = ActionType.ClearAndSelect, Rect = G.MapRect, VehicleType = type};
-        }
-
         public override string ToString()
         {
             switch (Action)
@@ -95,13 +79,50 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     return ActionType.Scale + " (" + X + ", " + Y + "; " + Factor + ")";
                 case ActionType.ClearAndSelect:
                     var groupStr = VehicleType?.ToString() ?? (Group != 0 ? Group.ToString() : "");
-                    return ActionType.ClearAndSelect + " " + groupStr + "[" + Left + ", " + Right + "][" + Top + ", " + Bottom + "]";
+                    return ActionType.ClearAndSelect + " " + groupStr + Rect;
                 case ActionType.TacticalNuclearStrike:
                     return ActionType.TacticalNuclearStrike + "(" + X + ", " + Y + ") " + VehicleId;
+                case ActionType.Assign:
+                    return ActionType.Assign + " " + Group;
+                case ActionType.SetupVehicleProduction:
+                    return ActionType.SetupVehicleProduction + " " + FacilityId + " " + VehicleType;
                 default:
                     //TODO
                     return base.ToString();
             }
+        }
+    }
+
+    public class AMovePresets
+    {
+        public static AMove ClearAndSelectType(VehicleType type)
+        {
+            return new AMove { Action = ActionType.ClearAndSelect, Rect = G.MapRect, VehicleType = type };
+        }
+
+        public static AMove AssignGroup(int groupId)
+        {
+            return new AMove {Action = ActionType.Assign, Group = groupId};
+        }
+
+        public static AMove Scale(Point point, double factor)
+        {
+            return new AMove {Action = ActionType.Scale, Factor = factor, Point = point};
+        }
+
+        public static AMove Rotate(Point point, double angle)
+        {
+            return new AMove {Action = ActionType.Rotate, Point = point, Angle = angle};
+        }
+
+        public static AMove MoveTo(Point from, Point to)
+        {
+            return new AMove {Action = ActionType.Move, Point = to - from};
+        }
+
+        public static AMove Move(Point vector)
+        {
+            return new AMove {Action = ActionType.Move, Point = vector};
         }
     }
 }

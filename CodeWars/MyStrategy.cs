@@ -14,6 +14,7 @@ using System.Threading;
  * 
  * - ядерка: перебрать несколько центров, учитывать уклонения
  * - починить упирание в стену
+ * - упирание в ungrouped
  */
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -29,13 +30,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static int[][] FacilityIdx;
         public static Sandbox Environment;
         public static List<VehiclesCluster> OppClusters;
+        public static List<VehiclesCluster> MyUngroupedClusters;
 
         Stopwatch _globalTimer = new Stopwatch();
 
         ~MyStrategy()
         {
             _globalTimer.Stop();
-            Console.WriteLine("=========================================== errs " + errs + " / " + ccnt);
             Console.WriteLine("Total time: " + _globalTimer.ElapsedMilliseconds + " ms");
         }
 
@@ -94,28 +95,48 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
 
-        Tuple<AMove, AMove, double> DoMain(bool opt)
+        Tuple<AMove[], DangerResult> DoMain(bool opt)
         {
             var baseTicksCount = Const.ActionsBruteforceDepth;
             if (Environment.Nuclears.Length > 0)
                 baseTicksCount *= 2;
 
-            AMove selMove = new AMove();
-            AMove selNextMove = null;
+            var selMoves = new[] { new AMove() };
 
             var env1 = Environment.Clone();
             for (var i = 0; i < baseTicksCount; i++)
                 env1.DoTick();
-            DangerResult selDanger = GetDanger(Environment, env1);
+            DangerResult selDanger = GetDanger(Environment, env1, GroupsManager.MyGroups, MyUngroupedClusters);
+            var doNothingDanger = selDanger;
             var targetFacilities = selDanger.TargetFacility;
 
-            foreach (var group in GroupsManager.MyGroups)
+            for (var s = 0; s < GroupsManager.MyGroups.Count + MyUngroupedClusters.Count; s++)
             {
-                var selectedIds = Utility.UnitsHash(Environment.MyVehicles.Where(x => x.IsSelected));
-                var needToSelectIds = Utility.UnitsHash(Environment.GetVehicles(true, group));
+                MyGroup group;
+                List<AVehicle> newGroupVehicles = null;
+                if (s < GroupsManager.MyGroups.Count)
+                    group = GroupsManager.MyGroups[s];
+                else
+                {
+                    newGroupVehicles = MyUngroupedClusters[s - GroupsManager.MyGroups.Count];
+                    if (newGroupVehicles.Count < NewGroupMinSize)
+                        continue;
+                    if (MoveObserver.AvailableActions < 3)
+                        continue;
+                    group = new MyGroup(GroupsManager.NextGroupId, newGroupVehicles[0].Type);
+                }
 
                 var startEnv = Environment.Clone();
                 var ticksCount = baseTicksCount;
+
+                if (newGroupVehicles != null)
+                {
+                    foreach (var newVeh in newGroupVehicles)
+                        startEnv.AddVehicleGroup(startEnv.VehicleById[newVeh.Id], group.Group);
+                }
+
+                var selectedIds = Utility.UnitsHash(startEnv.MyVehicles.Where(x => x.IsSelected));
+                var needToSelectIds = Utility.UnitsHash(startEnv.GetVehicles(true, group));
 
                 AMove selectionMove = null;
                 var availableActions = MoveObserver.AvailableActions;
@@ -125,12 +146,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (MoveObserver.AvailableActions < 2)
                         continue;
 
-                    selectionMove = new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        MyGroup = group,
-                        Rect = G.MapRect,
-                    };
+                    selectionMove = newGroupVehicles == null
+                        ? new AMove
+                        {
+                            Action = ActionType.ClearAndSelect,
+                            Group = group.Group,
+                            Rect = G.MapRect,
+                        }
+                        : new AMove
+                        {
+                            Action = ActionType.ClearAndSelect,
+                            VehicleType = group.VehicleType,
+                            Rect = Utility.BoundingRect(newGroupVehicles),
+                        };
                     startEnv.ApplyMove(selectionMove);
                     startEnv.DoTick();
                     availableActions--;
@@ -164,7 +192,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 List<Point> pos = new List<Point>(), neg = new List<Point>();
-                var myType = GroupsManager.GroupLeader(group);
+                
                 for (var clIdx = 0; clIdx < OppClusters.Count; clIdx++)
                 {
                     var cl = OppClusters[clIdx];
@@ -173,9 +201,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (cl.CountByType[(int)oppType] > 0)
                         {
                             var avg = Utility.Average(cl.VehicleType(oppType));
-                            if (G.AttackDamage[(int)myType, (int)oppType] > 0)
+                            if (G.AttackDamage[(int)group.VehicleType, (int)oppType] > 0)
                                 pos.Add(avg);
-                            else if (G.AttackDamage[(int)oppType, (int)myType] > 0)
+                            else if (G.AttackDamage[(int)oppType, (int)group.VehicleType] > 0)
                                 neg.Add(avg);
                         }
                     }
@@ -220,20 +248,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                     Logger.CumulativeOperationEnd("End of simulation");
 
-                    var danger = GetDanger(Environment, env, cache);
+                    var myGroups = GroupsManager.MyGroups.AsEnumerable();
+                    var myUngroups = MyUngroupedClusters.AsEnumerable();
+                    if (newGroupVehicles != null)
+                    {
+                        myGroups = myGroups.ConcatSingle(group);
+                        myUngroups = myUngroups.Where(cl => !cl.Equals(newGroupVehicles));
+                    }
+
+                    var danger = GetDanger(Environment, env, myGroups.ToList(), myUngroups.ToList(), cache);
                     if (selDanger == null || danger.Score < selDanger.Score)
                     {
                         selDanger = danger;
-                        if (selectionMove == null)
+                        selMoves = new[]
                         {
-                            selMove = move;
-                            selNextMove = null;
+                            selectionMove,
+                            move,
+                            newGroupVehicles == null
+                                ? null
+                                : AMovePresets.AssignGroup((int) group.Group)
                         }
-                        else
-                        {
-                            selMove = selectionMove;
-                            selNextMove = move;
-                        }
+                            .Where(x => x != null)
+                            .ToArray();
                     }
                     return danger.Score;
                 };
@@ -244,10 +280,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     Point =
                         Point.ByAngle(2*Math.PI/12*idx)*
                         startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)*
-                        ticksCount*(group.Type == null ? 40 : 7),
-                    MaxSpeed = group.Group == GroupsManager.StartingTanksGroupId
+                        ticksCount*40,
+                    MaxSpeed = group.Group == GroupsManager.StartingTanksGroupId && Const.MixArrvsWithGrounds
                         ? Math.Min(G.MaxSpeed[(int) VehicleType.Tank], G.MaxSpeed[(int) VehicleType.Arrv])
-                        : group.Group == GroupsManager.StartingIfvsGroupId
+                        : group.Group == GroupsManager.StartingIfvsGroupId && Const.MixArrvsWithGrounds
                             ? Math.Min(G.MaxSpeed[(int) VehicleType.Ifv], G.MaxSpeed[(int) VehicleType.Arrv])
                             : 0
                 };
@@ -265,64 +301,34 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 foreach (var move in 
-                    Environment.Nuclears.Select(nuclear => new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Factor = 1.5,
-                        Point = nuclear
-                    })
+                    Environment.Nuclears.Select(nuclear => AMovePresets.Scale(nuclear, 1.5))
                         .Concat(new[]
                         {
-                            new AMove
-                            {
-                                Action = ActionType.Scale,
-                                Factor = 0.1,
-                                Point = typeRect.Center,
-                            },
-                            new AMove
-                            {
-                                Action = ActionType.Rotate,
-                                Point = typeRect.Center,
-                                Angle = Math.PI/4,
-                            },
-                            new AMove
-                            {
-                                Action = ActionType.Rotate,
-                                Point = typeRect.Center,
-                                Angle = -Math.PI/4,
-                            },
+                            AMovePresets.Scale(typeRect.Center, 0.1),
+                            AMovePresets.Rotate(typeRect.Center, Math.PI/4),
+                            AMovePresets.Rotate(typeRect.Center, -Math.PI/4),
                         })
                         .Concat(
                             pos.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
                                 .Take(2)
-                                .Select(cen => new AMove
-                                {
-                                    Action = ActionType.Move,
-                                    Point = cen - typeRect.Center
-                                }))
+                                .Select(cen => AMovePresets.MoveTo(typeRect.Center, cen))
+                                )
                         .Concat(
                             neg.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
                                 .Take(1)
-                                .Select(cen => new AMove
-                                {
-                                    Action = ActionType.Move,
-                                    Point = (typeRect.Center - cen).Take(150)
-                                })))
+                                .Select(cen => AMovePresets.Move((typeRect.Center - cen).Take(150)))
+                                ))
                 {
                     checkAction(move);
                 }
 
-                if (group.Group != null && targetFacilities.ContainsKey((int) group.Group))
+                if (targetFacilities.ContainsKey(group.Group))
                 {
-                    checkAction(new AMove
-                    {
-                        Action = ActionType.Move,
-                        Point = targetFacilities[(int)group.Group] - typeRect.Center,
-                    });
+                    checkAction(AMovePresets.MoveTo(typeRect.Center, targetFacilities[group.Group]));
                 }
             }
 
-            return new Tuple<AMove, AMove, double>(selMove, selNextMove, selDanger.Score);
+            return new Tuple<AMove[], DangerResult>(selMoves, selDanger);
         }
 
         private void _move(Game game)
@@ -346,8 +352,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (GroupsManager.MyGroups.Count == 0)
                 return;
 
-            if (World.TickIndex % MoveObserver.ActionsBaseInterval == 0 
-                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete && World.TickIndex >= _noMoveLastTick + MoveObserver.ActionsBaseInterval
+            var actionsBaseInterval = MoveObserver.ActionsBaseInterval;
+            if (MyUngroupedClusters.Any(x => x.Count >= NewGroupMinSize))
+                actionsBaseInterval++;
+            if (World.TickIndex % actionsBaseInterval == 0 
+                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete && World.TickIndex >= _noMoveLastTick + actionsBaseInterval
                 || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
                 var nuclearMove = NuclearStrategy();
@@ -359,14 +368,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 var mainNew = DoMain(true);
 
-                if (mainNew.Item1.Action == null || mainNew.Item1.Action == ActionType.None)
+                if (mainNew.Item1[0].Action == null || mainNew.Item1[0].Action == ActionType.None)
                     _noMoveLastTick = World.TickIndex;
-                
-                ccnt++;
 
-                ResultingMove = mainNew.Item1;
-                if (mainNew.Item2 != null)
-                    MoveQueue.Add(mainNew.Item2);
+                ResultingMove = mainNew.Item1[0];
+                for (var i = 1; i < mainNew.Item1.Length; i++)
+                {
+                    var mv = mainNew.Item1[i];
+                    MoveQueue.Add(mv);
+                    if (mv.Action == ActionType.Assign && mainNew.Item1[0].VehicleType != null)
+                        GroupsManager.AddPendingGroup(new MyGroup(mv.Group, mainNew.Item1[0].VehicleType.Value));
+                }
+
             }
 
             if (ResultingMove == null || ResultingMove.Action == null || ResultingMove.Action == ActionType.None)
@@ -375,22 +388,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     var facilitiesMove = FacilitiesStrategy();
                     if (facilitiesMove != null)
-                    {
                         ResultingMove = facilitiesMove[0];
-                        for (var i = 1; i < facilitiesMove.Length; i++)
-                        {
-                            MoveQueue.Add(facilitiesMove[i]);
-                            if (facilitiesMove[i].Action == ActionType.Assign)
-                                GroupsManager.AddPendingGroup(new MyGroup(facilitiesMove[i].Group), ResultingMove.VehicleType.Value);
-                        }
-                    }
                 }
             }
         }
 
         private int _noMoveLastTick = -Const.Infinity;
-
-        private static int errs = 0;
-        private static int ccnt = 0;
     }
 }

@@ -13,7 +13,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public int Durability;
         public bool IsSelected;
         public int RemainingAttackCooldownTicks;
-        public uint Groups;
+        public ulong Groups;
         public bool CanChargeFacility;
 
         public Point MoveTarget;
@@ -100,17 +100,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool HasGroup(int groupId)
         {
-            return (Groups & (1U << groupId)) != 0;
+            return (Groups & (1UL << groupId)) != 0;
         }
 
         public void AddGroup(int groupId)
         {
-            Groups |= 1U << groupId;
+            Groups |= 1UL << groupId;
         }
 
         public void RemoveGroup(int groupId)
         {
-            Groups &= (1U << groupId) ^ 0xFFFFFFFF;
+            Groups &= ~(1UL << groupId);
         }
 
         public bool IsAerial => Type == VehicleType.Helicopter || Type == VehicleType.Fighter;
@@ -166,10 +166,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (MoveTarget != null || RotationCenter != null)
             {
-                if (X + deltaX < Radius - Const.Eps ||
-                    Y + deltaY < Radius - Const.Eps ||
-                    X + deltaX > G.MapSize - Radius + Const.Eps ||
-                    Y + deltaY > G.MapSize - Radius + Const.Eps)
+                if (X + deltaX < Radius - Const.Eps)
+                {
+                    return false;
+                }
+                if (Y + deltaY < Radius - Const.Eps)
+                {
+                    return false;
+                }
+                if (X + deltaX > G.MapSize - Radius + Const.Eps)
+                {
+                    return false;
+                }
+                if (Y + deltaY > G.MapSize - Radius + Const.Eps)
                 {
                     return false;
                 }
@@ -278,8 +287,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool IsGroup(MyGroup group)
         {
-            return group.Type == Type ||
-                   group.Group != null && HasGroup((int) group.Group);
+            return HasGroup(group.Group);
         }
 
         public double ActualVisionRange
@@ -309,7 +317,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public override string ToString()
         {
-            return "(" + X + ", " + Y + ") " + Type + " " + Durability + "%";
+            var groupsStr = Groups == 0 ? "" : "(" + string.Join(", ", GroupsList) + ")";
+            return "(" + X + ", " + Y + ") " + Type + groupsStr + " " + Durability + "%";
         }
     }
 }

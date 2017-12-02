@@ -45,13 +45,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                 }
             }
-
-            public static bool Free => queue.Count == 0;
-
-            public static bool AllStoppedCondition(Sandbox env)
-            {
-                return env.MyVehicles.All(x => Geom.PointsEquals(x, MoveObserver.BeforeMoveUnits[x.Id]));
-            }
         }
 
         void _selectIfNotSelected(Sandbox env, AMove move)
@@ -106,7 +99,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var sh = 10;
             var cs = G.CellSize * 2.5;
 
-            if (!G.IsFacilitiesEnabled)
+            if (Const.MixArrvsWithGrounds)
             {
                 expandSquares(0, 2*cs, 0, sh);
                 expandSquares(0, cs, 0, sh);
@@ -116,13 +109,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             ActionsQueue.Add(env =>
             {
-                var groups = new[] {GroupsManager.StartingTanksGroupId, GroupsManager.StartingIfvsGroupId, GroupsManager.StartingHelicoptersGroupId, GroupsManager.StartingFightersGroupId };
-                if (G.IsFacilitiesEnabled)
+                var groups = new[]
+                {
+                    GroupsManager.StartingFightersGroupId,
+                    GroupsManager.StartingHelicoptersGroupId,
+                    GroupsManager.StartingTanksGroupId,
+                    GroupsManager.StartingIfvsGroupId,
+                     
+                };
+                var groupsLeaders = new[]
+                {
+                    (VehicleType)0,
+                    VehicleType.Fighter,
+                    VehicleType.Helicopter,
+                    VehicleType.Tank,
+                    VehicleType.Ifv,
+                    VehicleType.Arrv
+                };
+                if (!Const.MixArrvsWithGrounds)
                     groups = groups.ConcatSingle(GroupsManager.StartingArrvsGroupId).ToArray();
 
                 foreach (var group in groups)
                 {
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(GroupsManager.GroupLeaders[group]));
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(groupsLeaders[group]));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Assign,
@@ -134,22 +143,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             ActionsQueue.Add(env =>
             {
-                GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingFightersGroupId));
-                GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingHelicoptersGroupId));
+                GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingFightersGroupId, VehicleType.Fighter));
+                GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingHelicoptersGroupId, VehicleType.Helicopter));
                 
-                if (G.IsFacilitiesEnabled)
+                if (!Const.MixArrvsWithGrounds)
                 {
-                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingArrvsGroupId));
-                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId));
-                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingArrvsGroupId, VehicleType.Arrv));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId, VehicleType.Ifv));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId, VehicleType.Tank));
                     FirstMovesComplete = true;
                 }
                 return e => true;
             });
 
-            if (!G.IsFacilitiesEnabled)
+            if (Const.MixArrvsWithGrounds)
             {
-
                 ActionsQueue.Add(env =>
                 {
                     var arrvs = env.GetVehicles(true, VehicleType.Arrv);
@@ -161,7 +169,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var ifvsRect = Utility.BoundingRect(ifvs);
 
                     var d = 1.38;
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(VehicleType.Arrv));
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Arrv));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Scale,
@@ -169,7 +177,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Factor = d,
                     });
 
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(VehicleType.Tank));
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Tank));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Scale,
@@ -177,7 +185,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Factor = d,
                     });
 
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(VehicleType.Ifv));
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Ifv));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Scale,
@@ -196,7 +204,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 ActionsQueue.Add(env =>
                 {
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(VehicleType.Arrv));
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Arrv));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Move,
@@ -327,14 +335,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Y = (tanksRect.Center.Y - tankArrvsRect.Center.Y)*proportionT,
                     });
 
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(VehicleType.Ifv));
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Ifv));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Move,
                         Y = -(ifvsRect.Center.Y - ifvArrvsRect.Center.Y)*(1 - proportionI),
                     });
 
-                    _selectIfNotSelected(env, AMove.ClearAndSelectType(VehicleType.Tank));
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Tank));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Move,
@@ -383,8 +391,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 ActionsQueue.Add(env =>
                 {
                     FirstMovesComplete = true;
-                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId));
-                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId, VehicleType.Ifv));
+                    GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId, VehicleType.Tank));
                     return e => true;
                 });
 
@@ -398,26 +406,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
     public class MyGroup
     {
-        public readonly VehicleType? Type;
-        public readonly int? Group;
+        public readonly int Group;
+        public readonly VehicleType VehicleType;
 
-        public MyGroup(int group)
+        public MyGroup(int group, VehicleType type)
         {
             Group = group;
-        }
-
-        public MyGroup(VehicleType type)
-        {
-            Type = type;
+            VehicleType = type;
         }
 
         public override string ToString()
         {
-            if (Type != null)
-                return Type.ToString();
-            if (Group != null)
-                return Group.ToString();
-            return "";
+            return VehicleType + "(" + Group + ")";
         }
     }
 }
