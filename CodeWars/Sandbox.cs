@@ -15,6 +15,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public readonly Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
 
         public bool CheckCollisionsWithOpponent = true;
+        public bool UseFightOptimization = true;
 
         private readonly List<AVehicle>[] _vehiclesByOwner =
         {
@@ -281,7 +282,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private void _doFight()
         {
             Utility.ResizeArray(ref _nearestFightersCacheDist, Vehicles.Length, double.MaxValue/2);
-            Utility.ResizeArray(ref _nearestFightersCacheTick, Vehicles.Length, -1);
+            if (UseFightOptimization)
+                Utility.ResizeArray(ref _nearestFightersCacheTick, Vehicles.Length, -1);
 
             for (var i = 0; i < Vehicles.Length; i++)
             {
@@ -302,7 +304,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var oppTree = _tree(!veh.IsMy, veh.IsAerial);
                 var oppTree2 = _tree(!veh.IsMy, !veh.IsAerial);
 
-                if (_nearestFightersCacheTick[i] == -1 && veh.Type != VehicleType.Arrv)
+                if (UseFightOptimization && _nearestFightersCacheTick[i] == -1 && veh.Type != VehicleType.Arrv)
                 {
                     double maxDist = Const.ActionsBruteforceDepth * (G.MaxVehicleSpeed + G.MaxSpeed[(int) veh.Type]) + G.MaxAttackRange;
                     var interactors = new List<AVehicle>
@@ -319,7 +321,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 var irad = veh.Type == VehicleType.Arrv ? G.ArrvRepairRange : G.MaxAttackRange;
 
-                if (_nearestFightersCacheDist[i] - (TickIndex - _nearestFightersCacheTick[i]) * G.MaxVehicleSpeed > irad + Const.Eps)
+                if (UseFightOptimization && _nearestFightersCacheDist[i] - (TickIndex - _nearestFightersCacheTick[i]) * G.MaxVehicleSpeed > irad + Const.Eps)
                     continue;
 
                 var nearestInteractors = veh.Type == VehicleType.Arrv

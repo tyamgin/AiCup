@@ -217,6 +217,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         : startEnv.Clone();
 
                     env.CheckCollisionsWithOpponent = false;
+                    env.UseFightOptimization = false;
 
                     if (partialEnv != null)
                     {

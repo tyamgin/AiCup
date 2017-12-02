@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -62,6 +63,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             MyUngroupedClusters = ungroupedEnv.GetClusters(true, Const.ClusteringMargin * 2);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WeatherType Weather(double x, double y)
         {
             int I, J;
@@ -69,6 +71,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return WeatherType[I][J];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TerrainType Terrain(double x, double y)
         {
             int I, J;
@@ -76,6 +79,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return TerrainType[I][J];
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FacilityIndex(double x, double y)
         {
             int I, J;
