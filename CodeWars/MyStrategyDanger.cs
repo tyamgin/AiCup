@@ -128,7 +128,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                     )*
                                   (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
                                       ? 1.0*opp.Durability/G.MaxDurability
-                                      : 1)*(m.Type==opp.Type?0.3:1));
+                                      : 1)*
+                                  (m.Type == opp.Type ? 0.3 : 1)
+                    );
             });
             Logger.CumulativeOperationEnd("Danger0");
             return result;

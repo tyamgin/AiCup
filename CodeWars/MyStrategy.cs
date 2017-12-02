@@ -211,10 +211,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 Func<AMove, double> checkAction = move =>
                 {
-                    Sandbox env = partialEnv != null
-                        ? new Sandbox(partialEnv.OppVehicles.Concat(startEnv.GetVehicles(true, group)),
-                            startEnv.Nuclears, partialEnv.Facilities, clone: true)
-                        : startEnv.Clone();
+                    Logger.CumulativeOperationStart("Building nearby environment");
+                    Sandbox env;
+                    IEnumerable<AVehicle> farOpponents = null;
+                    if (partialEnv == null)
+                    {
+                        env = startEnv.Clone();
+                    }
+                    else
+                    {
+                        var currentVehicles = startEnv.GetVehicles(true, group);
+                        var currentVehiclesCenter = Utility.BoundingRect(currentVehicles).Center;
+                        var split = partialEnv.OppVehicles.ToLookup(
+                                x => x.GetDistanceTo2(currentVehiclesCenter) < Geom.Sqr(2*G.TacticalNuclearStrikeRadius));
+                        farOpponents = split[false];
+                        var nearOpponents = split[true];
+                        env = new Sandbox(nearOpponents.Concat(currentVehicles),
+                            startEnv.Nuclears, partialEnv.Facilities, clone: true);
+                    }
 
                     env.CheckCollisionsWithOpponent = false;
                     env.UseFightOptimization = false;
@@ -235,19 +249,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             // TODO: если кд только восстановилось
                         }
                     }
+                    Logger.CumulativeOperationEnd("Building nearby environment");
 
                     Logger.CumulativeOperationStart("End of simulation");
                     env.ApplyMove(move);
                     env.DoTicksApprox(ticksCount, moveApprox: move.Action == ActionType.Move);
+                    Logger.CumulativeOperationEnd("End of simulation");
 
+                    Logger.CumulativeOperationStart("Building last environment");
                     var cache = sumMaxAlmostAttacksCache;
                     if (partialEnv != null)
                     {
-                        env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)));
-                        cache += GetSumMaxAlmostAttacks(env,
-                            env.MyVehicles.Where(x => x.IsGroup(group)));
+                        env.AddRange(partialEnv.MyVehicles.Where(x => !x.IsGroup(group)).Concat(farOpponents));
+                        cache += GetSumMaxAlmostAttacks(env, env.GetVehicles(true, group));
                     }
-                    Logger.CumulativeOperationEnd("End of simulation");
 
                     var myGroups = GroupsManager.MyGroups.AsEnumerable();
                     var myUngroups = MyUngroupedClusters.AsEnumerable();
@@ -256,6 +271,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         myGroups = myGroups.ConcatSingle(group);
                         myUngroups = myUngroups.Where(cl => !cl.Equals(newGroupVehicles));
                     }
+
+                    Debug.Assert(env.Vehicles.Length == Environment.Vehicles.Length);
+                    Logger.CumulativeOperationEnd("Building last environment");
+
 
                     var danger = GetDanger(Environment, env, myGroups.ToList(), myUngroups.ToList(), cache);
                     if (selDanger == null || danger.Score < selDanger.Score)
