@@ -302,7 +302,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 foreach (var move in 
-                    Environment.Nuclears.Select(nuclear => AMovePresets.Scale(nuclear, 1.5))
+                    Environment.Nuclears
+                        .Where(n => n.GetDistanceTo(Utility.Average(startEnv.MyVehicles.Where(x => x.IsSelected))) < G.TacticalNuclearStrikeRadius*2)
+                        .Select(nuclear => AMovePresets.Scale(nuclear, 1.5))
                         .Concat(new[]
                         {
                             AMovePresets.Scale(typeRect.Center, 0.1),

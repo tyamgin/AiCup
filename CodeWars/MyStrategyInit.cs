@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
@@ -49,7 +50,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears, facilities) { TickIndex = World.TickIndex };
             OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
 
-            NewGroupMinSize = (int)(Environment.MyVehicles.Count*11/500.0);
+            NewGroupMinSize = (int)(Environment.MyVehicles.Count*40/500.0);
 
             var newVehicles = Environment.MyVehicles.Where(x => x.Groups == 0).ToArray();
             
@@ -60,7 +61,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 clone: true
                 );
 
-            MyUngroupedClusters = ungroupedEnv.GetClusters(true, Const.ClusteringMargin * 2);
+            MyUngroupedClusters = G.IsFacilitiesEnabled
+                ? ungroupedEnv.GetClusters(true, Const.ClusteringMargin*2)
+                : new List<VehiclesCluster>();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

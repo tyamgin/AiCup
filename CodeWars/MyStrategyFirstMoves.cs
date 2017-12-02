@@ -131,12 +131,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 foreach (var group in groups)
                 {
-                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(groupsLeaders[group]));
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Assign,
-                        Group = group,
-                    });
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(groupsLeaders[group]));
+                    MoveQueue.Add(AMovePresets.AssignGroup(group));
                 }
                 return e => true;
             });
@@ -170,28 +166,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     var d = 1.38;
                     _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Arrv));
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Point = arrvsRect.Center,
-                        Factor = d,
-                    });
+                    MoveQueue.Add(AMovePresets.Scale(arrvsRect.Center, d));
 
-                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Tank));
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Point = tanksRect.Center,
-                        Factor = d,
-                    });
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Tank));
+                    MoveQueue.Add(AMovePresets.Scale(tanksRect.Center, d));
 
-                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Ifv));
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Scale,
-                        Point = ifvsRect.Center,
-                        Factor = d,
-                    });
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Ifv));
+                    MoveQueue.Add(AMovePresets.Scale(ifvsRect.Center, d));
 
                     return env2 =>
                     {
@@ -266,7 +247,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         X = tanksRect.Center.X - (tankArrvsRect.Center.X - shift),
                     });
 
-                    _selectIfNotSelected(env, new AMove
+                    MoveQueue.Add(new AMove
                     {
                         Action = ActionType.ClearAndSelect,
                         Rect = ifvArrvsRect,
@@ -323,7 +304,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Y = (ifvsRect.Center.Y - ifvArrvsRect.Center.Y)*proportionI,
                     });
 
-                    _selectIfNotSelected(env, new AMove
+                    MoveQueue.Add(new AMove
                     {
                         Action = ActionType.ClearAndSelect,
                         Rect = tankArrvsRect,
@@ -335,14 +316,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Y = (tanksRect.Center.Y - tankArrvsRect.Center.Y)*proportionT,
                     });
 
-                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Ifv));
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Ifv));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Move,
                         Y = -(ifvsRect.Center.Y - ifvArrvsRect.Center.Y)*(1 - proportionI),
                     });
 
-                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Tank));
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Tank));
                     MoveQueue.Add(new AMove
                     {
                         Action = ActionType.Move,
