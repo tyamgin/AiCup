@@ -14,9 +14,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const int ActionsBruteforceDepth = 10;
         public static bool MixArrvsWithGrounds;
 
+        public static VehicleType[] AerialTypes =
+        {
+            VehicleType.Fighter, VehicleType.Helicopter, 
+        };
+
+        public static VehicleType[] GroundTypes =
+        {
+            VehicleType.Arrv, VehicleType.Ifv, VehicleType.Tank,
+        };
+
         public static VehicleType[] AllTypes =
         {
-            VehicleType.Arrv, VehicleType.Fighter, VehicleType.Helicopter, VehicleType.Ifv, VehicleType.Tank
+            VehicleType.Arrv, VehicleType.Fighter, VehicleType.Helicopter, VehicleType.Ifv, VehicleType.Tank,
         };
 
         public static void Initialize(World world, Game game)

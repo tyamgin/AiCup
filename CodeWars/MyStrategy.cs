@@ -223,7 +223,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         foreach (var veh in env.Vehicles)
                         {
-                            if (veh.IsMy && veh.IsGroup(group))
+                            if (veh.IsGroup(group))
                                 continue;
 
                             veh.ForgotTarget(); // чтобы не шли повторно
