@@ -72,7 +72,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     res += RectanglesIntersects2*1000;
                     res += MoveToSum/3;
                     res += FacilitiesPointsDiff;
-                    res += MoveToFacilitySum*150;
+                    res += MoveToFacilitySum*300;
                     return res;
                 }
             }
