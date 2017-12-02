@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Security.Authentication.ExtendedProtection;
+using System.Windows.Forms;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -10,6 +11,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     public class Sandbox
     {
         public int TickIndex;
+        public AVehicle[] Vehicles;
         public ANuclear[] Nuclears;
         public AFacility[] Facilities;
         public readonly Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
@@ -96,8 +98,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public IEnumerable<AFacility> MyVehicleFactories => Facilities.Where(x => x.IsMy && x.Type == FacilityType.VehicleFactory);
 
-        public AVehicle[] Vehicles;
-
         public Sandbox(IEnumerable<AVehicle> vehicles, IEnumerable<ANuclear> nuclears, IEnumerable<AFacility> facilities, bool clone = false)
         {
             if (clone)
@@ -140,17 +140,54 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        private Sandbox()
+        {
+        }
+
         public Sandbox Clone()
         {
-            // TODO: use QuadTree.Clone()
-            return new Sandbox(
-                Vehicles.Select(x => new AVehicle(x)),
-                Nuclears.Select(x => new ANuclear(x)),
-                Facilities.Select(x => new AFacility(x)))
+            var clone = new Sandbox
             {
                 CheckCollisionsWithOpponent = CheckCollisionsWithOpponent,
+                UseFightOptimization = UseFightOptimization,
                 TickIndex = TickIndex,
+
+                Nuclears = Nuclears.Select(x => new ANuclear(x)).ToArray(),
+                Facilities = Facilities.Select(x => new AFacility(x)).ToArray(),
+                Vehicles = new AVehicle[Vehicles.Length],
             };
+            var ptr = 0;
+
+
+            for (var i = 0; i < _myVehiclesByGroup.Count; i++)
+            {
+                clone._myVehiclesByGroup.Add(new List<AVehicle>(_myVehiclesByGroup[i].Count));
+            }
+
+            for (var isMy = 0; isMy < 2; isMy++)
+            {
+                clone._vehiclesByOwner[isMy].Capacity = _vehiclesByOwner[isMy].Count;
+                for (var j = 0; j < 5; j++)
+                    clone._vehiclesByOwnerAndType[isMy][j].Capacity = _vehiclesByOwnerAndType[isMy][j].Count;
+
+                for (var isAerial = 0; isAerial < 2; isAerial++)
+                {
+                    var treeNodes = new List<AVehicle>();
+                    clone._trees[isMy, isAerial] = _tree(isMy == 1, isAerial == 1).Clone(ref treeNodes);
+                    foreach (var veh in treeNodes)
+                    {
+                        clone.Vehicles[ptr++] = veh;
+
+                        clone._vehiclesByOwner[isMy].Add(veh);
+                        clone._vehiclesByOwnerAndType[isMy][(int)veh.Type].Add(veh);
+                        clone.VehicleById[veh.Id] = veh;
+                        if (veh.IsMy)
+                            foreach (var g in veh.GroupsList)
+                                clone._myVehiclesByGroup[g - 1].Add(veh);
+                    }
+                }
+            }
+            return clone;
         }
 
         public void ApplyMove(Move move)

@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -81,7 +82,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
             dest = new Node {HasValueBelow = src.HasValueBelow};
             if (src.Value != null)
+            {
                 dest.Value = _cloneFunc(src.Value);
+                _values?.Add(dest.Value);
+            }
             else
             {
                 _clone(src.LeftTop, out dest.LeftTop);
@@ -805,7 +809,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public QuadTree<T> Clone()
         {
             var tree = new QuadTree<T>(_left, _top, _right, _bottom, _epsilon, _cloneFunc);
+            _values = null;
             _clone(_root, out tree._root);
+            tree.Count = Count;
+            return tree;
+        }
+
+        public QuadTree<T> Clone(ref List<T> createdNodes)
+        {
+            var tree = new QuadTree<T>(_left, _top, _right, _bottom, _epsilon, _cloneFunc);
+            _values = createdNodes;
+            _values.Capacity = Count;
+            _clone(_root, out tree._root);
+            Debug.Assert(Count == createdNodes.Count);
             tree.Count = Count;
             return tree;
         }
