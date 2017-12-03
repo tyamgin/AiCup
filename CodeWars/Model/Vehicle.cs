@@ -1,7 +1,7 @@
 using System;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public class Vehicle : CircularUnit {
+    public partial class Vehicle : CircularUnit {
         private readonly long playerId;
         private readonly int durability;
         private readonly int maxDurability;

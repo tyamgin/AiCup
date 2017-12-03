@@ -1,7 +1,7 @@
 using System;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public sealed class PlayerContext {
+    public sealed partial class PlayerContext {
         private readonly Player player;
         private readonly World world;
 

@@ -1,7 +1,7 @@
 using System;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public abstract class Unit {
+    public abstract partial class Unit {
         private readonly long id;
         private readonly double x;
         private readonly double y;

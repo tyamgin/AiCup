@@ -1,7 +1,7 @@
 using System;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public class VehicleUpdate {
+    public partial class VehicleUpdate {
         private readonly long id;
         private readonly double x;
         private readonly double y;

@@ -1,7 +1,7 @@
 using System;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public class Move {
+    public partial class Move {
         private ActionType? action;
         private int group;
         private double left;

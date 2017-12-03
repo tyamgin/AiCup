@@ -1,7 +1,5 @@
-using System;
-
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public class Facility {
+    public partial class Facility {
         private readonly long id;
         private readonly FacilityType type;
         private readonly long ownerPlayerId;

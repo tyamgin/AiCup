@@ -1,7 +1,7 @@
 using System;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public class Player {
+    public partial class Player {
         private readonly long id;
         private readonly bool isMe;
         private readonly bool isStrategyCrashed;

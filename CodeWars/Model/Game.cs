@@ -1,7 +1,7 @@
 using System;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
-    public class Game {
+    public partial class Game {
         private readonly long randomSeed;
         private readonly int tickCount;
         private readonly double worldWidth;
