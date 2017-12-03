@@ -22,8 +22,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (newFactories.Length == 0)
                 return null;
 
-            var requiredType = Environment.GetVehicles(true, VehicleType.Fighter).Count <
-                               Environment.GetVehicles(false, VehicleType.Fighter).Count
+            var requiredType = Environment.GetVehicles(false, VehicleType.Fighter).Count > 5
                 ? VehicleType.Fighter
                 : VehicleType.Helicopter;
 
