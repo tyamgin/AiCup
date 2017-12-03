@@ -23,6 +23,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public double RotationAngularSpeed;
         public int DurabilityPool;
 
+        //public int Index; //
+
         public AVehicle(Vehicle unit) : base(unit)
         {
             IsMy = unit.PlayerId == MyStrategy.Me.Id;

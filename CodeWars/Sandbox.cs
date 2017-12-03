@@ -33,7 +33,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private readonly List<List<AVehicle>> _myVehiclesByGroup = new List<List<AVehicle>>();
 
         private AVehicle[] _nearestCache;
-        private int[] _notMoved;
         private double[] _nearestFightersCacheDist;
         private int[] _nearestFightersCacheTick;
 
@@ -393,12 +392,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        private static readonly int[] _notMoved = new int[10000];
+        private static readonly AVehicle[] _movedState = new AVehicle[10000];
+
         private void _doMove()
         {
             Utility.ResizeArray(ref _nearestCache, Vehicles.Length);
-            Utility.ResizeArray(ref _notMoved, Vehicles.Length);
-
-            var movedState = Vehicles.Select(x => default(AVehicle)).ToArray();
+            
             var notMovedLength = 0;
 
             for (var i = 0; i < Vehicles.Length; i++)
@@ -409,10 +409,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     veh.Move();
                     continue;
                 }
-                movedState[i] = new AVehicle(veh);
-                if (!movedState[i].Move())
+                if (_movedState[i] == null)
+                    _movedState[i] = new AVehicle(veh);
+                else
+                    _movedState[i].CopyFrom(veh);
+
+                if (!_movedState[i].Move())
                 {
-                    veh.CopyFrom(movedState[i]);
+                    veh.CopyFrom(_movedState[i]);
                     continue;
                 }
 
@@ -426,7 +430,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 for (var i = 0; i < notMovedLength; i++)
                 {
                     var idx = _notMoved[i];
-                    var movedUnit = movedState[idx];
+                    var movedUnit = _movedState[idx];
                     var unitTree = _tree(movedUnit.IsMy, movedUnit.IsAerial);
                     var oppTree = _tree(!movedUnit.IsMy, movedUnit.IsAerial);
 

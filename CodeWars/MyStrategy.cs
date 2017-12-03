@@ -274,7 +274,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     Logger.CumulativeOperationStart("End of simulation");
                     env.ApplyMove(move);
-                    env.DoTicksApprox(ticksCount, moveApprox: move.Action == ActionType.Move);
+                    env.DoTicksApprox(ticksCount, moveApprox: move.Action == ActionType.Move/* || move.Action == ActionType.Rotate*/);
                     Logger.CumulativeOperationEnd("End of simulation");
 
                     //Logger.CumulativeOperationStart("Building last environment");
