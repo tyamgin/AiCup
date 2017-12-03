@@ -482,6 +482,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (!movedUnit.IsAerial && CheckCollisionsWithOpponent)
                         {
                             var nearest = oppTree.FindFirstNearby(movedUnit, Geom.Sqr(2 * movedUnit.Radius));
+
                             if (nearest != null)
                             {
                                 if (nearest.IntersectsWith(movedUnit))
@@ -518,6 +519,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             if (!unitTree.ChangeXY(unit, movedUnit.X, movedUnit.Y))
                                 throw new Exception("Can't change unit coordinates, id=" + unit.Id);
 
+                            
                             if (_nearestFightersCacheTick != null && _nearestFightersCacheTick[idx] != -1)
                                 _nearestFightersCacheDist[idx] -= unit.GetDistanceTo(prevX, prevY);
                         }
