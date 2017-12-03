@@ -300,7 +300,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         myUngroups = myUngroups.Where(cl => !cl.Equals(newGroupVehicles));
                     }
 
-                    Debug.Assert(env.Vehicles.Length == Environment.Vehicles.Length);
+                    if (env.Vehicles.Length != Environment.Vehicles.Length)
+                        throw new Exception("Final sandbox size mismatch");
                     //Logger.CumulativeOperationEnd("Building last environment");
 
 

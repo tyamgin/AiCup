@@ -112,7 +112,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var currentY = currentValue.Y;
 
                 if (value.X.CompareTo(currentX) == 0 && value.Y.CompareTo(currentY) == 0)
-                    return;
+                    throw new Exception($"Trying to add point with same coordinates ({currentX}, {currentY})");
 
                 node.Value = null;
                 node.HasValueBelow = true;
@@ -821,7 +821,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _values = createdNodes;
             _values.Capacity = Count;
             _clone(_root, out tree._root);
-            Debug.Assert(Count == createdNodes.Count);
+            if (Count != createdNodes.Count)
+                throw new Exception("Missing nodes in tree clone");
             tree.Count = Count;
             return tree;
         }
