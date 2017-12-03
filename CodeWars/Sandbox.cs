@@ -7,6 +7,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Sandbox
     {
+        private const int MagicMaxSize = 5000;
+        private const int MagicMaxDependenciesCount = 50;
+
         public int TickIndex;
         public AVehicle[] Vehicles;
         public ANuclear[] Nuclears;
@@ -392,14 +395,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private static readonly int[] _notMoved = new int[10000];
-        private static readonly AVehicle[] _movedState = new AVehicle[10000];
+        private static int[] _unblocked = new int[MagicMaxSize];
+        private static int[] _unblocked2 = new int[MagicMaxSize];
+        private static readonly bool[] _complete = new bool[MagicMaxSize];
+        private static readonly int[][] _deps = new int[MagicMaxSize][];
+        private static readonly int[] _depsLen = new int[MagicMaxSize];
+        private static readonly AVehicle[] _movedState = new AVehicle[MagicMaxSize];
 
         private void _doMove()
         {
             Utility.ResizeArray(ref _nearestCache, Vehicles.Length);
             
-            var notMovedLength = 0;
+            var unblockedLength = 0;
 
             for (var i = 0; i < Vehicles.Length; i++)
             {
@@ -407,6 +414,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (veh.MoveTarget == null && veh.RotationCenter == null)
                 {
                     veh.Move();
+                    _complete[i] = true;
                     continue;
                 }
                 if (_movedState[i] == null)
@@ -417,19 +425,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (!_movedState[i].Move())
                 {
                     veh.CopyFrom(_movedState[i]);
+                    _complete[i] = true;
                     continue;
                 }
 
-                _notMoved[notMovedLength++] = i;
+                _unblocked[unblockedLength++] = i;
+                _complete[i] = false;
+                veh.Index = i;
+
+                if (_deps[i] == null)
+                    _deps[i] = new int[MagicMaxDependenciesCount];
+                _depsLen[i] = 0;
             }
 
-            while (notMovedLength > 0)
+            while (unblockedLength > 0)
             {
-                var notMovedNewLength = 0;
+                var unblockedNewLength = 0;
 
-                for (var i = 0; i < notMovedLength; i++)
+                for (var i = 0; i < unblockedLength; i++)
                 {
-                    var idx = _notMoved[i];
+                    var idx = _unblocked[i];
                     var movedUnit = _movedState[idx];
                     var unitTree = _tree(movedUnit.IsMy, movedUnit.IsAerial);
                     var oppTree = _tree(!movedUnit.IsMy, movedUnit.IsAerial);
@@ -437,13 +452,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var nearestWithNotMoved = _nearestCache[idx];
                     var nearestWithMoved = nearestWithNotMoved;
 
-                    var intersects = false;
+                    var intersectsWith = -1;
 
                     do
                     {
                         if (nearestWithMoved != null && nearestWithMoved.IntersectsWith(movedUnit))
                         {
-                            intersects = true;
+                            intersectsWith = nearestWithMoved.Index;
                             break;
                         }
                  
@@ -455,7 +470,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 if (nearest.IntersectsWith(movedUnit))
                                 {
                                     nearestWithNotMoved = nearest;
-                                    intersects = true;
+                                    intersectsWith = nearest.Index;
                                     break;
                                 }
                                 if (nearestWithMoved == null ||
@@ -472,7 +487,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 if (nearest.IntersectsWith(movedUnit))
                                 {
                                     nearestWithNotMoved = nearest;
-                                    intersects = true;
+                                    intersectsWith = nearest.Index;
                                     break;
                                 }
                                 if (nearestWithMoved == null ||
@@ -482,10 +497,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     } while (false);
 
-                    if (intersects)
+                    if (intersectsWith != -1)
                     {
                         _nearestCache[idx] = nearestWithNotMoved;
-                        _notMoved[notMovedNewLength++] = idx;
+                        if (!_complete[intersectsWith])
+                            _deps[intersectsWith][_depsLen[intersectsWith]++] = idx;
                     }
                     else
                     {
@@ -507,11 +523,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                         _nearestCache[idx] = nearestWithMoved;
                     }
+
+                    if (intersectsWith == -1 || _complete[intersectsWith])
+                    {
+                        // resolve dependencies
+                        _complete[idx] = true;
+                        for (var k = 0; k < _depsLen[idx]; k++)
+                            _unblocked2[unblockedNewLength++] = _deps[idx][k];
+                    }
                 }
 
-                if (notMovedLength == notMovedNewLength)
-                    break;
-                notMovedLength = notMovedNewLength;
+                unblockedLength = unblockedNewLength;
+                Utility.Swap(ref _unblocked, ref _unblocked2);
             }
         }
 
@@ -581,7 +604,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             TickIndex++;
         }
 
-        static AVehicle[] _prevStateCache = new AVehicle[10000];
+        static AVehicle[] _prevStateCache = new AVehicle[MagicMaxSize];
 
         private void _updateVehicleCoordinates(AVehicle veh, double prevX, double prevY)
         {
