@@ -582,6 +582,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         static AVehicle[] _prevStateCache = new AVehicle[10000];
 
+        private void _updateVehicleCoordinates(AVehicle veh, double prevX, double prevY)
+        {
+            var unitTree = _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0];
+            if (unitTree == null)
+                return; // Дерево ещё не создано. Когда будет создаваться - тогда и наполнится обновленными данными.
+
+            var moveX = veh.X;
+            var moveY = veh.Y;
+            if (!Geom.PointsEquals(prevX, prevY, moveX, moveY))
+            {
+                veh.X = prevX;
+                veh.Y = prevY;
+
+                if (!unitTree.ChangeXY(veh, moveX, moveY))
+                    throw new Exception("Can't change unit coordinates, id=" + veh.Id);
+            }
+        }
+
         public void DoTicksApprox(int ticksCount, bool moveApprox)
         {
             var canMove = true;
@@ -591,26 +609,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     if (canMove)
                     {
-                        _tree(false, false); // fill cache
-                        _tree(false, true);
-                        _tree(true, false);
-                        _tree(true, true);
-
-                        Action<AVehicle, double, double> update = (veh, prevX, prevY) =>
-                        {
-                            var moveX = veh.X;
-                            var moveY = veh.Y;
-                            if (!Geom.PointsEquals(prevX, prevY, moveX, moveY))
-                            {
-                                veh.X = prevX;
-                                veh.Y = prevY;
-                                var unitTree = _tree(veh.IsMy, veh.IsAerial);
-
-                                if (!unitTree.ChangeXY(veh, moveX, moveY))
-                                    throw new Exception("Can't change unit coordinates, id=" + veh.Id);
-                            }
-                        };
-
                         for (var i = 0; i < Vehicles.Length; i++)
                         {
                             var veh = Vehicles[i];
@@ -627,13 +625,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                     var prevX = Vehicles[j].X;
                                     var prevY = Vehicles[j].Y;
                                     Vehicles[j].CopyFrom(_prevStateCache[j]);
-                                    update(Vehicles[j], prevX, prevY);
+                                    _updateVehicleCoordinates(Vehicles[j], prevX, prevY);
                                 }
                                 canMove = false;
                                 break;
                             }
                             
-                            update(veh, _prevStateCache[i].X, _prevStateCache[i].Y);
+                            _updateVehicleCoordinates(veh, _prevStateCache[i].X, _prevStateCache[i].Y);
                         }
                     }
                 }

@@ -34,7 +34,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 #if DEBUG
             var time = TimerStop();
             if (time > limit)
-                Log(MyStrategy.World.TickIndex + ">" + new string('-', _timers.Count * 2) + " " + caption + ":" + time);
+                Log(MyStrategy.World.TickIndex + ">" + new string('-', _timers.Count*2) + " " + caption + ":" + time);
 #endif
         }
 
@@ -46,6 +46,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         private static Dictionary<string, Stopwatch> _tickTimers = new Dictionary<string, Stopwatch>();
+        private static Dictionary<string, long> _timesSum = new Dictionary<string, long>();
 
         public static void CumulativeOperationStart(string key)
         {
@@ -72,8 +73,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var time = item.Value.ElapsedMilliseconds;
                 if (time >= limit)
                     Log("[Cumulative] " + item.Key + ": " + time);
+                if (_timesSum.ContainsKey(item.Key))
+                    _timesSum[item.Key] += time;
+                else
+                    _timesSum[item.Key] = time;
                 item.Value.Reset();
             }
+#endif
+        }
+
+        public static void CumulativeOperationSummary()
+        {
+#if DEBUG
+            foreach (var item in _timesSum)
+                Log("[Cumulative Summary] " + item.Key + ": " + item.Value);
 #endif
         }
     }

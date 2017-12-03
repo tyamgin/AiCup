@@ -74,6 +74,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Logger.TimerStart();
             _move(game);
             Logger.CumulativeOperationPrintAndReset(2);
+            if (world.TickIndex % 500 == 0)
+                Logger.CumulativeOperationSummary();
             ResultingMove.ApplyTo(move);
             Logger.TimerEndLog("All", 0);
 #if DEBUG
