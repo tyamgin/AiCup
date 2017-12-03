@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -71,7 +72,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     res += RectanglesIntersects1*7000;
                     res += RectanglesIntersects2*1000;
                     res += MoveToSum/3;
-                    res += FacilitiesPointsDiff;
+                    res += FacilitiesPointsDiff*4;
                     res += MoveToFacilitySum*300;
                     return res;
                 }
@@ -108,6 +109,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private const double ExpX2 = 1024;
         private const double ExpY2 = 0.002;
         private static double ExpB, ExpA;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static double DangerExp(double dist)
+        {
+            return ExpA*Math.Exp(-ExpB*Math.Max(dist, G.MaxAttackRange));
+        }
 
         static double GetSumMaxAlmostAttacks(Sandbox env, IEnumerable<AVehicle> myVehicles)
         {
@@ -266,7 +273,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         
                         score = score*cl.CountByType[oppType]*myRatio;
 
-                        var e = -(myAttack == 0 && dist < 120 ? 0 : ExpA *Math.Exp(-ExpB*dist));
+                        var e = -(myAttack == 0 && dist > 120 || myAttack < oppAttack && dist > 140 && type != VehicleType.Helicopter 
+                            ? 0 
+                            : DangerExp(dist));
 
                         lst.Add(new Tuple<double, double>(score, e));
                     }
@@ -309,7 +318,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     
                     var dist = cen.GetDistanceTo(facility.Center);
                     var score = -myRatio * (groundGroupsId[i].VehicleType == VehicleType.Arrv ? 4 : 1);
-                    flist.Add(new Tuple<double, double>(score, ExpA*Math.Exp(-ExpB*dist)));    
+                    flist.Add(new Tuple<double, double>(score, DangerExp(dist)));    
                     
                     result.MoveToFacilitiesInfo.Add(flist);
                 }
