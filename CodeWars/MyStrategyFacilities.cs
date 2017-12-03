@@ -9,7 +9,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             if (MoveObserver.AvailableActions == 0)
                 return null;
-            if (Environment.Nuclears.Any(x => x.IsMy))
+            if (Environment.Nuclears.Any(x => x.IsMy)) // лучше приберечь ходы
                 return null;
 
             return _setFactoryProduction();

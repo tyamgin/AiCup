@@ -85,8 +85,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static void CumulativeOperationSummary()
         {
 #if DEBUG
+            long sum = 0;
             foreach (var item in _timesSum)
+            {
                 Log("[Cumulative Summary] " + item.Key + ": " + item.Value);
+                sum += item.Value;
+            }
+            Log("[Cumulative Summary] Sum: " + sum);
 #endif
         }
     }
