@@ -428,7 +428,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var mv = mainNew.Item1[i];
                     MoveQueue.Add(mv);
                     if (mv.Action == ActionType.Assign && mainNew.Item1[0].VehicleType != null)
+                    {
                         GroupsManager.AddPendingGroup(new MyGroup(mv.Group, mainNew.Item1[0].VehicleType.Value));
+                    }
+                }
+                if (mainNew.Item1.Length == 3)
+                {
+                    var nearestFacility = Environment.Facilities.ArgMin(
+                        f => f.Center.GetDistanceTo2(ResultingMove.Rect.Center));
+                    var changeProdMove = ChangeFactoryProduction(nearestFacility);
+                    if (changeProdMove != null)
+                        MoveQueue.Add(changeProdMove);
                 }
 
             }
@@ -439,7 +449,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     var facilitiesMove = FacilitiesStrategy();
                     if (facilitiesMove != null)
-                        ResultingMove = facilitiesMove[0];
+                        ResultingMove = facilitiesMove;
                 }
             }
         }

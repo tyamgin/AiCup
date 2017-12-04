@@ -5,7 +5,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        public static AMove[] FacilitiesStrategy()
+        public static AMove FacilitiesStrategy()
         {
             if (MoveObserver.AvailableActions == 0)
                 return null;
@@ -15,26 +15,44 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return _setFactoryProduction();
         }
 
+        public static AMove ChangeFactoryProduction(AFacility factory)
+        {
+            VehicleType requiredType;
 
-        private static AMove[] _setFactoryProduction()
+            var myFighters = Environment.GetVehicles(true, VehicleType.Fighter).Count;
+            var oppFighters = Environment.GetVehicles(false, VehicleType.Fighter).Count;
+
+            if (myFighters < oppFighters)
+            {
+                requiredType = VehicleType.Fighter;
+            }
+            else if (oppFighters < 10 && Environment.MyVehicleFactories.Count(x => x.VehicleType == VehicleType.Helicopter) == 0)
+            {
+                requiredType = VehicleType.Helicopter;
+            }
+            else
+            {
+                requiredType = VehicleType.Tank;
+            }
+
+            if (requiredType == factory.VehicleType)
+                return null;
+
+            return new AMove
+            {
+                Action = ActionType.SetupVehicleProduction,
+                VehicleType = requiredType,
+                FacilityId = factory.Id,
+            };
+        }
+
+        private static AMove _setFactoryProduction()
         {
             var newFactories = Environment.MyVehicleFactories.Where(f => f.VehicleType == null).ToArray();
             if (newFactories.Length == 0)
                 return null;
 
-            var requiredType = Environment.GetVehicles(false, VehicleType.Fighter).Count > 5
-                ? VehicleType.Fighter
-                : VehicleType.Helicopter;
-
-            return new[]
-            {
-                new AMove
-                {
-                    Action = ActionType.SetupVehicleProduction,
-                    VehicleType = requiredType,
-                    FacilityId = newFactories[0].Id,
-                }
-            };
+            return ChangeFactoryProduction(newFactories[0]);
         }
     }
 }

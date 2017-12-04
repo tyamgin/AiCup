@@ -282,9 +282,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 result.MoveToInfo.Add(new Tuple<MyGroup, List<Tuple<double, double>>>(gr, lst));
 
-                if (!Utility.IsAerial(type))
+                if (!Utility.IsAerial(type) && s < myGroups.Count)
                 {
-                    // TODO: код корректен пока ground-ы не производятся
                     groundGroups.Add(myGroup);
                     groundGroupsCenters.Add(cen);
                     groundGroupsId.Add(gr);
