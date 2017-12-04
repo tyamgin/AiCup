@@ -55,16 +55,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (!Geom.PointsEquals(aveh, updatedVehicle))
                             Console.WriteLine("Looks vehicle updated wrong (X, Y)");
 
-                        if (aveh.MoveTarget != null && Geom.PointsEquals(aveh, aveh.MoveTarget) ||
-                            aveh.RotationCenter != null && Geom.DoublesEquals(aveh.RotationAngle, 0))
+                        if ((aveh.Action == AVehicle.MoveType.Move || aveh.Action == AVehicle.MoveType.Scale) && Geom.PointsEquals(aveh, aveh.ActionTarget) ||
+                            aveh.Action == AVehicle.MoveType.Rotate && Geom.DoublesEquals(aveh.ActionRotationAngle, 0))
                         {
                             aveh.ForgotTarget();
                         }
-                        updatedVehicle.MoveSpeed = aveh.MoveSpeed;
-                        updatedVehicle.MoveTarget = aveh.MoveTarget;
-                        updatedVehicle.RotationAngularSpeed = aveh.RotationAngularSpeed;
-                        updatedVehicle.RotationAngle = aveh.RotationAngle;
-                        updatedVehicle.RotationCenter = aveh.RotationCenter;
+                        updatedVehicle.Action = aveh.Action;
+                        updatedVehicle.ActionTarget = aveh.ActionTarget;
+                        updatedVehicle.ActionSpeed = aveh.ActionSpeed;
+                        updatedVehicle.ActionRotationAngle = aveh.ActionRotationAngle;
                         updatedVehicle.DurabilityPool = cur.DurabilityPool;
                         //TODO: поддерживать DurabilityPool if (!updatedVehicle.IsMy)
                     }

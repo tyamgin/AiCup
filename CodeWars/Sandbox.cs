@@ -49,9 +49,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var tree = _trees[isMy ? 1 : 0, isAerial ? 1 : 0];
             if (tree == null)
             {
+                Logger.CumulativeOperationStart("QuadTree construct");
                 tree = new QuadTree<AVehicle>(0, 0, G.MapSize, G.MapSize, Const.Eps, _cloneVehicle);
                 tree.AddRange(_vehiclesByOwner[isMy ? 1 : 0].Where(x => x.IsAerial == isAerial));
                 _trees[isMy ? 1 : 0, isAerial ? 1 : 0] = tree;
+                Logger.CumulativeOperationEnd("QuadTree construct");
             }
             return tree;
         }
@@ -243,11 +245,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         if (!unit.IsSelected)
                             continue;
-                        unit.MoveSpeed = move.MaxSpeed;
-                        unit.MoveTarget = unit + new Point(move.X, move.Y);
-                        unit.RotationAngularSpeed = 0;
-                        unit.RotationAngle = 0;
-                        unit.RotationCenter = null;
+                        unit.Action = AVehicle.MoveType.Move;
+                        unit.ActionSpeed = move.MaxSpeed;
+                        unit.ActionTarget = unit + new Point(move.X, move.Y);
+                        unit.ActionRotationAngle = 0;
                     }
                     break;
                 case ActionType.Rotate:
@@ -255,11 +256,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         if (!unit.IsSelected)
                             continue;
-                        unit.MoveSpeed = 0;
-                        unit.MoveTarget = null;
-                        unit.RotationAngularSpeed = move.MaxAngularSpeed;
-                        unit.RotationAngle = move.Angle;
-                        unit.RotationCenter = new Point(move.X, move.Y);
+                        unit.Action = AVehicle.MoveType.Rotate;
+                        unit.ActionSpeed = move.MaxAngularSpeed;
+                        unit.ActionRotationAngle = move.Angle;
+                        unit.ActionTarget = new Point(move.X, move.Y);
                     }
                     break;
                 case ActionType.Scale:
@@ -267,12 +267,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     {
                         if (!unit.IsSelected)
                             continue;
-                        unit.MoveSpeed = move.MaxSpeed;
+                        unit.Action = AVehicle.MoveType.Scale;
+                        unit.ActionSpeed = move.MaxSpeed;
                         var scaleCenter = new Point(move.X, move.Y);
-                        unit.MoveTarget = (unit - scaleCenter) * move.Factor + scaleCenter;
-                        unit.RotationAngularSpeed = 0;
-                        unit.RotationAngle = 0;
-                        unit.RotationCenter = null;
+                        unit.ActionTarget = (unit - scaleCenter) * move.Factor + scaleCenter;
+                        unit.ActionRotationAngle = 0;
                     }
                     break;
             }
@@ -411,7 +410,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             for (var i = 0; i < Vehicles.Length; i++)
             {
                 var veh = Vehicles[i];
-                if (veh.MoveTarget == null && veh.RotationCenter == null)
+                if (veh.Action == AVehicle.MoveType.None)
                 {
                     veh.Move();
                     _complete[i] = true;
@@ -626,7 +625,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public void DoTicksApprox(int ticksCount, bool moveApprox)
+        public void DoTicksApprox(int ticksCount, bool moveApprox, bool fightApprox)
         {
             var canMove = true;
             for (var t = 0; t < ticksCount; t++)
@@ -663,12 +662,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 else
                 {
-                    Logger.CumulativeOperationStart("DoMove");
+                    Logger.CumulativeOperationStart("DoMove1");
                     _doMove();
-                    Logger.CumulativeOperationEnd("DoMove");
+                    Logger.CumulativeOperationEnd("DoMove1");
                 }
 
-                if (t == ticksCount - 1)
+                if (!fightApprox || t == ticksCount - 1)
                 {
                     // TODO: FIXME! arrvs repair apply ticksCount times
                     Logger.CumulativeOperationStart("DoFight");

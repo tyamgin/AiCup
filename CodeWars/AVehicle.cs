@@ -16,11 +16,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public ulong Groups;
         public bool CanChargeFacility;
 
-        public Point MoveTarget;
-        public double MoveSpeed;
-        public Point RotationCenter;
-        public double RotationAngle;
-        public double RotationAngularSpeed;
+        public MoveType Action;
+        public Point ActionTarget;
+        public double ActionSpeed; // speed or angular speed
+        public double ActionRotationAngle;
         public int DurabilityPool;
 
         public int Index; //
@@ -48,11 +47,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             Groups = unit.Groups;
             CanChargeFacility = unit.CanChargeFacility;
 
-            MoveTarget = unit.MoveTarget;
-            MoveSpeed = unit.MoveSpeed;
-            RotationCenter = unit.RotationCenter;
-            RotationAngle = unit.RotationAngle;
-            RotationAngularSpeed = unit.RotationAngularSpeed;
+            Action = unit.Action;
+            ActionTarget = unit.ActionTarget;
+            ActionSpeed = unit.ActionSpeed;
+            ActionRotationAngle = unit.ActionRotationAngle;
+
             DurabilityPool = unit.DurabilityPool;
         }
 
@@ -119,16 +118,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool Move()
         {
-            var newRotationAngle = RotationAngle;
+            var newRotationAngle = ActionRotationAngle;
 
             double deltaX = 0;
             double deltaY = 0;
             var done = false;
 
-            if (MoveTarget != null)
+            if (Action == MoveType.Move || Action == MoveType.Scale)
             {
-                var vecX = MoveTarget.X - X;
-                var vecY = MoveTarget.Y - Y;
+                var vecX = ActionTarget.X - X;
+                var vecY = ActionTarget.Y - Y;
                 
                 var speed = ActualSpeed;
 
@@ -146,56 +145,43 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     deltaY = vecY*factor;
                 }
             }
-            else if (RotationCenter != null)
+            else if (Action == MoveType.Rotate)
             {
                 var angle = ActualAngularSpeed;
-                if (angle + Const.Eps >= Math.Abs(RotationAngle))
+                if (angle + Const.Eps >= Math.Abs(ActionRotationAngle))
                 {
                     done = true;
-                    angle = RotationAngle;
+                    angle = ActionRotationAngle;
                 }
                 else
                 {
-                    if (RotationAngle < 0)
+                    if (ActionRotationAngle < 0)
                         angle = -angle;
 
                     newRotationAngle -= angle;
                 }
-                var to = RotateCounterClockwise(angle, RotationCenter);
+                var to = RotateCounterClockwise(angle, ActionTarget);
                 deltaX = to.X - X;
                 deltaY = to.Y - Y;
             }
 
-            if (MoveTarget != null || RotationCenter != null)
+            if (Action != MoveType.None)
             {
-                if (X + deltaX < Radius - Const.Eps)
-                {
-                    return false;
-                }
-                if (Y + deltaY < Radius - Const.Eps)
-                {
-                    return false;
-                }
-                if (X + deltaX > G.MapSize - Radius + Const.Eps)
-                {
-                    return false;
-                }
-                if (Y + deltaY > G.MapSize - Radius + Const.Eps)
+                if (X + deltaX < Radius - Const.Eps ||
+                    Y + deltaY < Radius - Const.Eps ||
+                    X + deltaX > G.MapSize - Radius + Const.Eps ||
+                    Y + deltaY > G.MapSize - Radius + Const.Eps)
                 {
                     return false;
                 }
 
                 X += deltaX;
                 Y += deltaY;
-                RotationAngle = newRotationAngle;
+                ActionRotationAngle = newRotationAngle;
 
                 if (done)
                 {
-                    MoveTarget = null;
-                    MoveSpeed = 0;
-                    RotationCenter = null;
-                    RotationAngle = 0;
-                    RotationAngularSpeed = 0;
+                    ForgotTarget();
                 }
             }
             return true;
@@ -222,8 +208,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     else if (terrian == TerrainType.Forest)
                         speed *= G.ForestTerrainSpeedFactor;
                 }
-                if (MoveSpeed > 0 && MoveSpeed < speed)
-                    speed = MoveSpeed;
+                if (ActionSpeed > 0 && ActionSpeed < speed)
+                    speed = ActionSpeed;
                 return speed;
             }
         }
@@ -233,9 +219,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             get
             {
                 var speed = ActualSpeed;
-                var angle = speed/GetDistanceTo(RotationCenter);
-                if (RotationAngularSpeed > 0 && RotationAngularSpeed < angle)
-                    angle = RotationAngularSpeed;
+                var angle = speed/GetDistanceTo(ActionTarget);
+                if (ActionSpeed > 0 && ActionSpeed < angle)
+                    angle = ActionSpeed;
                 return angle;
             }
         }
@@ -278,15 +264,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return Math.Min(damage, Durability);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ForgotTarget()
         {
-            MoveTarget = null;
-            MoveSpeed = 0;
-            RotationCenter = null;
-            RotationAngle = 0;
-            RotationAngularSpeed = 0;
+            Action = MoveType.None;
+            ActionTarget = null;
+            ActionSpeed = 0;
+            ActionRotationAngle = 0;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsGroup(MyGroup group)
         {
             return HasGroup(group.Group);
@@ -315,12 +302,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public bool Stopped => MoveTarget == null && RotationCenter == null;
+        public bool Stopped => Action == MoveType.None;
 
         public override string ToString()
         {
             var groupsStr = Groups == 0 ? "" : "(" + string.Join(", ", GroupsList) + ")";
             return "(" + X + ", " + Y + ") " + Type + groupsStr + " " + Durability + "%";
+        }
+
+        public enum MoveType
+        {
+            None,
+            Move,
+            Scale,
+            Rotate,
         }
     }
 }
