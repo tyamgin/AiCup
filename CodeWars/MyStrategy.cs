@@ -132,6 +132,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     group = new MyGroup(GroupsManager.NextGroupId, newGroupVehicles[0].Type);
                 }
 
+                Logger.CumulativeOperationStart("First env actions");
+
                 var startEnv = Environment.Clone();
                 var ticksCount = baseTicksCount;
 
@@ -150,7 +152,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (selectedIds != needToSelectIds)
                 {
                     if (MoveObserver.AvailableActions < 2)
+                    {
+                        Logger.CumulativeOperationEnd("First env actions");
                         continue;
+                    }
 
                     selectionMove = newGroupVehicles == null
                         ? new AMove
@@ -172,6 +177,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
                 availableActions--;
 
+                Logger.CumulativeOperationEnd("First env actions");
+
                 // availableActions теперь - это сколько действий останется после выполнения текущего тика
                 // должно остаться хотябы 2, или 1, если обладатель ядерки selected
                 var myNuclear = startEnv.Nuclears.FirstOrDefault(n => n.IsMy);
@@ -179,6 +186,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     continue;
 
                 var typeRect = Utility.BoundingRect(startEnv.GetVehicles(true, group));
+
+                Logger.CumulativeOperationStart("Partial env actions");
 
                 Sandbox partialEnv = null;
                 var sumMaxAlmostAttacksCache = -1.0;
@@ -197,6 +206,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     sumMaxAlmostAttacksCache = GetSumMaxAlmostAttacks(partialEnv, partialEnv.MyVehicles);
                 }
 
+                Logger.CumulativeOperationEnd("Partial env actions");
+
                 List<Point> pos = new List<Point>(), neg = new List<Point>();
                 
                 for (var clIdx = 0; clIdx < OppClusters.Count; clIdx++)
@@ -214,6 +225,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         }
                     }
                 }
+
+
+                Logger.CumulativeOperationStart("Pre last env actions");
 
                 Sandbox preLastEnv = null;
                 AVehicle[] farOpponents = null, nearOpponents = null;
@@ -235,6 +249,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         clone: true
                     );
                 }
+
+                Logger.CumulativeOperationEnd("Pre last env actions");
 
                 Func<AMove, double> checkAction = move =>
                 {

@@ -29,12 +29,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 #endif
         }
 
+        private static long _allSum;
+
         public static void TimerEndLog(string caption, long limit = 30)
         {
 #if DEBUG
             var time = TimerStop();
             if (time > limit)
                 Log(MyStrategy.World.TickIndex + ">" + new string('-', _timers.Count*2) + " " + caption + ":" + time);
+            if (caption == "All")
+                _allSum += time;
 #endif
         }
 
@@ -85,13 +89,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static void CumulativeOperationSummary()
         {
 #if DEBUG
-            long sum = 0;
             foreach (var item in _timesSum)
             {
                 Log("[Cumulative Summary] " + item.Key + ": " + item.Value);
-                sum += item.Value;
             }
-            Log("[Cumulative Summary] Sum: " + sum);
+            Log("[Cumulative Summary] All: " + _allSum);
 #endif
         }
     }

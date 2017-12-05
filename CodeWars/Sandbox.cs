@@ -194,6 +194,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public void ApplyMove(Move move)
         {
             // TODO: проверки на валидность
+            var movePt = new Point(move.X, move.Y);
+            var moveVecNorm = movePt.Normalized();
+            var moveVecLength = movePt.Length;
 
             switch (move.Action)
             {
@@ -246,9 +249,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (!unit.IsSelected)
                             continue;
                         unit.Action = AVehicle.MoveType.Move;
-                        unit.ActionSpeed = move.MaxSpeed;
-                        unit.ActionTarget = unit + new Point(move.X, move.Y);
-                        unit.ActionRotationAngle = 0;
+                        unit.MoveSpeedOrAngularSpeed = move.MaxSpeed;
+                        unit.MoveVectorOrRotationCenter = moveVecNorm;
+                        unit.MoveLengthOrRotationAngle = moveVecLength;
                     }
                     break;
                 case ActionType.Rotate:
@@ -257,9 +260,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (!unit.IsSelected)
                             continue;
                         unit.Action = AVehicle.MoveType.Rotate;
-                        unit.ActionSpeed = move.MaxAngularSpeed;
-                        unit.ActionRotationAngle = move.Angle;
-                        unit.ActionTarget = new Point(move.X, move.Y);
+                        unit.MoveSpeedOrAngularSpeed = move.MaxAngularSpeed;
+                        unit.MoveLengthOrRotationAngle = move.Angle;
+                        unit.MoveVectorOrRotationCenter = movePt;
                     }
                     break;
                 case ActionType.Scale:
@@ -268,10 +271,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         if (!unit.IsSelected)
                             continue;
                         unit.Action = AVehicle.MoveType.Scale;
-                        unit.ActionSpeed = move.MaxSpeed;
-                        var scaleCenter = new Point(move.X, move.Y);
-                        unit.ActionTarget = (unit - scaleCenter) * move.Factor + scaleCenter;
-                        unit.ActionRotationAngle = 0;
+                        unit.MoveSpeedOrAngularSpeed = move.MaxSpeed;
+                        
+                        var vec = (unit - movePt)*move.Factor + movePt - unit;
+                        unit.MoveVectorOrRotationCenter = vec.Normalized();
+                        unit.MoveLengthOrRotationAngle = vec.Length;
                     }
                     break;
             }
@@ -670,9 +674,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (!fightApprox || t == ticksCount - 1)
                 {
                     // TODO: FIXME! arrvs repair apply ticksCount times
-                    Logger.CumulativeOperationStart("DoFight");
+                    Logger.CumulativeOperationStart("DoFight1");
                     _doFight();
-                    Logger.CumulativeOperationEnd("DoFight");
+                    Logger.CumulativeOperationEnd("DoFight1");
                 }
 
                 _doNuclears();

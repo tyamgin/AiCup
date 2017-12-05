@@ -17,9 +17,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public bool CanChargeFacility;
 
         public MoveType Action;
-        public Point ActionTarget;
-        public double ActionSpeed; // speed or angular speed
-        public double ActionRotationAngle;
+        public Point MoveVectorOrRotationCenter;
+        public double MoveSpeedOrAngularSpeed;
+        public double MoveLengthOrRotationAngle;
         public int DurabilityPool;
 
         public int Index; //
@@ -48,9 +48,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             CanChargeFacility = unit.CanChargeFacility;
 
             Action = unit.Action;
-            ActionTarget = unit.ActionTarget;
-            ActionSpeed = unit.ActionSpeed;
-            ActionRotationAngle = unit.ActionRotationAngle;
+            MoveVectorOrRotationCenter = unit.MoveVectorOrRotationCenter;
+            MoveSpeedOrAngularSpeed = unit.MoveSpeedOrAngularSpeed;
+            MoveLengthOrRotationAngle = unit.MoveLengthOrRotationAngle;
 
             DurabilityPool = unit.DurabilityPool;
         }
@@ -118,7 +118,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool Move()
         {
-            var newRotationAngle = ActionRotationAngle;
+            var newMoveLengthOrRotationAngle = MoveLengthOrRotationAngle;
 
             double deltaX = 0;
             double deltaY = 0;
@@ -126,41 +126,42 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (Action == MoveType.Move || Action == MoveType.Scale)
             {
-                var vecX = ActionTarget.X - X;
-                var vecY = ActionTarget.Y - Y;
+                var vecX = MoveVectorOrRotationCenter.X;
+                var vecY = MoveVectorOrRotationCenter.Y;
                 
                 var speed = ActualSpeed;
 
-                var vecLen2 = vecX*vecX + vecY*vecY;
-                if (vecLen2 - Const.Eps <= speed*speed)
+                if (MoveLengthOrRotationAngle - Const.Eps <= speed)
                 {
                     done = true;
-                    deltaX = vecX;
-                    deltaY = vecY;
+                    deltaX = MoveLengthOrRotationAngle*vecX;
+                    deltaY = MoveLengthOrRotationAngle*vecY;
+                    newMoveLengthOrRotationAngle = 0;
                 }
                 else
                 {
-                    var factor = speed/Math.Sqrt(vecLen2);
-                    deltaX = vecX*factor;
-                    deltaY = vecY*factor;
+                    deltaX = speed*vecX;
+                    deltaY = speed*vecY;
+                    newMoveLengthOrRotationAngle -= speed;
                 }
             }
             else if (Action == MoveType.Rotate)
             {
                 var angle = ActualAngularSpeed;
-                if (angle + Const.Eps >= Math.Abs(ActionRotationAngle))
+                if (angle + Const.Eps >= Math.Abs(MoveLengthOrRotationAngle))
                 {
                     done = true;
-                    angle = ActionRotationAngle;
+                    angle = MoveLengthOrRotationAngle;
+                    newMoveLengthOrRotationAngle = 0;
                 }
                 else
                 {
-                    if (ActionRotationAngle < 0)
+                    if (MoveLengthOrRotationAngle < 0)
                         angle = -angle;
 
-                    newRotationAngle -= angle;
+                    newMoveLengthOrRotationAngle -= angle;
                 }
-                var to = RotateCounterClockwise(angle, ActionTarget);
+                var to = RotateCounterClockwise(angle, MoveVectorOrRotationCenter);
                 deltaX = to.X - X;
                 deltaY = to.Y - Y;
             }
@@ -177,7 +178,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 X += deltaX;
                 Y += deltaY;
-                ActionRotationAngle = newRotationAngle;
+                MoveLengthOrRotationAngle = newMoveLengthOrRotationAngle;
 
                 if (done)
                 {
@@ -208,8 +209,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     else if (terrian == TerrainType.Forest)
                         speed *= G.ForestTerrainSpeedFactor;
                 }
-                if (ActionSpeed > 0 && ActionSpeed < speed)
-                    speed = ActionSpeed;
+                if (MoveSpeedOrAngularSpeed > 0 && MoveSpeedOrAngularSpeed < speed)
+                    speed = MoveSpeedOrAngularSpeed;
                 return speed;
             }
         }
@@ -219,9 +220,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             get
             {
                 var speed = ActualSpeed;
-                var angle = speed/GetDistanceTo(ActionTarget);
-                if (ActionSpeed > 0 && ActionSpeed < angle)
-                    angle = ActionSpeed;
+                var angle = speed/GetDistanceTo(MoveVectorOrRotationCenter);
+                if (MoveSpeedOrAngularSpeed > 0 && MoveSpeedOrAngularSpeed < angle)
+                    angle = MoveSpeedOrAngularSpeed;
                 return angle;
             }
         }
@@ -268,9 +269,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public void ForgotTarget()
         {
             Action = MoveType.None;
-            ActionTarget = null;
-            ActionSpeed = 0;
-            ActionRotationAngle = 0;
+            MoveVectorOrRotationCenter = null;
+            MoveSpeedOrAngularSpeed = 0;
+            MoveLengthOrRotationAngle = 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
