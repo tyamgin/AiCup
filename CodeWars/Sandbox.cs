@@ -417,12 +417,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMove()
         {
-            _doMove1(Vehicles);
+            _doMove1(Vehicles, true);
         }
 
-        private void _doMove1(AVehicle[] Vehicles)
+        private void _doMove1(AVehicle[] Vehicles, bool cache = false)
         {
-            Utility.ResizeArray(ref _nearestCache, Vehicles.Length);
+            if (cache)
+                Utility.ResizeArray(ref _nearestCache, Vehicles.Length);
             
             var unblockedLength = 0;
 
@@ -467,7 +468,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var unitTree = _tree(movedUnit.IsMy, movedUnit.IsAerial);
                     var oppTree = _tree(!movedUnit.IsMy, movedUnit.IsAerial);
 
-                    var nearestWithNotMoved = _nearestCache[idx];
+                    var nearestWithNotMoved = cache ? _nearestCache[idx] : null;
                     var nearestWithMoved = nearestWithNotMoved;
 
                     var intersectsWith = -1;
@@ -518,7 +519,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (intersectsWith != -1)
                     {
-                        _nearestCache[idx] = nearestWithNotMoved;
+                        if (cache)
+                            _nearestCache[idx] = nearestWithNotMoved;
                         if (!_complete[intersectsWith])
                             _deps[intersectsWith][_depsLen[intersectsWith]++] = idx;
                     }
@@ -541,7 +543,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             if (_nearestFightersCacheTick != null && _nearestFightersCacheTick[idx] != -1)
                                 _nearestFightersCacheDist[idx] -= unit.GetDistanceTo(prevX, prevY);
                         }
-                        _nearestCache[idx] = nearestWithMoved;
+                        if (cache)
+                            _nearestCache[idx] = nearestWithMoved;
                     }
 
                     if (intersectsWith == -1 || _complete[intersectsWith])
@@ -652,7 +655,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public bool DoMoveApprox(AVehicle[] vehicles, bool moveApprox)
+        public bool DoMoveApprox(AVehicle[] Vehicles, bool moveApprox)
         {
             if (moveApprox)
             {
@@ -682,7 +685,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             else
             {
                 Logger.CumulativeOperationStart("DoMove1");
-                _doMove1(vehicles);
+                _doMove1(Vehicles);
                 Logger.CumulativeOperationEnd("DoMove1");
             }
             return true;

@@ -70,11 +70,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
 #endif
             Logger.TimerStart();
+            if (Me.NextNuclearStrikeVehicleId != -1)
+                Logger.TimerStart();
+
             _move(game);
             Logger.CumulativeOperationPrintAndReset(2);
             if (world.TickIndex % 500 == 0)
                 Logger.CumulativeOperationSummary();
             ResultingMove.ApplyTo(move);
+
+            if (Me.NextNuclearStrikeVehicleId != -1)
+                Logger.TimerEndLog("AllN", 1);
             Logger.TimerEndLog("All", 0);
 #if DEBUG
             Visualizer.Visualizer.CreateForm();

@@ -29,7 +29,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 #endif
         }
 
-        private static long _allSum;
+        private static long _allSum, _allSumN;
 
         public static void TimerEndLog(string caption, long limit = 30)
         {
@@ -39,6 +39,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Log(MyStrategy.World.TickIndex + ">" + new string('-', _timers.Count*2) + " " + caption + ":" + time);
             if (caption == "All")
                 _allSum += time;
+            if (caption == "AllN")
+                _allSumN += time;
 #endif
         }
 
@@ -94,6 +96,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Log("[Cumulative Summary] " + item.Key + ": " + item.Value);
             }
             Log("[Cumulative Summary] All: " + _allSum);
+            Log("[Cumulative Summary] All nuclears: " + _allSumN);
 #endif
         }
     }
