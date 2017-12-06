@@ -201,8 +201,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         );
                     partialEnv.CheckCollisionsWithOpponent = false;
 
+
+                    var grps = GroupsManager.MyGroups.Select(g => partialEnv.GetVehicles(true, g).ToArray()).ToArray();
                     for (var i = 0; i < ticksCount; i++)
-                        partialEnv.DoTick();
+                    {
+                        for (var j = 0; j < grps.Length; j++)
+                        {
+                            var pgr = grps[j];
+                            if (pgr.Length > 0)
+                                partialEnv.DoMoveApprox(pgr, pgr[0].Action != AVehicle.MoveType.Scale);
+                        }
+                        partialEnv._doFacilities();
+                        partialEnv._doNuclears();
+                    }
+                    partialEnv._doFight();
+
                     sumMaxAlmostAttacksCache = GetSumMaxAlmostAttacks(partialEnv, partialEnv.MyVehicles);
                 }
 
@@ -230,8 +243,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Logger.CumulativeOperationStart("Pre last env actions");
 
                 Sandbox preLastEnv = null;
+                Sandbox preLastEnv2 = null;
                 AVehicle[] farOpponents = null, nearOpponents = null;
                 List<AVehicle> currentVehicles = null;
+                AVehicle[] preLastEnvVehiclesCopy = null;
 
                 if (partialEnv != null)
                 {
@@ -243,11 +258,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     nearOpponents = split[true].ToArray();
 
                     preLastEnv = new Sandbox(
-                        partialEnv.MyVehicles.Where(x => !x.IsGroup(group)).Concat(farOpponents),
+                        partialEnv.MyVehicles.Where(x => !x.IsGroup(group)).Concat(farOpponents).Concat(nearOpponents).Concat(currentVehicles),
                         new ANuclear[] {}, 
                         new AFacility[] {},
                         clone: true
                     );
+                    preLastEnvVehiclesCopy = preLastEnv.Vehicles.Select(x => new AVehicle(x)).ToArray();
                 }
 
                 Logger.CumulativeOperationEnd("Pre last env actions");
@@ -256,16 +272,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     Logger.CumulativeOperationStart("Building nearby environment");
                     Sandbox env;
-                    
+
                     if (partialEnv == null)
-                    {
                         env = startEnv.Clone();
-                    }
                     else
-                    {
                         env = new Sandbox(nearOpponents.Concat(currentVehicles),
                             startEnv.Nuclears, partialEnv.Facilities, clone: true);
-                    }
 
                     env.CheckCollisionsWithOpponent = false;
                     env.UseFightOptimization = false;
@@ -290,23 +302,29 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     Logger.CumulativeOperationStart("End of simulation");
                     env.ApplyMove(move);
-                    env.DoTicksApprox(ticksCount, 
+                    env.DoTicksApprox(ticksCount,
                         moveApprox: move.Action == ActionType.Move || move.Action == ActionType.Rotate,
                         fightApprox: true);
                     Logger.CumulativeOperationEnd("End of simulation");
 
-                    //Logger.CumulativeOperationStart("Building last environment");
+                    Logger.CumulativeOperationStart("Building last environment");
                     var cache = sumMaxAlmostAttacksCache;
                     if (partialEnv != null)
                     {
                         var tmp = env;
-                        Logger.CumulativeOperationStart("Building last environment");
-                        env = preLastEnv.Clone();
-                        Logger.CumulativeOperationEnd("Building last environment");
+                        env = preLastEnv;
+
+                        for (var i = 0; i < env.Vehicles.Length; i++)
+                        {
+                            var veh = env.Vehicles[i];
+                            if (tmp.VehicleById.ContainsKey(veh.Id))
+                                env.UpdateVehicle(veh, tmp.VehicleById[veh.Id]);
+                            else
+                                env.UpdateVehicle(veh, preLastEnvVehiclesCopy[i]);
+                        }
 
                         env.Nuclears = tmp.Nuclears;
                         env.Facilities = tmp.Facilities;
-                        env.AddRange(tmp.Vehicles);
                         cache += GetSumMaxAlmostAttacks(env, env.GetVehicles(true, group));
                     }
 
@@ -320,10 +338,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     if (env.Vehicles.Length != Environment.Vehicles.Length)
                         throw new Exception("Final sandbox size mismatch");
-                    //Logger.CumulativeOperationEnd("Building last environment");
+                    Logger.CumulativeOperationEnd("Building last environment");
 
 
                     var danger = GetDanger(Environment, env, myGroups.ToList(), myUngroups.ToList(), cache);
+                    
                     if (selDanger == null || danger.Score < selDanger.Score)
                     {
                         selDanger = danger;
@@ -333,7 +352,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             move,
                             newGroupVehicles == null
                                 ? null
-                                : AMovePresets.AssignGroup((int) group.Group)
+                                : AMovePresets.AssignGroup(group.Group)
                         }
                             .Where(x => x != null)
                             .ToArray();

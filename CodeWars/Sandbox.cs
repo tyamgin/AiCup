@@ -173,9 +173,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 for (var isAerial = 0; isAerial < 2; isAerial++)
                 {
-                    var treeNodes = new List<AVehicle>();
-                    clone._trees[isMy, isAerial] = _tree(isMy == 1, isAerial == 1).Clone(ref treeNodes);
-                    foreach (var veh in treeNodes)
+                    IEnumerable<AVehicle> vehiclesClones;
+                    clone._trees[isMy, isAerial] = _trees[isMy, isAerial];
+                    if (clone._trees[isMy, isAerial] == null)
+                    {
+                        vehiclesClones = _vehiclesByOwner[isMy].Where(x => x.IsAerial == (isAerial == 1)).Select(_cloneVehicle);
+                    }
+                    else
+                    {
+                        var treeNodes = new List<AVehicle>();
+                        clone._trees[isMy, isAerial] = clone._trees[isMy, isAerial].Clone(ref treeNodes);
+                        vehiclesClones = treeNodes;
+                    }
+                    foreach (var veh in vehiclesClones)
                     {
                         clone.Vehicles[ptr++] = veh;
 
@@ -318,7 +328,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return nearestInteractors;
         }
 
-        private void _doFight()
+        public void _doFight()
         {
             Utility.ResizeArray(ref _nearestFightersCacheDist, Vehicles.Length, double.MaxValue/2);
             if (UseFightOptimization)
@@ -406,6 +416,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private static readonly AVehicle[] _movedState = new AVehicle[MagicMaxSize];
 
         private void _doMove()
+        {
+            _doMove1(Vehicles);
+        }
+
+        private void _doMove1(AVehicle[] Vehicles)
         {
             Utility.ResizeArray(ref _nearestCache, Vehicles.Length);
             
@@ -543,7 +558,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private void _doNuclears()
+        public void _doNuclears()
         {
             bool needRemove = false;
             foreach (var nuclear in Nuclears)
@@ -572,7 +587,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Nuclears = Nuclears.Where(x => x.RemainingTicks > 0).ToArray();
         }
 
-        private void _doFacilities()
+        public void _doFacilities()
         {
             if (Facilities.Length == 0)
                 return;
@@ -611,6 +626,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         static AVehicle[] _prevStateCache = new AVehicle[MagicMaxSize];
 
+        public void UpdateVehicle(AVehicle cur, AVehicle from)
+        {
+            var prevX = cur.X;
+            var prevY = cur.Y;
+            cur.CopyFrom(from);
+            _updateVehicleCoordinates(cur, prevX, prevY);
+        }
+
         private void _updateVehicleCoordinates(AVehicle veh, double prevX, double prevY)
         {
             var unitTree = _trees[veh.IsMy ? 1 : 0, veh.IsAerial ? 1 : 0];
@@ -629,46 +652,50 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
+        public bool DoMoveApprox(AVehicle[] vehicles, bool moveApprox)
+        {
+            if (moveApprox)
+            {
+                for (var i = 0; i < Vehicles.Length; i++)
+                {
+                    var veh = Vehicles[i];
+                    if (_prevStateCache[i] == null)
+                        _prevStateCache[i] = new AVehicle(veh);
+                    else
+                        _prevStateCache[i].CopyFrom(veh);
+
+                    if (!veh.Move())
+                    {
+                        // откатываем изменения
+                        for (var j = 0; j < i; j++)
+                        {
+                            var prevX = Vehicles[j].X;
+                            var prevY = Vehicles[j].Y;
+                            Vehicles[j].CopyFrom(_prevStateCache[j]);
+                            _updateVehicleCoordinates(Vehicles[j], prevX, prevY);
+                        }
+                        return false;
+                    }
+                    _updateVehicleCoordinates(veh, _prevStateCache[i].X, _prevStateCache[i].Y);
+                }
+            }
+            else
+            {
+                Logger.CumulativeOperationStart("DoMove1");
+                _doMove1(vehicles);
+                Logger.CumulativeOperationEnd("DoMove1");
+            }
+            return true;
+        }
+
         public void DoTicksApprox(int ticksCount, bool moveApprox, bool fightApprox)
         {
             var canMove = true;
             for (var t = 0; t < ticksCount; t++)
             {
-                if (moveApprox)
+                if (canMove)
                 {
-                    if (canMove)
-                    {
-                        for (var i = 0; i < Vehicles.Length; i++)
-                        {
-                            var veh = Vehicles[i];
-                            if (_prevStateCache[i] == null)
-                                _prevStateCache[i] = new AVehicle(veh);
-                            else
-                                _prevStateCache[i].CopyFrom(veh);
-
-                            if (!veh.Move())
-                            {
-                                // откатываем изменения
-                                for (var j = 0; j < i; j++)
-                                {
-                                    var prevX = Vehicles[j].X;
-                                    var prevY = Vehicles[j].Y;
-                                    Vehicles[j].CopyFrom(_prevStateCache[j]);
-                                    _updateVehicleCoordinates(Vehicles[j], prevX, prevY);
-                                }
-                                canMove = false;
-                                break;
-                            }
-                            
-                            _updateVehicleCoordinates(veh, _prevStateCache[i].X, _prevStateCache[i].Y);
-                        }
-                    }
-                }
-                else
-                {
-                    Logger.CumulativeOperationStart("DoMove1");
-                    _doMove();
-                    Logger.CumulativeOperationEnd("DoMove1");
+                    canMove = DoMoveApprox(Vehicles, moveApprox);
                 }
 
                 if (!fightApprox || t == ticksCount - 1)
