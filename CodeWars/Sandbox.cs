@@ -210,10 +210,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             switch (move.Action)
             {
                 case ActionType.ClearAndSelect:
-                    foreach (var unit in Vehicles)
+                    foreach (var unit in MyVehicles)
                     {
-                        if (!unit.IsMy)
-                            continue;
                         if (move.Group != 0)
                         {
                             unit.IsSelected = unit.HasGroup(move.Group);
@@ -227,10 +225,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                     break;
                 case ActionType.AddToSelection:
-                    foreach (var unit in Vehicles)
+                    foreach (var unit in MyVehicles)
                     {
-                        if (!unit.IsMy)
-                            continue;
                         if (move.Group != 0)
                         {
                             unit.IsSelected = unit.HasGroup(move.Group);
@@ -240,6 +236,26 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             unit.IsSelected |= Geom.Between(move.Left, move.Right, unit.X) &&
                                                Geom.Between(move.Top, move.Bottom, unit.Y) &&
                                                (move.VehicleType == null || move.VehicleType == unit.Type);
+                        }
+                    }
+                    break;
+                case ActionType.Deselect:
+                    foreach (var unit in MyVehicles)
+                    {
+                        if (!unit.IsSelected)
+                            continue;
+
+                        if (move.Group != 0)
+                        {
+                            if (unit.HasGroup(move.Group))
+                                unit.IsSelected = false;
+                        }
+                        else
+                        {
+                            if (Geom.Between(move.Left, move.Right, unit.X) &&
+                                Geom.Between(move.Top, move.Bottom, unit.Y) &&
+                                (move.VehicleType == null || move.VehicleType == unit.Type))
+                                unit.IsSelected = false;
                         }
                     }
                     break;
