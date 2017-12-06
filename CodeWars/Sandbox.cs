@@ -35,7 +35,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private readonly List<List<AVehicle>> _myVehiclesByGroup = new List<List<AVehicle>>();
 
-        private AVehicle[] _nearestCache;
         private double[] _nearestFightersCacheDist;
         private int[] _nearestFightersCacheTick;
 
@@ -417,13 +416,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private void _doMove()
         {
-            _doMove1(Vehicles, true);
+            _doMove1(Vehicles);
         }
 
-        private void _doMove1(AVehicle[] Vehicles, bool cache = false)
+        private void _doMove1(AVehicle[] Vehicles)
         {
-            if (cache)
-                Utility.ResizeArray(ref _nearestCache, Vehicles.Length);
             
             var unblockedLength = 0;
 
@@ -468,19 +465,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var unitTree = _tree(movedUnit.IsMy, movedUnit.IsAerial);
                     var oppTree = _tree(!movedUnit.IsMy, movedUnit.IsAerial);
 
-                    var nearestWithNotMoved = cache ? _nearestCache[idx] : null;
-                    var nearestWithMoved = nearestWithNotMoved;
-
                     var intersectsWith = -1;
 
                     do
                     {
-                        if (nearestWithMoved != null && nearestWithMoved.IntersectsWith(movedUnit))
-                        {
-                            intersectsWith = nearestWithMoved.Index;
-                            break;
-                        }
-                 
                         {
                             var nearest = unitTree.FindFirstNearby(movedUnit, Geom.Sqr(2 * movedUnit.Radius));
 
@@ -488,13 +476,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             {
                                 if (nearest.IntersectsWith(movedUnit))
                                 {
-                                    nearestWithNotMoved = nearest;
                                     intersectsWith = nearest.Index;
                                     break;
                                 }
-                                if (nearestWithMoved == null ||
-                                    nearest.GetDistanceTo2(movedUnit) < nearestWithMoved.GetDistanceTo2(movedUnit))
-                                    nearestWithMoved = nearest;
                             }
                         }
 
@@ -506,21 +490,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             {
                                 if (nearest.IntersectsWith(movedUnit))
                                 {
-                                    nearestWithNotMoved = nearest;
                                     intersectsWith = nearest.Index;
                                     break;
                                 }
-                                if (nearestWithMoved == null ||
-                                    nearest.GetDistanceTo2(movedUnit) < nearestWithMoved.GetDistanceTo2(movedUnit))
-                                    nearestWithMoved = nearest;
                             }
                         }
                     } while (false);
 
                     if (intersectsWith != -1)
                     {
-                        if (cache)
-                            _nearestCache[idx] = nearestWithNotMoved;
                         if (!_complete[intersectsWith])
                             _deps[intersectsWith][_depsLen[intersectsWith]++] = idx;
                     }
@@ -543,8 +521,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             if (_nearestFightersCacheTick != null && _nearestFightersCacheTick[idx] != -1)
                                 _nearestFightersCacheDist[idx] -= unit.GetDistanceTo(prevX, prevY);
                         }
-                        if (cache)
-                            _nearestCache[idx] = nearestWithMoved;
                     }
 
                     if (intersectsWith == -1 || _complete[intersectsWith])
