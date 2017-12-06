@@ -182,7 +182,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (newGroupVehicles != null)
                     {
                         foreach (var mg in GroupsManager.MyGroups)
-                            if (newGroupVehicles.Any(x => x.IsGroup(mg)))
+                            if (mg.VehicleType == group.VehicleType && startEnv.MyVehicles.Where(x => x.IsSelected).Any(x => x.IsGroup(mg)))
                                 selectionMoves.Add(new AMove {Action = ActionType.Deselect, Group = mg.Group});
                     }
 
