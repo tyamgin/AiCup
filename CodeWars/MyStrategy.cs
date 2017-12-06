@@ -152,7 +152,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var selectedIds = Utility.UnitsHash(startEnv.MyVehicles.Where(x => x.IsSelected));
                 var needToSelectIds = Utility.UnitsHash(startEnv.GetVehicles(true, group));
 
-                AMove selectionMove = null;
+                List<AMove> selectionMoves = new List<AMove>();
                 var availableActions = MoveObserver.AvailableActions;
 
                 if (selectedIds != needToSelectIds)
@@ -163,23 +163,42 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         continue;
                     }
 
-                    selectionMove = newGroupVehicles == null
-                        ? new AMove
+                    if (newGroupVehicles == null)
+                        selectionMoves.Add(new AMove
                         {
                             Action = ActionType.ClearAndSelect,
                             Group = group.Group,
                             Rect = G.MapRect,
-                        }
-                        : new AMove
+                        });
+                    else
+                        selectionMoves.Add(new AMove
                         {
                             Action = ActionType.ClearAndSelect,
                             VehicleType = group.VehicleType,
                             Rect = Utility.BoundingRect(newGroupVehicles),
-                        };
-                    startEnv.ApplyMove(selectionMove);
-                    startEnv.DoTick();
-                    availableActions--;
-                    ticksCount--;
+                        });
+                        
+                    
+                    if (newGroupVehicles != null)
+                    {
+                        foreach (var mg in GroupsManager.MyGroups)
+                            if (newGroupVehicles.Any(x => x.IsGroup(mg)))
+                                selectionMoves.Add(new AMove {Action = ActionType.Deselect, Group = mg.Group});
+                    }
+
+                    if (MoveObserver.AvailableActions < selectionMoves.Count + 1)
+                    {
+                        Logger.CumulativeOperationEnd("First env actions");
+                        continue;
+                    }
+
+                    foreach (var mv in selectionMoves)
+                    {
+                        startEnv.ApplyMove(mv);
+                        startEnv.DoTick();
+                        availableActions--;
+                        ticksCount--;
+                    }
                 }
                 availableActions--;
 
@@ -352,14 +371,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (selDanger == null || danger.Score < selDanger.Score)
                     {
                         selDanger = danger;
-                        selMoves = new[]
+                        selMoves = selectionMoves.Concat(new[]
                         {
-                            selectionMove,
                             move,
                             newGroupVehicles == null
                                 ? null
                                 : AMovePresets.AssignGroup(group.Group)
-                        }
+                        })
                             .Where(x => x != null)
                             .ToArray();
                     }
@@ -475,7 +493,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         GroupsManager.AddPendingGroup(new MyGroup(mv.Group, mainNew.Item1[0].VehicleType.Value));
                     }
                 }
-                if (mainNew.Item1.Length == 3)
+                if (mainNew.Item1.Length >= 3)
                 {
                     var nearestFacility = Environment.Facilities.ArgMin(
                         f => f.Center.GetDistanceTo2(ResultingMove.Rect.Center));
