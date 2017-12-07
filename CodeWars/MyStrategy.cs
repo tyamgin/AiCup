@@ -268,7 +268,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Logger.CumulativeOperationStart("Pre last env actions");
 
                 Sandbox preLastEnv = null;
-                Sandbox preLastEnv2 = null;
                 AVehicle[] farOpponents = null, nearOpponents = null;
                 List<AVehicle> currentVehicles = null;
                 AVehicle[] preLastEnvVehiclesCopy = null;
@@ -327,10 +326,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     Logger.CumulativeOperationStart("End of simulation");
                     env.ApplyMove(move);
-                    env.DoTicksApprox(ticksCount,
+                    try
+                    {
+                        env.DoTicksApprox(ticksCount,
                         moveApprox: move.Action == ActionType.Move || move.Action == ActionType.Rotate,
                         fightApprox: true);
-                    Logger.CumulativeOperationEnd("End of simulation");
+                    }
+                    catch(QuadTree<AVehicle>.PointAlreadyExistsException e)
+                    {
+                        Logger.Log(e.Message);
+                        return double.PositiveInfinity;
+                    }
+                    finally
+                    {
+                        Logger.CumulativeOperationEnd("End of simulation");
+                    }
 
                     Logger.CumulativeOperationStart("Building last environment");
                     var cache = sumMaxAlmostAttacksCache;

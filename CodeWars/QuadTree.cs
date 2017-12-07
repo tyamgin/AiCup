@@ -111,7 +111,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var currentY = currentValue.Y;
 
                 if (value.X.CompareTo(currentX) == 0 && value.Y.CompareTo(currentY) == 0)
-                    throw new Exception($"Trying to add point with same coordinates ({currentX}, {currentY})");
+                    throw new PointAlreadyExistsException($"Trying to add point with same coordinates ({currentX}, {currentY})");
 
                 node.Value = null;
                 node.HasValueBelow = true;
@@ -844,6 +844,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         public int Count = 0;
+
+        public class PointAlreadyExistsException : Exception
+        {
+            public PointAlreadyExistsException(string message) : base(message)
+            {
+            }
+        }
 
         #endregion
     }
