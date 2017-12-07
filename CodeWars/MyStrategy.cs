@@ -214,12 +214,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 var typeRect = Utility.BoundingRect(startEnv.GetVehicles(true, group));
 
-                Logger.CumulativeOperationStart("Partial env actions");
-
                 Sandbox partialEnv = null;
                 var sumMaxAlmostAttacksCache = -1.0;
                 if (Environment.Nuclears.Length == 0)
                 {
+                    Logger.CumulativeOperationStart("Partial env actions");
+
                     partialEnv = new Sandbox(
                         startEnv.Vehicles.Where(x => !x.IsSelected),
                         new ANuclear[] { },
@@ -228,25 +228,35 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         );
                     partialEnv.CheckCollisionsWithOpponent = false;
 
-
                     var grps = GroupsManager.MyGroups.Select(g => partialEnv.GetVehicles(true, g).ToArray()).ToArray();
-                    for (var i = 0; i < ticksCount; i++)
+
+                    try
                     {
-                        for (var j = 0; j < grps.Length; j++)
+                        for (var i = 0; i < ticksCount; i++)
                         {
-                            var pgr = grps[j];
-                            if (pgr.Length > 0)
-                                partialEnv.DoMoveApprox(pgr, pgr[0].Action != AVehicle.MoveType.Scale);
+                            for (var j = 0; j < grps.Length; j++)
+                            {
+                                var pgr = grps[j];
+                                if (pgr.Length > 0)
+                                    partialEnv.DoMoveApprox(pgr, pgr[0].Action != AVehicle.MoveType.Scale);
+                            }
+                            partialEnv._doFacilities();
+                            partialEnv._doNuclears();
                         }
-                        partialEnv._doFacilities();
-                        partialEnv._doNuclears();
+                        partialEnv._doFight();
+
+                        sumMaxAlmostAttacksCache = GetSumMaxAlmostAttacks(partialEnv, partialEnv.MyVehicles);
                     }
-                    partialEnv._doFight();
-
-                    sumMaxAlmostAttacksCache = GetSumMaxAlmostAttacks(partialEnv, partialEnv.MyVehicles);
+                    catch (QuadTree<AVehicle>.PointAlreadyExistsException e)
+                    {
+                        Logger.Log(e.Message);
+                        continue;
+                    }
+                    finally
+                    {
+                        Logger.CumulativeOperationEnd("Partial env actions");
+                    }
                 }
-
-                Logger.CumulativeOperationEnd("Partial env actions");
 
                 List<Point> pos = new List<Point>(), neg = new List<Point>();
                 
