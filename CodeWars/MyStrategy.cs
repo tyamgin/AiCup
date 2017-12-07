@@ -13,6 +13,7 @@ using System.Threading;
  * - оптимизировать начальное построение (?)
  * 
  * - ядерка: перебрать несколько центров, учитывать уклонения
+ * - ядерка: убивают крайнего
  */
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
