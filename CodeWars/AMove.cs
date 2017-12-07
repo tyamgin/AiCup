@@ -95,9 +95,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
     public class AMovePresets
     {
-        public static AMove ClearAndSelectType(VehicleType type)
+        public static AMove ClearAndSelectType(VehicleType type, Rect rect = null)
         {
-            return new AMove { Action = ActionType.ClearAndSelect, Rect = G.MapRect, VehicleType = type };
+            return new AMove { Action = ActionType.ClearAndSelect, Rect = rect ?? G.MapRect, VehicleType = type };
+        }
+
+        public static AMove ClearAndSelectGroup(int group, Rect rect = null)
+        {
+            return new AMove { Action = ActionType.ClearAndSelect, Rect = rect ?? G.MapRect, Group = group };
         }
 
         public static AMove AssignGroup(int groupId)

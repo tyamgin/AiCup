@@ -164,23 +164,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
 
                     if (newGroupVehicles == null)
-                        selectionMoves.Add(new AMove
-                        {
-                            Action = ActionType.ClearAndSelect,
-                            Group = group.Group,
-                            Rect = G.MapRect,
-                        });
+                        selectionMoves.Add(AMovePresets.ClearAndSelectGroup(group.Group));
                     else
-                        selectionMoves.Add(new AMove
-                        {
-                            Action = ActionType.ClearAndSelect,
-                            VehicleType = group.VehicleType,
-                            Rect = Utility.BoundingRect(newGroupVehicles),
-                        });
-                        
-                    
-                    if (newGroupVehicles != null)
                     {
+                        selectionMoves.Add(AMovePresets.ClearAndSelectType(group.VehicleType, Utility.BoundingRect(newGroupVehicles)));
+                        
                         foreach (var mg in GroupsManager.MyGroups)
                             if (mg.VehicleType == group.VehicleType && startEnv.MyVehicles.Where(x => x.IsSelected).Any(x => x.IsGroup(mg)))
                                 selectionMoves.Add(new AMove {Action = ActionType.Deselect, Group = mg.Group});
@@ -268,7 +256,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Logger.CumulativeOperationStart("Pre last env actions");
 
                 Sandbox preLastEnv = null;
-                AVehicle[] farOpponents = null, nearOpponents = null;
+                AVehicle[] nearOpponents = null;
                 List<AVehicle> currentVehicles = null;
                 AVehicle[] preLastEnvVehiclesCopy = null;
 
@@ -276,13 +264,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     currentVehicles = startEnv.GetVehicles(true, group);
                     var currentVehiclesCenter = Utility.BoundingRect(currentVehicles).Center;
-                    var split = partialEnv.OppVehicles.ToLookup(
-                            x => x.GetDistanceTo2(currentVehiclesCenter) < Geom.Sqr(2 * G.TacticalNuclearStrikeRadius));
-                    farOpponents = split[false].ToArray();
-                    nearOpponents = split[true].ToArray();
+                    nearOpponents = partialEnv.OppVehicles
+                        .Where(x => x.GetDistanceTo2(currentVehiclesCenter) < Geom.Sqr(2*G.TacticalNuclearStrikeRadius))
+                        .ToArray();
 
                     preLastEnv = new Sandbox(
-                        partialEnv.MyVehicles.Where(x => !x.IsGroup(group)).Concat(farOpponents).Concat(nearOpponents).Concat(currentVehicles),
+                        partialEnv.Vehicles.Where(x => !x.IsGroup(group)).Concat(currentVehicles),
                         new ANuclear[] {}, 
                         new AFacility[] {},
                         clone: true
