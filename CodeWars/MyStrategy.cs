@@ -107,7 +107,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
 
-        Tuple<AMove[], DangerResult> DoMain(bool opt)
+        Tuple<AMove[], DangerResult> DoMain()
         {
             var baseTicksCount = Const.ActionsBruteforceDepth;
             if (Environment.Nuclears.Length > 0)
@@ -395,38 +395,38 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             : 0
                 };
 
-                var dangers = opt 
-                    ? Enumerable.Range(0, 6).Select(i => checkAction(idxToMove(i*2))).ToArray()
-                    : Enumerable.Range(0, 12).Select(i => checkAction(idxToMove(i))).ToArray();
-
-                if (opt)
-                {
-                    var dangers2 = dangers.Select((x, i) => new Tuple<double, int>(x, i)).OrderBy(x => x.Item1).Select(x => x.Item2).Take(2).ToArray();
-
-                    foreach (var i in dangers2.Select(i => i*2 + 1).Concat(dangers2.Select(i => i*2 - 1)).Distinct())
-                        checkAction(idxToMove(i));
-                }
+                var dangers = Enumerable.Range(0, 6).Select(i => checkAction(idxToMove(i*2))).ToArray();
+                    
+                var dangers2 = dangers.Select((x, i) => new Tuple<double, int>(x, i)).OrderBy(x => x.Item1).Select(x => x.Item2).Take(2).ToArray();
+                foreach (var i in dangers2.Select(i => i*2 + 1).Concat(dangers2.Select(i => i*2 - 1)).Distinct())
+                    checkAction(idxToMove(i));
 
                 foreach (var move in 
                     Environment.Nuclears
-                        .Where(n => n.GetDistanceTo(Utility.Average(startEnv.MyVehicles.Where(x => x.IsSelected))) < G.TacticalNuclearStrikeRadius*2)
-                        .Select(nuclear => AMovePresets.Scale(nuclear, 1.5))
-                        .Concat(new[]
-                        {
-                            AMovePresets.Scale(typeRect.Center, 0.1),
-                            AMovePresets.Rotate(typeRect.Center, Math.PI/4),
-                            AMovePresets.Rotate(typeRect.Center, -Math.PI/4),
-                        })
-                        .Concat(
-                            pos.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
-                                .Take(2)
-                                .Select(cen => AMovePresets.MoveTo(typeRect.Center, cen))
-                                )
-                        .Concat(
-                            neg.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
-                                .Take(1)
-                                .Select(cen => AMovePresets.Move((typeRect.Center - cen).Take(150)))
-                                ))
+                        .Where(n =>
+                            n.GetDistanceTo(Utility.Average(startEnv.MyVehicles.Where(x => x.IsSelected))) <
+                            G.TacticalNuclearStrikeRadius*2)
+                        .Select(nuclear => AMovePresets.Scale(nuclear, 1.5)))
+                {
+                    checkAction(move);
+                }
+
+                checkAction(AMovePresets.Scale(typeRect.Center, 0.1));
+                checkAction(AMovePresets.Rotate(typeRect.Center, Math.PI/4));
+                checkAction(AMovePresets.Rotate(typeRect.Center, -Math.PI/4));
+
+                foreach (var move in 
+                    pos.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
+                        .Take(2)
+                        .Select(cen => AMovePresets.MoveTo(typeRect.Center, cen)))
+                {
+                    checkAction(move);
+                }
+
+                foreach (var move in
+                    neg.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
+                        .Take(1)
+                        .Select(cen => AMovePresets.Move((typeRect.Center - cen).Take(150))))
                 {
                     checkAction(move);
                 }
@@ -475,7 +475,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     return;
                 }
 
-                var mainNew = DoMain(true);
+                var mainNew = DoMain();
 
                 if (mainNew.Item1[0].Action == null || mainNew.Item1[0].Action == ActionType.None)
                     _noMoveLastTick = World.TickIndex;
