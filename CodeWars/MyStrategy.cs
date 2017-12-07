@@ -181,8 +181,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         selectionMoves.Add(AMovePresets.ClearAndSelectGroup(group.Group));
                     else
                     {
-                        selectionMoves.Add(AMovePresets.ClearAndSelectType(group.VehicleType, Utility.BoundingRect(newGroupVehicles)));
-                        
+                        var selectionMove = AMovePresets.ClearAndSelectType(group.VehicleType, Utility.BoundingRect(newGroupVehicles));
+                        startEnv.ApplyMove(selectionMove); // ниже выполнится лишний раз, но не страшно
+                        selectionMoves.Add(selectionMove);
+
                         foreach (var mg in GroupsManager.MyGroups)
                             if (mg.VehicleType == group.VehicleType && startEnv.MyVehicles.Where(x => x.IsSelected).Any(x => x.IsGroup(mg)))
                                 selectionMoves.Add(new AMove {Action = ActionType.Deselect, Group = mg.Group});
