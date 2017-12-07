@@ -107,13 +107,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
 
-        Tuple<AMove[], DangerResult> DoMain()
+        Tuple<AMove[], MyGroup, DangerResult> DoMain(bool opt)
         {
             var baseTicksCount = Const.ActionsBruteforceDepth;
             if (Environment.Nuclears.Length > 0)
                 baseTicksCount *= 2;
 
             var selMoves = new[] { new AMove() };
+            MyGroup selGroup = null;
 
             var env1 = Environment.Clone();
             for (var i = 0; i < baseTicksCount; i++)
@@ -136,6 +137,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (MoveObserver.AvailableActions < 3)
                         continue;
                     group = new MyGroup(GroupsManager.NextGroupId, newGroupVehicles[0].Type);
+                }
+
+                if (opt && !(
+                    Environment.Nuclears.Length > 0 ||
+                    Environment.Facilities.Length <= 4 ||
+                    World.TickIndex < 3000 ||
+                    MoveObserver.MaxAvailableActions <= 12 ||
+                    _doMainLastGroup != null && _doMainLastGroup.Group == group.Group || // ходил предыдущий раз
+                    group.Group % 2 == _doMainsCount % 2 // через раз
+                    ))
+                {
+                    continue;
                 }
 
                 Logger.CumulativeOperationStart("First env actions");
@@ -377,6 +390,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         })
                             .Where(x => x != null)
                             .ToArray();
+                        selGroup = group;
                     }
                     return danger.Score;
                 };
@@ -437,8 +451,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
             }
 
-            return new Tuple<AMove[], DangerResult>(selMoves, selDanger);
+            return new Tuple<AMove[], MyGroup, DangerResult>(selMoves, selGroup, selDanger);
         }
+
+        private int _doMainsCount = 0;
+        private MyGroup _doMainLastGroup;
 
         private void _move(Game game)
         {
@@ -475,7 +492,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     return;
                 }
 
-                var mainNew = DoMain();
+                var mainNew = DoMain(true);
+                _doMainsCount++;
+                _doMainLastGroup = mainNew.Item2;
 
                 if (mainNew.Item1[0].Action == null || mainNew.Item1[0].Action == ActionType.None)
                     _noMoveLastTick = World.TickIndex;
@@ -498,7 +517,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (changeProdMove != null)
                         MoveQueue.Add(changeProdMove);
                 }
-
             }
 
             if (ResultingMove == null || ResultingMove.Action == null || ResultingMove.Action == ActionType.None)
