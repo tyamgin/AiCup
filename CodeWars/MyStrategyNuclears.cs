@@ -57,6 +57,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (totalDamage <= selTotalDamage)
                     continue;
 
+                var vehNextMove = new AVehicle(veh);
+                vehNextMove.Move();
+                if (vehNextMove.GetDistanceTo2(nuclear) + Const.Eps >= Geom.Sqr(vehNextMove.ActualVisionRange))
+                    continue;
+
                 selTotalDamage = totalDamage;
                 selMove = new AMove
                 {
