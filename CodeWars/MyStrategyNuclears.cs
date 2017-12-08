@@ -74,7 +74,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             continue;
 
                         var vehNextMove = new AVehicle(veh);
-                        vehNextMove.Move();
+                        for (var t = 0; t < 3; t++)
+                            vehNextMove.Move();
                         if (vehNextMove.GetDistanceTo2(nuclear) + Const.Eps >= Geom.Sqr(vehNextMove.ActualVisionRange))
                             continue;
 
