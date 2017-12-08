@@ -9,10 +9,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        double asdf(AVehicle veh, Sandbox env, double lowerBound, out ANuclear nuclearResult)
+        double asdf(AVehicle veh, Sandbox env, double lowerBound, List<AVehicle> targets, out ANuclear nuclearResult)
         {
             var vr = veh.ActualVisionRange * 0.9;
-            var targets = env.GetOpponentNeighbours(veh.X, veh.Y, vr + G.TacticalNuclearStrikeRadius);
             var cen = Utility.Average(targets);
             cen = veh + (cen - veh).Normalized() * Math.Min(vr, veh.GetDistanceTo(cen));
             var nuclear = new ANuclear(cen.X, cen.Y, true, veh.Id, G.TacticalNuclearStrikeDelay);
@@ -41,74 +40,116 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return result;
         }
 
-        AMove _nuclearStrategy()
+        Tuple<double, AMove> fnd(Sandbox env, double selTotalDamage, bool checkOnly)
         {
-            var damageBound2 = 8000.0*Environment.Vehicles.Length/1000;
-            var damageBound1 = 3000.0*Environment.Vehicles.Length/1000;
-
-            var selTotalDamage = damageBound1;
             AMove selMove = null;
 
-            foreach (var veh in Environment.MyVehicles)
+            for (var s = 0; s < GroupsManager.MyGroups.Count + MyUngroupedClusters.Count; s++)
             {
-                ANuclear nuclear;
-                var totalDamage = asdf(veh, Environment, selTotalDamage, out nuclear);
+                var vehicles = s < GroupsManager.MyGroups.Count
+                    ? env.GetVehicles(true, GroupsManager.MyGroups[s])
+                    : MyUngroupedClusters[s - GroupsManager.MyGroups.Count];
+                var myAvg = Utility.Average(vehicles);
 
-                if (totalDamage <= selTotalDamage)
-                    continue;
+                var vrg = G.VisionRange[(int) VehicleType.Fighter] + G.MaxTacticalNuclearStrikeDamage;
 
-                var vehNextMove = new AVehicle(veh);
-                vehNextMove.Move();
-                if (vehNextMove.GetDistanceTo2(nuclear) + Const.Eps >= Geom.Sqr(vehNextMove.ActualVisionRange))
-                    continue;
+                var oppGroups = OppClusters
+                    .Where(cl => cl.Avg.GetDistanceTo(myAvg) < vrg)
+                    .OrderBy(cl => cl.Avg.GetDistanceTo(myAvg))
+                    .Take(3)
+                    .ToArray();
 
-                selTotalDamage = totalDamage;
-                selMove = new AMove
+                foreach (var veh in vehicles)
                 {
-                    Action = ActionType.TacticalNuclearStrike,
-                    VehicleId = veh.Id,
-                    Point = nuclear,
-                };
+                    var vr = veh.ActualVisionRange * 0.9;
+
+                    foreach (
+                        var oppGroup in
+                            new[] {env.GetOpponentNeighbours(veh.X, veh.Y, vr + G.TacticalNuclearStrikeRadius)}.Concat(oppGroups))
+                    {
+                        ANuclear nuclear;
+                        var totalDamage = asdf(veh, env, selTotalDamage, oppGroup, out nuclear);
+
+                        if (totalDamage <= selTotalDamage)
+                            continue;
+
+                        var vehNextMove = new AVehicle(veh);
+                        vehNextMove.Move();
+                        if (vehNextMove.GetDistanceTo2(nuclear) + Const.Eps >= Geom.Sqr(vehNextMove.ActualVisionRange))
+                            continue;
+
+                        const int n = 10;
+                        if (vehicles.Count > n)
+                        {
+                            var myDist2 = veh.GetDistanceTo2(nuclear);
+                            var myNearestCount = vehicles.Count(x => x.GetDistanceTo2(nuclear) <= myDist2);
+                            if (myNearestCount < n)
+                                continue;
+                        }
+
+                        selTotalDamage = totalDamage;
+                        selMove = new AMove
+                        {
+                            Action = ActionType.TacticalNuclearStrike,
+                            VehicleId = veh.Id,
+                            Point = nuclear,
+                        };
+
+                        if (checkOnly)
+                            return new Tuple<double, AMove>(selTotalDamage, selMove);
+                    }
+                }
             }
 
             if (selMove == null)
+            {
+                return null;
+            }
+
+            return new Tuple<double, AMove>(selTotalDamage, selMove);
+        }
+
+        AMove _nuclearStrategy()
+        {
+            var damageBound2 = 8000.0 * Environment.Vehicles.Length / 1000;
+            var damageBound1 = 3000.0 * Environment.Vehicles.Length / 1000;
+
+            var cur = fnd(Environment, damageBound1, false);
+            if (cur == null)
             {
                 _prevNuclearTotalDamage = 0;
                 return null;
             }
 
-            if (selTotalDamage >= damageBound2)
+            if (cur.Item1 >= damageBound2)
             {
                 _prevNuclearTotalDamage = 0;
-                return selMove;
+                return cur.Item2;
             }
 
             // нужно проверить, что в следующий тик не будет лучше
-            
+
             // предыдущее предсказание не оправдалось:
-            if (selTotalDamage < _prevNuclearTotalDamage)
+            if (cur.Item1 < _prevNuclearTotalDamage)
             {
                 _prevNuclearTotalDamage = 0;
-                return selMove;
+                // возвращает то что есть
+                return cur.Item2;
             }
 
             var env = Environment.Clone();
             env.DoTick(fight: false);
 
-            foreach (var veh in env.MyVehicles)
+            var next = fnd(env, cur.Item1, true);
+            if (next == null)
             {
-                ANuclear nuclear;
-                var totalDamage = asdf(veh, env, selTotalDamage, out nuclear);
-
-                if (totalDamage > selTotalDamage)
-                {
-                    _prevNuclearTotalDamage = totalDamage;
-                    return null; // будет лучше
-                }
+                _prevNuclearTotalDamage = 0;
+                return cur.Item2;
             }
 
-            _prevNuclearTotalDamage = 0;
-            return selMove;
+            // должно буть лучше
+            _prevNuclearTotalDamage = cur.Item1;
+            return null;
         }
 
         private double _prevNuclearTotalDamage;

@@ -35,7 +35,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 requiredType = VehicleType.Fighter;
             }
-            else if (oppFighters < 10 && Environment.MyVehicleFactories.Count(x => x.VehicleType == VehicleType.Helicopter) == 0)
+            else if (oppFighters < 10 && Environment.MyVehicleFactories.Count(x => x.VehicleType == VehicleType.Helicopter) - (factory.VehicleType == VehicleType.Helicopter ? 1 : 0) == 0)
             {
                 requiredType = VehicleType.Helicopter;
             }
