@@ -116,13 +116,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             var selMoves = new[] { new AMove() };
             MyGroup selGroup = null;
-
-            var env1 = Environment.Clone();
-            for (var i = 0; i < baseTicksCount; i++)
-                env1.DoTick();
-            DangerResult selDanger = GetDanger(Environment, env1, GroupsManager.MyGroups, MyUngroupedClusters);
-            var doNothingDanger = selDanger;
-            var targetFacilities = selDanger.TargetFacility;
+            DangerResult selDanger = null;
+            
+            var targetFacilities = GetDanger(Environment, Environment, GroupsManager.MyGroups, MyUngroupedClusters).TargetFacility;
 
             for (var s = 0; s < GroupsManager.MyGroups.Count + MyUngroupedClusters.Count; s++)
             {
@@ -461,6 +457,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (targetFacilities.ContainsKey(group.Group))
                 {
                     checkAction(AMovePresets.MoveTo(typeRect.Center, targetFacilities[group.Group]));
+                }
+
+                if (selectionMoves.Count == 0)
+                {
+                    checkAction(new AMove());
                 }
             }
 
