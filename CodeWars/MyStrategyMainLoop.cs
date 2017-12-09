@@ -328,7 +328,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         .Where(n =>
                             n.GetDistanceTo(Utility.Average(startEnv.MyVehicles.Where(x => x.IsSelected))) <
                             G.TacticalNuclearStrikeRadius * 2)
-                        .Select(nuclear => AMovePresets.Scale(nuclear, 1.5)))
+                        .SelectMany(nuclear => new[]
+                        {
+                            AMovePresets.Scale(nuclear, 1.5),
+                            AMovePresets.Scale(nuclear, 3.0),
+                            AMovePresets.Scale((Environment.VehicleById[nuclear.VehicleId] + nuclear) / 2, 2.0),
+                        }))
                 {
                     checkAction(move);
                 }
