@@ -129,7 +129,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (GroupsManager.MyGroups.Count == 0)
                 return;
 
-/*            if (World.TickIndex == 200)
+            if (World.TickIndex == 200)
             {
                 var avg = Utility.Average(Environment.GetVehicles(true, VehicleType.Ifv));
                 var ifv = Environment.GetVehicles(true, VehicleType.Ifv).ArgMin(x => x.GetDistanceTo2(avg));
@@ -140,7 +140,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 var sum = Environment.MyVehicles.Sum(x => x.Durability);
                 sum = sum;
-            }*/
+            }
 
             var actionsBaseInterval = MoveObserver.ActionsBaseInterval;
             if (MyUngroupedClusters.Any(x => x.Count >= NewGroupMinSize))
