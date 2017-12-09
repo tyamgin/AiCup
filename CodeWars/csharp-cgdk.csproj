@@ -88,6 +88,7 @@
     <Compile Include="Hungarian.cs" />
     <Compile Include="MyStrategyFacilities.cs" />
     <Compile Include="MyStrategyInit.cs" />
+    <Compile Include="MyStrategyMainLoop.cs" />
     <Compile Include="QuadTree.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="Model\ActionType.cs" />
