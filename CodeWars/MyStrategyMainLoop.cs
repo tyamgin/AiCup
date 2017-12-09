@@ -175,7 +175,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Logger.CumulativeOperationStart("Pre last env actions");
 
                 Sandbox preLastEnv = null;
-                AVehicle[] nearOpponents = null;
+                AVehicle[] nearInteractors = null;
                 List<AVehicle> currentVehicles = null;
                 AVehicle[] preLastEnvVehiclesCopy = null;
 
@@ -183,12 +183,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     currentVehicles = startEnv.GetVehicles(true, group);
                     var currentVehiclesCenter = Utility.BoundingRect(currentVehicles).Center;
-                    nearOpponents = partialEnv.OppVehicles
-                        .Where(x => x.GetDistanceTo2(currentVehiclesCenter) < Geom.Sqr(2 * G.TacticalNuclearStrikeRadius))
+                    nearInteractors = partialEnv.Vehicles
+                        .Where(x =>
+                            !x.IsMy && x.GetDistanceTo2(currentVehiclesCenter) < Geom.Sqr(2*G.TacticalNuclearStrikeRadius)
+                            || x.IsMy && x.IsAerial == Utility.IsAerial(group.VehicleType) && x.GetDistanceTo2(currentVehiclesCenter) < Geom.Sqr(G.TacticalNuclearStrikeRadius))
                         .ToArray();
 
                     preLastEnv = new Sandbox(
-                        partialEnv.Vehicles.Where(x => !x.IsGroup(group)).Concat(currentVehicles),
+                        partialEnv.Vehicles.Concat(currentVehicles),
                         new ANuclear[] { },
                         new AFacility[] { },
                         clone: true
@@ -206,7 +208,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (partialEnv == null)
                         env = startEnv.Clone();
                     else
-                        env = new Sandbox(nearOpponents.Concat(currentVehicles),
+                        env = new Sandbox(nearInteractors.Concat(currentVehicles),
                             startEnv.Nuclears, partialEnv.Facilities, clone: true);
 
                     env.CheckCollisionsWithOpponent = false;
