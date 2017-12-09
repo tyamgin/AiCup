@@ -136,7 +136,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                   (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
                                       ? 1.0*opp.Durability/G.MaxDurability
                                       : 1)*
-                                  (m.Type == opp.Type ? 0.3 : 1)
+                                  (m.Type == opp.Type ? 0.1 : 1)
                     );
             });
             Logger.CumulativeOperationEnd("Danger0");
@@ -280,6 +280,44 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         lst.Add(new Tuple<double, double>(score, e));
                     }
                 }
+
+                foreach (var helpGroup in myGroups)
+                {
+                    if (type == VehicleType.Helicopter && helpGroup.VehicleType == VehicleType.Ifv)
+                    {
+                        var fightersCount = env.GetVehicles(false, VehicleType.Fighter).Count;
+                        if (fightersCount == 0)
+                            continue;
+
+                        var helpGroupVehicles = env.GetVehicles(true, helpGroup);
+                        var helpGroupVehiclesCenter = Utility.BoundingRect(helpGroupVehicles).Center;
+
+                        var myAttack = G.AttackDamage[(int)type, (int)VehicleType.Fighter];
+                        var oppAttack = G.AttackDamage[(int)VehicleType.Fighter, (int)type];
+
+                        var score = (myAttack - oppAttack * 0.49);
+                        score = score * fightersCount * myRatio;
+                        var dist = cen.GetDistanceTo(helpGroupVehiclesCenter);
+                        var distToFighter = Math.Sqrt(env.GetVehicles(false, VehicleType.Fighter).Min(x => x.GetDistanceTo2(cen)));
+                        const double n = 700;
+                        var coef = Math.Max(0, (n - distToFighter)/n);
+
+                        lst.Add(new Tuple<double, double>(coef * score, DangerExp(dist)));
+                    }
+
+                    if ((type == VehicleType.Helicopter || type == VehicleType.Fighter) &&
+                        helpGroup.VehicleType == VehicleType.Arrv)
+                    {
+                        var helpGroupVehicles = env.GetVehicles(true, helpGroup);
+                        var helpGroupVehiclesCenter = Utility.BoundingRect(helpGroupVehicles).Center;
+
+                        var score = -(myGroup.Count * G.MaxDurability - myGroup.Sum(x => x.Durability)) * myRatio;
+                        var dist = cen.GetDistanceTo(helpGroupVehiclesCenter);
+                        
+                        lst.Add(new Tuple<double, double>(score, DangerExp(dist)));
+                    }
+                }
+
                 result.MoveToInfo.Add(new Tuple<MyGroup, List<Tuple<double, double>>>(gr, lst));
 
                 if (!Utility.IsAerial(type) && s < myGroups.Count)
