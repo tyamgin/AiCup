@@ -367,6 +367,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     checkAction(new AMove());
                 }
+
+                if (group.VehicleType == VehicleType.Helicopter || group.VehicleType == VehicleType.Fighter)
+                {
+                    var arrvGroupsCenters = GroupsManager.MyGroups
+                        .Where(g => g.VehicleType == VehicleType.Arrv)
+                        .Select(g => Utility.BoundingRect(Environment.GetVehicles(true, g)).Center)
+                        .ToArray();
+                    if (arrvGroupsCenters.Length > 0)
+                    {
+                        checkAction(AMovePresets.MoveTo(typeRect.Center,
+                            arrvGroupsCenters.ArgMin(p => p.GetDistanceTo2(typeRect.Center))));
+                    }
+                }
             }
 
             return new Tuple<AMove[], MyGroup, DangerResult>(selMoves, selGroup, selDanger);
