@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
@@ -45,14 +46,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 )
                 .ToArray();
 
+            Logger.CumulativeOperationStart("VO Update");
             VehiclesObserver.Update();
+            Logger.CumulativeOperationEnd("VO Update");
+
             MoveObserver.Init();
             var prevEnv = Environment;
             Environment = new Sandbox(VehiclesObserver.VehicleById.Values, nuclears, facilities) { TickIndex = World.TickIndex };
-            VehiclesObserver.Update2(prevEnv, Environment);
-            OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
 
-            NewGroupMinSize = (int)(Environment.MyVehicles.Count*44/500.0);
+            Logger.CumulativeOperationStart("VO Update2");
+            VehiclesObserver.Update2(prevEnv, Environment);
+            Logger.CumulativeOperationEnd("VO Update2");
+
+            OppClusters = Clustering.GetClustersSimple(
+                Environment.OppVehicles.Concat(VehiclesObserver.OppUncheckedVehicles.Values).ToArray(),
+                Const.ClusteringMargin
+                );
+
+            NewGroupMinSize = Math.Min(22, (int)(Environment.MyVehicles.Count*44/500.0));
 
             var newVehicles = Environment.MyVehicles.Where(x => x.Groups == 0).ToArray();
             
@@ -64,7 +75,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 );
 
             MyUngroupedClusters = G.IsFacilitiesEnabled
-                ? ungroupedEnv.GetClusters(true, Const.ClusteringMargin*2)
+                ? Clustering.GetClustersSimple(ungroupedEnv.MyVehicles.ToArray(), Const.ClusteringMargin*2)
                 : new List<VehiclesCluster>();
         }
 

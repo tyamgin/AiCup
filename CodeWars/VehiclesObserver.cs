@@ -135,11 +135,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private static bool _isVehicleVisible(Sandbox env, AVehicle veh)
         {
-            return env.MyVehicles.Any(x => x.IsVisible(veh));
+            foreach (var x in env.GetMyNeighbours(veh.X, veh.Y, 120 * veh.StealthFactor))
+                if (x.IsVisible(veh))
+                    return true;
+            return false;
         }
 
         public static void Update2(Sandbox prevEnv, Sandbox curEnv)
         {
+            if (!G.IsFogOfWarEnabled)
+                return;
+
             foreach (var veh in OppUncheckedVehicles.Values.ToArray())
             {
                 if (_isVehicleVisible(curEnv, veh))

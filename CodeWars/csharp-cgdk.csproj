@@ -80,6 +80,7 @@
     <Compile Include="ANuclear.cs" />
     <Compile Include="AUnit.cs" />
     <Compile Include="AVehicle.cs" />
+    <Compile Include="Clustering.cs" />
     <Compile Include="Const.cs" />
     <Compile Include="GroupsManager.cs" />
     <Compile Include="MyStrategyDanger.cs" />
