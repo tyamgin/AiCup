@@ -153,25 +153,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                 }
 
-                List<Point> pos = new List<Point>(), neg = new List<Point>();
-
-                for (var clIdx = 0; clIdx < OppClusters.Count; clIdx++)
-                {
-                    var cl = OppClusters[clIdx];
-                    foreach (var oppType in Const.AllTypes)
-                    {
-                        if (cl.CountByType[(int)oppType] > 0)
-                        {
-                            var avg = Utility.Average(cl.VehicleType(oppType));
-                            if (G.AttackDamage[(int)group.VehicleType, (int)oppType] > 0)
-                                pos.Add(avg);
-                            else if (G.AttackDamage[(int)oppType, (int)group.VehicleType] > 0)
-                                neg.Add(avg);
-                        }
-                    }
-                }
-
-
                 Logger.CumulativeOperationStart("Pre last env actions");
 
                 Sandbox preLastEnv = null;
@@ -317,8 +298,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             : 0
                 };
 
+                // проверка на каждые 2 часа
                 var dangers = Enumerable.Range(0, 6).Select(i => checkAction(idxToMove(i * 2))).ToArray();
 
+                // проверка на середины лучших промежутков
                 var dangers2 = dangers.Select((x, i) => new Tuple<double, int>(x, i)).OrderBy(x => x.Item1).Select(x => x.Item2).Take(2).ToArray();
                 foreach (var i in dangers2.Select(i => i * 2 + 1).Concat(dangers2.Select(i => i * 2 - 1)).Distinct())
                     checkAction(idxToMove(i));
@@ -342,8 +325,24 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 checkAction(AMovePresets.Rotate(typeRect.Center, Math.PI / 4));
                 checkAction(AMovePresets.Rotate(typeRect.Center, -Math.PI / 4));
 
+                List<Point> positiveInteractors = new List<Point>(), negativeInteractors = new List<Point>();
+                foreach (var cluster in OppClusters)
+                {
+                    foreach (var oppType in Const.AllTypes)
+                    {
+                        if (cluster.CountByType[(int)oppType] > 0)
+                        {
+                            var avg = Utility.Average(cluster.VehicleType(oppType));
+                            if (G.AttackDamage[(int)group.VehicleType, (int)oppType] > 0)
+                                positiveInteractors.Add(avg);
+                            else if (G.AttackDamage[(int)oppType, (int)group.VehicleType] > 0)
+                                negativeInteractors.Add(avg);
+                        }
+                    }
+                }
+
                 foreach (var move in
-                    pos.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
+                    positiveInteractors.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
                         .Take(2)
                         .Select(cen => AMovePresets.MoveTo(typeRect.Center, cen)))
                 {
@@ -351,7 +350,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 foreach (var move in
-                    neg.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
+                    negativeInteractors.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
                         .Take(1)
                         .Select(cen => AMovePresets.Move((typeRect.Center - cen).Take(150))))
                 {
@@ -363,11 +362,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     checkAction(AMovePresets.MoveTo(typeRect.Center, targetFacilities[group.Group]));
                 }
 
+                // проверка действия "ничего не делать"
                 if (selectionMoves.Count == 0)
                 {
                     checkAction(new AMove());
                 }
 
+                // полет к ближайшему Arrv
                 if (group.VehicleType == VehicleType.Helicopter || group.VehicleType == VehicleType.Fighter)
                 {
                     var arrvGroupsCenters = GroupsManager.MyGroups

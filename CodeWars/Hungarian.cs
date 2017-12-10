@@ -1,4 +1,7 @@
-﻿using System;
+﻿/*
+ * http://e-maxx.ru/algo/assignment_hungary
+ */
+using System;
 using System.Linq;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
