@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
+﻿using System.Globalization;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk

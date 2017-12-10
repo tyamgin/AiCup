@@ -2,7 +2,6 @@
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows.Forms;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
