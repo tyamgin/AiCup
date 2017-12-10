@@ -87,7 +87,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     res += RectanglesIntersects2*1000;
                     res += MoveToSum/3;
                     res += FacilitiesPointsDiff*4;
-                    res += MoveToFacilitySum*650;
+                    res += MoveToFacilitySum*900;
                     return res;
                 }
             }
@@ -184,9 +184,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                    opp.GetAttackDamage(m, additionalRadius*5)/16
                                     )*
                                   (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
-                                      ? 1.0*opp.Durability/G.MaxDurability
+                                      ? Geom.Sqr(1.0*opp.Durability/G.MaxDurability)
                                       : 1)*
-                                  (m.Type == opp.Type ? 0.1 : 1)
+                                  (m.Type == opp.Type ? 0.6 : 1)
                     );
             });
             Logger.CumulativeOperationEnd("Danger0");
@@ -317,9 +317,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                         var score = (myAttack - oppAttack*0.49);
                         
-                        score = score*cl.CountByType[oppType]*myRatio;
+                        score = score*cl.CountByType[oppType]*myRatio;//TODO:add sum((100-durability)/100) if >0, else minus
 
-                        var e = -(myAttack == 0 && dist > 120 || myAttack < oppAttack && dist > 140 && type != VehicleType.Helicopter 
+                        var e = -(myAttack == 0 && dist > 120 || myAttack < oppAttack && dist > (type == VehicleType.Helicopter ? 350 : 140)
                             ? 0 
                             : DangerExp(dist));
 
@@ -345,7 +345,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         score = score * fightersCount * myRatio;
                         var dist = cen.GetDistanceTo(helpGroupVehiclesCenter);
                         var distToFighter = Math.Sqrt(env.GetVehicles(false, VehicleType.Fighter).Min(x => x.GetDistanceTo2(cen)));
-                        const double n = 700;
+                        const double n = 400;
                         var coef = Math.Max(0, (n - distToFighter)/n);
 
                         lst.Add(new DangerResult.ScoreDistancePair(coef * score, DangerExp(dist)));
