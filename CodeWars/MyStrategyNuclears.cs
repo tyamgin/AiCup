@@ -61,6 +61,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 foreach (var veh in vehicles)
                 {
+                    if (!veh.IsSelected && MoveObserver.AvailableActions < 3)
+                        continue;
+                    if (veh.IsSelected && MoveObserver.AvailableActions < 2)
+                        continue;
+
                     var vr = veh.ActualVisionRange * 0.9;
 
                     foreach (
