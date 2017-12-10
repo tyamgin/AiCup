@@ -10,6 +10,7 @@ using System.Threading;
  * TODO:
  * - €дерка: учитывать уклонени€
  * - €дерка: scale от последствий €дерки в той же точке
+ * - объединение групп (застревают на фабриках)
  */
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -41,7 +42,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public MyStrategy()
         {
             _globalTimer.Start();
-#if DEBUG
+#if DEBUG // <-- на сервере почему-то падает
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
 #endif
         }
@@ -103,6 +104,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private int _doMainsCount = 0;
         private MyGroup _doMainLastGroup;
+        private Dictionary<int, Tuple<int, AMove>> _doMainLastUnscale = new Dictionary<int, Tuple<int, AMove>>();
 
         private void _move(Game game)
         {
@@ -155,6 +157,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var mainNew = DoMainLoop(true);
                 _doMainsCount++;
                 _doMainLastGroup = mainNew.Item2;
+                foreach (var move in mainNew.Item1)
+                    if (move.Action == ActionType.Scale && move.Factor > 1)
+                        _doMainLastUnscale[mainNew.Item2.Group] = new Tuple<int, AMove>(World.TickIndex, move);
+                 foreach (var groupId in _doMainLastUnscale.Keys.ToArray())
+                     if (_doMainLastUnscale[groupId].Item1 + 10 + G.TacticalNuclearStrikeDelay < World.TickIndex)
+                         _doMainLastUnscale.Remove(groupId);
 
                 if (mainNew.Item1[0].Action == null || mainNew.Item1[0].Action == ActionType.None)
                     _noMoveLastTick = World.TickIndex;

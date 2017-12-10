@@ -322,6 +322,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 checkAction(AMovePresets.Scale(typeRect.Center, 0.1));
+                if (_doMainLastUnscale.ContainsKey(group.Group))
+                {
+                    var prevScaleMove = _doMainLastUnscale[group.Group].Item2;
+                    checkAction(AMovePresets.Scale(prevScaleMove.Point, 1 / prevScaleMove.Factor));
+                }
                 checkAction(AMovePresets.Rotate(typeRect.Center, Math.PI / 4));
                 checkAction(AMovePresets.Rotate(typeRect.Center, -Math.PI / 4));
 

@@ -17,12 +17,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
             {
                 StartInfo =
                 {
-                    FileName = @"G:\Projects\AiCup\CodeWars\bin\1.exe",
+                    FileName = @"G:\Projects\AiCup\CodeWars\bin\anton.exe",
                     Arguments = "127.0.0.1 " + (31002) + " 0000000000000000",
                     CreateNoWindow = true
                 }
             };
-            //otherStrategy.Start();
+            otherStrategy.Start();
             Thread.Sleep(100);
 #endif
 
