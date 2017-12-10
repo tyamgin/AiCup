@@ -80,60 +80,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
 
         public static List<object[]> SegmentsDrawQueue = new List<object[]>();
 
-        public class Color01
-        {
-            public double R, G, B;
-
-            public Color01(double r, double g, double b)
-            {
-                R = r;
-                G = g;
-                B = b;
-            }
-
-            public Color ToColor()
-            {
-                return Color.FromArgb((int)(255 * R), (int)(255 * G), (int)(255 * B));
-            }
-        }
-
-        static private Color01 _grad2(Color01 col1, Color01 col2, double x)
-        {
-            return new Color01(
-                (col2.R - col1.R) * x + col1.R,
-                (col2.G - col1.G) * x + col1.G,
-                (col2.B - col1.B) * x + col1.B
-            );
-        }
-
-        public static Color01[] BadColors = new[] {
-            new Color01(0x8B / 255.0, 0, 0),// red!!
-            new Color01(1, 0, 0),// red
-            new Color01(1, 69 / 255.0, 0),// orange
-            new Color01(1, 1, 0),// yellow
-            new Color01(1, 1, 1),// white
-        };
-
-        public static Color01[] GoodColors = new[] {
-            new Color01(1, 1, 1),// white
-            new Color01(0, 1, 0),// green
-        };
-
-        static Color01 _grad(Color01[] colors, double x)
-        {
-            var delta = 1.0 / (colors.Length - 1);
-            for (var i = 0; i < colors.Length - 1; i++)
-            {
-                var left = delta*i;
-                var right = delta * (i + 1);
-                if (left <= x && x <= right)
-                {
-                    return _grad2(colors[i], colors[i + 1], (x - left) * (colors.Length - 1));
-                }
-            }
-            throw new Exception("wrong x ranges");
-        }
-
         public class RectangularSelection : Rect
         {
             public int Tick;
@@ -268,7 +214,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             }
             if (MyStrategy.ResultingMove.Action == ActionType.Move)
             {
-                var selectedVehicles = VehiclesObserver.Vehicles.Where(x => x.IsSelected).ToArray();
+                var selectedVehicles = MyStrategy.Environment.Vehicles.Where(x => x.IsSelected).ToArray();
                 if (selectedVehicles.Length == 0)
                     throw new Exception("Trying to move 0 vehicles");
                 var start = Utility.Average(selectedVehicles);
@@ -312,7 +258,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             {
                 DrawCircle(Color.OrangeRed, nuclear.X, nuclear.Y, nuclear.Radius, 1);
                 FillPie(Color.OrangeRed, nuclear.X, nuclear.Y, nuclear.Radius, 0, 2 * Math.PI * (G.TacticalNuclearStrikeDelay - nuclear.RemainingTicks) / G.TacticalNuclearStrikeDelay);
-                var veh = VehiclesObserver.Vehicles.FirstOrDefault(x => x.Id == nuclear.VehicleId);
+                var veh = MyStrategy.Environment.Vehicles.FirstOrDefault(x => x.Id == nuclear.VehicleId);
                 if (veh != null)
                     FillCircle(Color.Black, veh.X, veh.Y, veh.Radius * 2);
             }
@@ -334,8 +280,16 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             }
 
             // vehicles
-            foreach (var veh in VehiclesObserver.Vehicles)
+            var actualVehicles = MyStrategy.Environment.Vehicles;
+            var phantomVehicles = VehiclesObserver.OppUncheckedVehicles.Values.ToArray();
+            for (var s = 0; s < actualVehicles.Length + phantomVehicles.Length; s++)
+            //foreach (var veh in MyStrategy.Environment.Vehicles)
             {
+                var isPhantom = s >= actualVehicles.Length;
+                var veh = !isPhantom
+                    ? actualVehicles[s]
+                    : phantomVehicles[s - actualVehicles.Length];
+
                 var color = Color.Black;
                 switch (veh.Type)
                 {
@@ -364,8 +318,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
                 if (veh.IsSelected)
                     DrawCircle(color,  veh.X, veh.Y, veh.Radius + 1, 1);
 
-                if (!veh.IsMy)
-                    FillCircle(Color.Black, veh.X, veh.Y, 0.6);
+                if (isPhantom)
+                    FillCircle(Color.BlueViolet, veh.X, veh.Y, 0.7);
+                else if (!veh.IsMy)
+                    FillCircle(Color.Black, veh.X, veh.Y, 0.7);
             }
 
 

@@ -157,7 +157,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             _expect(game.MaxUnitGroup, G.MaxUnitGroup);
 
+            _expect(game.RainWeatherStealthFactor, G.RainWeatherStealthFactor);
+            _expect(game.CloudWeatherStealthFactor, G.CloudWeatherStealthFactor);
+            _expect(game.ForestTerrainStealthFactor, G.ForestTerrainStealthFactor);
+            _expect(game.SwampTerrainStealthFactor, 1);
+            _expect(game.ClearWeatherStealthFactor, 1);
+            _expect(game.PlainTerrainStealthFactor, 1);
+
             G.IsFacilitiesEnabled = world.Facilities.Length > 0;
+            G.IsFogOfWarEnabled = game.IsFogOfWarEnabled;
             MixArrvsWithGrounds = !G.IsFacilitiesEnabled;
         }
 
@@ -193,11 +201,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const int ActionDetectionInterval = 60;
         public const int BaseActionCount = 12;
         public const int AdditionalActionCountPerControlCenter = 3;
-        public static bool IsFacilitiesEnabled = false;
+        public static bool IsFacilitiesEnabled;
+        public static bool IsFogOfWarEnabled;
         public const double FacilitySize = 64;
         public const double MaxFacilityCapturePoints = 100;
         public const double FacilityCapturePointsPerVehiclePerTick = 0.005;
         public const int MaxUnitGroup = 100;
+        public const double RainWeatherStealthFactor = 0.6;
+        public const double CloudWeatherStealthFactor = 0.8;
+        public const double ForestTerrainStealthFactor= 0.6;
 
         public static readonly int[,] AttackDamage = new int[5, 5]
         {

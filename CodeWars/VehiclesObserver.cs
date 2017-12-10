@@ -11,14 +11,36 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private static Dictionary<long, Vehicle> _vehicleById = new Dictionary<long, Vehicle>();
         public static Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
 
-        public static AVehicle[] Vehicles = new AVehicle[0];
+        public static Dictionary<long, AVehicle> OppUncheckedVehicles = new Dictionary<long, AVehicle>();
+        public static Dictionary<long, AVehicle> OppCheckedVehicles = new Dictionary<long, AVehicle>();
+
+        private static List<long> _disappearedIds = new List<long>(); 
+        private static HashSet<long> _visibleOnce = new HashSet<long>(); 
 
         public static void Update()
         {
+            _disappearedIds.Clear();
             foreach (Vehicle vehicle in MyStrategy.World.NewVehicles)
             {
                 _vehicleById[vehicle.Id] = vehicle;
                 VehicleById[vehicle.Id] = new AVehicle(vehicle);
+
+                if (G.IsFogOfWarEnabled && vehicle.PlayerId != MyStrategy.Me.Id)
+                {
+                    if (vehicle.Id <= 1000 && !_visibleOnce.Contains(vehicle.Id))
+                    {
+                        var fakeId = _idsPool[(int) vehicle.Type].Last();
+                        _idsPool[(int)vehicle.Type].Pop();
+
+                        OppUncheckedVehicles.Remove(fakeId);
+                        OppCheckedVehicles.Remove(fakeId);
+                    }
+
+                    OppCheckedVehicles.Remove(vehicle.Id);
+                    OppUncheckedVehicles.Remove(vehicle.Id);
+
+                    _visibleOnce.Add(vehicle.Id);
+                }
             }
 
             foreach (VehicleUpdate vehicleUpdate in MyStrategy.World.VehicleUpdates)
@@ -29,10 +51,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     _vehicleById.Remove(vehicleId);
                     VehicleById.Remove(vehicleId);
+
+                    _disappearedIds.Add(vehicleId);
                 }
                 else
                 {
-                    _vehicleById[vehicleId] = new Vehicle(_vehicleById[vehicleId], vehicleUpdate);
+                    var veh = new Vehicle(_vehicleById[vehicleId], vehicleUpdate);
+                    _vehicleById[vehicleId] = veh;
+                    if (veh.PlayerId != MyStrategy.Me.Id)
+                    {
+                        OppCheckedVehicles.Remove(veh.Id);
+                        OppUncheckedVehicles.Remove(veh.Id);
+                    }
                 }
             }
 
@@ -99,10 +129,61 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     Console.WriteLine("Looks vehicle updated wrong (IsSelected)");
             }
 
-            Vehicles = VehicleById.Values.ToArray();
-
             if (errorsCount > 0)
                 Logger.Log("Move errors count: " + errorsCount);
         }
+
+        private static bool _isVehicleVisible(Sandbox env, AVehicle veh)
+        {
+            return env.MyVehicles.Any(x => x.IsVisible(veh));
+        }
+
+        public static void Update2(Sandbox prevEnv, Sandbox curEnv)
+        {
+            foreach (var veh in OppUncheckedVehicles.Values.ToArray())
+            {
+                if (_isVehicleVisible(curEnv, veh))
+                {
+                    OppCheckedVehicles.Add(veh.Id, veh);
+                    OppUncheckedVehicles.Remove(veh.Id);
+                }
+            }
+
+            foreach (var disappearedId in _disappearedIds)
+            {
+                if (curEnv.VehicleById.ContainsKey(disappearedId))
+                    throw new Exception("Something wrong");
+
+                var veh = prevEnv.VehicleById[disappearedId];
+                if (_isVehicleVisible(curEnv, veh))
+                {
+                    // убит
+                }
+                else
+                {
+                    OppUncheckedVehicles[veh.Id] = veh;
+                }
+            }
+
+            if (MyStrategy.World.TickIndex == 0)
+                _fillStartingPosition(curEnv.MyVehicles);
+        }
+
+        private static void _fillStartingPosition(IEnumerable<AVehicle> myVehicles)
+        {
+            foreach (var my in myVehicles)
+            {
+                var clone = new AVehicle(my);
+                clone.X = G.MapSize - clone.X;
+                clone.Y = G.MapSize - clone.Y;
+                clone.IsMy = !clone.IsMy;
+                clone.Id *= -1;
+
+                OppUncheckedVehicles[clone.Id] = clone;
+                _idsPool[(int) clone.Type].Add(clone.Id);
+            }
+        }
+
+        private static List<long>[] _idsPool = { new List<long>(), new List<long>(), new List<long>(), new List<long>(), new List<long>(), };
     }
 }

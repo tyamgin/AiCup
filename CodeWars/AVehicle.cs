@@ -229,6 +229,34 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool IsAlive => Durability > Const.Eps;
 
+        public double StealthFactor
+        {
+            get
+            {
+                if (IsAerial)
+                {
+                    var weather = MyStrategy.Weather(X, Y);
+                    if (weather == WeatherType.Cloud)
+                        return G.CloudWeatherStealthFactor;
+                    if (weather == WeatherType.Rain)
+                        return G.RainWeatherStealthFactor;
+                }
+                else
+                {
+                    var terrian = MyStrategy.Terrain(X, Y);
+                    if (terrian == TerrainType.Forest)
+                        return G.ForestTerrainStealthFactor;
+                }
+                return 1;
+            }
+        }
+
+        public bool IsVisible(AVehicle vehicle)
+        {
+            var visionRange = vehicle.ActualVisionRange * vehicle.StealthFactor;
+            return visionRange*visionRange + Const.Eps >= GetDistanceTo2(vehicle);
+        }
+
         public int GetAttackDamage(AVehicle veh, double additionalRadius = 0)
         {
             var damage = GetAttackDamage2(veh, additionalRadius);

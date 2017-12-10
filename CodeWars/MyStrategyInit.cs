@@ -47,7 +47,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             VehiclesObserver.Update();
             MoveObserver.Init();
-            Environment = new Sandbox(VehiclesObserver.Vehicles, nuclears, facilities) { TickIndex = World.TickIndex };
+            var prevEnv = Environment;
+            Environment = new Sandbox(VehiclesObserver.VehicleById.Values, nuclears, facilities) { TickIndex = World.TickIndex };
+            VehiclesObserver.Update2(prevEnv, Environment);
             OppClusters = Environment.GetClusters(false, Const.ClusteringMargin);
 
             NewGroupMinSize = (int)(Environment.MyVehicles.Count*44/500.0);
