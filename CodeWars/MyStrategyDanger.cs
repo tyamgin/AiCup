@@ -86,7 +86,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     res += RectanglesIntersects1*7000;
                     res += RectanglesIntersects2*1000;
                     res += MoveToSum/3;
-                    res += FacilitiesPointsDiff*4;
+                    res += FacilitiesPointsDiff*110;
                     res += MoveToFacilitySum*900;
                     return res;
                 }
@@ -323,7 +323,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             durabilityCoeff *= -1;
                         score = score*(cl.CountByType[oppType]+durabilityCoeff)*myRatio;
 
-                        var e = -(myAttack == 0 && dist > 120 || myAttack < oppAttack && dist > (type == VehicleType.Helicopter ? 350 : 140)
+                        var e = -(myAttack == 0 && dist > 100 || myAttack < oppAttack && dist > (type == VehicleType.Helicopter ? 350 : 140)
                             ? 0 
                             : DangerExp(dist));
 

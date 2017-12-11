@@ -63,7 +63,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Const.ClusteringMargin
                 );
 
-            NewGroupMinSize = Math.Min(22, (int)(Environment.MyVehicles.Count*44/500.0));
+            NewGroupMinSize = Math.Min(33, (int)(Environment.MyVehicles.Count*44/500.0));
 
             var newVehicles = Environment.MyVehicles.Where(x => x.Groups == 0).ToArray();
             
