@@ -84,6 +84,23 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _copyFrom(unit);
         }
 
+        public AVehicle(Point center, long id, VehicleType type, bool isMy)
+        {
+            Radius = G.VehicleRadius;
+            X = center.X;
+            Y = center.Y;
+            Id = id;
+
+            IsMy = isMy;
+            Type = type;
+            Durability = G.MaxDurability;
+            IsSelected = false;
+            RemainingAttackCooldownTicks = 0;
+            Groups = 0;
+            CanChargeFacility = !Utility.IsAerial(type);
+            DurabilityPool = 0;
+        }
+
         public double FullDurability => Durability + (double) DurabilityPool/G.ArrvRepairPoints;
 
         public void Repair()

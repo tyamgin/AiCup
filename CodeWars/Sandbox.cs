@@ -313,6 +313,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return res;
         }
 
+        public AVehicle GetFirstIntersector(ACircularUnit circle, bool isAerial)
+        {
+            for (var isMy = 0; isMy < 2; isMy++)
+            {
+                var nearby = _tree(isMy == 1, isAerial).FindFirstNearby(circle.X, circle.Y, Geom.Sqr(circle.Radius + G.VehicleRadius), -1);
+                if (nearby != null && nearby.IntersectsWith(circle))
+                    return nearby;
+            }
+            return null;
+        }
+
         public List<AVehicle> GetOpponentNeighbours(double x, double y, double radius)
         {
             var res = _tree(false, false).FindAllNearby(x, y, radius * radius, -1);

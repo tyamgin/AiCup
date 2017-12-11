@@ -164,6 +164,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(game.ClearWeatherStealthFactor, 1);
             _expect(game.PlainTerrainStealthFactor, 1);
 
+            _expect(game.ArrvProductionCost, G.ProductionCost[arrv]);
+            _expect(game.FighterProductionCost, G.ProductionCost[fighter]);
+            _expect(game.HelicopterProductionCost, G.ProductionCost[helicopter]);
+            _expect(game.IfvProductionCost, G.ProductionCost[ifv]);
+            _expect(game.TankProductionCost, G.ProductionCost[tank]);
+
             G.IsFacilitiesEnabled = world.Facilities.Length > 0;
             G.IsFogOfWarEnabled = game.IsFogOfWarEnabled;
             MixArrvsWithGrounds = !G.IsFacilitiesEnabled;
@@ -233,6 +239,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static readonly double[] MaxSpeed = {0.4, 1.2, 0.9, 0.4, 0.3};
 
         public static readonly double[] VisionRange = {60, 120, 100, 80, 80};
+
+        public static readonly int[] ProductionCost = {60, 90, 75, 60, 60};
 
         public static readonly Rect MapRect = new Rect {X = 0, Y = 0, X2 = MapSize, Y2 = MapSize};
     }

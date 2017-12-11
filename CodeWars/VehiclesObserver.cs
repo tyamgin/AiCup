@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Linq;
+using System.Windows.Forms;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
@@ -142,36 +144,39 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static void Update2(Sandbox prevEnv, Sandbox curEnv)
         {
-            if (!G.IsFogOfWarEnabled)
-                return;
-
-            foreach (var veh in OppUncheckedVehicles.Values.ToArray())
+            if (G.IsFogOfWarEnabled)
             {
-                if (_isVehicleVisible(curEnv, veh))
+                foreach (var veh in OppUncheckedVehicles.Values.ToArray())
                 {
-                    OppCheckedVehicles.Add(veh.Id, veh);
-                    OppUncheckedVehicles.Remove(veh.Id);
+                    if (_isVehicleVisible(curEnv, veh))
+                    {
+                        OppCheckedVehicles.Add(veh.Id, veh);
+                        OppUncheckedVehicles.Remove(veh.Id);
+                    }
                 }
+
+                foreach (var disappearedId in _disappearedIds)
+                {
+                    if (curEnv.VehicleById.ContainsKey(disappearedId))
+                        throw new Exception("Something wrong");
+
+                    var veh = prevEnv.VehicleById[disappearedId];
+                    if (_isVehicleVisible(curEnv, veh))
+                    {
+                        // убит
+                    }
+                    else
+                    {
+                        OppUncheckedVehicles[veh.Id] = veh;
+                    }
+                }
+
+                if (MyStrategy.World.TickIndex == 0)
+                    _fillStartingPosition(curEnv.MyVehicles);
             }
 
-            foreach (var disappearedId in _disappearedIds)
-            {
-                if (curEnv.VehicleById.ContainsKey(disappearedId))
-                    throw new Exception("Something wrong");
-
-                var veh = prevEnv.VehicleById[disappearedId];
-                if (_isVehicleVisible(curEnv, veh))
-                {
-                    // убит
-                }
-                else
-                {
-                    OppUncheckedVehicles[veh.Id] = veh;
-                }
-            }
-
-            if (MyStrategy.World.TickIndex == 0)
-                _fillStartingPosition(curEnv.MyVehicles);
+            if (MyStrategy.World.TickIndex > 0)
+                _facilitiesProduction(prevEnv, curEnv);
         }
 
         private static void _fillStartingPosition(IEnumerable<AVehicle> myVehicles)
@@ -186,6 +191,87 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 OppUncheckedVehicles[clone.Id] = clone;
                 _idsPool[(int) clone.Type].Add(clone.Id);
+            }
+        }
+
+        private static long _nextFreeId = 1001;
+
+        private static AVehicle _doFacilityProd(Sandbox env, AFacility facility)
+        {
+            var vehicleType = facility.VehicleType.Value;
+            var isMy = facility.IsMy;
+
+            var pt = new ACircularUnit();
+            pt.Radius = G.VehicleRadius;
+
+            for (var j = 0; j < 11; j++)
+            {
+                for (var i = 0; i < 11; i++)
+                {
+                    if (facility.IsMy)
+                    {
+                        pt.X = facility.X + i*6 + G.VehicleRadius;
+                        pt.Y = facility.Y + j*6 + G.VehicleRadius;
+                    }
+                    else
+                    {
+                        pt.X = facility.X2 - i*6 - G.VehicleRadius;
+                        pt.Y = facility.Y2 - j*6 - G.VehicleRadius;
+                    }
+
+                    var nearby = env.GetFirstIntersector(pt, Utility.IsAerial(vehicleType));
+                    if (nearby == null && !facility.IsMy)
+                    {
+                        nearby = OppUncheckedVehicles.Values
+                            .Where(x => Utility.IsAerial(x.Type) == Utility.IsAerial(vehicleType))
+                            .ArgMin(x => x.GetDistanceTo2(pt));
+                    }
+
+                    if (nearby == null || !nearby.IntersectsWith(pt) || nearby.Id == _nextFreeId && Geom.PointsEquals(nearby, pt))
+                    {
+                        return new AVehicle(pt, _nextFreeId++, vehicleType, isMy);
+                    }
+                }
+            }
+            return null;
+        }
+
+        private static void _facilitiesProduction(Sandbox prevEnv, Sandbox curEnv)
+        {
+            for (var i = 0; i < curEnv.Facilities.Length; i++)
+            {
+                var prevState = prevEnv.Facilities[i];
+                if (prevState.Type != FacilityType.VehicleFactory)
+                    continue;
+                var curState = curEnv.Facilities[i];
+
+                var type = prevState.VehicleType;
+                if (type != null && prevState.ProductionProgress == G.ProductionCost[(int) type] - 1
+                    && curState.VehicleType == type && prevState.IsMy == curState.IsMy)
+                {
+                    Logger.CumulativeOperationStart("Do production");
+                    var newVehicle = _doFacilityProd(curEnv, prevState);
+                    Logger.CumulativeOperationEnd("Do production");
+                    if (newVehicle != null)
+                    {
+                        if (curEnv.VehicleById.ContainsKey(newVehicle.Id))
+                        {
+                            var actualVehicle = curEnv.VehicleById[newVehicle.Id];
+                            if (!Geom.PointsEquals(actualVehicle, newVehicle) || actualVehicle.Type != newVehicle.Type || actualVehicle.IsMy != newVehicle.IsMy)
+                                Console.WriteLine("Vehicle production simulation error");
+                        }
+                        else
+                        {
+                            if (newVehicle.IsMy)
+                                Console.WriteLine("Vehicle production simulation error");
+                            else
+                            {
+                                if (G.IsFogOfWarEnabled)
+                                    OppUncheckedVehicles.Add(newVehicle.Id, newVehicle);
+                            }
+                        }
+                    }
+                } 
             }
         }
 
