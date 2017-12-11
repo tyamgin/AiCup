@@ -315,10 +315,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         {
                             AMovePresets.Scale(nuclear, 1.5),
                             AMovePresets.Scale(nuclear, 3.0),
-                            AMovePresets.Scale((Environment.VehicleById[nuclear.VehicleId] + nuclear) / 2, 2.0),
+                            Environment.VehicleById.ContainsKey(nuclear.VehicleId) ? AMovePresets.Scale((Environment.VehicleById[nuclear.VehicleId] + nuclear) / 2, 2.0) : null,
                         }))
                 {
-                    checkAction(move);
+					if (move != null)
+						checkAction(move);
                 }
 
                 checkAction(AMovePresets.Scale(typeRect.Center, 0.1));
