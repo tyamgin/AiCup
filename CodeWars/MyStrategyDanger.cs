@@ -172,7 +172,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var result = myVehicles.Sum(m =>
             {
                 var additionalRadius = m.ActualSpeed;
-                return env.GetOpponentFightNeighbours(m, G.MaxAttackRange + additionalRadius*5).DefaultIfEmpty(null)
+                return env.GetOpponentNeighbours(m.X, m.Y, G.MaxAttackRange + additionalRadius*5).DefaultIfEmpty(null)
                     .Max(
                         opp =>
                             opp == null

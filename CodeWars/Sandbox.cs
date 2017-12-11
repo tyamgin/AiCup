@@ -338,22 +338,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return res;
         }
 
-        public List<AVehicle> GetOpponentFightNeighbours(AVehicle veh, double radius)
-        {
-            if (veh.Type == VehicleType.Arrv)
-                return new List<AVehicle>();
-
-            var oppTree = _tree(!veh.IsMy, veh.IsAerial);
-            var oppTree2 = _tree(!veh.IsMy, !veh.IsAerial);
-
-            var nearestInteractors = oppTree.FindAllNearby(veh, radius*radius);
-
-            if (veh.Type != VehicleType.Fighter)
-                nearestInteractors.AddRange(oppTree2.FindAllNearby(veh, radius*radius));
-
-            return nearestInteractors;
-        }
-
         public void _doFight()
         {
             Utility.ResizeArray(ref _nearestFightersCacheDist, Vehicles.Length, double.MaxValue/2);

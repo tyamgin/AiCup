@@ -21,6 +21,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             for (var s = 0; s < GroupsManager.MyGroups.Count + MyUngroupedClusters.Count; s++)
             {
+                var availableActions = MoveObserver.AvailableActions;
+                if (Opp.RemainingNuclearStrikeCooldownTicks < 60 && Environment.Nuclears.Length == 0)
+                    availableActions -= 2;
+
                 MyGroup group;
                 List<AVehicle> newGroupVehicles = null;
                 if (s < GroupsManager.MyGroups.Count)
@@ -30,7 +34,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     newGroupVehicles = MyUngroupedClusters[s - GroupsManager.MyGroups.Count];
                     if (newGroupVehicles.Count < NewGroupMinSize)
                         continue;
-                    if (MoveObserver.AvailableActions < 3)
+                    if (availableActions < 3) // required: clear, move, assign
                         continue;
                     group = new MyGroup(GroupsManager.NextGroupId, newGroupVehicles[0].Type);
                 }
@@ -62,11 +66,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var needToSelectIds = Utility.UnitsHash(startEnv.GetVehicles(true, group));
 
                 List<AMove> selectionMoves = new List<AMove>();
-                var availableActions = MoveObserver.AvailableActions;
 
                 if (selectedIds != needToSelectIds)
                 {
-                    if (MoveObserver.AvailableActions < 2)
+                    if (availableActions < 2) // required: select, move
                     {
                         Logger.CumulativeOperationEnd("First env actions");
                         continue;
@@ -85,7 +88,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 selectionMoves.Add(new AMove { Action = ActionType.Deselect, Group = mg.Group });
                     }
 
-                    if (MoveObserver.AvailableActions < selectionMoves.Count + 1)
+                    if (availableActions < selectionMoves.Count + 1) // required: select, move, deselect all
                     {
                         Logger.CumulativeOperationEnd("First env actions");
                         continue;
