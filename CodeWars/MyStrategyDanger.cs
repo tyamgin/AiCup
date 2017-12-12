@@ -317,7 +317,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                         var score = myAttack - oppAttack*0.49;
                         if (type == VehicleType.Helicopter && oppType == (int) VehicleType.Fighter)
-                            score *= 2.0;
+                            score *= 2.5;
                         else if (type == VehicleType.Helicopter && oppType == (int)VehicleType.Arrv)
                             score *= 0.8;
 
