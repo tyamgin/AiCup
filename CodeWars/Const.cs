@@ -38,7 +38,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _expect(hungTest[0], -1);
             _expect(hungTest[1], 1);
             _expect(hungTest[2], 0);
-            
+
+            G.IsTopLeftStartingPosition = world.Players.Any(x => x.IsMe && x.Id == 1);
+
             _expect(world.Width, G.MapSize);
             _expect(world.Height, G.MapSize);
 
@@ -184,6 +186,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
     class G
     {
+        public static bool IsTopLeftStartingPosition;
         public const double MapSize = 1024;
         public const double CellSize = 32;
         public const int MaxUnitsCount = 1000;

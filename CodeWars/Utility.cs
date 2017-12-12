@@ -35,8 +35,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetCell(double x, double y, out int I, out int J)
         {
-            I = (int) ((x)/G.CellSize); // TODO: need Eps: http://russianaicup.ru/forum/index.php?topic=804.0
-            J = (int) ((y)/G.CellSize);
+            var i = x/G.CellSize;
+            var j = y/G.CellSize;
+
+            // see http://russianaicup.ru/forum/index.php?topic=804.0
+
+            if (!G.IsTopLeftStartingPosition && i.CompareTo((int) i) == 0)
+                I = (int) i - 1;
+            else
+                I = (int) i;
+
+            if (!G.IsTopLeftStartingPosition && j.CompareTo((int) j) == 0)
+                J = (int)j - 1;
+            else
+                J = (int)j;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
