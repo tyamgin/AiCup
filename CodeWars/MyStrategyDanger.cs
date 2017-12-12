@@ -349,7 +349,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var myAttack = G.AttackDamage[(int)type, (int)VehicleType.Fighter];
                         var oppAttack = G.AttackDamage[(int)VehicleType.Fighter, (int)type];
 
-                        var score = (myAttack - oppAttack * 0.49);
+                        var score = (myAttack - oppAttack * 0.49)*2.5;
                         score = score * fightersCount * myRatio;
                         var dist = cen.GetDistanceTo(helpGroupVehiclesCenter);
                         var distToFighter = Math.Sqrt(env.GetVehicles(false, VehicleType.Fighter).Min(x => x.GetDistanceTo2(cen)));
