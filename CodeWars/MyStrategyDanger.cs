@@ -315,7 +315,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var avg = Utility.Average(cl.VehicleType((VehicleType) oppType));
                         var dist = avg.GetDistanceTo(cen);
 
-                        var score = (myAttack - oppAttack*0.49);
+                        var score = myAttack - oppAttack*0.49;
+                        if (type == VehicleType.Helicopter && oppType == (int) VehicleType.Fighter)
+                            score *= 2.0;
+                        else if (type == VehicleType.Helicopter && oppType == (int)VehicleType.Arrv)
+                            score *= 0.8;
 
                         var maxDurability = cl.CountByType[oppType]*G.MaxDurability;
                         var durabilityCoeff = (maxDurability - cl.DurabilitySumByType[oppType])/G.MaxDurability;
