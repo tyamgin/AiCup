@@ -587,6 +587,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             {
                 if (!veh.CanChargeFacility)
                     continue;
+                if (!veh.IsMy) // HACK: из-за неоднозначного порядка захвата лучше вообще не моделировать действие соперника
+                    continue;
 
                 var facilityIdx = MyStrategy.FacilityIndex(veh.X, veh.Y);
                 if (facilityIdx != -1)

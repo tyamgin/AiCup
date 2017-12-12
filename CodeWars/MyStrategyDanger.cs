@@ -178,10 +178,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             opp == null
                                 ? 0
                                 : (opp.GetAttackDamage(m, additionalRadius) +
-                                   opp.GetAttackDamage(m, additionalRadius*2)/2 +
-                                   opp.GetAttackDamage(m, additionalRadius*3)/4 +
-                                   opp.GetAttackDamage(m, additionalRadius*4)/8 +
-                                   opp.GetAttackDamage(m, additionalRadius*5)/16
+                                   opp.GetAttackDamage(m, additionalRadius*2)/2.0 +
+                                   opp.GetAttackDamage(m, additionalRadius*3)/4.0 +
+                                   opp.GetAttackDamage(m, additionalRadius*4)/8.0 +
+                                   opp.GetAttackDamage(m, additionalRadius*5)/16.0
                                     )*
                                   (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
                                       ? Geom.Sqr(1.0*opp.Durability/G.MaxDurability)
