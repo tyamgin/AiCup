@@ -114,14 +114,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return new AMove {Action = ActionType.Rotate, Point = point, Angle = angle};
         }
 
-        public static AMove MoveTo(Point from, Point to)
+        public static AMove MoveTo(Point from, Point to, double maxSpeed = 0)
         {
-            return new AMove {Action = ActionType.Move, Point = to - from};
+            return new AMove {Action = ActionType.Move, Point = to - from, MaxSpeed = maxSpeed};
         }
 
-        public static AMove Move(Point vector)
+        public static AMove Move(Point vector, double maxSpeed = 0)
         {
-            return new AMove {Action = ActionType.Move, Point = vector};
+            return new AMove {Action = ActionType.Move, Point = vector, MaxSpeed = maxSpeed};
         }
     }
 }

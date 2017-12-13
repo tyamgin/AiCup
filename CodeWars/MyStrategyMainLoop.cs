@@ -9,6 +9,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         Tuple<AMove[], MyGroup, DangerResult> DoMainLoop(bool opt)
         {
+            _isSlowMode = _isSlowMode && Environment.OppVehicles.Count == 0;
             var baseTicksCount = Const.ActionsBruteforceDepth;
             if (Environment.Nuclears.Length > 0)
                 baseTicksCount *= 2;
@@ -50,6 +51,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     continue;
                 }
+
+                if (_isSlowMode && World.TickIndex < 300 && group.VehicleType == VehicleType.Helicopter)
+                    continue;
 
                 Logger.CumulativeOperationStart("First env actions");
 
@@ -287,25 +291,25 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     return danger.Score;
                 };
 
-                Func<int, AMove> idxToMove = idx => new AMove
-                {
-                    Action = ActionType.Move,
-                    Point =
-                        Point.ByAngle(2 * Math.PI / 12 * idx) *
-                        startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed) *
-                        ticksCount * 40,
-                    MaxSpeed = group.Group == GroupsManager.StartingTanksGroupId && Const.MixArrvsWithGrounds
-                        ? Math.Min(G.MaxSpeed[(int)VehicleType.Tank], G.MaxSpeed[(int)VehicleType.Arrv])
-                        : group.Group == GroupsManager.StartingIfvsGroupId && Const.MixArrvsWithGrounds
-                            ? Math.Min(G.MaxSpeed[(int)VehicleType.Ifv], G.MaxSpeed[(int)VehicleType.Arrv])
-                            : 0
-                };
-
                 var typeRectCenter = typeRect.Center;
-                bool simpleMode = Environment.Nuclears.Length == 0 && (
+                var simpleMode = Environment.Nuclears.Length == 0 && (
                     Environment.OppVehicles.Count == 0 ||
                     Environment.OppVehicles.Min(x => x.GetDistanceTo2(typeRectCenter)) > Geom.Sqr(120));
 
+                var moveMaxSpeed = _isSlowMode && Utility.IsAerial(group.VehicleType) ? G.MaxSpeed[(int) group.VehicleType] * 0.6 : 0; 
+
+                Func<int, AMove> idxToMove = idx => AMovePresets.Move(
+                    Point.ByAngle(2*Math.PI/12*idx)
+                    *startEnv.MyVehicles.Where(x => x.IsSelected).Max(x => x.ActualSpeed)
+                    *ticksCount*40,
+                    group.Group == GroupsManager.StartingTanksGroupId && Const.MixArrvsWithGrounds
+                        ? Math.Min(G.MaxSpeed[(int) VehicleType.Tank], G.MaxSpeed[(int) VehicleType.Arrv])
+                        : group.Group == GroupsManager.StartingIfvsGroupId && Const.MixArrvsWithGrounds
+                            ? Math.Min(G.MaxSpeed[(int) VehicleType.Ifv], G.MaxSpeed[(int) VehicleType.Arrv])
+                            : moveMaxSpeed
+                    );
+
+                
                 double[] dangers;
                 if (simpleMode)
                 {
@@ -367,7 +371,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 foreach (var move in
                     positiveInteractors.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
                         .Take(2)
-                        .Select(cen => AMovePresets.MoveTo(typeRect.Center, cen)))
+                        .Select(cen => AMovePresets.MoveTo(typeRect.Center, cen, moveMaxSpeed)))
                 {
                     checkAction(move);
                 }
@@ -375,14 +379,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 foreach (var move in
                     negativeInteractors.OrderBy(cen => cen.GetDistanceTo2(typeRect.Center))
                         .Take(1)
-                        .Select(cen => AMovePresets.Move((typeRect.Center - cen).Take(150))))
+                        .Select(cen => AMovePresets.Move((typeRect.Center - cen).Take(150), moveMaxSpeed)))
                 {
                     checkAction(move);
                 }
 
                 if (targetFacilities.ContainsKey(group.Group))
                 {
-                    checkAction(AMovePresets.MoveTo(typeRect.Center, targetFacilities[group.Group]));
+                    checkAction(AMovePresets.MoveTo(typeRect.Center, targetFacilities[group.Group], moveMaxSpeed));
                 }
 
                 // проверка действия "ничего не делать"
@@ -401,7 +405,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (arrvGroupsCenters.Length > 0)
                     {
                         checkAction(AMovePresets.MoveTo(typeRect.Center,
-                            arrvGroupsCenters.ArgMin(p => p.GetDistanceTo2(typeRect.Center))));
+                            arrvGroupsCenters.ArgMin(p => p.GetDistanceTo2(typeRect.Center)), moveMaxSpeed));
                     }
                 }
             }
@@ -409,5 +413,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return new Tuple<AMove[], MyGroup, DangerResult>(selMoves, selGroup, selDanger);
         }
 
+
+        private bool _isSlowMode = true;
     }
 }
