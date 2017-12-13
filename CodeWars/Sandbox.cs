@@ -646,8 +646,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public bool DoMoveApprox(AVehicle[] Vehicles, bool moveApprox)
         {
+            var result = true;
             if (moveApprox)
             {
+                Logger.CumulativeOperationStart("DoMoveA");
                 for (var i = 0; i < Vehicles.Length; i++)
                 {
                     var veh = Vehicles[i];
@@ -666,10 +668,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             Vehicles[j].CopyFrom(_prevStateCache[j]);
                             _updateVehicleCoordinates(Vehicles[j], prevX, prevY);
                         }
-                        return false;
+                        result = false;
+                        break;
                     }
                     _updateVehicleCoordinates(veh, _prevStateCache[i].X, _prevStateCache[i].Y);
                 }
+                Logger.CumulativeOperationEnd("DoMoveA");
             }
             else
             {
@@ -677,7 +681,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 _doMove1(Vehicles);
                 Logger.CumulativeOperationEnd("DoMove1");
             }
-            return true;
+            return result;
         }
 
         public void DoTicksApprox(int ticksCount, bool moveApprox, bool fightApprox)

@@ -42,10 +42,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (opt && !(
                     Environment.Nuclears.Length > 0 ||
                     Environment.Facilities.Length <= 4 ||
-                    World.TickIndex < 3000 ||
+                    World.TickIndex < 2500 ||
                     MoveObserver.MaxAvailableActions <= 12 ||
                     _doMainLastGroup != null && _doMainLastGroup.Group == group.Group || // ходил предыдущий раз
-                    group.Group % 2 == _doMainsCount % 2 // через раз
+                    (newGroupVehicles == null && group.Group % 2 == _doMainsCount % 2 || newGroupVehicles != null && group.Group % 3 == _doMainsCount % 3) // через раз/два
                     ))
                 {
                     continue;
@@ -301,13 +301,27 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             : 0
                 };
 
-                // проверка на каждые 2 часа
-                var dangers = Enumerable.Range(0, 6).Select(i => checkAction(idxToMove(i * 2))).ToArray();
+                var typeRectCenter = typeRect.Center;
+                bool simpleMode = Environment.Nuclears.Length == 0 && (
+                    Environment.OppVehicles.Count == 0 ||
+                    Environment.OppVehicles.Min(x => x.GetDistanceTo2(typeRectCenter)) > Geom.Sqr(120));
 
-                // проверка на середины лучших промежутков
-                var dangers2 = dangers.Select((x, i) => new Tuple<double, int>(x, i)).OrderBy(x => x.Item1).Select(x => x.Item2).Take(2).ToArray();
-                foreach (var i in dangers2.Select(i => i * 2 + 1).Concat(dangers2.Select(i => i * 2 - 1)).Distinct())
-                    checkAction(idxToMove(i));
+                double[] dangers;
+                if (simpleMode)
+                {
+                   // проверка на каждые 3 часа
+                   dangers = Enumerable.Range(0, 4).Select(i => checkAction(idxToMove(i * 3))).ToArray();
+                }
+                else
+                {
+                    // проверка на каждые 2 часа
+                    dangers = Enumerable.Range(0, 6).Select(i => checkAction(idxToMove(i * 2))).ToArray();
+
+                    // проверка на середины лучших промежутков
+                    var dangers2 = dangers.Select((x, i) => new Tuple<double, int>(x, i)).OrderBy(x => x.Item1).Select(x => x.Item2).Take(2).ToArray();
+                    foreach (var i in dangers2.Select(i => i * 2 + 1).Concat(dangers2.Select(i => i * 2 - 1)).Distinct())
+                        checkAction(idxToMove(i));
+                }
 
                 foreach (var move in
                     Environment.Nuclears
