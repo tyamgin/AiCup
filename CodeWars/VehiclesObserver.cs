@@ -238,6 +238,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private static void _facilitiesProduction(Sandbox prevEnv, Sandbox curEnv)
         {
+            var newVehiclesList = new List<AVehicle>();
             for (var i = 0; i < curEnv.Facilities.Length; i++)
             {
                 var prevState = prevEnv.Facilities[i];
@@ -254,6 +255,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     Logger.CumulativeOperationEnd("Do production");
                     if (newVehicle != null)
                     {
+                        newVehiclesList.Add(newVehicle);
                         if (curEnv.VehicleById.ContainsKey(newVehicle.Id))
                         {
                             var actualVehicle = curEnv.VehicleById[newVehicle.Id];
@@ -263,7 +265,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         else
                         {
                             if (newVehicle.IsMy)
-                                Console.WriteLine("Vehicle production simulation error");
+                                Console.WriteLine("Vehicle production simulation error (my)");
                             else
                             {
                                 if (G.IsFogOfWarEnabled)
