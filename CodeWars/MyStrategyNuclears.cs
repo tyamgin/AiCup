@@ -52,7 +52,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 var vrg = G.VisionRange[(int) VehicleType.Fighter] + G.MaxTacticalNuclearStrikeDamage;
 
                 var oppGroups = OppClusters
-                    .Where(cl => cl.Avg.GetDistanceTo(myAvg) < vrg)
+                    .Where(cl =>
+                        cl.Avg.GetDistanceTo(myAvg) < vrg
+                        && cl.Any(x => env.VehicleById.ContainsKey(x.Id)))// пропускать полностью фантомные группы
                     .OrderBy(cl => cl.Avg.GetDistanceTo(myAvg))
                     .Take(3)
                     .ToArray();
