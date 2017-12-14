@@ -172,22 +172,30 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var result = myVehicles.Sum(m =>
             {
                 var additionalRadius = m.ActualSpeed;
-                return env.GetOpponentNeighbours(m.X, m.Y, G.MaxAttackRange + additionalRadius*5).DefaultIfEmpty(null)
-                    .Max(
-                        opp =>
-                            opp == null
-                                ? 0
-                                : (opp.GetAttackDamage(m, additionalRadius) +
-                                   opp.GetAttackDamage(m, additionalRadius*2)/2.0 +
-                                   opp.GetAttackDamage(m, additionalRadius*3)/4.0 +
-                                   opp.GetAttackDamage(m, additionalRadius*4)/8.0 +
-                                   opp.GetAttackDamage(m, additionalRadius*5)/16.0
-                                    )*
-                                  (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
-                                      ? Geom.Sqr(1.0*opp.Durability/G.MaxDurability)
-                                      : 1)*
-                                  (m.Type == opp.Type ? 0.6 : 1)
-                    );
+                const int radiusFactor = 5;
+                return env.GetOpponentNeighbours(m.X, m.Y, G.MaxAttackRange + additionalRadius*radiusFactor).DefaultIfEmpty(null)
+                    .Max(opp =>
+                    {
+                        if (opp == null)
+                            return 0;
+                        var dmg = opp.GetAttackDamage(m, additionalRadius*radiusFactor);
+                        if (dmg == 0)
+                        {
+                            return
+                                -(m.GetAttackDamage(opp, additionalRadius) +
+                                  m.GetAttackDamage(opp, additionalRadius*radiusFactor)/2.0);
+                        }
+                        return (opp.GetAttackDamage(m, additionalRadius) +
+                                opp.GetAttackDamage(m, additionalRadius*2)/2.0 +
+                                opp.GetAttackDamage(m, additionalRadius*3)/4.0 +
+                                opp.GetAttackDamage(m, additionalRadius*4)/8.0 +
+                                dmg/16.0
+                            )*
+                               (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
+                                   ? Geom.Sqr(1.0*opp.Durability/G.MaxDurability)
+                                   : 1)*
+                               (m.Type == opp.Type ? 0.6 : 1);
+                    });
             });
             Logger.CumulativeOperationEnd("Danger0");
             return result;

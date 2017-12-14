@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var myFighters = Environment.GetVehicles(true, VehicleType.Fighter).Count;
             var oppFighters = Environment.GetVehicles(false, VehicleType.Fighter).Count;
 
-            var nearest = Environment.OppVehicles.ArgMin(x => x.GetDistanceTo2(factory.Center));
+            var nearest = Environment.OppVehicles.Concat(VehiclesObserver.OppUncheckedVehicles.Values).ArgMin(x => x.GetDistanceTo2(factory.Center));
             if (nearest?.Type == VehicleType.Fighter && factory.Center.GetDistanceTo(nearest) < 200)
             {
                 requiredType = VehicleType.Ifv;

@@ -414,6 +414,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
 
-        private bool _isSlowMode = true;
+        private bool _isSlowMode = false;
     }
 }
