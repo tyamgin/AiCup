@@ -154,6 +154,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     return;
                 }
 
+                Logger.CumulativeOperationStart("Unstuck");
+                var unstuckMove = GetUnstuckMove();
+                Logger.CumulativeOperationEnd("Unstuck");
+                if (unstuckMove != null)
+                {
+                    Console.WriteLine("Unstuck");
+                    ResultingMove = unstuckMove[0];
+                    for (var i = 1; i < unstuckMove.Length; i++)
+                        MoveQueue.Add(unstuckMove[i]);
+                    return;
+                }
+
                 var mainNew = DoMainLoop(true);
                 _doMainsCount++;
                 _doMainLastGroup = mainNew.Item2;

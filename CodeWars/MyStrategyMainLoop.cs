@@ -415,5 +415,48 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
 
         private bool _isSlowMode = false;
+
+        public AMove[] GetUnstuckMove()
+        {
+            var availableActions = MoveObserver.AvailableActions;
+            if (Opp.RemainingNuclearStrikeCooldownTicks < 60 && Environment.Nuclears.Length == 0)
+                availableActions -= 2;
+
+            if (availableActions < 2)
+                return null;
+
+            foreach (var cl in MyUngroupedClusters)
+            {
+                foreach (var type in Const.AllTypes)
+                {
+                    if (cl.CountByType[(int) type] < 5)
+                        continue;
+
+                    foreach (var group in GroupsManager.MyGroups)
+                    {
+                        if (group.VehicleType == type)
+                        {
+                            var br = Utility.BoundingRect(Environment.GetVehicles(true, group));
+                            br.ExtendRadius(G.VehicleRadius);
+                            var bu = cl.BoundingRect.Clone();
+                            bu.ExtendRadius(G.VehicleRadius);
+                            if (br.IntersectsWith(bu))
+                            {
+                                if (cl.Count == Environment.MyVehicles.Count(
+                                    x => x.Type == type && !x.IsGroup(group) && cl.BoundingRect.ContainsPoint(x)))
+                                {
+                                    return new[]
+                                    {
+                                        AMovePresets.ClearAndSelectType(type, cl.BoundingRect),
+                                        AMovePresets.AssignGroup(group.Group),
+                                    };
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
     }
 }
