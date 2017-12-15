@@ -269,7 +269,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             else
                             {
                                 if (G.IsFogOfWarEnabled)
-                                    OppUncheckedVehicles.Add(newVehicle.Id, newVehicle);
+                                    OppUncheckedVehicles[newVehicle.Id] = newVehicle;
                             }
                         }
                     }
