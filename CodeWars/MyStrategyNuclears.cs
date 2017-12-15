@@ -117,9 +117,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         AMove _nuclearStrategy()
         {
-            var countMultiplier = Environment.OppVehicles.Count
+            var countMultiplier = Math.Min(500, Environment.OppVehicles.Count
                 + VehiclesObserver.OppUncheckedVehicles.Count*0.85 
-                + VehiclesObserver.OppCheckedVehicles.Count*0.75;
+                + VehiclesObserver.OppCheckedVehicles.Count*0.75);
 
             var damageBound2 = 8000.0*countMultiplier/500;
             var damageBound1 = 3000.0*countMultiplier/500;
