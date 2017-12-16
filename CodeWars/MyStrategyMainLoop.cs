@@ -109,9 +109,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Logger.CumulativeOperationEnd("First env actions");
 
                 // availableActions теперь - это сколько действий останется после выполнения текущего тика
-                // должно остаться хотябы 2, или 1, если обладатель ядерки selected
+                // должно остаться хотябы 2, или 0, если обладатель ядерки selected
                 var myNuclear = startEnv.Nuclears.FirstOrDefault(n => n.IsMy);
-                if (myNuclear != null && availableActions < 2 - (startEnv.VehicleById.ContainsKey(myNuclear.VehicleId) && startEnv.VehicleById[myNuclear.VehicleId].IsSelected ? 1 : 0))
+                if (myNuclear != null && availableActions < 2 - (startEnv.VehicleById.ContainsKey(myNuclear.VehicleId) && startEnv.VehicleById[myNuclear.VehicleId].IsSelected ? 2 : 0))
                     continue;
 
                 var typeRect = Utility.BoundingRect(startEnv.GetVehicles(true, group));

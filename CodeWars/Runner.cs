@@ -10,7 +10,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
 
         public static void Main(string[] args) {
 #if DEBUG
-            Process.Start("G:\\Projects\\AiCup\\CodeWars\\local_runner\\local-runner-sync.bat");
+            //Process.Start("G:\\Projects\\AiCup\\CodeWars\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(2000);
 
             var otherStrategy = new Process
@@ -22,7 +22,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
                     CreateNoWindow = true
                 }
             };
-            otherStrategy.Start();
+            //otherStrategy.Start();
             Thread.Sleep(100);
 #endif
 
