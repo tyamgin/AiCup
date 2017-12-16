@@ -63,7 +63,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Const.ClusteringMargin
                 );
 
-            if (!G.IsAerialButerDetected && World.TickIndex < 1000 && OppClusters.Count < 20)
+            if (!G.IsAerialButerDetected && World.TickIndex < 1500 && OppClusters.Count < 20)
             {
                 foreach (var cl1 in OppClusters)
                 {
