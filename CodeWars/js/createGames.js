@@ -1,9 +1,9 @@
 // запускать на http://russianaicup.ru/game/create
 var name = 'tyamgin';
-var names = "GreenTea,mixei4,morozec,ud1,oreshnik,selya_,MucmuK,Adler,dbf".split(',');
+var names = "GreenTea,Milanin,mixei4,morozec,oreshnik,Leos,stem,TonyK,spacistor,TouchAI,Adler".split(',');
 
 var interval = 21 * 60 * 1000;
-var gamesPerInterval = 4;
+var gamesPerInterval = 5;
 
 for(var i = 0; i < 1000; i += gamesPerInterval) {
     for (var j = 0; j < gamesPerInterval; j++) {
@@ -15,7 +15,12 @@ for(var i = 0; i < 1000; i += gamesPerInterval) {
             form.attr('target', '_blank');
 
             setTimeout(function() {
-                form.submit();
+                $.ajax({
+                    type: "POST",
+                    url: location.href,
+                    data: form.serialize(),
+                    dataType: "json"
+                });
                 setTimeout(function() {
                     $('#participant1').val('');
                     $('#participant2').val('');
