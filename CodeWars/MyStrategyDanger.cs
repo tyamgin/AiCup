@@ -204,6 +204,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public static DangerResult GetDanger(Sandbox startEnv, Sandbox env, List<MyGroup> myGroups, List<VehiclesCluster> myUngroups, double sumMaxAlmostAttacksCache = -1)
         {
+            var fighters = env.GetVehicles(false, VehicleType.Fighter)
+                .Concat(VehiclesObserver.OppUncheckedVehicles.Values.VehicleType(VehicleType.Fighter))
+                .ToArray();
+
+            var fightersCount = fighters.Length
+                                + VehiclesObserver.OppCheckedVehicles.Count(x => x.Value.Type == VehicleType.Fighter)*0.75;
+
             ExpB = Math.Log(ExpY1/ExpY2) / (ExpX2 - ExpX1);
             ExpA = ExpY1/Math.Exp(-ExpB*ExpX1);
 
@@ -348,8 +355,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     if (type == VehicleType.Helicopter && helpGroup.VehicleType == VehicleType.Ifv)
                     {
-                        var fightersCount = env.GetVehicles(false, VehicleType.Fighter).Count;
-                        if (fightersCount == 0)
+                        if (fightersCount < 1 || fighters.Length == 0)
                             continue;
 
                         var helpGroupVehicles = env.GetVehicles(true, helpGroup);
@@ -361,7 +367,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         var score = (myAttack - oppAttack * 0.49)*2.5;
                         score = score * fightersCount * myRatio;
                         var dist = cen.GetDistanceTo(helpGroupVehiclesCenter);
-                        var distToFighter = Math.Sqrt(env.GetVehicles(false, VehicleType.Fighter).Min(x => x.GetDistanceTo2(cen)));
+                        var distToFighter = Math.Sqrt(fighters.Min(x => x.GetDistanceTo2(cen)));
                         const double n = 400;
                         var coef = Math.Max(0, (n - distToFighter)/n);
 
