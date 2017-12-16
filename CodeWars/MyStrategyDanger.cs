@@ -194,7 +194,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                (G.AttackDamage[(int) m.Type, (int) opp.Type] > 0
                                    ? Geom.Sqr(1.0*opp.Durability/G.MaxDurability)
                                    : 1)*
-                               (m.Type == opp.Type ? 0.6 : 1);
+                               (m.Type == opp.Type ? 0.6 : 1)*
+                               (G.IsAerialButerDetected && opp.Type == VehicleType.Fighter ? 3 : 1);
                     });
             });
             Logger.CumulativeOperationEnd("Danger0");

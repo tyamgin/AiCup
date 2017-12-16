@@ -63,6 +63,28 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Const.ClusteringMargin
                 );
 
+            if (!G.IsAerialButerDetected && World.TickIndex < 1000 && OppClusters.Count < 20)
+            {
+                foreach (var cl1 in OppClusters)
+                {
+                    if (cl1.CountByType[(int) VehicleType.Fighter] > 30)
+                    {
+                        foreach (var cl2 in OppClusters)
+                        {
+                            if (cl2.CountByType[(int) VehicleType.Helicopter] > 30)
+                            {
+                                var inter = cl1.BoundingRect.IntersectionWith(cl2.BoundingRect);
+                                if (inter != null && inter.Area >= cl1.BoundingRect.Area*0.7)
+                                {
+                                    G.IsAerialButerDetected = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             NewGroupMinSize = Math.Min(33, (int)(Environment.MyVehicles.Count*44/500.0));
 
             var newVehicles = Environment.MyVehicles.Where(x => x.Groups == 0).ToArray();

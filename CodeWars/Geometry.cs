@@ -320,6 +320,20 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return Geom.Intersect1D(X, X2, rect.X, rect.X2) && Geom.Intersect1D(Y, Y2, rect.Y, rect.Y2);
         }
 
+        public Rect IntersectionWith(Rect rect)
+        {
+            if (!IntersectsWith(rect))
+                return null;
+
+            return new Rect
+            {
+                X = Math.Max(X, rect.X),
+                Y = Math.Max(Y, rect.Y),
+                X2 = Math.Min(X2, rect.X2),
+                Y2 = Math.Min(Y2, rect.Y2)
+            };
+        }
+
         public double Area => Width*Height;
 
         public Rect[] SplitVertically()

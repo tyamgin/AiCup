@@ -220,6 +220,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public const double CloudWeatherStealthFactor = 0.8;
         public const double ForestTerrainStealthFactor= 0.6;
 
+        public static bool IsAerialButerDetected;
+
         public static readonly int[,] AttackDamage = new int[5, 5]
         {
             //  Arrv Fighter Helicopter Ifv Tank
