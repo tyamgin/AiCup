@@ -7,7 +7,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        double asdf(AVehicle veh, Sandbox env, double lowerBound, List<AVehicle> targets, out ANuclear nuclearResult)
+        public AMove NuclearStrategy()
+        {
+            AMove result = null;
+            if (Me.RemainingNuclearStrikeCooldownTicks == 0)
+            {
+                Logger.CumulativeOperationStart("NuclearStrategy");
+                result = _nuclearStrategy();
+                Logger.CumulativeOperationEnd("NuclearStrategy");
+            }
+            return result;
+        }
+
+        private double _nuclearGetDamage(AVehicle veh, Sandbox env, double lowerBound, List<AVehicle> targets, out ANuclear nuclearResult)
         {
             var vr = veh.ActualVisionRange * 0.9;
             var cen = Utility.Average(targets);
@@ -26,19 +38,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return totalDamage;
         }
 
-        AMove NuclearStrategy()
-        {
-            AMove result = null;
-            if (Me.RemainingNuclearStrikeCooldownTicks == 0)
-            {
-                Logger.CumulativeOperationStart("NuclearStrategy");
-                result = _nuclearStrategy();
-                Logger.CumulativeOperationEnd("NuclearStrategy");
-            }
-            return result;
-        }
-
-        Tuple<double, AMove> fnd(Sandbox env, double selTotalDamage, bool checkOnly)
+        private Tuple<double, AMove> _nuclearFindMove(Sandbox env, double selTotalDamage, bool checkOnly)
         {
             AMove selMove = null;
 
@@ -73,7 +73,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                             new[] {env.GetOpponentNeighbours(veh.X, veh.Y, vr + G.TacticalNuclearStrikeRadius)}.Concat(oppGroups))
                     {
                         ANuclear nuclear;
-                        var totalDamage = asdf(veh, env, selTotalDamage, oppGroup, out nuclear);
+                        var totalDamage = _nuclearGetDamage(veh, env, selTotalDamage, oppGroup, out nuclear);
 
                         if (totalDamage <= selTotalDamage)
                             continue;
@@ -115,7 +115,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return new Tuple<double, AMove>(selTotalDamage, selMove);
         }
 
-        AMove _nuclearStrategy()
+        private AMove _nuclearStrategy()
         {
             var countMultiplier = Math.Min(500, Environment.OppVehicles.Count
                 + VehiclesObserver.OppUncheckedVehicles.Count*0.85 
@@ -124,7 +124,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var damageBound2 = 8000.0*countMultiplier/500;
             var damageBound1 = 3000.0*countMultiplier/500;
 
-            var cur = fnd(Environment, damageBound1, false);
+            var cur = _nuclearFindMove(Environment, damageBound1, false);
             if (cur == null)
             {
                 _prevNuclearTotalDamage = 0;
@@ -150,7 +150,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             var env = Environment.Clone();
             env.DoTick(fight: false);
 
-            var next = fnd(env, cur.Item1, true);
+            var next = _nuclearFindMove(env, cur.Item1, true);
             if (next == null)
             {
                 _prevNuclearTotalDamage = 0;

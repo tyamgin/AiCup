@@ -1,6 +1,5 @@
-using System;
-
-namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model {
+namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model
+{
     public partial class Move {
         private ActionType? action;
         private int group;

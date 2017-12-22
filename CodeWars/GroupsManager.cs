@@ -15,7 +15,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private static int _firstFreeId;
 
         public static List<MyGroup> MyGroups = new List<MyGroup>();
-        private static List<MyGroup> _pendingGroups = new List<MyGroup>();
+        private static readonly List<MyGroup> _pendingGroups = new List<MyGroup>();
 
         public static void Update(Sandbox env)
         {

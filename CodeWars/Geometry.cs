@@ -1,5 +1,6 @@
 ﻿using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -9,10 +10,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
     {
         public double X, Y;
 
-        public double Length
-        {
-            get { return Math.Sqrt(X * X + Y * Y); }
-        }
+        public double Length => Math.Sqrt(X * X + Y * Y);
 
 
         /// <summary>
@@ -138,7 +136,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         /// <summary>
         /// Расстояние до юнита 
         /// </summary>
-        /// <param name="point"></param>
+        /// <param name="unit"></param>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDistanceTo(Unit unit)
@@ -176,7 +174,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         public override string ToString()
         {
-            return "(" + X.ToString().Replace(',', '.') + ", " + Y.ToString().Replace(',', '.') + ")";
+            return "(" + X.ToString(CultureInfo.InvariantCulture) + ", " + Y.ToString(CultureInfo.InvariantCulture) + ")";
         }
 
         public int CompareTo(Point other)
@@ -413,8 +411,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 return 0;
             return x < 0 ? -1 : 1;
         }
-
-
 
         public static bool Intersect1D(double a, double b, double c, double d)
         {

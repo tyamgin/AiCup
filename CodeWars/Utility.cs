@@ -8,24 +8,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public class Utility
     {
-        public static double EnsureInterval(double x, double left, double right)
-        {
-            if (x < left)
-                x = left;
-            if (x > right)
-                x = right;
-            return x;
-        }
-
-        public static double EnsureInterval(double x, double right)
-        {
-            if (x < -right)
-                x = -right;
-            if (x > right)
-                x = right;
-            return x;
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Equals(double x, double y)
         {
@@ -49,21 +31,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 J = (int)j - 1;
             else
                 J = (int)j;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Dec(ref int value)
-        {
-            if (value > 0)
-                value--;
-        }
-
-        public static IEnumerable<double> Range(double min, double max, int segments, bool rightInclusive = true)
-        {
-            for (var i = 0; i < segments; i++)
-                yield return (max - min)/segments*i + min;
-            if (rightInclusive)
-                yield return max;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -204,16 +171,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 idx++;
             }
             return res;
-        }
-
-        public static long MinimalExcluded(this IEnumerable<long> ie, long startingValue)
-        {
-            var set = new HashSet<long>();
-            foreach (var x in ie)
-                set.Add(x);
-            while (set.Contains(startingValue))
-                startingValue++;
-            return startingValue;
         }
     }
 

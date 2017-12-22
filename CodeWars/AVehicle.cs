@@ -21,7 +21,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public double MoveLengthOrRotationAngle;
         public int DurabilityPool;
 
-        public int Index; //
+        public int Index; // служебное свойство
 
         public AVehicle(Vehicle unit) : base(unit)
         {

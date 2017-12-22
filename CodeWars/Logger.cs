@@ -51,8 +51,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 #endif
         }
 
-        private static Dictionary<string, Stopwatch> _tickTimers = new Dictionary<string, Stopwatch>();
-        private static Dictionary<string, long> _timesSum = new Dictionary<string, long>();
+        private static readonly Dictionary<string, Stopwatch> _tickTimers = new Dictionary<string, Stopwatch>();
+        private static readonly Dictionary<string, long> _timesSum = new Dictionary<string, long>();
 
         public static void CumulativeOperationStart(string key)
         {

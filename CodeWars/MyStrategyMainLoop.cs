@@ -142,10 +142,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                                 if (pgr.Length > 0)
                                     partialEnv.DoMoveApprox(pgr, pgr[0].Action != AVehicle.MoveType.Scale);
                             }
-                            partialEnv._doFacilities();
-                            partialEnv._doNuclears();
+                            partialEnv.DoFacilities();
+                            partialEnv.DoNuclears();
                         }
-                        partialEnv._doFight();
+                        partialEnv.DoFight();
 
                         sumMaxAlmostAttacksCache = GetSumMaxAlmostAttacks(partialEnv, partialEnv.MyVehicles);
                     }

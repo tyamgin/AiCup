@@ -18,7 +18,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static readonly List<HistoryItem> History = new List<HistoryItem>();
         public static int MaxAvailableActions;
         public static int AvailableActions;
-        public static double Rate;
 
         public static void Init()
         {
@@ -26,7 +25,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 x => x.Type == FacilityType.ControlCenter &&
                      x.OwnerPlayerId == MyStrategy.Me.Id)*G.AdditionalActionCountPerControlCenter;
             AvailableActions = MaxAvailableActions;
-            Rate = 0;
 
             var tick = MyStrategy.World.TickIndex;
 
@@ -36,12 +34,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 if (historyItem.TickIndex <= tick - G.ActionDetectionInterval)
                     break;
                 AvailableActions--;
-                Rate += (historyItem.TickIndex - (tick - G.ActionDetectionInterval)) / (G.ActionDetectionInterval - 1.0);
             }
-            Rate /= MaxAvailableActions;
-
-            //Logger.Log("----------------------- Rate: " + Rate);
-            //Logger.Log("----------------------- Actions: " + AvailableActions);
         }
 
         public static void Update()

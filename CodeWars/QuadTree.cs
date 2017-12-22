@@ -702,6 +702,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
 
         #region Public Members
+        public int Count = 0;
+
         public QuadTree(double left, double top, double right, double bottom, double epsilon, Func<T, T> cloneFunc = null)
         {
             this._left = left;
@@ -792,18 +794,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasNearby(T value, double squaredDistance)
-        {
-            return FindFirstNearby(value, squaredDistance) != null;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasNearby(double x, double y, double squaredDistance)
-        {
-            return FindFirstNearby(x, y, squaredDistance, -1) != null;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
             _clear(_root);
@@ -842,8 +832,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         {
             return GetEnumerator();
         }
-
-        public int Count = 0;
 
         public class PointAlreadyExistsException : Exception
         {

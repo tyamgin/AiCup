@@ -6,13 +6,6 @@ using System.Globalization;
 using System.Linq;
 using System.Threading;
 
-/**
- * TODO:
- * - ядерка: учитывать уклонения
- * - ядерка: scale от последствий ядерки в той же точке
- * - объединение групп (застревают на фабриках)
- */
-
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy : IStrategy
@@ -28,7 +21,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         public static List<VehiclesCluster> OppClusters;
         public static List<VehiclesCluster> MyUngroupedClusters;
 
-        Stopwatch _globalTimer = new Stopwatch();
+        private readonly Stopwatch _globalTimer = new Stopwatch();
         private int _myLastScore;
         private int _oppLastScore;
 
@@ -104,7 +97,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private int _doMainsCount = 0;
         private MyGroup _doMainLastGroup;
-        private Dictionary<int, Tuple<int, AMove>> _doMainLastUnscale = new Dictionary<int, Tuple<int, AMove>>();
+        private readonly Dictionary<int, Tuple<int, AMove>> _doMainLastUnscale = new Dictionary<int, Tuple<int, AMove>>();
 
         private void _move(Game game)
         {
@@ -127,24 +120,11 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (GroupsManager.MyGroups.Count == 0)
                 return;
 
-            //if (World.TickIndex == 200)
-            //{
-            //    var avg = Utility.Average(Environment.GetVehicles(true, VehicleType.Ifv));
-            //    var ifv = Environment.GetVehicles(true, VehicleType.Ifv).ArgMin(x => x.GetDistanceTo2(avg));
-            //    ResultingMove = new AMove {Action = ActionType.TacticalNuclearStrike, VehicleId = ifv.Id, Point = ifv};
-            //    return;
-            //}
-            //if (World.TickIndex == 231)
-            //{
-            //    var sum = Environment.MyVehicles.Sum(x => x.Durability);
-            //    sum = sum;
-            //}
-
             var actionsBaseInterval = MoveObserver.ActionsBaseInterval;
             if (MyUngroupedClusters.Any(x => x.Count >= NewGroupMinSize))
                 actionsBaseInterval++;
             if (World.TickIndex % actionsBaseInterval == 0 
-                || MoveObserver.AvailableActions >= 4 && FirstMovesComplete && World.TickIndex >= _noMoveLastTick + actionsBaseInterval
+                || MoveObserver.AvailableActions >= 4 && FirstMovesCompleted && World.TickIndex >= _noMoveLastTick + actionsBaseInterval
                 || Environment.Nuclears.Any(x => x.RemainingTicks >= G.TacticalNuclearStrikeDelay - 2))
             {
                 var nuclearMove = NuclearStrategy();
@@ -201,7 +181,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
             if (ResultingMove == null || ResultingMove.Action == null || ResultingMove.Action == ActionType.None)
             {
-                if (FirstMovesComplete)
+                if (FirstMovesCompleted)
                 {
                     var facilitiesMove = FacilitiesStrategy();
                     if (facilitiesMove != null)

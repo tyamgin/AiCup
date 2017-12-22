@@ -123,9 +123,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Visualizer
             panel.Image = drawArea;
             _graphics = Graphics.FromImage(drawArea);
 
-            // туман войны
-            // TODO
-
             _form.scoreLabel.Text = MyStrategy.Me.Score + " : " + MyStrategy.Opp.Score;
 
             for (var j = 0; j < MyStrategy.TerrainType.Length; j++)

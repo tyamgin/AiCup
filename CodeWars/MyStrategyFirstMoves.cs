@@ -7,7 +7,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        private class ActionsQueue
+        internal class ActionsQueue
         {
             private class ActionQueueItem
             {
@@ -15,21 +15,21 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 public Predicate<Sandbox> EndCondition;
             }
 
-            static List<ActionQueueItem> queue = new List<ActionQueueItem>(); 
+            private static readonly List<ActionQueueItem> _queue = new List<ActionQueueItem>(); 
 
             public static void Add(Func<Sandbox, Predicate<Sandbox>> action)
             {
-                queue.Add(new ActionQueueItem {Action = action});
+                _queue.Add(new ActionQueueItem {Action = action});
             }
 
             public static void Process()
             {
-                while (queue.Count > 0)
+                while (_queue.Count > 0)
                 {
                     if (!MoveQueue.Free)
                         break;
 
-                    var item = queue[0];
+                    var item = _queue[0];
                     if (item.Action != null)
                     {
                         item.EndCondition = item.Action(Environment);
@@ -37,7 +37,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                     if (item.EndCondition(Environment))
                     {
-                        queue.RemoveAt(0);
+                        _queue.RemoveAt(0);
                     }
                     else
                     {
@@ -47,7 +47,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        void _selectIfNotSelected(Sandbox env, AMove move)
+        private static void _selectIfNotSelected(Sandbox env, AMove move)
         {
             if (move.Action != ActionType.ClearAndSelect)
                 throw new Exception("Invalid arguments for _selectIfNotSelected");
@@ -147,7 +147,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingArrvsGroupId, VehicleType.Arrv));
                     GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId, VehicleType.Ifv));
                     GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId, VehicleType.Tank));
-                    FirstMovesComplete = true;
+                    FirstMovesCompleted = true;
                 }
                 return e => true;
             });
@@ -221,18 +221,18 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Math.Max(aVert[1].Center.GetDistanceTo2(tanksRect.Center),
                             aVert[0].Center.GetDistanceTo2(ifvsRect.Center)))
                     {
-                        tankArrvs = topArrvs;
-                        ifvArrvs = bottomArrvs;
+                        _tankArrvs = topArrvs;
+                        _ifvArrvs = bottomArrvs;
                     }
                     else
                     {
-                        tankArrvs = bottomArrvs;
-                        ifvArrvs = topArrvs;
+                        _tankArrvs = bottomArrvs;
+                        _ifvArrvs = topArrvs;
                     }
 
 
-                    var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => env.VehicleById[id]));
-                    var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => env.VehicleById[id]));
+                    var tankArrvsRect = Utility.BoundingRect(_tankArrvs.Select(id => env.VehicleById[id]));
+                    var ifvArrvsRect = Utility.BoundingRect(_ifvArrvs.Select(id => env.VehicleById[id]));
 
 
                     _selectIfNotSelected(env, new AMove
@@ -274,8 +274,8 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     var tanksRect = Utility.BoundingRect(tanks);
                     var ifvsRect = Utility.BoundingRect(ifvs);
 
-                    var tankArrvsRect = Utility.BoundingRect(tankArrvs.Select(id => env.VehicleById[id]));
-                    var ifvArrvsRect = Utility.BoundingRect(ifvArrvs.Select(id => env.VehicleById[id]));
+                    var tankArrvsRect = Utility.BoundingRect(_tankArrvs.Select(id => env.VehicleById[id]));
+                    var ifvArrvsRect = Utility.BoundingRect(_ifvArrvs.Select(id => env.VehicleById[id]));
 
                     var proportionI = 0.55;
                     var proportionT = 0.55;
@@ -345,7 +345,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Action = ActionType.ClearAndSelect,
                         VehicleType = VehicleType.Arrv,
                         Rect = Utility.BoundingRect(
-                                env.GetVehicles(true, VehicleType.Arrv).Where(x => tankArrvs.Contains(x.Id)))
+                                env.GetVehicles(true, VehicleType.Arrv).Where(x => _tankArrvs.Contains(x.Id)))
                     });
                     MoveQueue.Add(new AMove
                     {
@@ -358,7 +358,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Action = ActionType.ClearAndSelect,
                         VehicleType = VehicleType.Arrv,
                         Rect = Utility.BoundingRect(
-                                env.GetVehicles(true, VehicleType.Arrv).Where(x => ifvArrvs.Contains(x.Id)))
+                                env.GetVehicles(true, VehicleType.Arrv).Where(x => _ifvArrvs.Contains(x.Id)))
                     });
                     MoveQueue.Add(new AMove
                     {
@@ -371,7 +371,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                 ActionsQueue.Add(env =>
                 {
-                    FirstMovesComplete = true;
+                    FirstMovesCompleted = true;
                     GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingIfvsGroupId, VehicleType.Ifv));
                     GroupsManager.MyGroups.Add(new MyGroup(GroupsManager.StartingTanksGroupId, VehicleType.Tank));
                     return e => true;
@@ -380,9 +380,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private long[] tankArrvs, ifvArrvs;
+        private long[] _tankArrvs, _ifvArrvs;
 
-        public bool FirstMovesComplete;
+        public bool FirstMovesCompleted;
     }
 
     public class MyGroup

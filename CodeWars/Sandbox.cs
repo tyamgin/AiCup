@@ -338,7 +338,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             return res;
         }
 
-        public void _doFight()
+        public void DoFight()
         {
             Utility.ResizeArray(ref _nearestFightersCacheDist, Vehicles.Length, double.MaxValue/2);
             if (UseFightOptimization)
@@ -430,14 +430,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             _doMove1(Vehicles);
         }
 
-        private void _doMove1(AVehicle[] Vehicles)
+        private void _doMove1(AVehicle[] vehicles)
         {
             
             var unblockedLength = 0;
 
-            for (var i = 0; i < Vehicles.Length; i++)
+            for (var i = 0; i < vehicles.Length; i++)
             {
-                var veh = Vehicles[i];
+                var veh = vehicles[i];
                 if (veh.Action == AVehicle.MoveType.None)
                 {
                     veh.Move();
@@ -515,7 +515,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                     else
                     {
-                        var unit = Vehicles[idx];
+                        var unit = vehicles[idx];
                         var prevX = unit.X;
                         var prevY = unit.Y;
                         unit.CopyFrom(movedUnit);
@@ -548,9 +548,9 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public void _doNuclears()
+        public void DoNuclears()
         {
-            bool needRemove = false;
+            var needRemove = false;
             foreach (var nuclear in Nuclears)
             {
                 if (VehicleById.ContainsKey(nuclear.VehicleId)) // если нет информации о владельце, то оставлять бомбу
@@ -577,7 +577,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Nuclears = Nuclears.Where(x => x.RemainingTicks > 0).ToArray();
         }
 
-        public void _doFacilities()
+        public void DoFacilities()
         {
             if (Facilities.Length == 0)
                 return;
@@ -606,17 +606,17 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             if (fight)
             {
                 Logger.CumulativeOperationStart("DoFight");
-                _doFight();
+                DoFight();
                 Logger.CumulativeOperationEnd("DoFight");
             }
 
-            _doNuclears();
-            _doFacilities();
+            DoNuclears();
+            DoFacilities();
 
             TickIndex++;
         }
 
-        static AVehicle[] _prevStateCache = new AVehicle[MagicMaxSize];
+        static readonly AVehicle[] _prevStateCache = new AVehicle[MagicMaxSize];
 
         public void UpdateVehicle(AVehicle cur, AVehicle from)
         {
@@ -644,15 +644,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        public bool DoMoveApprox(AVehicle[] Vehicles, bool moveApprox)
+        public bool DoMoveApprox(AVehicle[] vehicles, bool moveApprox)
         {
             var result = true;
             if (moveApprox)
             {
                 Logger.CumulativeOperationStart("DoMoveA");
-                for (var i = 0; i < Vehicles.Length; i++)
+                for (var i = 0; i < vehicles.Length; i++)
                 {
-                    var veh = Vehicles[i];
+                    var veh = vehicles[i];
                     if (_prevStateCache[i] == null)
                         _prevStateCache[i] = new AVehicle(veh);
                     else
@@ -663,10 +663,10 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         // откатываем изменения
                         for (var j = 0; j < i; j++)
                         {
-                            var prevX = Vehicles[j].X;
-                            var prevY = Vehicles[j].Y;
-                            Vehicles[j].CopyFrom(_prevStateCache[j]);
-                            _updateVehicleCoordinates(Vehicles[j], prevX, prevY);
+                            var prevX = vehicles[j].X;
+                            var prevY = vehicles[j].Y;
+                            vehicles[j].CopyFrom(_prevStateCache[j]);
+                            _updateVehicleCoordinates(vehicles[j], prevX, prevY);
                         }
                         result = false;
                         break;
@@ -678,7 +678,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             else
             {
                 Logger.CumulativeOperationStart("DoMove1");
-                _doMove1(Vehicles);
+                _doMove1(vehicles);
                 Logger.CumulativeOperationEnd("DoMove1");
             }
             return result;
@@ -698,12 +698,12 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 {
                     // TODO: FIXME! arrvs repair apply ticksCount times
                     Logger.CumulativeOperationStart("DoFight1");
-                    _doFight();
+                    DoFight();
                     Logger.CumulativeOperationEnd("DoFight1");
                 }
 
-                _doNuclears();
-                _doFacilities();
+                DoNuclears();
+                DoFacilities();
 
                 TickIndex++;
             }

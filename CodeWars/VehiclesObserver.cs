@@ -1,22 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO.Pipes;
 using System.Linq;
-using System.Windows.Forms;
 using Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk.Model;
 
 namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     class VehiclesObserver
     {
-        private static Dictionary<long, Vehicle> _vehicleById = new Dictionary<long, Vehicle>();
+        private static readonly Dictionary<long, Vehicle> _vehicleById = new Dictionary<long, Vehicle>();
         public static Dictionary<long, AVehicle> VehicleById = new Dictionary<long, AVehicle>();
 
         public static Dictionary<long, AVehicle> OppUncheckedVehicles = new Dictionary<long, AVehicle>();
         public static Dictionary<long, AVehicle> OppCheckedVehicles = new Dictionary<long, AVehicle>();
 
-        private static List<long> _disappearedIds = new List<long>(); 
-        private static HashSet<long> _visibleOnce = new HashSet<long>(); 
+        private static readonly List<long> _disappearedIds = new List<long>(); 
+        private static readonly HashSet<long> _visibleOnce = new HashSet<long>(); 
 
         public static void Update()
         {
@@ -238,6 +236,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private static void _facilitiesProduction(Sandbox prevEnv, Sandbox curEnv)
         {
+            // ReSharper disable once CollectionNeverQueried.Local
             var newVehiclesList = new List<AVehicle>();
             for (var i = 0; i < curEnv.Facilities.Length; i++)
             {
@@ -277,6 +276,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             }
         }
 
-        private static List<long>[] _idsPool = { new List<long>(), new List<long>(), new List<long>(), new List<long>(), new List<long>(), };
+        private static readonly List<long>[] _idsPool =
+        {
+            new List<long>(),
+            new List<long>(),
+            new List<long>(),
+            new List<long>(),
+            new List<long>(),
+        };
     }
 }

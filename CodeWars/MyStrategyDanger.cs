@@ -102,11 +102,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 get { return MoveToInfo.Select(tpl => GetMoveToSum(tpl.Item3)).ToArray(); }
             }
 
-            public double MoveToSumUnscaled
-            {
-                get { return MoveToSumByGroup.Sum(); }
-            }
-
             public static double AreaCoeff(double area, int count)
             {
                 var r = Geom.Sqr(2*G.VehicleRadius)*count/area;
@@ -131,11 +126,6 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
             public double[] MoveToFacilityByGroup
             {
                 get { return MoveToFacilitiesInfo.Select(lst => lst.Item3.Sum(x => x.Computed)).ToArray(); }
-            }
-
-            public double MoveToFacilitySumUnscaled
-            {
-                get { return MoveToFacilityByGroup.Sum(); }
             }
 
             public double MoveToFacilitySum
