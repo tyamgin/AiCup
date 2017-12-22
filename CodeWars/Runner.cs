@@ -10,19 +10,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk {
 
         public static void Main(string[] args) {
 #if DEBUG
-            //Process.Start("G:\\Projects\\AiCup\\CodeWars\\local_runner\\local-runner-sync.bat");
+            Process.Start("G:\\Projects\\AiCup\\CodeWars\\local_runner\\local-runner-sync.bat");
             Thread.Sleep(2000);
 
             var otherStrategy = new Process
             {
                 StartInfo =
                 {
-                    FileName = @"G:\Projects\AiCup\CodeWars\bin\anton.exe",
+                    FileName = @"G:\Projects\AiCup\CodeWars\bin\1.exe",
                     Arguments = "127.0.0.1 " + (31002) + " 0000000000000000",
                     CreateNoWindow = true
                 }
             };
-            //otherStrategy.Start();
+            otherStrategy.Start();
             Thread.Sleep(100);
 #endif
 
