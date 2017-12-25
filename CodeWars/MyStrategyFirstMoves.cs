@@ -186,12 +186,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 ActionsQueue.Add(env =>
                 {
                     _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Arrv));
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        X = shift,
-                        Y = shift,
-                    });
+                    MoveQueue.Add(AMovePresets.Move(new Point(shift, shift)));
 
                     return env2 =>
                     {
@@ -230,34 +225,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         _ifvArrvs = topArrvs;
                     }
 
-
                     var tankArrvsRect = Utility.BoundingRect(_tankArrvs.Select(id => env.VehicleById[id]));
                     var ifvArrvsRect = Utility.BoundingRect(_ifvArrvs.Select(id => env.VehicleById[id]));
 
-
-                    _selectIfNotSelected(env, new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        Rect = tankArrvsRect,
-                        VehicleType = VehicleType.Arrv,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        X = tanksRect.Center.X - (tankArrvsRect.Center.X - shift),
-                    });
-
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        Rect = ifvArrvsRect,
-                        VehicleType = VehicleType.Arrv,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        X = ifvsRect.Center.X - (ifvArrvsRect.Center.X - shift),
-                    });
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Arrv, tankArrvsRect));
+                    MoveQueue.Add(AMovePresets.Move(new Point(tanksRect.Center.X - (tankArrvsRect.Center.X - shift), 0)));
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Arrv, ifvArrvsRect));
+                    MoveQueue.Add(AMovePresets.Move(new Point(ifvsRect.Center.X - (ifvArrvsRect.Center.X - shift), 0)));
 
                     return env2 =>
                     {
@@ -292,43 +266,14 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     if (tankArrvsRect.Center.Y < 30 && tankArrvsRect.Center.GetDistanceTo(tanksRect.Center) < 20)
                         proportionT = 0.95;
 
-                    _selectIfNotSelected(env, new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        Rect = ifvArrvsRect,
-                        VehicleType = VehicleType.Arrv,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        Y = (ifvsRect.Center.Y - ifvArrvsRect.Center.Y)*proportionI,
-                    });
-
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        Rect = tankArrvsRect,
-                        VehicleType = VehicleType.Arrv,
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        Y = (tanksRect.Center.Y - tankArrvsRect.Center.Y)*proportionT,
-                    });
-
+                    _selectIfNotSelected(env, AMovePresets.ClearAndSelectType(VehicleType.Arrv, ifvArrvsRect));
+                    MoveQueue.Add(AMovePresets.Move(new Point(0, (ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * proportionI)));
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Arrv, tankArrvsRect));
+                    MoveQueue.Add(AMovePresets.Move(new Point(0, (tanksRect.Center.Y - tankArrvsRect.Center.Y) * proportionT)));
                     MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Ifv));
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        Y = -(ifvsRect.Center.Y - ifvArrvsRect.Center.Y)*(1 - proportionI),
-                    });
-
+                    MoveQueue.Add(AMovePresets.Move(new Point(0, -(ifvsRect.Center.Y - ifvArrvsRect.Center.Y) * (1 - proportionI))));
                     MoveQueue.Add(AMovePresets.ClearAndSelectType(VehicleType.Tank));
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        Y = -(tanksRect.Center.Y - tankArrvsRect.Center.Y)*(1 - proportionT),
-                    });
+                    MoveQueue.Add(AMovePresets.Move(new Point(0, -(tanksRect.Center.Y - tankArrvsRect.Center.Y) * (1 - proportionT))));
 
                     return env2 =>
                     {
@@ -340,31 +285,19 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 ActionsQueue.Add(env =>
                 {
                     // tanks already selected
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        VehicleType = VehicleType.Arrv,
-                        Rect = Utility.BoundingRect(
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(
+                        VehicleType.Arrv,
+                        Utility.BoundingRect(
                                 env.GetVehicles(true, VehicleType.Arrv).Where(x => _tankArrvs.Contains(x.Id)))
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Assign,
-                        Group = GroupsManager.StartingTanksGroupId,
-                    });
+                    ));
+                    MoveQueue.Add(AMovePresets.AssignGroup(GroupsManager.StartingTanksGroupId));
 
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.ClearAndSelect,
-                        VehicleType = VehicleType.Arrv,
-                        Rect = Utility.BoundingRect(
+                    MoveQueue.Add(AMovePresets.ClearAndSelectType(
+                        VehicleType.Arrv,
+                        Utility.BoundingRect(
                                 env.GetVehicles(true, VehicleType.Arrv).Where(x => _ifvArrvs.Contains(x.Id)))
-                    });
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Assign,
-                        Group = GroupsManager.StartingIfvsGroupId,
-                    });
+                    ));
+                    MoveQueue.Add(AMovePresets.AssignGroup(GroupsManager.StartingIfvsGroupId));
 
                     return e => true;
                 });
@@ -383,22 +316,5 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
         private long[] _tankArrvs, _ifvArrvs;
 
         public bool FirstMovesCompleted;
-    }
-
-    public class MyGroup
-    {
-        public readonly int Group;
-        public readonly VehicleType VehicleType;
-
-        public MyGroup(int group, VehicleType type)
-        {
-            Group = group;
-            VehicleType = type;
-        }
-
-        public override string ToString()
-        {
-            return VehicleType + "(" + Group + ")";
-        }
     }
 }

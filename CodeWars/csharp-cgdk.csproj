@@ -82,7 +82,9 @@
     <Compile Include="AVehicle.cs" />
     <Compile Include="Clustering.cs" />
     <Compile Include="Const.cs" />
+    <Compile Include="DangerResult.cs" />
     <Compile Include="GroupsManager.cs" />
+    <Compile Include="MyGroup.cs" />
     <Compile Include="MyStrategyDanger.cs" />
     <Compile Include="MyStrategyFirstMoves.cs" />
     <Compile Include="Geometry.cs" />
