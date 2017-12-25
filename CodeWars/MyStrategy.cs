@@ -79,6 +79,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 Visualizer.Visualizer.LookAt = new Point(0, 0);
                 Visualizer.Visualizer.Zoom = 0.5;
             }
+            Visualizer.Visualizer.SegmentsDrawQueue.AddRange(VisualSegments);
             Visualizer.Visualizer.Draw();
             if (world.TickIndex >= Visualizer.Visualizer.DrawSince)
             {

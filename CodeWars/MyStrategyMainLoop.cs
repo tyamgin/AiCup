@@ -7,8 +7,15 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
+        public List<object[]> VisualSegments = new List<object[]>();
+
         Tuple<AMove[], MyGroup, DangerResult> MainLoopStrategy(bool opt)
         {
+            VisualSegments.Clear();
+            var visualVectorsStart = new List<Point>();
+            var visualVectorsDir = new List<Point>();
+            var visualVectorsScore = new List<double>();
+
             _isSlowMode = _isSlowMode && Environment.OppVehicles.Count == 0;
             var baseTicksCount = Const.ActionsBruteforceDepth;
             if (Environment.Nuclears.Length > 0)
@@ -274,6 +281,13 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
                     var danger = GetDanger(Environment, env, myGroups.ToList(), myUngroups.ToList(), cache);
 
+                    if (move.Action == ActionType.Move)
+                    {
+                        visualVectorsStart.Add(typeRect.Center);
+                        visualVectorsDir.Add(new Point(move.X, move.Y).Normalized());
+                        visualVectorsScore.Add(danger.Score);
+                    }
+
                     if (selDanger == null || danger.Score < selDanger.Score)
                     {
                         selDanger = danger;
@@ -409,6 +423,30 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     }
                 }
             }
+
+#if DEBUG
+            //if (selDanger != null)
+            //{
+            //    var maxScore = visualVectorsScore.Max();
+            //    var minScore = visualVectorsScore.Min();
+            //    if (maxScore > minScore)
+            //    {
+            //        for (var i = 0; i < visualVectorsStart.Count; i++)
+            //        {
+            //            VisualSegments.Add(new object[]
+            //            {
+            //                new List<Point>
+            //                {
+            //                    visualVectorsStart[i],
+            //                    visualVectorsStart[i] + visualVectorsDir[i]*((visualVectorsScore[i]-minScore)/(minScore-maxScore)*40)
+            //                },
+            //                new System.Drawing.Pen(System.Drawing.Color.Green),
+            //                5
+            //            });
+            //        }
+            //    }
+            //}
+#endif
 
             return new Tuple<AMove[], MyGroup, DangerResult>(selMoves, selGroup, selDanger);
         }
