@@ -81,12 +81,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                         Rect = rect
                     });
 
-                    MoveQueue.Add(new AMove
-                    {
-                        Action = ActionType.Move,
-                        X = dx,
-                        Y = dy
-                    });
+                    MoveQueue.Add(AMovePresets.Move(new Point(dx, dy)));
 
                     return env2 =>
                     {

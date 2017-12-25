@@ -7,7 +7,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 {
     public partial class MyStrategy
     {
-        Tuple<AMove[], MyGroup, DangerResult> DoMainLoop(bool opt)
+        Tuple<AMove[], MyGroup, DangerResult> MainLoopStrategy(bool opt)
         {
             _isSlowMode = _isSlowMode && Environment.OppVehicles.Count == 0;
             var baseTicksCount = Const.ActionsBruteforceDepth;
@@ -416,7 +416,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
 
         private bool _isSlowMode = false;
 
-        public AMove[] GetUnstuckMove()
+        public AMove[] UnstuckStrategy()
         {
             var availableActions = MoveObserver.AvailableActions;
             if (Opp.RemainingNuclearStrikeCooldownTicks < 60 && Environment.Nuclears.Length == 0)

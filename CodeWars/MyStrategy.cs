@@ -135,7 +135,7 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                 }
 
                 Logger.CumulativeOperationStart("Unstuck");
-                var unstuckMove = GetUnstuckMove();
+                var unstuckMove = UnstuckStrategy();
                 Logger.CumulativeOperationEnd("Unstuck");
                 if (unstuckMove != null)
                 {
@@ -146,30 +146,30 @@ namespace Com.CodeGame.CodeWars2017.DevKit.CSharpCgdk
                     return;
                 }
 
-                var mainNew = DoMainLoop(true);
+                var mainMove = MainLoopStrategy(true);
                 _doMainsCount++;
-                _doMainLastGroup = mainNew.Item2;
-                foreach (var move in mainNew.Item1)
+                _doMainLastGroup = mainMove.Item2;
+                foreach (var move in mainMove.Item1)
                     if (move.Action == ActionType.Scale && move.Factor > 1)
-                        _doMainLastUnscale[mainNew.Item2.Group] = new Tuple<int, AMove>(World.TickIndex, move);
+                        _doMainLastUnscale[mainMove.Item2.Group] = new Tuple<int, AMove>(World.TickIndex, move);
                  foreach (var groupId in _doMainLastUnscale.Keys.ToArray())
                      if (_doMainLastUnscale[groupId].Item1 + 10 + G.TacticalNuclearStrikeDelay < World.TickIndex)
                          _doMainLastUnscale.Remove(groupId);
 
-                if (mainNew.Item1[0].Action == null || mainNew.Item1[0].Action == ActionType.None)
+                if (mainMove.Item1[0].Action == null || mainMove.Item1[0].Action == ActionType.None)
                     _noMoveLastTick = World.TickIndex;
 
-                ResultingMove = mainNew.Item1[0];
-                for (var i = 1; i < mainNew.Item1.Length; i++)
+                ResultingMove = mainMove.Item1[0];
+                for (var i = 1; i < mainMove.Item1.Length; i++)
                 {
-                    var mv = mainNew.Item1[i];
+                    var mv = mainMove.Item1[i];
                     MoveQueue.Add(mv);
-                    if (mv.Action == ActionType.Assign && mainNew.Item1[0].VehicleType != null)
+                    if (mv.Action == ActionType.Assign && mainMove.Item1[0].VehicleType != null)
                     {
-                        GroupsManager.AddPendingGroup(new MyGroup(mv.Group, mainNew.Item1[0].VehicleType.Value));
+                        GroupsManager.AddPendingGroup(new MyGroup(mv.Group, mainMove.Item1[0].VehicleType.Value));
                     }
                 }
-                if (mainNew.Item1.Length >= 3)
+                if (mainMove.Item1.Length >= 3)
                 {
                     var nearestFacility = Environment.Facilities.ArgMin(
                         f => f.Center.GetDistanceTo2(ResultingMove.Rect.Center));
