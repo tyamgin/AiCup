@@ -2,7 +2,7 @@
 
 #include "Point.hpp"
 
-struct Unit : Point
+struct Unit : ::Point
 {
 	double mass;
 	Point speed;
@@ -21,4 +21,11 @@ struct Unit : Point
 		if (obj.count("SY"))
 			speed.y = obj["SY"].get<double>();
 	}
+
+	bool canEat(const Unit &unit) const
+	{
+		return mass + EPS >= 1.2*unit.mass;
+	}
+
+
 };

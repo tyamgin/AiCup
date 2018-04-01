@@ -13,6 +13,7 @@ struct World
 	vector<Ejection> ejections;
 	vector<Food> foods;
 	vector<Virus> viruses;
+	int tick;
 
 	World(const nlohmann::json &obj)
 	{

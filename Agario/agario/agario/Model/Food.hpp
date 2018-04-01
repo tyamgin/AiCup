@@ -5,6 +5,11 @@
 
 struct Food : CircularUnit
 {
+	Food()
+	{
+		
+	}
+
 	Food(const nlohmann::json &obj) : CircularUnit(obj)
 	{
 		mass = Config::FOOD_MASS;

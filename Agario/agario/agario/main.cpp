@@ -1,7 +1,6 @@
 #define M_SOCKET_IO false
-#define M_VISUAL true
-
-#include "MainForm.h"
+#define M_VISUAL false
+#define EPS 1e-9
 
 #include <iostream>
 #include <string>
@@ -9,19 +8,20 @@
 
 #include "Config.hpp"
 #include "Model\World.hpp"
+#include "MyStrategy.hpp"
 using namespace std;
-
-ref struct Visualizer
-{
-	static agario::MainForm ^form;
-};
 
 char buffer[1 << 20];
 
 #if M_SOCKET_IO
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #include <winsock2.h>
 #pragma comment(lib, "ws2_32.lib")
 SOCKET server;
+#endif
+
+#if M_VISUAL
+#include "Visualizer.hpp"
 #endif
 
 nlohmann::json readJson()
@@ -39,7 +39,8 @@ nlohmann::json readJson()
 	}
 	catch (std::exception &e)
 	{
-		throw e;
+		cerr << e.what() << endl;
+		exit(1);
 	}
 }
 
@@ -54,61 +55,44 @@ void writeJson(nlohmann::json json)
 #endif
 }
 
-struct Strategy 
+struct Runner 
 {
 	void run() 
 	{
-		//auto thread1 = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(doVisualizer));
-		//thread1->Start();
-
 		auto config_json = readJson();
 		Config::parse(config_json);
+		int tick = 0;
+		MyStrategy strategy;
 
 		while (true) 
 		{
 			auto world_json = readJson();
 			World world(world_json);
-
-			auto command = onTick(world);
+			world.tick = tick++;
+#if M_VISUAL
+			Visualizer::update(world);
+#endif
+			auto command = strategy.onTick(world);
 
 			writeJson(command.toJson());
 		}
-
-		//thread1->Join();
-	}
-
-	Move onTick(const World &world)
-	{
-		//if (!world.me.fragments.empty())
-		//{
-		//	if (!world.foods.empty())
-		//	{
-		//		auto food = world.foods[0];
-		//		return{ { "X", food.x },{ "Y", food.y },{ "Debug", "FOOD" } };
-		//	}
-		//	return{ { "X", 0 },{ "Y", 0 },{ "Debug", "No food" } };
-		//}
-		return Move{ 100, 100 };
 	}
 };
 
 void doStrategy()
 {
-	Strategy strategy;
-	strategy.run();
+	Runner runner;
+	runner.run();
 }
 
+#if M_VISUAL
 void doVisualizer()
 {
-	System::Windows::Forms::Application::EnableVisualStyles();
-	System::Windows::Forms::Application::SetCompatibleTextRenderingDefault(false);
-	agario::MainForm form;
-
-	Visualizer::form = %form;
-	System::Windows::Forms::Application::Run(%form);
+	System::Windows::Forms::Application::Run(Visualizer::form);
 }
 
 [System::STAThread]
+#endif
 void main() 
 {
 #if M_SOCKET_IO
@@ -125,8 +109,26 @@ void main()
 	connect(server, (SOCKADDR *)&addr, sizeof(addr));
 	cout << "Connected to server!" << endl;
 #endif
+
+#if M_VISUAL
+	System::Windows::Forms::Application::EnableVisualStyles();
+	System::Windows::Forms::Application::SetCompatibleTextRenderingDefault(false);
+	agario::MainForm form;
+	Visualizer::form = %form;
+
+	System::Windows::Forms::Control::CheckForIllegalCrossThreadCalls = false;
+
+	auto thread1 = gcnew System::Threading::Thread(gcnew System::Threading::ThreadStart(doVisualizer));
+	thread1->Start();
 	
+	System::Threading::Thread::Sleep(200);
+#endif
+
 	doStrategy();
+
+#if M_VISUAL
+	thread1->Join();
+#endif
 	
 #if M_SOCKET_IO
 	closesocket(server);

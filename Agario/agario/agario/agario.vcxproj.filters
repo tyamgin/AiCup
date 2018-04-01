@@ -68,6 +68,12 @@
     <ClInclude Include="Model\Move.hpp">
       <Filter>Source Files\Model</Filter>
     </ClInclude>
+    <ClInclude Include="Visualizer.hpp">
+      <Filter>Source Files\Visualizer</Filter>
+    </ClInclude>
+    <ClInclude Include="MyStrategy.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">

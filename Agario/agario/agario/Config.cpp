@@ -14,3 +14,4 @@ double Config::VISCOSITY = 0;
 double Config::FOOD_RADIUS = 2.5;
 double Config::EJECTION_RADIUS = 4;
 double Config::EJECTION_MASS = 15;
+double Config::FRAGMENT_MIN_SPLIT_MASS = 120;

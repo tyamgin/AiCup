@@ -17,6 +17,7 @@ struct Config
 	static double FOOD_RADIUS;
 	static double EJECTION_RADIUS;
 	static double EJECTION_MASS;
+	static double FRAGMENT_MIN_SPLIT_MASS;
 
 	static void parse(const nlohmann::json &config_json)
 	{

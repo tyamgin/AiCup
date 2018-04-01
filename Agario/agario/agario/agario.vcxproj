@@ -150,6 +150,8 @@
     <ClInclude Include="Model\Unit.hpp" />
     <ClInclude Include="Model\Virus.hpp" />
     <ClInclude Include="Model\World.hpp" />
+    <ClInclude Include="MyStrategy.hpp" />
+    <ClInclude Include="Visualizer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
