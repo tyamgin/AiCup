@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "Config.hpp"
-#include "Model\World.hpp"
+#include "Model/World.hpp"
 #include "MyStrategy.hpp"
 using namespace std;
 
@@ -93,7 +93,7 @@ void doVisualizer()
 
 [System::STAThread]
 #endif
-void main() 
+int main() 
 {
 #if M_SOCKET_IO
 	WSADATA WSAData;
@@ -135,4 +135,5 @@ void main()
 	WSACleanup();
 	cout << "Socket closed." << endl << endl;
 #endif
+	return 0;
 }

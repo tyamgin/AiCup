@@ -1,10 +1,10 @@
 #include "Model/World.hpp"
 
-#define GRID_SIZE 20
+#define GRID_SIZE 50
 
 struct MyStrategy
 {
-	int lastSeen[GRID_SIZE][GRID_SIZE];
+	int lastSeen[GRID_SIZE + 1][GRID_SIZE + 1];
 
 	Move onTick(const World &world)
 	{
@@ -31,7 +31,7 @@ struct MyStrategy
 
 		int fragIdx = -1;
 		auto me = world.me.fragments[0];
-		auto mes = me + me.speed + me.speed;
+		auto mes = me + me.speed*6;
 
 		for(int i = 0; i < (int) world.opponentFragments.size(); i++)
 		{
@@ -57,6 +57,8 @@ struct MyStrategy
 				for (int j = 0; j <= GRID_SIZE; j++)
 				{
 					::Point pt(1.0 * Config::MAP_SIZE / GRID_SIZE * i, 1.0 * Config::MAP_SIZE / GRID_SIZE * j);
+					if (mes.getDistanceTo2(pt) > sqr(Config::MAP_SIZE / 3.0))
+						continue;
 
 					if (lastSeen[i][j] < minLastSeen || 
 						lastSeen[i][j] == minLastSeen && mes.getDistanceTo2(target) > mes.getDistanceTo2(pt))

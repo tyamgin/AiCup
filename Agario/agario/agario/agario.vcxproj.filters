@@ -19,6 +19,9 @@
     <Filter Include="Source Files\Model">
       <UniqueIdentifier>{573ca7f8-2b81-4581-9803-dfff149ad4bb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Utility">
+      <UniqueIdentifier>{94207cdc-239b-41d1-9929-f9bb4b9a4ee9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MainForm.cpp">
@@ -73,6 +76,9 @@
     </ClInclude>
     <ClInclude Include="MyStrategy.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Geometry.hpp">
+      <Filter>Source Files\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

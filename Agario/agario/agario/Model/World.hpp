@@ -5,6 +5,9 @@
 #include "Food.hpp"
 #include "Virus.hpp"
 #include "Move.hpp"
+#include "../Utility/Geometry.hpp"
+
+#include <climits>
 
 struct World
 {
