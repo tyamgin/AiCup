@@ -6,6 +6,7 @@
 #include "Virus.hpp"
 #include "Move.hpp"
 #include "../Utility/Geometry.hpp"
+#include "../Utility/Iterators.hpp"
 
 #include <climits>
 

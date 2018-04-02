@@ -81,6 +81,27 @@ struct Point
 		return Point(x - b.x, y - b.y);
 	}
 
+	Point &operator +=(const Point &b)
+	{
+		x += b.x;
+		y += b.y;
+		return *this;
+	}
+
+	Point &operator *=(double b)
+	{
+		x *= b;
+		y *= b;
+		return *this;
+	}
+
+	Point &operator /=(double b)
+	{
+		x /= b;
+		y /= b;
+		return *this;
+	}
+
 	double getAngle() const
 	{
 		return atan2(y, x);

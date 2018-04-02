@@ -5,7 +5,7 @@
 struct Unit : ::Point
 {
 	double mass;
-	Point speed;
+	::Point speed;
 
 	Unit()
 	{
@@ -27,5 +27,8 @@ struct Unit : ::Point
 		return mass + EPS >= 1.2*unit.mass;
 	}
 
-
+	double getMaxSpeed() const
+	{
+		return Config::SPEED_FACTOR / sqrt(mass);
+	}
 };

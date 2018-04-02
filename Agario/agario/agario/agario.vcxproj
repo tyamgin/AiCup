@@ -137,6 +137,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.hpp" />
+    <ClInclude Include="DangerStrategy.hpp" />
     <ClInclude Include="MainForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
@@ -147,11 +148,13 @@
     <ClInclude Include="Model\Player.hpp" />
     <ClInclude Include="Model\PlayerFragment.hpp" />
     <ClInclude Include="Model\Point.hpp" />
+    <ClInclude Include="Model\Sandbox.hpp" />
     <ClInclude Include="Model\Unit.hpp" />
     <ClInclude Include="Model\Virus.hpp" />
     <ClInclude Include="Model\World.hpp" />
     <ClInclude Include="MyStrategy.hpp" />
     <ClInclude Include="Utility\Geometry.hpp" />
+    <ClInclude Include="Utility\Iterators.hpp" />
     <ClInclude Include="Visualizer.hpp" />
   </ItemGroup>
   <ItemGroup>

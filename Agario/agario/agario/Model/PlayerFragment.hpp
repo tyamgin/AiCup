@@ -8,13 +8,13 @@ struct PlayerFragment : CircularUnit
 
 	PlayerFragment()
 	{
-		
+
 	}
 
 	PlayerFragment(const nlohmann::json &obj) : CircularUnit(obj)
 	{
 		if (obj.count("TTF"))
-			ttf = obj["TTF"].get<int>(); 
+			ttf = obj["TTF"].get<int>();
 		else
 			ttf = 0;
 	}
@@ -22,5 +22,11 @@ struct PlayerFragment : CircularUnit
 	Point getVisionCenter() const
 	{
 		return *this + speed.take(10);
+	}
+
+	void addMass(double add)
+	{
+		mass += add;
+		radius = 2 * sqrt(mass);
 	}
 };
