@@ -4,7 +4,7 @@
 
 struct Sandbox : public World 
 {
-	int eatenFoods = 0;
+	vector<int> eatenFoodTicks;
 
 	Sandbox(const World &world) : World(world)
 	{
@@ -34,7 +34,7 @@ struct Sandbox : public World
 			if (eat_frag != nullptr)
 			{
 				foods.erase(foods.begin() + i);
-				eatenFoods++;
+				eatenFoodTicks.push_back(tick);
 				eat_frag->addMass(Config::FOOD_MASS);
 				i--;
 			}

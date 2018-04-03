@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Unit.hpp"
+#include <climits>
 
 struct CircularUnit : Unit
 {

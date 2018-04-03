@@ -1,5 +1,5 @@
-#define M_SOCKET_IO true
-#define M_VISUAL true
+#define M_SOCKET_IO false
+#define M_VISUAL false
 #define EPS 1e-9
 
 #include <iostream>

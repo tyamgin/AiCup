@@ -9,6 +9,11 @@ struct MyStrategy
 	int lastSeen[GRID_SIZE + 1][GRID_SIZE + 1];
 	Player prevMe;
 
+	MyStrategy()
+	{
+		memset(lastSeen, 0, sizeof(lastSeen));
+	}
+
 	Move onTick(const World &world)
 	{
 		auto res = _onTick(world);
@@ -53,7 +58,7 @@ struct MyStrategy
 
 		for (auto &frag : world.me.fragments)
 		{
-			if (frag.mass >= Config::FRAGMENT_MIN_SPLIT_MASS)
+			if (frag.canSplit(world.me.fragments.size()))
 			{
 				return MoveFactory::split();
 			}
@@ -99,20 +104,26 @@ struct MyStrategy
 		const int angles = 24;
 		::Point best_dir{ 0, 0 };
 		double best_danger = INT_MAX;
+		Sandbox best_env(world);
+		
 		for (int angIdx = 0; angIdx < angles; angIdx++)
 		{
 			double ang = M_PI * 2 / angles * angIdx;
 			Sandbox env = world;
 			auto dir = ::Point::byAngle(ang);
+			auto moveto = getBorderPoint(env.me.fragments[0], dir);
 
 			for (int i = 0; i < steps; i++)
-				env.moveTo(getBorderPoint(env.me.fragments[0], dir));
-
-			auto d = getDanger(env);
-			if (d < best_danger)
 			{
-				best_danger = d;
-				best_dir = dir;
+				env.moveTo(moveto);
+
+				auto d = getDanger(world, env, steps);
+				if (d < best_danger)
+				{
+					best_danger = d;
+					best_dir = dir;
+					best_env = env;
+				}
 			}
 		}
 		auto to = getBorderPoint(world.me.fragments[0], best_dir);

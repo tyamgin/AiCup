@@ -18,13 +18,15 @@ struct Exponenter
 	};
 };
 
-double getDanger(const Sandbox &env)
+double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 {
-	double foodScore = 10;
-	Exponenter foodExp(1, foodScore * 0.8, Config::MAP_SIZE / 4.0, 0.3);
+	double foodScore = 15;
+	Exponenter foodExp(1, foodScore * 0.5, Config::MAP_SIZE / 4.0, 0.3);
 
 	double res = 0;
-	res -= env.eatenFoods * foodScore;
+	for (auto eatenFoodTick : env.eatenFoodTicks)
+		res -= foodScore * (interval - (eatenFoodTick - startEnv.tick)) / interval;
+
 	for (auto &food : env.foods)
 	{
 		for (auto &frag : env.me.fragments)
