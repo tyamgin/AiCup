@@ -1,10 +1,32 @@
 #pragma once
 
 #include "CircularUnit.hpp"
+#include "Move.hpp"
+#include "Ejection.hpp"
+
+#define VIS_FACTOR 4.0  // vision = radius * VF
+#define VIS_FACTOR_FR 2.5 // vision = radius * VFF * qSqrt(fragments.count())
+#define RADIUS_FACTOR 2.0
+#define SPLIT_START_SPEED 9.0
+#define COLLISION_POWER 20.0
+
+#define MIN_EJECT_MASS 40.0
+#define EJECT_START_SPEED 8.0
+#define EJECT_RADIUS 4.0
+#define EJECT_MASS 15.0
+#define MIN_SHRINK_MASS 100
+#define SHRINK_FACTOR 0.01
+
+#define qSqrt sqrt
+#define qAnd abs
+#define qCos cos
+#define qSin sin
+#define QPair pair
 
 struct PlayerFragment : CircularUnit
 {
 	int ttf;
+	int playerId, fragmentId = 1;
 
 	PlayerFragment()
 	{
@@ -17,6 +39,18 @@ struct PlayerFragment : CircularUnit
 			ttf = obj["TTF"].get<int>();
 		else
 			ttf = 0;
+
+		auto id_str = obj["Id"].get<string>();
+		auto dot_pos = id_str.find('.');
+		if (dot_pos == string::npos)
+		{
+			playerId = stoi(id_str);
+		}
+		else
+		{
+			playerId = stoi(id_str.substr(0, dot_pos));
+			fragmentId = stoi(id_str.substr(dot_pos + 1));
+		}
 	}
 
 	Point getVisionCenter() const
@@ -27,7 +61,7 @@ struct PlayerFragment : CircularUnit
 	void addMass(double add)
 	{
 		mass += add;
-		radius = 2 * sqrt(mass);
+		radius = RADIUS_FACTOR * sqrt(mass);
 	}
 
 	bool canBurst(int yet_cnt)  const
@@ -46,5 +80,318 @@ struct PlayerFragment : CircularUnit
 				return true;
 		
 		return false;
+	}
+
+	bool is_fast = false;
+	int fuse_timer = 0;
+
+	//QPair<double, double> get_direct_norm() const {
+	//	double dx = cmd_x - x, dy = cmd_y - y;
+	//	double dist = qSqrt(dx * dx + dy * dy);
+	//	if (dist > 0) {
+	//		double factor = 50 / dist;
+	//		return QPair<double, double>(x + dx * factor, y + dy * factor);
+	//	}
+	//	return QPair<double, double>(x, y);
+	//}
+
+	void apply_viscosity(double usual_speed) 
+	{
+		auto spd = speed.length();
+		// если на этом тике не снизим скорость достаточно - летим дальше
+		if (spd - Config::VISCOSITY > usual_speed) 
+		{
+			speed = speed.take(spd - Config::VISCOSITY);
+		}
+		else 
+		{
+			// иначе выставляем максимальную скорость и выходим из режима полёта
+			speed = speed.take(usual_speed);
+			is_fast = false;
+		}
+	}
+
+	void eat(const Unit &unit) 
+	{
+		mass += unit.mass;
+	}
+
+	/////////////////////////////// пока не нужно
+	//void burst_on(Circle *virus) 
+	//{
+	//	double dist = calc_dist(virus->getX(), virus->getY());
+	//	double dy = y - virus->getY(), dx = x - virus->getX();
+	//	double new_angle = 0.0;
+
+	//	if (dist > 0) {
+	//		new_angle = qAsin(dy / dist);
+	//		if (dx < 0) {
+	//			new_angle = M_PI - new_angle;
+	//		}
+	//	}
+	//	angle = new_angle;
+	//	double max_speed = Config::SPEED_FACTOR / qSqrt(mass);
+	//	if (speed < max_speed) {
+	//		speed = max_speed;
+	//	}
+	//	mass += BURST_BONUS;
+	//	score += SCORE_FOR_BURST;
+	//}
+
+	//QVector<Player*> burst_now(int max_fId, int yet_cnt) {
+	//	QVector<Player*> fragments;
+	//	int new_frags_cnt = int(mass / MIN_BURST_MASS) - 1;
+	//	int max_cnt = Config::MAX_FRAGS_CNT - yet_cnt;
+	//	if (new_frags_cnt > max_cnt) {
+	//		new_frags_cnt = max_cnt;
+	//	}
+
+	//	double new_mass = mass / (new_frags_cnt + 1);
+	//	double new_radius = Config::RADIUS_FACTOR * qSqrt(new_mass);
+
+	//	for (int I = 0; I < new_frags_cnt; I++) {
+	//		int new_fId = max_fId + I + 1;
+	//		Player *new_fragment = new Player(id, x, y, new_radius, new_mass, new_fId);
+	//		new_fragment->set_color(color);
+	//		fragments.append(new_fragment);
+
+	//		double burst_angle = angle - BURST_ANGLE_SPECTRUM / 2 + I * BURST_ANGLE_SPECTRUM / new_frags_cnt;
+	//		new_fragment->set_impulse(BURST_START_SPEED, burst_angle);
+	//	}
+	//	set_impulse(BURST_START_SPEED, angle + BURST_ANGLE_SPECTRUM / 2);
+
+	//	fragmentId = max_fId + new_frags_cnt + 1;
+	//	mass = new_mass;
+	//	radius = new_radius;
+	//	fuse_timer = Config::TICKS_TIL_FUSION;
+	//	return fragments;
+	//}
+
+	PlayerFragment split() {
+		double new_mass = mass / 2;
+		double new_radius = RADIUS_FACTOR * qSqrt(new_mass);
+
+		PlayerFragment new_player;
+		new_player.x = x;
+		new_player.y = y;
+		new_player.addMass(new_mass);
+		new_player.speed = speed.take(SPLIT_START_SPEED);
+		new_player.is_fast = true;
+
+		fuse_timer = Config::TICKS_TIL_FUSION;
+		mass = new_mass;
+		radius = new_radius;
+
+		return new_player;
+	}
+
+	bool can_fuse(const PlayerFragment &frag) const 
+	{
+		if (fuse_timer || frag.fuse_timer)
+			return false;
+
+		// TODO: can optimize
+		double dist = frag.getDistanceTo(x, y);
+		double nR = radius + frag.radius;
+
+		return dist <= nR;
+	}
+
+	void collisionCalc(PlayerFragment &other) 
+	{
+		if (is_fast || other.is_fast) { // do not collide splits
+			return;
+		}
+		double dist = getDistanceTo(other);
+		if (dist >= radius + other.radius) {
+			return;
+		}
+
+		// vector from centers
+		double collisionVectorX = this->x - other.x;
+		double collisionVectorY = this->y - other.y;
+		// normalize to 1
+		double vectorLen = qSqrt(collisionVectorX * collisionVectorX + collisionVectorY * collisionVectorY);
+		if (vectorLen < 1e-9) { // collision object in same point??
+			return;
+		}
+		collisionVectorX /= vectorLen;
+		collisionVectorY /= vectorLen;
+
+		double collisionForce = 1. - dist / (radius + other.radius);
+		collisionForce *= collisionForce;
+		collisionForce *= COLLISION_POWER;
+
+		double sumMass = mass + other.mass;
+		// calc influence on us
+		{
+			double currPart = other.mass / sumMass; // more influence on us if other bigger and vice versa
+
+			speed.x += collisionForce * currPart * collisionVectorX;
+			speed.y += collisionForce * currPart * collisionVectorY;
+		}
+
+		// calc influence on other
+		{
+			double otherPart = mass / sumMass;
+			
+			other.speed.x -= collisionForce * otherPart * collisionVectorX;
+			other.speed.y -= collisionForce * otherPart * collisionVectorY;
+		}
+	}
+
+	void fusion(const PlayerFragment frag) 
+	{
+		double sumMass = mass + frag.mass;
+
+		double fragInfluence = frag.mass / sumMass;
+		double currInfluence = mass / sumMass;
+
+		// center with both parts influence
+		this->x = this->x * currInfluence + frag.x * fragInfluence;
+		this->y = this->y * currInfluence + frag.y * fragInfluence;
+
+		// new move vector with both parts influence
+		speed.x = speed.x * currInfluence + frag.speed.x * fragInfluence;
+		speed.y = speed.y * currInfluence + frag.speed.y * fragInfluence;
+
+		mass += frag.mass;
+	}
+
+	bool can_eject() const
+	{
+		return mass > MIN_EJECT_MASS;
+	}
+
+	Ejection eject_now()
+	{
+		auto e = *this + speed.normalized() * (radius + 1);
+		
+		Ejection new_eject;
+		new_eject.x = e.x;
+		new_eject.y = e.y;
+		new_eject.radius = EJECT_RADIUS;
+		new_eject.mass = EJECT_MASS;
+		new_eject.ownerPlayerId = playerId;
+		
+		new_eject.speed = speed.take(EJECT_START_SPEED);
+
+		addMass(-EJECT_MASS);
+		return new_eject;
+	}
+
+	//bool update_by_mass(int max_x, int max_y) {
+	//	bool changed = false;
+	//	double new_radius = Config::RADIUS_FACTOR * qSqrt(mass);
+	//	if (radius != new_radius) {
+	//		radius = new_radius;
+	//		changed = true;
+	//	}
+
+	//	double new_speed = Config::SPEED_FACTOR / qSqrt(mass);
+	//	if (speed > new_speed && !is_fast) {
+	//		speed = new_speed;
+	//	}
+
+	//	if (x - radius < 0) {
+	//		x += (radius - x);
+	//		changed = true;
+	//	}
+	//	if (y - radius < 0) {
+	//		y += (radius - y);
+	//		changed = true;
+	//	}
+	//	if (x + radius > max_x) {
+	//		x -= (radius + x - max_x);
+	//		changed = true;
+	//	}
+	//	if (y + radius > max_y) {
+	//		y -= (radius + y - max_y);
+	//		changed = true;
+	//	}
+
+	//	return changed;
+	//}
+
+	void moveTo(const Move &mv)
+	{
+		apply_direct(mv);
+		move();
+	}
+
+	void apply_direct(const Move &direct) {
+		//cmd_x = direct.x; cmd_y = direct.y;
+		if (is_fast) return;
+
+
+		double max_speed = getMaxSpeed();
+
+		double dy = direct.y - y, dx = direct.x - x;
+		double dist = qSqrt(dx * dx + dy * dy);
+		double ny = (dist > 0) ? (dy / dist) : 0;
+		double nx = (dist > 0) ? (dx / dist) : 0;
+		double inertion = Config::INERTION_FACTOR;
+
+		speed.x += (nx * max_speed - speed.x) * inertion / mass;
+		speed.y += (ny * max_speed - speed.y) * inertion / mass;
+
+		if (speed.length() > max_speed)
+			speed = speed.take(max_speed);
+	}
+
+	bool move() 
+	{
+		double rB = x + radius, lB = x - radius;
+		double dB = y + radius, uB = y - radius;
+		auto map_size = Config::MAP_SIZE;
+
+		bool changed = false;
+		if (rB + speed.x < map_size && lB + speed.x > 0)
+		{
+			x += speed.x;
+			changed = true;
+		}
+		else 
+		{
+			// долетаем до стенки
+			double new_x = max(radius, min(map_size - radius, x + speed.x));
+			changed |= (x != new_x);
+			x = new_x;
+			// зануляем проекцию скорости по dx
+			speed.x = 0;
+		}
+
+		if (dB + speed.y < map_size && uB + speed.y > 0) 
+		{
+			y += speed.y;
+			changed = true;
+		}
+		else 
+		{
+			// долетаем до стенки
+			double new_y = max(radius, min(map_size - radius, y + speed.y));
+			changed |= (y != new_y);
+			y = new_y;
+			// зануляем проекцию скорости по dy
+			speed.y = 0;
+		}
+
+		if (is_fast)
+			apply_viscosity(getMaxSpeed());
+		
+		if (fuse_timer > 0) 
+			fuse_timer--;
+		
+		return changed;
+	}
+
+	bool can_shrink() 
+	{
+		return mass > MIN_SHRINK_MASS;
+	}
+
+	void shrink_now() 
+	{
+		addMass(-(mass - MIN_SHRINK_MASS) * SHRINK_FACTOR);
 	}
 };

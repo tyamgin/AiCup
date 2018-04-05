@@ -1,25 +1,40 @@
 #include "Model/World.hpp"
 #include "Model/Sandbox.hpp"
+#include "SpeedObserver.hpp"
 #include "DangerStrategy.hpp"
 
 #define GRID_SIZE 50
 
 struct MyStrategy
 {
+	SpeedObserver speedObserver;
+
 	int lastSeen[GRID_SIZE + 1][GRID_SIZE + 1];
-	Player prevMe;
+	Sandbox *prevEnv = nullptr;
 
 	MyStrategy()
 	{
 		memset(lastSeen, 0, sizeof(lastSeen));
 	}
 
-	Move onTick(const World &world)
+	Move onTick(World world)
 	{
-		auto res = _onTick(world);
+		speedObserver.update(world);
 
+		auto res = _onTick(world);
+		assert(!res.split || !res.eject);
 		
-		
+		if (res.split || res.eject)
+		{
+			prevEnv = new Sandbox(world);
+			prevEnv->move(res);
+		}
+
+
+		if (prevEnv != nullptr)
+		{
+			prevEnv = prevEnv;
+		}
 		return res;
 	}
 
@@ -61,6 +76,11 @@ struct MyStrategy
 			if (frag.canSplit(world.me.fragments.size()))
 			{
 				return MoveFactory::split();
+			}
+
+			if (frag.can_eject())
+			{
+				return MoveFactory::eject();
 			}
 		}
 
@@ -115,7 +135,8 @@ struct MyStrategy
 
 			for (int i = 0; i < steps; i++)
 			{
-				env.moveTo(moveto);
+				Move mv{ moveto.x, moveto.y };
+				env.move(mv);
 
 				auto d = getDanger(world, env, steps);
 				if (d < best_danger)

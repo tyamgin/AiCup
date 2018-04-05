@@ -1,10 +1,8 @@
 #pragma once
 
 #include "Player.hpp"
-#include "Ejection.hpp"
 #include "Food.hpp"
 #include "Virus.hpp"
-#include "Move.hpp"
 #include "../Utility/Geometry.hpp"
 #include "../Utility/Iterators.hpp"
 

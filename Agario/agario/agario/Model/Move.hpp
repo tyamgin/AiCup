@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../nlohmann/json.hpp"
+#include <string>
+using namespace std;
 
 struct Move
 {

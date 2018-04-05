@@ -32,18 +32,18 @@ struct CircularUnit : Unit
 		return INT_MIN;
 	}
 
-	void moveTo(const Point &to)
-	{
-		auto max_speed = getMaxSpeed();
-		auto n = (to - *this).take(max_speed);
-		speed += (n - speed) * Config::INERTION_FACTOR / mass;
+	//void moveTo(const Point &to)
+	//{
+	//	auto max_speed = getMaxSpeed();
+	//	auto n = (to - *this).take(max_speed);
+	//	speed += (n - speed) * Config::INERTION_FACTOR / mass;
 
-		auto new_x = x + speed.x;
-		auto new_y = y + speed.y;
-		if (new_x < radius || new_y < radius || new_x > Config::MAP_SIZE - radius || new_y > Config::MAP_SIZE - radius)
-			return;
-			
-		x = new_x;
-		y = new_y;
-	}
+	//	auto new_x = x + speed.x;
+	//	auto new_y = y + speed.y;
+	//	if (new_x < radius || new_y < radius || new_x > Config::MAP_SIZE - radius || new_y > Config::MAP_SIZE - radius)
+	//		return;
+	//		
+	//	x = new_x;
+	//	y = new_y;
+	//}
 };

@@ -153,6 +153,7 @@
     <ClInclude Include="Model\Virus.hpp" />
     <ClInclude Include="Model\World.hpp" />
     <ClInclude Include="MyStrategy.hpp" />
+    <ClInclude Include="SpeedObserver.hpp" />
     <ClInclude Include="Utility\Geometry.hpp" />
     <ClInclude Include="Utility\Iterators.hpp" />
     <ClInclude Include="Visualizer.hpp" />

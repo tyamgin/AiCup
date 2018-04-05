@@ -89,6 +89,9 @@
     <ClInclude Include="Model\Sandbox.hpp">
       <Filter>Source Files\Model</Filter>
     </ClInclude>
+    <ClInclude Include="SpeedObserver.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
