@@ -57,9 +57,6 @@ struct MyStrategy
 			}
 		}
 
-		if (world.me.fragments.empty())
-			return Move{ 100, 100 };
-
 		int fragIdx = -1;
 		auto me = world.me.fragments[0];
 		auto mes = me + me.speed*6;
@@ -75,15 +72,15 @@ struct MyStrategy
 		}
 		if (fragIdx != -1)
 		{
-			return Move{ world.opponentFragments[fragIdx].x, world.opponentFragments[fragIdx].y, "Fight" };
+			return Move(world.opponentFragments[fragIdx].x, world.opponentFragments[fragIdx].y);
 		}
 
 		for (auto &frag : world.me.fragments)
 		{
-			if (frag.canSplit(world.me.fragments.size()))
-			{
-				return MoveFactory::split();
-			}
+			//if (frag.canSplit(world.me.fragments.size()))
+			//{
+			//	return MoveFactory::split();
+			//}
 
 			//if (frag.can_eject())
 			//{
@@ -121,41 +118,50 @@ struct MyStrategy
 				}
 			}
 		}
-		return Move{ target.x, target.y, "Point" };
+		return Move(target.x, target.y);
 		
 	}
 
 	Move _doPP(const World &world)
 	{
-		const int steps = 15;
-		const int angles = 24;
-		::Point best_dir{ 0, 0 };
-		double best_danger = INT_MAX;
-		Sandbox best_env(world);
-		
-		for (int angIdx = 0; angIdx < angles; angIdx++)
+		int steps = 15;
+		int angles = 24;
+		if (world.me.fragments.size() > 5)
 		{
-			double ang = M_PI * 2 / angles * angIdx;
-			Sandbox env = world;
-			auto dir = ::Point::byAngle(ang);
-			auto moveto = getBorderPoint(env.me.fragments[0], dir);
+			steps = 10;
+			angles = 12;
+		}
 
-			for (int i = 0; i < steps; i++)
+		Move best_move;
+		double best_danger = INT_MAX;
+		//Sandbox best_env(world);
+		
+		for (int do_split = 0; do_split < 2; do_split++)
+		{
+			for (int angIdx = 0; angIdx < angles; angIdx++)
 			{
-				Move mv{ moveto.x, moveto.y };
-				env.move(mv);
+				double ang = M_PI * 2 / angles * angIdx;
+				Sandbox env = world;
+				auto dir = ::Point::byAngle(ang);
+				auto moveto = getBorderPoint(env.me.fragments[0], dir);
 
-				auto d = getDanger(world, env, steps);
-				if (d < best_danger)
+				for (int i = 0; i < steps; i++)
 				{
-					best_danger = d;
-					best_dir = dir;
-					best_env = env;
+					Move mv{ moveto.x, moveto.y };
+					mv.split = do_split && i == 0;
+					env.move(mv);
+
+					auto d = getDanger(world, env, steps);
+					if (d < best_danger)
+					{
+						best_danger = d;
+						best_move = mv;
+						//best_env = env;
+					}
 				}
 			}
 		}
-		auto to = getBorderPoint(world.me.fragments[0], best_dir);
-		return Move{ to.x, to.y, "PP" };
+		return best_move;
 	}
 
 	::Point getBorderPoint(::Point center, ::Point dir)

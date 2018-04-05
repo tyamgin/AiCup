@@ -38,11 +38,20 @@ ref struct Visualizer
 		for (auto &frag : world.me.fragments)
 		{
 			fillCircle(Color::Violet, frag.x, frag.y, frag.radius);
+			if (frag.canSplit(world.me.fragments.size()))
+				drawCircle(Color::White, frag.x, frag.y, frag.radius * 0.8, 2);
+			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x, frag.y + frag.speed.y, 2);
 		}
 
 		for (auto &frag : world.opponentFragments)
 		{
 			fillCircle(Color::Orange, frag.x, frag.y, frag.radius);
+			int frags_count = 0;
+			for (auto &f : world.opponentFragments)
+				frags_count += f.playerId == frag.playerId;
+			if (frag.canSplit(frags_count))
+				drawCircle(Color::White, frag.x, frag.y, frag.radius * 0.8, 2);
+			drawLine(Color::Green, frag.x, frag.x, frag.y + frag.speed.x, frag.y + frag.speed.y, 2);
 		}
 
 		for (auto &ej : world.ejections)
@@ -54,6 +63,17 @@ ref struct Visualizer
 	static void fillCircle(Color color, double x, double y, double radius)
 	{
 		_graphics->FillEllipse(gcnew SolidBrush(color), _x(x - radius), _y(y - radius), _s(radius * 2), _s(radius * 2));
+	}
+
+	static void drawCircle(Color color, double x, double y, double radius, float width)
+	{
+		auto pen = width > 0 ? gcnew Pen(color, width) : gcnew Pen(color);
+		_graphics->DrawEllipse(pen, _x(x - radius), _y(y - radius), _s(radius * 2), _s(radius * 2));
+	}
+
+	static void drawLine(Color color, double x, double y, double X, double Y, float width)
+	{
+		_graphics->DrawLine(gcnew Pen(color, width), _x(x), _y(y), _x(X), _y(Y));
 	}
 
 private:

@@ -10,6 +10,8 @@ struct Sandbox : public World
 
 	Sandbox(const World &world) : World(world)
 	{
+		// TODO: fuse, viruses
+		// seed = 111
 		
 	}
 

@@ -6,10 +6,18 @@ using namespace std;
 
 struct Move
 {
-	double x, y;
+	double x = 0, y = 0;
 	string debug;
-	bool split;
-	bool eject;
+	bool split = false;
+	bool eject = false;
+
+	Move()
+	{
+	}
+
+	Move(double x, double y) : x(x), y(y)
+	{
+	}
 
 	nlohmann::json toJson()
 	{
@@ -21,22 +29,5 @@ struct Move
 		if (eject)
 			result["Eject"] = true;
 		return result;
-	}
-};
-
-struct MoveFactory
-{
-	static Move eject()
-	{
-		auto move = Move();
-		move.eject = true;
-		return move;
-	}
-
-	static Move split()
-	{
-		auto move = Move();
-		move.split = true;
-		return move;
 	}
 };

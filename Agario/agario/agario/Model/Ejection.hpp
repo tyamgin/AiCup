@@ -18,20 +18,14 @@ struct Ejection : CircularUnit
 		ownerPlayerId = obj["pId"].get<int>();
 	}
 
-	bool move() 
+	void move() 
 	{
 		if (abs(speed.x) < EPS && abs(speed.y) < EPS)
-			return false;
+			return;
 		
-		double new_x = max(radius, min(Config::MAP_SIZE - radius, x + speed.x));
-		bool changed = (x != new_x);
-		x = new_x;
-
-		double new_y = max(radius, min(Config::MAP_SIZE - radius, y + speed.y));
-		changed |= (y != new_y);
-		y = new_y;
+		x = max(radius, min(Config::MAP_SIZE - radius, x + speed.x));
+		y = max(radius, min(Config::MAP_SIZE - radius, y + speed.y));
 
 		speed = speed.take(max(0.0, speed.length() - Config::VISCOSITY));
-		return changed;
 	}
 };
