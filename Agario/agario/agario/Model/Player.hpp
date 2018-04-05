@@ -41,11 +41,4 @@ struct Player
 		return false;
 	}
 
-	void moveTo(const Move &move)
-	{
-		for (auto &frag : fragments)
-			frag.moveTo(move);
-	}
-
-
 };

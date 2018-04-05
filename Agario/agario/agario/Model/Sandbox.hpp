@@ -15,8 +15,9 @@ struct Sandbox : public World
 
 	void move(Move move)
 	{
-		_doMove(move);
+		_doApply(move);
 		tick++;
+		_doMove(move);
 		_doEject(move);
 		_doSplit(move);
 		_doShrink();
@@ -25,7 +26,7 @@ struct Sandbox : public World
 		//fuse_players();
 		//burst_on_viruses();
 
-		//update_players_radius();
+		_doFixes();
 		//update_scores();
 		//split_viruses();
 	}
@@ -33,14 +34,27 @@ struct Sandbox : public World
 	
 
 private:
+	void _doApply(const Move &move)
+	{
+		for (auto &frag : me.fragments)
+			frag.applyDirect(move);
+	}
+
 	void _doMove(const Move &move)
 	{
-		me.moveTo(move);
-
 		for (auto &ej : ejections)
-		{
 			ej.move();
+		
+		for (int i = 0; i < (int) me.fragments.size(); i++)
+		{
+			for (int j = i + 1; j < (int) me.fragments.size(); j++)
+			{
+				me.fragments[i].collisionCalc(me.fragments[j]);
+			}
 		}
+
+		for (auto &frag : me.fragments)
+			frag.move();
 	}
 
 	void _doEat()
@@ -87,12 +101,16 @@ private:
 		int yet_cnt = me.fragments.size();
 		int size = yet_cnt;
 
+		int max_id = 0;
+		for (auto &frag : me.fragments)
+			max_id = max(max_id, frag.fragmentId);
+
 		for (int i = 0; i < size; i++)
 		{
 			auto &frag = me.fragments[i];
 			if (frag.canSplit(yet_cnt)) 
 			{
-				auto new_frag = frag.split();
+				auto new_frag = frag.split(max_id);
 				me.fragments.push_back(new_frag);
 				yet_cnt++;
 			}
@@ -112,5 +130,41 @@ private:
 				ejections.push_back(new_ej);
 			}
 		}
+	}
+
+	void _doFix(PlayerFragment &frag)
+	{
+		double new_speed = frag.getMaxSpeed();
+		if (!frag.is_fast) 
+		{
+			auto length2 = frag.speed.length2();
+			if (length2 > new_speed*new_speed)
+			{
+				auto length_factor = new_speed / sqrt(length2);
+				frag.speed *= length_factor;
+			}
+		}
+		
+		auto mx = Config::MAP_SIZE;
+
+		if (frag.x - frag.radius < 0)
+			frag.x += (frag.radius - frag.x);
+		
+		if (frag.y - frag.radius < 0)
+			frag.y += (frag.radius - frag.y);
+		
+		if (frag.x + frag.radius > mx)
+			frag.x -= (frag.radius + frag.x - mx);
+		
+		if (frag.y + frag.radius > mx)
+			frag.y -= (frag.radius + frag.y - mx);
+	}
+
+	void _doFixes() 
+	{
+		for (auto &frag : me.fragments)
+			_doFix(frag);
+		for (auto &frag : opponentFragments)
+			_doFix(frag);
 	}
 };

@@ -3,7 +3,6 @@
 #include "Player.hpp"
 #include "Food.hpp"
 #include "Virus.hpp"
-#include "../Utility/Geometry.hpp"
 #include "../Utility/Iterators.hpp"
 
 #include <climits>
@@ -16,6 +15,11 @@ struct World
 	vector<Food> foods;
 	vector<Virus> viruses;
 	int tick;
+
+	World()
+	{
+		
+	}
 
 	World(const nlohmann::json &obj)
 	{

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="Point">
+    <DisplayString>{{{x}, {y}}}</DisplayString>
+  </Type>
+  <Type Name="Unit">
+    <DisplayString>{{{x}, {y}, s={speed} m={mass}}}</DisplayString>
+  </Type>
+  <Type Name="CircularUnit">
+    <DisplayString>{{{x}, {y}, s={speed} m={mass}, r={radius}}}</DisplayString>
+  </Type>
+</AutoVisualizer>

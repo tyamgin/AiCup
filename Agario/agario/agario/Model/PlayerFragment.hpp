@@ -25,20 +25,18 @@
 
 struct PlayerFragment : CircularUnit
 {
-	int ttf;
-	int playerId, fragmentId = 1;
+	int ttf = 0;
+	int playerId = 0, fragmentId = 0;
+	bool is_fast = false;
 
 	PlayerFragment()
 	{
-
 	}
 
 	PlayerFragment(const nlohmann::json &obj) : CircularUnit(obj)
 	{
 		if (obj.count("TTF"))
 			ttf = obj["TTF"].get<int>();
-		else
-			ttf = 0;
 
 		auto id_str = obj["Id"].get<string>();
 		auto dot_pos = id_str.find('.');
@@ -81,9 +79,6 @@ struct PlayerFragment : CircularUnit
 		
 		return false;
 	}
-
-	bool is_fast = false;
-	int fuse_timer = 0;
 
 	//QPair<double, double> get_direct_norm() const {
 	//	double dx = cmd_x - x, dy = cmd_y - y;
@@ -167,9 +162,9 @@ struct PlayerFragment : CircularUnit
 	//	return fragments;
 	//}
 
-	PlayerFragment split() {
+	PlayerFragment split(int max_fragment_id) 
+	{
 		double new_mass = mass / 2;
-		double new_radius = RADIUS_FACTOR * qSqrt(new_mass);
 
 		PlayerFragment new_player;
 		new_player.x = x;
@@ -177,17 +172,20 @@ struct PlayerFragment : CircularUnit
 		new_player.addMass(new_mass);
 		new_player.speed = speed.take(SPLIT_START_SPEED);
 		new_player.is_fast = true;
-
-		fuse_timer = Config::TICKS_TIL_FUSION;
-		mass = new_mass;
-		radius = new_radius;
+		new_player.playerId = playerId;
+		new_player.fragmentId = max_fragment_id + 1;
+		new_player.ttf = Config::TICKS_TIL_FUSION;
+		
+		fragmentId = max_fragment_id + 2;
+		ttf = Config::TICKS_TIL_FUSION;
+		addMass(-new_mass);
 
 		return new_player;
 	}
 
 	bool can_fuse(const PlayerFragment &frag) const 
 	{
-		if (fuse_timer || frag.fuse_timer)
+		if (ttf || frag.ttf)
 			return false;
 
 		// TODO: can optimize
@@ -199,13 +197,14 @@ struct PlayerFragment : CircularUnit
 
 	void collisionCalc(PlayerFragment &other) 
 	{
-		if (is_fast || other.is_fast) { // do not collide splits
+		if (is_fast || other.is_fast) // do not collide splits
 			return;
-		}
-		double dist = getDistanceTo(other);
-		if (dist >= radius + other.radius) {
+		
+		double dist2 = getDistanceTo2(other);
+		if (dist2 >= sqr(radius + other.radius)) // do not intersects
 			return;
-		}
+		
+		auto dist = sqrt(dist2);
 
 		// vector from centers
 		double collisionVectorX = this->x - other.x;
@@ -313,13 +312,7 @@ struct PlayerFragment : CircularUnit
 	//	return changed;
 	//}
 
-	void moveTo(const Move &mv)
-	{
-		apply_direct(mv);
-		move();
-	}
-
-	void apply_direct(const Move &direct) {
+	void applyDirect(const Move &direct) {
 		//cmd_x = direct.x; cmd_y = direct.y;
 		if (is_fast) return;
 
@@ -339,23 +332,20 @@ struct PlayerFragment : CircularUnit
 			speed = speed.take(max_speed);
 	}
 
-	bool move() 
+	void move() 
 	{
 		double rB = x + radius, lB = x - radius;
 		double dB = y + radius, uB = y - radius;
 		auto map_size = Config::MAP_SIZE;
 
-		bool changed = false;
 		if (rB + speed.x < map_size && lB + speed.x > 0)
 		{
 			x += speed.x;
-			changed = true;
 		}
 		else 
 		{
 			// долетаем до стенки
 			double new_x = max(radius, min(map_size - radius, x + speed.x));
-			changed |= (x != new_x);
 			x = new_x;
 			// зануляем проекцию скорости по dx
 			speed.x = 0;
@@ -364,13 +354,11 @@ struct PlayerFragment : CircularUnit
 		if (dB + speed.y < map_size && uB + speed.y > 0) 
 		{
 			y += speed.y;
-			changed = true;
 		}
 		else 
 		{
 			// долетаем до стенки
 			double new_y = max(radius, min(map_size - radius, y + speed.y));
-			changed |= (y != new_y);
 			y = new_y;
 			// зануляем проекцию скорости по dy
 			speed.y = 0;
@@ -379,10 +367,8 @@ struct PlayerFragment : CircularUnit
 		if (is_fast)
 			apply_viscosity(getMaxSpeed());
 		
-		if (fuse_timer > 0) 
-			fuse_timer--;
-		
-		return changed;
+		if (ttf > 0) 
+			ttf--;
 	}
 
 	bool can_shrink() 

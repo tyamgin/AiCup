@@ -19,22 +19,29 @@ struct MyStrategy
 
 	Move onTick(World world)
 	{
-		speedObserver.update(world);
+		speedObserver.beforeTick(world);
 
 		auto res = _onTick(world);
 		assert(!res.split || !res.eject);
 		
-		if (res.split || res.eject)
-		{
-			prevEnv = new Sandbox(world);
-			prevEnv->move(res);
-		}
+		//if (res.split)
+		//{
+		//	prevEnv = new Sandbox(world);
+		//}
 
+		//if (prevEnv != nullptr)
+		//{
+		//	prevEnv = prevEnv;
+		//}
 
-		if (prevEnv != nullptr)
-		{
-			prevEnv = prevEnv;
-		}
+		//if (prevEnv != nullptr)
+		//{
+		//	prevEnv->move(res);
+		//}
+
+		Sandbox env(world);
+		env.move(res);
+		speedObserver.adterTick(env);
 		return res;
 	}
 
@@ -78,10 +85,10 @@ struct MyStrategy
 				return MoveFactory::split();
 			}
 
-			if (frag.can_eject())
-			{
-				return MoveFactory::eject();
-			}
+			//if (frag.can_eject())
+			//{
+			//	return MoveFactory::eject();
+			//}
 		}
 
 		bool danger = false;

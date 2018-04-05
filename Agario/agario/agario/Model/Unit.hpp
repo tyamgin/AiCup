@@ -1,10 +1,11 @@
 #pragma once
 
 #include "Point.hpp"
+using namespace std;
 
 struct Unit : ::Point
 {
-	double mass;
+	double mass = 0;
 	::Point speed;
 
 	Unit()
@@ -30,5 +31,10 @@ struct Unit : ::Point
 	double getMaxSpeed() const
 	{
 		return Config::SPEED_FACTOR / sqrt(mass);
+	}
+
+	string toString() const
+	{
+		return "test";
 	}
 };

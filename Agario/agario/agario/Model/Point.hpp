@@ -1,17 +1,16 @@
 #pragma once
 #include "../nlohmann/json.hpp"
+#include "../Utility/Geometry.hpp"
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include "CircularUnit.hpp"
 
 struct Point
 {
-	double x, y;
+	double x = 0, y = 0;
 
 	Point()
 	{
-		x = 0;
-		y = 0;
 	}
 
 	explicit Point(double x, double y)
@@ -29,6 +28,11 @@ struct Point
 	double length() const
 	{
 		return sqrt(x * x + y * y);
+	}
+
+	double length2() const
+	{
+		return x * x + y * y;
 	}
 
 	// Вектор длины 1 того-же направления, или (0, 0), если вектор нулевой

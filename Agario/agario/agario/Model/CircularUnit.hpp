@@ -5,7 +5,7 @@
 
 struct CircularUnit : Unit
 {
-	double radius;
+	double radius = 0;
 
 	CircularUnit()
 	{
