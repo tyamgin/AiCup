@@ -57,23 +57,23 @@ struct MyStrategy
 			}
 		}
 
-		int fragIdx = -1;
+		//int fragIdx = -1;
 		auto me = world.me.fragments[0];
 		auto mes = me + me.speed*6;
 
-		for(int i = 0; i < (int) world.opponentFragments.size(); i++)
-		{
-			auto &oppFrag = world.opponentFragments[i];
-			if (world.me.canEat(oppFrag))
-			{
-				if (fragIdx == -1 || world.opponentFragments[fragIdx].getDistanceTo2(mes) > oppFrag.getDistanceTo2(mes))
-					fragIdx = i;
-			}
-		}
-		if (fragIdx != -1)
-		{
-			return Move(world.opponentFragments[fragIdx].x, world.opponentFragments[fragIdx].y);
-		}
+		//for(int i = 0; i < (int) world.opponentFragments.size(); i++)
+		//{
+		//	auto &oppFrag = world.opponentFragments[i];
+		//	if (world.me.canEat(oppFrag))
+		//	{
+		//		if (fragIdx == -1 || world.opponentFragments[fragIdx].getDistanceTo2(mes) > oppFrag.getDistanceTo2(mes))
+		//			fragIdx = i;
+		//	}
+		//}
+		//if (fragIdx != -1)
+		//{
+		//	return Move(world.opponentFragments[fragIdx].x, world.opponentFragments[fragIdx].y);
+		//}
 
 		for (auto &frag : world.me.fragments)
 		{
@@ -88,13 +88,13 @@ struct MyStrategy
 			//}
 		}
 
-		bool danger = false;
+		bool fight = false;
 		for (auto &oppFr : world.opponentFragments)
 			for (auto &myFr : world.me.fragments)
-				if (oppFr.canEat(myFr))
-					danger = true;
+				if (oppFr.canEat(myFr) || myFr.canEat(oppFr))
+					fight = true;
 
-		if (!world.foods.empty() || danger)
+		if (!world.foods.empty() || fight)
 		{
 			return _doPP(world);
 		}
@@ -124,6 +124,8 @@ struct MyStrategy
 
 	Move _doPP(const World &world)
 	{
+		TIMER_START("pp");
+
 		int steps = 15;
 		int angles = 24;
 		if (world.me.fragments.size() > 5)
@@ -134,33 +136,55 @@ struct MyStrategy
 
 		Move best_move;
 		double best_danger = INT_MAX;
-		//Sandbox best_env(world);
+		Sandbox best_env(world);
 		
-		for (int do_split = 0; do_split < 2; do_split++)
+		bool can_split_any = false;
+		for (auto &frag : world.me.fragments)
+			can_split_any |= frag.canSplit(world.me.fragments.size());
+
+		auto check_move_to = [&](bool do_split, ::Point moveto)
+		{
+			Sandbox env = world;
+			Move first_move;
+
+			for (int i = 0; i < steps; i++)
+			{
+				Move mv{ moveto.x, moveto.y };
+				mv.split = do_split && i == 0;
+				env.move(mv);
+				if (i == 0)
+					first_move = mv;
+
+				auto d = getDanger(world, env, steps);
+				if (d < best_danger)
+				{
+					best_danger = d;
+					best_move = first_move;
+					best_env = env;
+				}
+			}
+		};
+
+		for (int do_split = 0; do_split <= (int)can_split_any; do_split++)
 		{
 			for (int angIdx = 0; angIdx < angles; angIdx++)
 			{
 				double ang = M_PI * 2 / angles * angIdx;
-				Sandbox env = world;
 				auto dir = ::Point::byAngle(ang);
-				auto moveto = getBorderPoint(env.me.fragments[0], dir);
-
-				for (int i = 0; i < steps; i++)
-				{
-					Move mv{ moveto.x, moveto.y };
-					mv.split = do_split && i == 0;
-					env.move(mv);
-
-					auto d = getDanger(world, env, steps);
-					if (d < best_danger)
-					{
-						best_danger = d;
-						best_move = mv;
-						//best_env = env;
-					}
-				}
+				auto moveto = getBorderPoint(world.me.fragments[0], dir);
+				check_move_to(!!do_split, moveto);
 			}
 		}
+		if (world.me.fragments.size() > 1)
+		{
+			auto rect = getBoundingRect(world.me.fragments);
+			const int side = 3;
+			for (int i = 0; i < side; i++)
+				for (int j = 0; j < side; j++)
+					check_move_to(false, ::Point(rect.width() / (side - 1) * i, rect.height() / (side - 1) * j));
+		}
+
+		TIMER_ENG_LOG("pp");
 		return best_move;
 	}
 

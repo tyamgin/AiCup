@@ -21,7 +21,7 @@ struct CircularUnit : Unit
 	double eatDepth(const CircularUnit &unit) const
 	{
 		if (!canEat(unit))
-			return false;
+			return -INFINITY;
 
 		const double DIAM_EAT_FACTOR = 2.0 / 3;
 
@@ -29,7 +29,7 @@ struct CircularUnit : Unit
 		if (dist - unit.radius + (unit.radius * 2) * DIAM_EAT_FACTOR < radius) {
 			return radius - dist;
 		}
-		return INT_MIN;
+		return -INFINITY;
 	}
 
 	//void moveTo(const Point &to)

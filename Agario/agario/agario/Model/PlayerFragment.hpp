@@ -90,7 +90,7 @@ struct PlayerFragment : CircularUnit
 	//	return QPair<double, double>(x, y);
 	//}
 
-	void apply_viscosity(double usual_speed) 
+	void applyViscosity(double usual_speed) 
 	{
 		auto spd = speed.length();
 		// если на этом тике не снизим скорость достаточно - летим дальше
@@ -104,11 +104,6 @@ struct PlayerFragment : CircularUnit
 			speed = speed.take(usual_speed);
 			is_fast = false;
 		}
-	}
-
-	void eat(const Unit &unit) 
-	{
-		mass += unit.mass;
 	}
 
 	/////////////////////////////// пока не нужно
@@ -183,7 +178,7 @@ struct PlayerFragment : CircularUnit
 		return new_player;
 	}
 
-	bool can_fuse(const PlayerFragment &frag) const 
+	bool canFuse(const PlayerFragment &frag) const 
 	{
 		if (ttf || frag.ttf)
 			return false;
@@ -247,22 +242,22 @@ struct PlayerFragment : CircularUnit
 		double currInfluence = mass / sumMass;
 
 		// center with both parts influence
-		this->x = this->x * currInfluence + frag.x * fragInfluence;
-		this->y = this->y * currInfluence + frag.y * fragInfluence;
+		x = x * currInfluence + frag.x * fragInfluence;
+		y = y * currInfluence + frag.y * fragInfluence;
 
 		// new move vector with both parts influence
 		speed.x = speed.x * currInfluence + frag.speed.x * fragInfluence;
 		speed.y = speed.y * currInfluence + frag.speed.y * fragInfluence;
 
-		mass += frag.mass;
+		addMass(frag.mass);
 	}
 
-	bool can_eject() const
+	bool canEject() const
 	{
 		return mass > MIN_EJECT_MASS;
 	}
 
-	Ejection eject_now()
+	Ejection eject()
 	{
 		auto e = *this + speed.normalized() * (radius + 1);
 		
@@ -365,18 +360,18 @@ struct PlayerFragment : CircularUnit
 		}
 
 		if (is_fast)
-			apply_viscosity(getMaxSpeed());
+			applyViscosity(getMaxSpeed());
 		
 		if (ttf > 0) 
 			ttf--;
 	}
 
-	bool can_shrink() 
+	bool canShrink() 
 	{
 		return mass > MIN_SHRINK_MASS;
 	}
 
-	void shrink_now() 
+	void shrink() 
 	{
 		addMass(-(mass - MIN_SHRINK_MASS) * SHRINK_FACTOR);
 	}

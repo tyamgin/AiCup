@@ -156,6 +156,7 @@
     <ClInclude Include="SpeedObserver.hpp" />
     <ClInclude Include="Utility\Geometry.hpp" />
     <ClInclude Include="Utility\Iterators.hpp" />
+    <ClInclude Include="Utility\Logger.h" />
     <ClInclude Include="Visualizer.hpp" />
   </ItemGroup>
   <ItemGroup>

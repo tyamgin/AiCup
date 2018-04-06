@@ -24,8 +24,8 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 	Exponenter foodExp(1, foodScore * 0.5, Config::MAP_SIZE / 4.0, 0.3);
 
 	double res = 0;
-	for (auto eatenFoodTick : env.eatenFoodTicks)
-		res -= foodScore * (interval - (eatenFoodTick - startEnv.tick)) / interval;
+	for (auto &eatenFoodEvent : env.eatenFoodEvents)
+		res -= foodScore * (interval - (eatenFoodEvent.tick - startEnv.tick)) / interval;
 
 	for (auto &food : env.foods)
 	{
@@ -38,7 +38,7 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 		}
 	}
 
-	double oppScore = 100;
+	double oppScore = 120;
 	Exponenter oppExp(20, oppScore, Config::MAP_SIZE / 4.0, 2);
 
 	for (auto &opp : env.opponentFragments)
@@ -50,7 +50,17 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 				auto dst = frag.getDistanceTo(opp);
 				res += oppExp(dst);
 			}
+
+			if (frag.canEat(opp))
+			{
+				auto dst = frag.getDistanceTo(opp);
+				res -= oppExp(dst);
+			}
 		}
 	}
+
+	res -= env.eatenFragmentEvents.size() * oppScore;
+	res += env.lostFragmentEvents.size() * oppScore;
+
 	return res;
 }

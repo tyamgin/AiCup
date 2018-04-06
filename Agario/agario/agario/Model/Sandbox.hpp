@@ -4,15 +4,31 @@
 
 #define SHRINK_EVERY_TICK 50
 
+struct EatenFoodEvent
+{
+	int tick;
+};
+
+struct EatenFragmentEvent
+{
+	int tick;
+	double mass;
+};
+
+struct LostFragmentEvent
+{
+	int tick;
+	double mass;
+};
+
 struct Sandbox : public World 
 {
-	vector<int> eatenFoodTicks;
+	vector<EatenFoodEvent> eatenFoodEvents;
+	vector<EatenFragmentEvent> eatenFragmentEvents;
+	vector<LostFragmentEvent> lostFragmentEvents;
 
 	Sandbox(const World &world) : World(world)
-	{
-		// TODO: fuse, viruses
-		// seed = 111
-		
+	{		
 	}
 
 	void move(Move move)
@@ -25,7 +41,7 @@ struct Sandbox : public World
 		_doShrink();
 		_doEat();
 
-		//fuse_players();
+		_doFuse();
 		//burst_on_viruses();
 
 		_doFixes();
@@ -59,27 +75,96 @@ private:
 			frag.move();
 	}
 
+	int nearest_fragment(const vector<PlayerFragment> &collection, const CircularUnit &unit)
+	{
+		int nearest_predator_idx = -1;
+		double deeper_dist = -INFINITY;
+		for (int i = 0; i < (int)collection.size(); i++)
+		{
+			auto &predator = collection[i];
+			double qdist = predator.eatDepth(unit);
+			if (qdist > deeper_dist)
+			{
+				deeper_dist = qdist;
+				nearest_predator_idx = i;
+			}
+		}
+		return nearest_predator_idx;
+	}
+
 	void _doEat()
 	{
+
+
+
+		//auto nearest_virus = [this](Ejection *eject) {
+		//	Virus *nearest_predator = NULL;
+		//	double deeper_dist = -INFINITY;
+		//	for (Virus *predator : virus_array) {
+		//		double qdist = predator->can_eat(eject);
+		//		if (qdist > deeper_dist) {
+		//			deeper_dist = qdist;
+		//			nearest_predator = predator;
+		//		}
+		//	}
+		//	return nearest_predator;
+		//};
+
+		// поедаю еду
 		for (int i = 0; i < (int)foods.size(); i++)
 		{
 			auto &food = foods[i];
-			double max_eat_depth = 0;
-			PlayerFragment *eat_frag = nullptr;
-			for (auto &frag : me.fragments)
+			auto nearest_predator_idx = nearest_fragment(me.fragments, food);
+			if (nearest_predator_idx != -1)
 			{
-				auto eat_depth = frag.eatDepth(food);
-				if (eat_depth > max_eat_depth)
-				{
-					max_eat_depth = eat_depth;
-					eat_frag = &frag;
-				}
-			}
-			if (eat_frag != nullptr)
-			{
+				eatenFoodEvents.push_back({ tick });
+				me.fragments[nearest_predator_idx].addMass(Config::FOOD_MASS);
 				foods.erase(foods.begin() + i);
-				eatenFoodTicks.push_back(tick);
-				eat_frag->addMass(Config::FOOD_MASS);
+				i--;
+			}
+		}
+
+		//for (auto eit = eject_array.begin(); eit != eject_array.end(); ) {
+		//	auto eject = *eit;
+		//	if (Virus *eater = nearest_virus(eject)) {
+		//		eater->eat(eject);
+		//	}
+		//	else if (Player *eater = nearest_player(eject)) {
+		//		eater->eat(eject);
+		//	}
+		//	else {
+		//		eit++;
+		//		continue;
+		//	}
+		//	logger->write_kill_cmd(tick, eject);
+		//	delete eject;
+		//	eit = eject_array.erase(eit);
+		//}
+
+		// я поедаю
+		for (int i = 0; i < (int)opponentFragments.size(); i++)
+		{
+			auto &opp = opponentFragments[i];
+			auto nearest_predator_idx = nearest_fragment(me.fragments, opp);
+			if (nearest_predator_idx != -1)
+			{
+				me.fragments[nearest_predator_idx].addMass(opp.mass);
+				eatenFragmentEvents.push_back({ tick, opp.mass });
+				opponentFragments.erase(opponentFragments.begin() + i);
+				i--;
+			}
+		}
+
+		// меня поедают
+		for (int i = 0; i < (int)me.fragments.size(); i++)
+		{
+			auto &my = me.fragments[i];
+			auto nearest_predator_idx = nearest_fragment(opponentFragments, my);
+			if (nearest_predator_idx != -1)
+			{
+				opponentFragments[nearest_predator_idx].addMass(my.mass);
+				lostFragmentEvents.push_back({ tick, my.mass });
+				me.fragments.erase(me.fragments.begin() + i);
 				i--;
 			}
 		}
@@ -91,8 +176,8 @@ private:
 			return;
 
 		for (auto &frag : me.fragments)
-			if (frag.can_shrink())
-				frag.shrink_now();
+			if (frag.canShrink())
+				frag.shrink();
 	}
 
 	void _doSplit(const Move &move)
@@ -126,9 +211,9 @@ private:
 
 		for (auto &frag : me.fragments)
 		{
-			if (frag.can_eject())
+			if (frag.canEject())
 			{
-				auto new_ej = frag.eject_now();
+				auto new_ej = frag.eject();
 				ejections.push_back(new_ej);
 			}
 		}
@@ -169,4 +254,45 @@ private:
 		for (auto &frag : opponentFragments)
 			_doFix(frag);
 	}
+
+
+	void _doFuse() 
+	{
+		sort(me.fragments.begin(), me.fragments.end(), [](const PlayerFragment &a, const PlayerFragment &b)
+		{
+			if (a.mass == b.mass)
+				return a.fragmentId < b.fragmentId;
+			return a.mass > b.mass;
+		});
+
+		bool new_fusion_check = true;
+		while (new_fusion_check) 
+		{
+			new_fusion_check = false;
+			for (int i = 0; i < (int) me.fragments.size(); i++)
+			{
+				auto &frag1 = me.fragments[i];
+				if (frag1.ttf)
+					continue;
+
+				for (int j = i + 1; j < (int)me.fragments.size(); j++)
+				{
+					auto &frag2 = me.fragments[j];
+					if (frag1.canFuse(frag2))
+					{
+						frag1.fusion(frag2);
+						new_fusion_check = true;
+						me.fragments.erase(me.fragments.begin() + j);
+						j--;
+					}
+				}
+			}
+			if (new_fusion_check) 
+				for (auto &frag : me.fragments)
+					_doFix(frag);
+		}
+		if (me.fragments.size() == 1)
+			me.fragments[0].fragmentId = 0;
+	}
+
 };

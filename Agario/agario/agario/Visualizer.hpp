@@ -34,13 +34,13 @@ ref struct Visualizer
 		{
 			fillCircle(Color::Gray, virus.x, virus.y, virus.radius);
 		}
-
+		const int speed_line_factor = 5;
 		for (auto &frag : world.me.fragments)
 		{
 			fillCircle(Color::Violet, frag.x, frag.y, frag.radius);
 			if (frag.canSplit(world.me.fragments.size()))
 				drawCircle(Color::White, frag.x, frag.y, frag.radius * 0.8, 2);
-			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x, frag.y + frag.speed.y, 2);
+			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x*speed_line_factor, frag.y + frag.speed.y*speed_line_factor, 2);
 		}
 
 		for (auto &frag : world.opponentFragments)
@@ -51,13 +51,18 @@ ref struct Visualizer
 				frags_count += f.playerId == frag.playerId;
 			if (frag.canSplit(frags_count))
 				drawCircle(Color::White, frag.x, frag.y, frag.radius * 0.8, 2);
-			drawLine(Color::Green, frag.x, frag.x, frag.y + frag.speed.x, frag.y + frag.speed.y, 2);
+			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x*speed_line_factor, frag.y + frag.speed.y*speed_line_factor, 2);
 		}
 
 		for (auto &ej : world.ejections)
 		{
 			fillCircle(Color::DarkViolet, ej.x, ej.y, ej.radius);
 		}
+	}
+
+	static void updateMove(const Move &move)
+	{
+		fillCircle(Color::Black, move.x, move.y, 12);
 	}
 
 	static void fillCircle(Color color, double x, double y, double radius)

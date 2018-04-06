@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "Utility/Logger.h"
 #include "Config.hpp"
 #include "Model/World.hpp"
 #include "MyStrategy.hpp"
@@ -69,10 +70,16 @@ struct Runner
 			auto world_json = readJson();
 			World world(world_json);
 			world.tick = tick++;
+			Logger::instance()->tick = world.tick;
 #if M_VISUAL
 			Visualizer::update(world);
 #endif
+			TIMER_START();
 			auto command = strategy.onTick(world);
+			TIMER_ENG_LOG("all");
+#if M_VISUAL
+			Visualizer::updateMove(command);
+#endif
 
 			writeJson(command.toJson());
 		}

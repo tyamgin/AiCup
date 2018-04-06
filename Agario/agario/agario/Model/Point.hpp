@@ -182,3 +182,40 @@ struct Point
 	//	return distToCenter - circle.radius;
 	//}
 };
+
+struct Rect
+{
+	double x1, y1, x2, y2;
+
+	Rect(double x1, double y1, double x2, double y2) : x1(x1), y1(y1), x2(x2), y2(y2)
+	{
+	}
+
+	double width() const
+	{
+		return x2 - x1;
+	}
+
+	double height() const
+	{
+		return y2 - y1;
+	}
+};
+
+template<typename Collection>
+Rect getBoundingRect(const Collection &arr)
+{
+	double minX = INFINITY, minY = INFINITY, maxX = -INFINITY, maxY = -INFINITY;
+	for (auto &point : arr)
+	{
+		if (point.x < minX)
+			minX = point.x;
+		if (point.x > maxX)
+			maxX = point.x;
+		if (point.y < minY)
+			minY = point.y;
+		if (point.y > maxY)
+			maxY = point.y;
+	}
+	return Rect(minX, minY, maxX, maxY);
+}

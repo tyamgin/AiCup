@@ -92,6 +92,9 @@
     <ClInclude Include="SpeedObserver.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Utility\Logger.h">
+      <Filter>Source Files\Utility</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MainForm.resx">
