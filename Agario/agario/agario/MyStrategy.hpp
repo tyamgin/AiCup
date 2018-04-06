@@ -47,6 +47,9 @@ struct MyStrategy
 
 	Move _onTick(const World &world)
 	{
+		if (world.me.fragments.empty())
+			return Move();
+
 		for (int i = 0; i <= GRID_SIZE; i++)
 		{
 			for (int j = 0; j <= GRID_SIZE; j++)
@@ -145,6 +148,7 @@ struct MyStrategy
 		auto check_move_to = [&](bool do_split, ::Point moveto)
 		{
 			Sandbox env = world;
+			env.opponentDummyStrategy = true;
 			Move first_move;
 
 			for (int i = 0; i < steps; i++)

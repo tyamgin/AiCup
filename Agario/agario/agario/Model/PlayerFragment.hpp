@@ -307,8 +307,7 @@ struct PlayerFragment : CircularUnit
 	//	return changed;
 	//}
 
-	void applyDirect(const Move &direct) {
-		//cmd_x = direct.x; cmd_y = direct.y;
+	void applyDirect(const Point &direct) {
 		if (is_fast) return;
 
 

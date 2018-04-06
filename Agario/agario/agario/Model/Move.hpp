@@ -4,18 +4,22 @@
 #include <string>
 using namespace std;
 
-struct Move
+struct Move : ::Point
 {
-	double x = 0, y = 0;
 	string debug;
 	bool split = false;
 	bool eject = false;
 
 	Move()
 	{
+		x = y = 0;
 	}
 
-	Move(double x, double y) : x(x), y(y)
+	Move(double x, double y) : ::Point(x, y)
+	{
+	}
+
+	Move(const ::Point &p) : ::Point(p)
 	{
 	}
 

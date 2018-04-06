@@ -26,6 +26,7 @@ struct Sandbox : public World
 	vector<EatenFoodEvent> eatenFoodEvents;
 	vector<EatenFragmentEvent> eatenFragmentEvents;
 	vector<LostFragmentEvent> lostFragmentEvents;
+	bool opponentDummyStrategy = false;
 
 	Sandbox(const World &world) : World(world)
 	{		
@@ -64,18 +65,52 @@ private:
 			ej.move();
 		
 		for (int i = 0; i < (int) me.fragments.size(); i++)
-		{
 			for (int j = i + 1; j < (int) me.fragments.size(); j++)
-			{
 				me.fragments[i].collisionCalc(me.fragments[j]);
-			}
-		}
 
 		for (auto &frag : me.fragments)
 			frag.move();
+
+		_doOpponentDummyMove();
 	}
 
-	int nearest_fragment(const vector<PlayerFragment> &collection, const CircularUnit &unit)
+	void _doOpponentDummyMove()
+	{
+		if (!opponentDummyStrategy)
+			return;
+
+		for (auto &opp : opponentFragments)
+		{
+			::Point *predator_pt = nullptr;
+			::Point *target_pt = nullptr;
+			double predator_dist2 = INFINITY;
+			double target_dist2 = INFINITY;
+
+			for (auto &my : me.fragments)
+			{
+				if (opp.canEat(my))
+				{
+					auto dist2 = my.getDistanceTo2(opp);
+					if (dist2 < target_dist2)
+						target_dist2 = dist2, target_pt = &my;
+				}
+				else if (my.canEat(opp))
+				{
+					auto dist2 = my.getDistanceTo2(opp);
+					if (dist2 < predator_dist2)
+						predator_dist2 = dist2, predator_pt = &my;
+				}
+			}
+			if (target_pt && target_dist2 < predator_dist2)
+				opp.applyDirect(*target_pt);
+			else if (predator_pt)
+				opp.applyDirect(opp + (opp - *predator_pt).take(100));
+			
+			opp.move();
+		}
+	}
+
+	int _getNearestPredator(const vector<PlayerFragment> &collection, const CircularUnit &unit)
 	{
 		int nearest_predator_idx = -1;
 		double deeper_dist = -INFINITY;
@@ -114,7 +149,7 @@ private:
 		for (int i = 0; i < (int)foods.size(); i++)
 		{
 			auto &food = foods[i];
-			auto nearest_predator_idx = nearest_fragment(me.fragments, food);
+			auto nearest_predator_idx = _getNearestPredator(me.fragments, food);
 			if (nearest_predator_idx != -1)
 			{
 				eatenFoodEvents.push_back({ tick });
@@ -145,7 +180,7 @@ private:
 		for (int i = 0; i < (int)opponentFragments.size(); i++)
 		{
 			auto &opp = opponentFragments[i];
-			auto nearest_predator_idx = nearest_fragment(me.fragments, opp);
+			auto nearest_predator_idx = _getNearestPredator(me.fragments, opp);
 			if (nearest_predator_idx != -1)
 			{
 				me.fragments[nearest_predator_idx].addMass(opp.mass);
@@ -159,7 +194,7 @@ private:
 		for (int i = 0; i < (int)me.fragments.size(); i++)
 		{
 			auto &my = me.fragments[i];
-			auto nearest_predator_idx = nearest_fragment(opponentFragments, my);
+			auto nearest_predator_idx = _getNearestPredator(opponentFragments, my);
 			if (nearest_predator_idx != -1)
 			{
 				opponentFragments[nearest_predator_idx].addMass(my.mass);
