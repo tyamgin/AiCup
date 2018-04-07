@@ -1,9 +1,16 @@
 #pragma once
 
 #include "MainForm.h"
+#include <cliext/vector>
 
 using namespace System;
 using namespace System::Drawing;
+using namespace System::Collections::Generic;
+
+ref struct VCircle
+{
+	double x, y, r;
+};
 
 ref struct Visualizer
 {
@@ -60,9 +67,27 @@ ref struct Visualizer
 		}
 	}
 
+	static List<VCircle^> _moves;
+
 	static void updateMove(const Move &move)
 	{
-		fillCircle(Color::Black, move.x, move.y, 12);
+		VCircle^ circle = gcnew VCircle();
+		circle->x = move.x;
+		circle->y = move.y;
+		circle->r = 6;
+		_moves.Add(circle);
+
+		for (int i = (int) _moves.Count - 1; i >= 0; i--)
+		{
+			_moves[i]->r -= 0.33;
+			if (_moves[i]->r <= 0)
+			{
+				_moves.RemoveAt(i);
+			}
+		}
+
+		for each (VCircle ^circle in _moves)
+			fillCircle(Color::Black, circle->x, circle->y, circle->r);
 	}
 
 	static void fillCircle(Color color, double x, double y, double radius)

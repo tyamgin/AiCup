@@ -128,6 +128,10 @@ struct Runner
 #else
 			writeJson(command.toJson());
 #endif
+
+#if M_VISUAL
+			System::Threading::Thread::Sleep(1);
+#endif
 		}
 	}
 };

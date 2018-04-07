@@ -4,7 +4,7 @@
 #include "DangerStrategy.hpp"
 #include "Utility/Logger.h"
 
-#define GRID_SIZE 50
+#define GRID_SIZE 32
 
 struct MyStrategy
 {
@@ -42,7 +42,7 @@ struct MyStrategy
 
 		Sandbox env(world);
 		env.move(res);
-		speedObserver.adterTick(env);
+		speedObserver.afterTick(env);
 		return res;
 	}
 
@@ -50,6 +50,9 @@ struct MyStrategy
 	{
 		if (world.me.fragments.empty())
 			return Move();
+
+//		if (world.tick < 430)
+//			return Move(world.me.fragments[0]);
 
 		for (int i = 0; i <= GRID_SIZE; i++)
 		{

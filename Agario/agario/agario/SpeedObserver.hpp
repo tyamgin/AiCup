@@ -44,7 +44,7 @@ struct SpeedObserver
 			_prevTickOpponentFragments[pair<int, int>(frag.playerId, frag.fragmentId)] = frag;
 	}
 
-	void adterTick(const World &world)
+	void afterTick(const World &world)
 	{
 		_prevWorld = world;
 	}

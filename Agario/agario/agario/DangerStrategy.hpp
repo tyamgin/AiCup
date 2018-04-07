@@ -12,11 +12,35 @@ struct Exponenter
 		a = y1 / exp(-b*x1);
 	}
 	
-	double operator ()(double x)
+	double operator ()(double x) const
 	{
 		return a*exp(-x*b);
 	};
 };
+
+template<typename Collection>
+double progressiveScore(const Collection &my_fragments, const Collection &opp_fragments, const Exponenter &dist_exp)
+{
+	double res = 0;
+	for (auto &opp : opp_fragments)
+	{
+		vector<double> scores;
+		for (auto &frag : my_fragments)
+		{
+			if (frag.canEat(opp))
+			{
+				auto dst = frag.getDistanceTo(opp);
+				scores.push_back(dist_exp(dst));
+			}
+		}
+		sort(scores.begin(), scores.end(), greater<double>());
+		double score = 0, pw = 1;
+		for (auto x : scores)
+			score += x * pw, pw *= 0.5;
+		res += score;
+	}
+	return res;
+}
 
 double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 {
@@ -41,26 +65,11 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 	double oppScore = 120;
 	Exponenter oppExp(20, oppScore, Config::MAP_SIZE / 4.0, 2);
 
-	for (auto &opp : env.opponentFragments)
-	{
-		for (auto &frag : env.me.fragments)
-		{
-			if (opp.canEat(frag))
-			{
-				auto dst = frag.getDistanceTo(opp);
-				res += oppExp(dst);
-			}
+	res -= progressiveScore(env.me.fragments, env.opponentFragments, oppExp);
+	res += progressiveScore(env.opponentFragments, env.me.fragments, oppExp);
 
-			if (frag.canEat(opp))
-			{
-				auto dst = frag.getDistanceTo(opp);
-				res -= oppExp(dst);
-			}
-		}
-	}
-
-	res -= env.eatenFragmentEvents.size() * oppScore;
-	res += env.lostFragmentEvents.size() * oppScore;
+	res -= env.eatenFragmentEvents.size() * oppScore * 2;
+	res += env.lostFragmentEvents.size() * oppScore * 2;
 
 	return res;
 }
