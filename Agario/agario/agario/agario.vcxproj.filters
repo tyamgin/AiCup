@@ -24,7 +24,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="MainForm.cpp">
+    <ClCompile Include="Visualizer\MainForm.cpp">
       <Filter>Source Files\Visualizer</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -35,7 +35,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MainForm.h">
+    <ClInclude Include="Visualizer\MainForm.h">
       <Filter>Source Files\Visualizer</Filter>
     </ClInclude>
     <ClInclude Include="Config.hpp">
@@ -71,7 +71,7 @@
     <ClInclude Include="Model\Move.hpp">
       <Filter>Source Files\Model</Filter>
     </ClInclude>
-    <ClInclude Include="Visualizer.hpp">
+    <ClInclude Include="Visualizer\Visualizer.hpp">
       <Filter>Source Files\Visualizer</Filter>
     </ClInclude>
     <ClInclude Include="MyStrategy.hpp">
@@ -97,7 +97,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="MainForm.resx">
+    <EmbeddedResource Include="Visualizer\MainForm.resx">
       <Filter>Resource Files</Filter>
     </EmbeddedResource>
   </ItemGroup>

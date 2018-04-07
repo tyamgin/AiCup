@@ -133,12 +133,12 @@
   <ItemGroup>
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MainForm.cpp" />
+    <ClCompile Include="Visualizer\MainForm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.hpp" />
     <ClInclude Include="DangerStrategy.hpp" />
-    <ClInclude Include="MainForm.h">
+    <ClInclude Include="Visualizer\MainForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
     <ClInclude Include="Model\CircularUnit.hpp" />
@@ -157,11 +157,11 @@
     <ClInclude Include="Utility\Geometry.hpp" />
     <ClInclude Include="Utility\Iterators.hpp" />
     <ClInclude Include="Utility\Logger.h" />
-    <ClInclude Include="Visualizer.hpp" />
+    <ClInclude Include="Visualizer\Visualizer.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="MainForm.resx">
-      <DependentUpon>MainForm.h</DependentUpon>
+    <EmbeddedResource Include="Visualizer\MainForm.resx">
+      <DependentUpon>Visualizer\MainForm.h</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

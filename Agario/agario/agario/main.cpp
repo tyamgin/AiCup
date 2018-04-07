@@ -1,7 +1,7 @@
 #ifdef _DEBUG
-#define M_SOCKET_IO false
+#define M_SOCKET_IO true
 #define M_VISUAL true
-#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\110169_dump.log"
+//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\110169_dump.log"
 #else
 #define M_SOCKET_IO false
 #define M_VISUAL false
@@ -34,7 +34,7 @@ SOCKET server;
 #endif
 
 #if M_VISUAL
-#include "Visualizer.hpp"
+#include "Visualizer/Visualizer.hpp"
 #endif
 
 nlohmann::json readJson()
