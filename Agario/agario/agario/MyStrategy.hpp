@@ -9,9 +9,7 @@
 struct MyStrategy
 {
 	SpeedObserver speedObserver;
-
 	int lastSeen[GRID_SIZE + 1][GRID_SIZE + 1];
-	Sandbox *prevEnv = nullptr;
 
 	MyStrategy()
 	{
@@ -25,21 +23,6 @@ struct MyStrategy
 		auto res = _onTick(world);
 		assert(!res.split || !res.eject);
 		
-		//if (res.split)
-		//{
-		//	prevEnv = new Sandbox(world);
-		//}
-
-		//if (prevEnv != nullptr)
-		//{
-		//	prevEnv = prevEnv;
-		//}
-
-		//if (prevEnv != nullptr)
-		//{
-		//	prevEnv->move(res);
-		//}
-
 		Sandbox env(world);
 		env.move(res);
 		speedObserver.afterTick(env);
@@ -51,9 +34,6 @@ struct MyStrategy
 		if (world.me.fragments.empty())
 			return Move();
 
-//		if (world.tick < 430)
-//			return Move(world.me.fragments[0]);
-
 		for (int i = 0; i <= GRID_SIZE; i++)
 		{
 			for (int j = 0; j <= GRID_SIZE; j++)
@@ -64,36 +44,8 @@ struct MyStrategy
 			}
 		}
 
-		//int fragIdx = -1;
 		auto me = world.me.fragments[0];
 		auto mes = me + me.speed*6;
-
-		//for(int i = 0; i < (int) world.opponentFragments.size(); i++)
-		//{
-		//	auto &oppFrag = world.opponentFragments[i];
-		//	if (world.me.canEat(oppFrag))
-		//	{
-		//		if (fragIdx == -1 || world.opponentFragments[fragIdx].getDistanceTo2(mes) > oppFrag.getDistanceTo2(mes))
-		//			fragIdx = i;
-		//	}
-		//}
-		//if (fragIdx != -1)
-		//{
-		//	return Move(world.opponentFragments[fragIdx].x, world.opponentFragments[fragIdx].y);
-		//}
-
-		for (auto &frag : world.me.fragments)
-		{
-			//if (frag.canSplit(world.me.fragments.size()))
-			//{
-			//	return MoveFactory::split();
-			//}
-
-			//if (frag.can_eject())
-			//{
-			//	return MoveFactory::eject();
-			//}
-		}
 
 		bool fight = false;
 		for (auto &oppFr : world.opponentFragments)
@@ -149,10 +101,24 @@ struct MyStrategy
 		for (auto &frag : world.me.fragments)
 			can_split_any |= frag.canSplit(world.me.fragments.size());
 
+		vector<Virus> closestViruses;
+		for (auto &virus : world.viruses)
+		{
+			for (auto &frag : world.me.fragments)
+			{
+				if (virus.getDistanceTo(frag) - virus.radius - frag.radius < frag.getMaxSpeed() * steps)
+				{
+					closestViruses.push_back(virus);
+					break;
+				}
+			}
+		}
+
 		auto check_move_to = [&](bool do_split, ::Point moveto)
 		{
 			Sandbox env = world;
 			env.opponentDummyStrategy = true;
+			env.viruses = closestViruses;
 			Move first_move;
 
 			for (int i = 0; i < steps; i++)

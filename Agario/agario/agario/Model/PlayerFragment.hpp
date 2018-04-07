@@ -3,6 +3,7 @@
 #include "CircularUnit.hpp"
 #include "Move.hpp"
 #include "Ejection.hpp"
+#include "Virus.hpp"
 
 struct PlayerFragment : CircularUnit
 {
@@ -43,22 +44,23 @@ struct PlayerFragment : CircularUnit
 		radius = RADIUS_FACTOR * sqrt(mass);
 	}
 
+	static int _restFragmentsCount(int existing_fragments_count) 
+	{
+		return Config::MAX_FRAGS_CNT - existing_fragments_count;
+	}
+		
 	bool canBurst(int yet_cnt)  const
 	{
 		if (mass < MIN_BURST_MASS * 2)
 			return false;
 		
 		int frags_cnt = int(mass / MIN_BURST_MASS);
-		return frags_cnt > 1 && yet_cnt + 1 <= Config::MAX_FRAGS_CNT;
+		return frags_cnt > 1 && _restFragmentsCount(yet_cnt) > 0;
 	}
 
 	bool canSplit(int yet_cnt) const
 	{
-		if (yet_cnt + 1 <= Config::MAX_FRAGS_CNT)
-			if (mass > MIN_SPLIT_MASS)
-				return true;
-		
-		return false;
+		return mass > MIN_SPLIT_MASS && _restFragmentsCount(yet_cnt) > 0;
 	}
 
 	// вызывается для isFast'ов
@@ -78,56 +80,54 @@ struct PlayerFragment : CircularUnit
 		}
 	}
 
-	/////////////////////////////// пока не нужно
-	//void burst_on(Circle *virus) 
-	//{
-	//	double dist = calc_dist(virus->getX(), virus->getY());
-	//	double dy = y - virus->getY(), dx = x - virus->getX();
-	//	double new_angle = 0.0;
+	vector<PlayerFragment> burst(const Virus &virus, int max_fragment_id, int yet_cnt)
+	{
+		vector<PlayerFragment> fragments;
+		double dist = getDistanceTo(virus);
+		double dy = y - virus.y, dx = x - virus.x;
+		double angle = atan2(y, x);
 
-	//	if (dist > 0) {
-	//		new_angle = qAsin(dy / dist);
-	//		if (dx < 0) {
-	//			new_angle = M_PI - new_angle;
-	//		}
-	//	}
-	//	angle = new_angle;
-	//	double max_speed = Config::SPEED_FACTOR / qSqrt(mass);
-	//	if (speed < max_speed) {
-	//		speed = max_speed;
-	//	}
-	//	mass += BURST_BONUS;
-	//	score += SCORE_FOR_BURST;
-	//}
+		if (dist > 0) 
+		{
+			angle = asin(dy / dist);
+			if (dx < 0)
+				angle = M_PI - angle;
+		}
 
-	//QVector<Player*> burst_now(int max_fId, int yet_cnt) {
-	//	QVector<Player*> fragments;
-	//	int new_frags_cnt = int(mass / MIN_BURST_MASS) - 1;
-	//	int max_cnt = Config::MAX_FRAGS_CNT - yet_cnt;
-	//	if (new_frags_cnt > max_cnt) {
-	//		new_frags_cnt = max_cnt;
-	//	}
+		mass += BURST_BONUS;
 
-	//	double new_mass = mass / (new_frags_cnt + 1);
-	//	double new_radius = Config::RADIUS_FACTOR * qSqrt(new_mass);
+		int new_frags_cnt = int(mass / MIN_BURST_MASS) - 1;
 
-	//	for (int I = 0; I < new_frags_cnt; I++) {
-	//		int new_fId = max_fId + I + 1;
-	//		Player *new_fragment = new Player(id, x, y, new_radius, new_mass, new_fId);
-	//		new_fragment->set_color(color);
-	//		fragments.append(new_fragment);
+		new_frags_cnt = min(new_frags_cnt, _restFragmentsCount(yet_cnt));
 
-	//		double burst_angle = angle - BURST_ANGLE_SPECTRUM / 2 + I * BURST_ANGLE_SPECTRUM / new_frags_cnt;
-	//		new_fragment->set_impulse(BURST_START_SPEED, burst_angle);
-	//	}
-	//	set_impulse(BURST_START_SPEED, angle + BURST_ANGLE_SPECTRUM / 2);
+		double new_mass = mass / (new_frags_cnt + 1);
 
-	//	fragmentId = max_fId + new_frags_cnt + 1;
-	//	mass = new_mass;
-	//	radius = new_radius;
-	//	fuse_timer = Config::TICKS_TIL_FUSION;
-	//	return fragments;
-	//}
+		for (int I = 0; I < new_frags_cnt; I++) 
+		{
+			int new_fId = max_fragment_id + I + 1;
+
+			PlayerFragment new_fragment;
+			new_fragment.x = x;
+			new_fragment.y = y;
+			new_fragment.addMass(new_mass);
+			new_fragment.playerId = playerId;
+			new_fragment.fragmentId = new_fId;
+
+			double burst_angle = angle - BURST_ANGLE_SPECTRUM / 2 + I * BURST_ANGLE_SPECTRUM / new_frags_cnt;
+			new_fragment.speed = ::Point::byAngle(burst_angle) * BURST_START_SPEED;
+			new_fragment.isFast = true;
+			new_fragment.ttf = Config::TICKS_TIL_FUSION;
+
+			fragments.push_back(new_fragment);
+		}
+		speed = ::Point::byAngle(angle + BURST_ANGLE_SPECTRUM / 2) * BURST_START_SPEED;
+		isFast = true;
+
+		fragmentId = max_fragment_id + new_frags_cnt + 1;
+		addMass(new_mass - mass);
+		ttf = Config::TICKS_TIL_FUSION;
+		return fragments;
+	}
 
 	PlayerFragment split(int max_fragment_id) 
 	{

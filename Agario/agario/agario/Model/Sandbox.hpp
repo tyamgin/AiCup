@@ -41,7 +41,7 @@ struct Sandbox : public World
 		_doEat();
 
 		_doFuse();
-		//burst_on_viruses();
+		_doBurst();
 
 		_doFixes();
 		//update_scores();
@@ -213,6 +213,14 @@ private:
 				frag.shrink();
 	}
 
+	int _maxMeId()
+	{
+		int max_id = 0;
+		for (auto &frag : me.fragments)
+			max_id = max(max_id, frag.fragmentId);
+		return max_id;
+	}
+
 	void _doSplit(const Move &move)
 	{
 		if (!move.split)
@@ -221,9 +229,7 @@ private:
 		int yet_cnt = me.fragments.size();
 		int size = yet_cnt;
 
-		int max_id = 0;
-		for (auto &frag : me.fragments)
-			max_id = max(max_id, frag.fragmentId);
+		int max_id = _maxMeId();
 
 		for (int i = 0; i < size; i++)
 		{
@@ -318,6 +324,50 @@ private:
 		}
 		if (me.fragments.size() == 1)
 			me.fragments[0].fragmentId = 0;
+	}
+
+
+	int _nearestVirusTarget(const Virus &virus)
+	{
+		double nearest_dist = INFINITY;
+		int nearest_fragment_idx = -1;
+
+		int yet_cnt = me.fragments.size();
+		for (int i = 0; i < yet_cnt; i++)
+		{
+			auto &frag = me.fragments[i];
+			double qdist = virus.hurtDepth(frag);
+			if (qdist < nearest_dist)
+			{
+				if (frag.canBurst(yet_cnt))
+				{
+					nearest_dist = qdist;
+					nearest_fragment_idx = i;
+				}
+			}
+		}
+		return nearest_fragment_idx;
+	}
+
+	void _doBurst() 
+	{
+		for (int i = 0; i < (int) viruses.size(); i++)
+		{
+			auto &virus = viruses[i];
+			auto frag_idx = _nearestVirusTarget(virus);
+			if (frag_idx == -1)
+				continue;
+
+			auto &target = me.fragments[frag_idx];
+			int yet_cnt = me.fragments.size();
+			int max_fragment_id = _maxMeId();
+
+			auto new_fragments = target.burst(virus, max_fragment_id, yet_cnt);
+			me.fragments.insert(me.fragments.end(), new_fragments.begin(), new_fragments.end());
+
+			viruses.erase(viruses.begin() + i);
+			i--;
+		}
 	}
 
 };

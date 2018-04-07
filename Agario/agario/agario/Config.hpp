@@ -3,6 +3,7 @@
 
 #define FOOD_RADIUS 2.5
 #define MIN_SPLIT_MASS 120
+#define RAD_HURT_FACTOR (2.0/3)
 #define MIN_BURST_MASS 60
 #define VIS_FACTOR 4.0  // vision = radius * VF
 #define VIS_FACTOR_FR 2.5 // vision = radius * VFF * qSqrt(fragments.count())
@@ -16,6 +17,9 @@
 #define MIN_SHRINK_MASS 100
 #define SHRINK_FACTOR 0.01
 #define SHRINK_EVERY_TICK 50
+#define BURST_BONUS 5.0
+#define BURST_START_SPEED 8.0
+#define BURST_ANGLE_SPECTRUM M_PI
 
 struct Config
 {
