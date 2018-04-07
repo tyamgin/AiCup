@@ -256,16 +256,8 @@ private:
 
 	void _doFix(PlayerFragment &frag)
 	{
-		double new_speed = frag.getMaxSpeed();
-		if (!frag.is_fast) 
-		{
-			auto length2 = frag.speed.length2();
-			if (length2 > new_speed*new_speed)
-			{
-				auto length_factor = new_speed / sqrt(length2);
-				frag.speed *= length_factor;
-			}
-		}
+		if (!frag.isFast)
+			frag.dropSpeed();
 		
 		auto mx = Config::MAP_SIZE;
 

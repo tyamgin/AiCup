@@ -12,12 +12,12 @@ struct SpeedObserver
 			{
 				if (_isSameFrag(frag, prev_frag))
 				{
-					frag.is_fast = prev_frag.is_fast;
+					frag.isFast = prev_frag.isFast;
 					found = true;
 					break;
 				}
 			}
-			if (!found && world.tick > 0)
+			if (!found && world.tick > 1)
 			{
 				found = found;
 			}

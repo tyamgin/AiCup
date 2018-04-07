@@ -33,6 +33,23 @@ struct Unit : ::Point
 		return Config::SPEED_FACTOR / sqrt(mass);
 	}
 
+	double getMaxSpeed2() const
+	{
+		return Config::SPEED_FACTOR * Config::SPEED_FACTOR / mass;
+	}
+
+	void dropSpeed()
+	{
+		auto length2 = speed.length2();
+		auto max_speed2 = getMaxSpeed2();
+		if (length2 > max_speed2)
+		{
+			auto length_factor = sqrt(max_speed2 / length2);
+			speed.x *= length_factor;
+			speed.y *= length_factor;
+		}
+	}
+
 	string toString() const
 	{
 		return "test";

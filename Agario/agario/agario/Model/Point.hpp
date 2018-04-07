@@ -106,6 +106,16 @@ struct Point
 		return *this;
 	}
 
+	bool operator ==(const Point &other) const
+	{
+		return abs(x - other.x) < EPS && abs(y - other.y) < EPS;
+	}
+
+	bool operator !=(const Point &other) const
+	{
+		return abs(x - other.x) >= EPS || abs(y - other.y) >= EPS;
+	}
+
 	double getAngle() const
 	{
 		return atan2(y, x);

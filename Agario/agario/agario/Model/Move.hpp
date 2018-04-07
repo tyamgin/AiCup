@@ -23,6 +23,16 @@ struct Move : ::Point
 	{
 	}
 
+	explicit Move(const nlohmann::json &obj) : ::Point(obj)
+	{
+		if (obj.count("Split"))
+			split = obj["Split"].get<bool>();
+		if (obj.count("Eject"))
+			eject = obj["Eject"].get<bool>();
+		if (obj.count("Debug"))
+			debug = obj["Debug"].get<string>();
+	}
+
 	nlohmann::json toJson()
 	{
 		nlohmann::json result = { { "X", x }, { "Y", y } };
@@ -33,5 +43,15 @@ struct Move : ::Point
 		if (eject)
 			result["Eject"] = true;
 		return result;
+	}
+
+	bool operator ==(const Move &other) const
+	{
+		return ::Point::operator==(other) && split == other.split && eject == other.eject; // NOTE: no need to compare "debug"
+	}
+
+	bool operator !=(const Move &other) const
+	{
+		return !operator==(other);
 	}
 };

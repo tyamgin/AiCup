@@ -2,6 +2,7 @@
 #include "Model/Sandbox.hpp"
 #include "SpeedObserver.hpp"
 #include "DangerStrategy.hpp"
+#include "Utility/Logger.h"
 
 #define GRID_SIZE 50
 
@@ -17,7 +18,7 @@ struct MyStrategy
 		memset(lastSeen, 0, sizeof(lastSeen));
 	}
 
-	Move onTick(World world)
+	Move onTick(World world, const Move &debug_real_move)
 	{
 		speedObserver.beforeTick(world);
 
@@ -127,7 +128,7 @@ struct MyStrategy
 
 	Move _doPP(const World &world)
 	{
-		TIMER_START("pp");
+		TIMER_START();
 
 		int steps = 15;
 		int angles = 24;

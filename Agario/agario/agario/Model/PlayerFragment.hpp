@@ -17,17 +17,11 @@
 #define MIN_SHRINK_MASS 100
 #define SHRINK_FACTOR 0.01
 
-#define qSqrt sqrt
-#define qAnd abs
-#define qCos cos
-#define qSin sin
-#define QPair pair
-
 struct PlayerFragment : CircularUnit
 {
 	int ttf = 0;
 	int playerId = 0, fragmentId = 0;
-	bool is_fast = false;
+	bool isFast = false;
 
 	PlayerFragment()
 	{
@@ -80,16 +74,7 @@ struct PlayerFragment : CircularUnit
 		return false;
 	}
 
-	//QPair<double, double> get_direct_norm() const {
-	//	double dx = cmd_x - x, dy = cmd_y - y;
-	//	double dist = qSqrt(dx * dx + dy * dy);
-	//	if (dist > 0) {
-	//		double factor = 50 / dist;
-	//		return QPair<double, double>(x + dx * factor, y + dy * factor);
-	//	}
-	//	return QPair<double, double>(x, y);
-	//}
-
+	// вызывается для isFast'ов
 	void applyViscosity(double usual_speed) 
 	{
 		auto spd = speed.length();
@@ -102,7 +87,7 @@ struct PlayerFragment : CircularUnit
 		{
 			// иначе выставляем максимальную скорость и выходим из режима полёта
 			speed = speed.take(usual_speed);
-			is_fast = false;
+			isFast = false;
 		}
 	}
 
@@ -166,7 +151,7 @@ struct PlayerFragment : CircularUnit
 		new_player.y = y;
 		new_player.addMass(new_mass);
 		new_player.speed = speed.take(SPLIT_START_SPEED);
-		new_player.is_fast = true;
+		new_player.isFast = true;
 		new_player.playerId = playerId;
 		new_player.fragmentId = max_fragment_id + 1;
 		new_player.ttf = Config::TICKS_TIL_FUSION;
@@ -183,16 +168,12 @@ struct PlayerFragment : CircularUnit
 		if (ttf || frag.ttf)
 			return false;
 
-		// TODO: can optimize
-		double dist = frag.getDistanceTo(x, y);
-		double nR = radius + frag.radius;
-
-		return dist <= nR;
+		return getDistanceTo2(frag) <= sqr(radius + frag.radius);
 	}
 
 	void collisionCalc(PlayerFragment &other) 
 	{
-		if (is_fast || other.is_fast) // do not collide splits
+		if (isFast || other.isFast) // do not collide splits
 			return;
 		
 		double dist2 = getDistanceTo2(other);
@@ -202,13 +183,13 @@ struct PlayerFragment : CircularUnit
 		auto dist = sqrt(dist2);
 
 		// vector from centers
-		double collisionVectorX = this->x - other.x;
-		double collisionVectorY = this->y - other.y;
+		double collisionVectorX = x - other.x;
+		double collisionVectorY = y - other.y;
 		// normalize to 1
-		double vectorLen = qSqrt(collisionVectorX * collisionVectorX + collisionVectorY * collisionVectorY);
-		if (vectorLen < 1e-9) { // collision object in same point??
+		double vectorLen = sqrt(collisionVectorX * collisionVectorX + collisionVectorY * collisionVectorY);
+		if (vectorLen < 1e-9) // collision object in same point??
 			return;
-		}
+		
 		collisionVectorX /= vectorLen;
 		collisionVectorY /= vectorLen;
 
@@ -234,7 +215,7 @@ struct PlayerFragment : CircularUnit
 		}
 	}
 
-	void fusion(const PlayerFragment frag) 
+	void fusion(const PlayerFragment &frag) 
 	{
 		double sumMass = mass + frag.mass;
 
@@ -267,7 +248,6 @@ struct PlayerFragment : CircularUnit
 		new_eject.radius = EJECT_RADIUS;
 		new_eject.mass = EJECT_MASS;
 		new_eject.ownerPlayerId = playerId;
-		
 		new_eject.speed = speed.take(EJECT_START_SPEED);
 
 		addMass(-EJECT_MASS);
@@ -307,14 +287,15 @@ struct PlayerFragment : CircularUnit
 	//	return changed;
 	//}
 
-	void applyDirect(const Point &direct) {
-		if (is_fast) return;
-
+	void applyDirect(const Point &direct) 
+	{
+		if (isFast)
+			return;
 
 		double max_speed = getMaxSpeed();
 
 		double dy = direct.y - y, dx = direct.x - x;
-		double dist = qSqrt(dx * dx + dy * dy);
+		double dist = sqrt(dx * dx + dy * dy);
 		double ny = (dist > 0) ? (dy / dist) : 0;
 		double nx = (dist > 0) ? (dx / dist) : 0;
 		double inertion = Config::INERTION_FACTOR;
@@ -322,43 +303,34 @@ struct PlayerFragment : CircularUnit
 		speed.x += (nx * max_speed - speed.x) * inertion / mass;
 		speed.y += (ny * max_speed - speed.y) * inertion / mass;
 
-		if (speed.length() > max_speed)
-			speed = speed.take(max_speed);
+		dropSpeed();
 	}
 
 	void move() 
 	{
-		double rB = x + radius, lB = x - radius;
-		double dB = y + radius, uB = y - radius;
 		auto map_size = Config::MAP_SIZE;
 
-		if (rB + speed.x < map_size && lB + speed.x > 0)
-		{
+		if (x + radius + speed.x < map_size && x - radius + speed.x > 0)
 			x += speed.x;
-		}
 		else 
 		{
 			// долетаем до стенки
-			double new_x = max(radius, min(map_size - radius, x + speed.x));
-			x = new_x;
+			x = max(radius, min(map_size - radius, x + speed.x));
 			// зануляем проекцию скорости по dx
 			speed.x = 0;
 		}
 
-		if (dB + speed.y < map_size && uB + speed.y > 0) 
-		{
+		if (y + radius + speed.y < map_size && y - radius + speed.y > 0)
 			y += speed.y;
-		}
 		else 
 		{
 			// долетаем до стенки
-			double new_y = max(radius, min(map_size - radius, y + speed.y));
-			y = new_y;
+			y = max(radius, min(map_size - radius, y + speed.y));
 			// зануляем проекцию скорости по dy
 			speed.y = 0;
 		}
 
-		if (is_fast)
+		if (isFast)
 			applyViscosity(getMaxSpeed());
 		
 		if (ttf > 0) 
