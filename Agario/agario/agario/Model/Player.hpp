@@ -23,7 +23,7 @@ struct Player
 
 	bool isPointVisible(const ::Point &p) const
 	{
-		auto coeff = fragments.size() <= 1 ? 4.0 : 2.5 * sqrt(1.0 * fragments.size());
+		auto coeff = fragments.size() <= 1 ? VIS_FACTOR : VIS_FACTOR_FR * sqrt(1.0 * fragments.size());
 		for (auto &frag : fragments)
 		{
 			auto visionCenter = frag.getVisionCenter();

@@ -4,19 +4,6 @@
 #include "Move.hpp"
 #include "Ejection.hpp"
 
-#define VIS_FACTOR 4.0  // vision = radius * VF
-#define VIS_FACTOR_FR 2.5 // vision = radius * VFF * qSqrt(fragments.count())
-#define RADIUS_FACTOR 2.0
-#define SPLIT_START_SPEED 9.0
-#define COLLISION_POWER 20.0
-
-#define MIN_EJECT_MASS 40.0
-#define EJECT_START_SPEED 8.0
-#define EJECT_RADIUS 4.0
-#define EJECT_MASS 15.0
-#define MIN_SHRINK_MASS 100
-#define SHRINK_FACTOR 0.01
-
 struct PlayerFragment : CircularUnit
 {
 	int ttf = 0;
@@ -58,17 +45,17 @@ struct PlayerFragment : CircularUnit
 
 	bool canBurst(int yet_cnt)  const
 	{
-		if (mass < Config::MIN_BURST_MASS * 2)
+		if (mass < MIN_BURST_MASS * 2)
 			return false;
 		
-		int frags_cnt = int(mass / Config::MIN_BURST_MASS);
+		int frags_cnt = int(mass / MIN_BURST_MASS);
 		return frags_cnt > 1 && yet_cnt + 1 <= Config::MAX_FRAGS_CNT;
 	}
 
 	bool canSplit(int yet_cnt) const
 	{
 		if (yet_cnt + 1 <= Config::MAX_FRAGS_CNT)
-			if (mass > Config::MIN_SPLIT_MASS)
+			if (mass > MIN_SPLIT_MASS)
 				return true;
 		
 		return false;

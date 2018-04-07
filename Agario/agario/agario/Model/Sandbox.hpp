@@ -2,8 +2,6 @@
 
 #include "World.hpp"
 
-#define SHRINK_EVERY_TICK 50
-
 struct EatenFoodEvent
 {
 	int tick;

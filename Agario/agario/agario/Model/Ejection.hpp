@@ -13,8 +13,8 @@ struct Ejection : CircularUnit
 
 	Ejection(const nlohmann::json &obj) : CircularUnit(obj)
 	{
-		mass = Config::EJECTION_MASS;
-		radius = Config::EJECTION_RADIUS;
+		mass = EJECT_MASS;
+		radius = EJECT_RADIUS;
 		ownerPlayerId = obj["pId"].get<int>();
 	}
 

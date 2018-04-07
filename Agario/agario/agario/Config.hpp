@@ -1,6 +1,22 @@
 #pragma once
 #include "nlohmann/json.hpp"
 
+#define FOOD_RADIUS 2.5
+#define MIN_SPLIT_MASS 120
+#define MIN_BURST_MASS 60
+#define VIS_FACTOR 4.0  // vision = radius * VF
+#define VIS_FACTOR_FR 2.5 // vision = radius * VFF * qSqrt(fragments.count())
+#define RADIUS_FACTOR 2.0
+#define SPLIT_START_SPEED 9.0
+#define COLLISION_POWER 20.0
+#define MIN_EJECT_MASS 40.0
+#define EJECT_START_SPEED 8.0
+#define EJECT_RADIUS 4.0
+#define EJECT_MASS 15.0
+#define MIN_SHRINK_MASS 100
+#define SHRINK_FACTOR 0.01
+#define SHRINK_EVERY_TICK 50
+
 struct Config
 {
 	static int MAP_SIZE;
@@ -13,12 +29,6 @@ struct Config
 	static double VIRUS_RADIUS;
 	static double VIRUS_SPLIT_MASS;
 	static double VISCOSITY;
-
-	static double FOOD_RADIUS;
-	static double EJECTION_RADIUS;
-	static double EJECTION_MASS;
-	static double MIN_SPLIT_MASS;
-	static double MIN_BURST_MASS;
 
 	static void parse(const nlohmann::json &config_json)
 	{

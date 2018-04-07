@@ -10,9 +10,3 @@ int Config::TICKS_TIL_FUSION = 0;
 double Config::VIRUS_RADIUS = 0;
 double Config::VIRUS_SPLIT_MASS = 0;
 double Config::VISCOSITY = 0;
-
-double Config::FOOD_RADIUS = 2.5;
-double Config::EJECTION_RADIUS = 4;
-double Config::EJECTION_MASS = 15;
-double Config::MIN_SPLIT_MASS = 120;
-double Config::MIN_BURST_MASS = 60;
