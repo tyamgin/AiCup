@@ -6,6 +6,7 @@
 struct Ejection : CircularUnit
 {
 	int ownerPlayerId = 0;
+	int id;
 
 	Ejection()
 	{
@@ -16,6 +17,7 @@ struct Ejection : CircularUnit
 		mass = EJECT_MASS;
 		radius = EJECT_RADIUS;
 		ownerPlayerId = obj["pId"].get<int>();
+		id = stoi(obj["Id"].get<string>());
 	}
 
 	void move() 
@@ -26,6 +28,11 @@ struct Ejection : CircularUnit
 		x = max(radius, min(Config::MAP_SIZE - radius, x + speed.x));
 		y = max(radius, min(Config::MAP_SIZE - radius, y + speed.y));
 
+		slowDown(speed);
+	}
+
+	static void slowDown(::Point &speed)
+	{
 		speed = speed.take(max(0.0, speed.length() - Config::VISCOSITY));
 	}
 };

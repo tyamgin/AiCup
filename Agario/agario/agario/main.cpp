@@ -110,12 +110,8 @@ struct Runner
 			World world(world_json);
 			world.tick = ++tick;
 			Logger::instance()->tick = world.tick;
-#if M_VISUAL
-			Visualizer::update(world);
-#endif
-			TIMER_START();
+
 			auto command = strategy.onTick(world, debug_real_move);
-			TIMER_ENG_LOG("all");
 #if M_VISUAL
 			Visualizer::updateMove(command);
 #endif

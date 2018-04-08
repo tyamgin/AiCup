@@ -3,7 +3,6 @@
 #include "MainForm.h"
 #include <cliext/vector>
 
-using namespace System;
 using namespace System::Drawing;
 using namespace System::Collections::Generic;
 

@@ -4,6 +4,10 @@
 #include "DangerStrategy.hpp"
 #include "Utility/Logger.h"
 
+#if M_VISUAL
+#include "Visualizer/Visualizer.hpp"
+#endif
+
 #define GRID_SIZE 32
 
 struct MyStrategy
@@ -19,6 +23,10 @@ struct MyStrategy
 	Move onTick(World world, const Move &debug_real_move)
 	{
 		speedObserver.beforeTick(world);
+#if M_VISUAL
+		Visualizer::update(world);
+#endif
+		TIMER_START();
 
 		auto res = _onTick(world);
 		assert(!res.split || !res.eject);
@@ -26,6 +34,8 @@ struct MyStrategy
 		Sandbox env(world);
 		env.move(res);
 		speedObserver.afterTick(env);
+
+		TIMER_ENG_LOG("all");
 		return res;
 	}
 
@@ -33,6 +43,17 @@ struct MyStrategy
 	{
 		if (world.me.fragments.empty())
 			return Move();
+
+		//static bool asd = false;
+		//if (world.me.fragments[0].canEject())
+		//{
+		//	Move move;
+		//	move.eject = true;
+		//	//asd = true;
+		//	return move;
+		//}
+		//if (asd)
+		//	return Move(world.me.fragments[0] - world.me.fragments[0].speed);
 
 		for (int i = 0; i <= GRID_SIZE; i++)
 		{

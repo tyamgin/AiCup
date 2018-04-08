@@ -7,6 +7,12 @@ struct EatenFoodEvent
 	int tick;
 };
 
+struct EatenEjectionEvent
+{
+	int tick;
+	int ownerPlayerId;
+};
+
 struct EatenFragmentEvent
 {
 	int tick;
@@ -22,6 +28,7 @@ struct LostFragmentEvent
 struct Sandbox : public World 
 {
 	vector<EatenFoodEvent> eatenFoodEvents;
+	vector<EatenEjectionEvent> eatenEjectionEvents;
 	vector<EatenFragmentEvent> eatenFragmentEvents;
 	vector<LostFragmentEvent> lostFragmentEvents;
 	bool opponentDummyStrategy = false;
@@ -157,22 +164,19 @@ private:
 			}
 		}
 
-		//for (auto eit = eject_array.begin(); eit != eject_array.end(); ) {
-		//	auto eject = *eit;
-		//	if (Virus *eater = nearest_virus(eject)) {
-		//		eater->eat(eject);
-		//	}
-		//	else if (Player *eater = nearest_player(eject)) {
-		//		eater->eat(eject);
-		//	}
-		//	else {
-		//		eit++;
-		//		continue;
-		//	}
-		//	logger->write_kill_cmd(tick, eject);
-		//	delete eject;
-		//	eit = eject_array.erase(eit);
-		//}
+		// поедаю выбросы
+		for (int i = 0; i < (int)ejections.size(); i++)
+		{
+			auto &ej = ejections[i];
+			auto nearest_predator_idx = _getNearestPredator(me.fragments, ej);
+			if (nearest_predator_idx != -1)
+			{
+				eatenEjectionEvents.push_back({ tick, ej.ownerPlayerId });
+				me.fragments[nearest_predator_idx].addMass(EJECT_MASS);
+				ejections.erase(ejections.begin() + i);
+				i--;
+			}
+		}
 
 		// я поедаю
 		for (int i = 0; i < (int)opponentFragments.size(); i++)
@@ -231,6 +235,13 @@ private:
 
 		int max_id = _maxMeId();
 
+		sort(me.fragments.begin(), me.fragments.end(), [](const PlayerFragment &a, const PlayerFragment &b)
+		{
+			if (a.mass == b.mass)
+				return a.fragmentId > b.fragmentId;
+			return a.mass > b.mass;
+		});
+
 		for (int i = 0; i < size; i++)
 		{
 			auto &frag = me.fragments[i];
@@ -285,7 +296,6 @@ private:
 		for (auto &frag : opponentFragments)
 			_doFix(frag);
 	}
-
 
 	void _doFuse() 
 	{

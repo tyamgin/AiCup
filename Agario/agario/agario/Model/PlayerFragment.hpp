@@ -235,6 +235,7 @@ struct PlayerFragment : CircularUnit
 		new_eject.radius = EJECT_RADIUS;
 		new_eject.mass = EJECT_MASS;
 		new_eject.ownerPlayerId = playerId;
+		new_eject.id = 0;
 		new_eject.speed = speed.take(EJECT_START_SPEED);
 
 		addMass(-EJECT_MASS);

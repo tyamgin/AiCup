@@ -6,6 +6,7 @@ using namespace std;
 
 struct Player
 {
+	int id = 0;
 	vector<PlayerFragment> fragments;
 
 	Player()
@@ -16,9 +17,10 @@ struct Player
 	Player(const nlohmann::json &obj)
 	{
 		for (auto &mine_obj : obj)
-		{
 			fragments.emplace_back(mine_obj);
-		}
+		
+		if (fragments.size())
+			id = fragments[0].playerId;
 	}
 
 	bool isPointVisible(const ::Point &p) const

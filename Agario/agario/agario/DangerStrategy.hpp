@@ -47,9 +47,14 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 	double foodScore = 15;
 	Exponenter foodExp(1, foodScore * 0.5, Config::MAP_SIZE / 4.0, 0.3);
 
+	double ejectScore = 40;
+	Exponenter ejectExp(1, ejectScore * 0.5, Config::MAP_SIZE / 4.0, 0.3);
+
 	double res = 0;
 	for (auto &eatenFoodEvent : env.eatenFoodEvents)
 		res -= foodScore * (interval - (eatenFoodEvent.tick - startEnv.tick)) / interval;
+	for (auto &eatenEjectionEvent : env.eatenEjectionEvents)
+		res -= ejectScore * (interval - (eatenEjectionEvent.tick - startEnv.tick)) / interval;
 
 	for (auto &food : env.foods)
 	{
@@ -58,6 +63,16 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 			auto dst = frag.getDistanceTo(food);
 			auto e = foodExp(dst);
 		
+			res -= e / env.me.fragments.size();
+		}
+	}
+	for (auto &ej : env.ejections)
+	{
+		for (auto &frag : env.me.fragments)
+		{
+			auto dst = frag.getDistanceTo(ej);
+			auto e = ejectExp(dst);
+
 			res -= e / env.me.fragments.size();
 		}
 	}
