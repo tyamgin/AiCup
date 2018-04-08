@@ -90,6 +90,8 @@ struct Runner
 		fgets(buffer, sizeof(buffer), stdin); // skip empty line
 #endif
 
+		
+
 		while (true) 
 		{
 #ifdef M_FROM_LOG
@@ -107,11 +109,16 @@ struct Runner
 				fgets(buffer, sizeof(buffer), stdin); // skip empty line
 			}
 #endif
+			if (tick == 0)
+				Logger::instance()->timerStart();
+
 			World world(world_json);
 			world.tick = ++tick;
 			Logger::instance()->tick = world.tick;
 
 			auto command = strategy.onTick(world, debug_real_move);
+			if (tick % 100 == 0)
+				command.debug += "Time: " + to_string(Logger::instance()->timerGet()) + "ms\n";
 #if M_VISUAL
 			Visualizer::updateMove(command);
 #endif

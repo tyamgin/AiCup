@@ -26,7 +26,13 @@ public:
 		_timers.push_back(clock());
 	}
 
-	int timerStop()
+	int timerGet()
+	{
+		auto start_clock = _timers.back();
+		return (clock() - start_clock) * 1000 / CLOCKS_PER_SEC;
+	}
+
+	int timerEnd()
 	{
 		auto start_clock = _timers.back();
 		_timers.pop_back();
@@ -35,7 +41,7 @@ public:
 
 	void timerEndLog(string caption, int limit)
 	{
-		auto time = timerStop();
+		auto time = timerEnd();
 		if (time > limit)
 			log(to_string(tick) + ">" + string(_timers.size() * 2, '-') + " " + caption + ":" + to_string(time));
 	}
