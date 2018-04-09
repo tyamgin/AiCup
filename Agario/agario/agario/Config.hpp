@@ -1,5 +1,6 @@
 #pragma once
 #include "nlohmann/json.hpp"
+#include "Model/Point.hpp"
 
 #define FOOD_RADIUS 2.5
 #define MIN_SPLIT_MASS 120
@@ -20,6 +21,7 @@
 #define BURST_BONUS 5.0
 #define BURST_START_SPEED 8.0
 #define BURST_ANGLE_SPECTRUM M_PI
+#define MASS_EAT_FACTOR 1.2
 
 struct Config
 {
@@ -33,6 +35,8 @@ struct Config
 	static double VIRUS_RADIUS;
 	static double VIRUS_SPLIT_MASS;
 	static double VISCOSITY;
+
+	static ::Point MAP_CENTER;
 
 	static void parse(const nlohmann::json &config_json)
 	{
@@ -49,5 +53,9 @@ struct Config
 		Config::VIRUS_RADIUS = config_json["VIRUS_RADIUS"].get<double>();
 		Config::VIRUS_SPLIT_MASS = config_json["VIRUS_SPLIT_MASS"].get<double>();
 		Config::VISCOSITY = config_json["VISCOSITY"].get<double>();
+
+		Config::MAP_CENTER.x = Config::MAP_CENTER.y = Config::MAP_SIZE / 2;
 	}
 };
+
+#define M_SAFE_RAD_FACTOR (0.60)

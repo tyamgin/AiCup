@@ -31,6 +31,8 @@ ref struct Visualizer
 			_scale = 1.0 * Config::MAP_SIZE / panel->Size.Height;
 		}
 
+		drawCircle(Color::Black, Config::MAP_CENTER.x, Config::MAP_CENTER.y, Config::MAP_SIZE*M_SAFE_RAD_FACTOR, 1);
+
 		for (auto &food : world.foods)
 		{
 			fillCircle(Color::Chocolate, food.x, food.y, food.radius);
@@ -46,6 +48,8 @@ ref struct Visualizer
 			fillCircle(Color::Violet, frag.x, frag.y, frag.radius);
 			if (frag.canSplit(world.me.fragments.size()))
 				drawCircle(Color::White, frag.x, frag.y, frag.radius * 0.8, 2);
+			if (frag.isFast)
+				drawCircle(Color::Yellow, frag.x, frag.y, frag.radius * 0.5, 2);
 			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x*speed_line_factor, frag.y + frag.speed.y*speed_line_factor, 2);
 		}
 
@@ -57,6 +61,8 @@ ref struct Visualizer
 				frags_count += f.playerId == frag.playerId;
 			if (frag.canSplit(frags_count))
 				drawCircle(Color::White, frag.x, frag.y, frag.radius * 0.8, 2);
+			if (frag.isFast2())
+				drawCircle(Color::Yellow, frag.x, frag.y, frag.radius * 0.5, 2);
 			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x*speed_line_factor, frag.y + frag.speed.y*speed_line_factor, 2);
 		}
 
@@ -64,6 +70,7 @@ ref struct Visualizer
 		{
 			fillCircle(Color::DarkViolet, ej.x, ej.y, ej.radius);
 		}
+
 	}
 
 	static List<VCircle^> _moves;

@@ -3,7 +3,7 @@
 #include "../Utility/Geometry.hpp"
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include "CircularUnit.hpp"
+#define EPS 1e-9
 
 struct Point
 {

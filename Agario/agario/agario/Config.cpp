@@ -10,3 +10,5 @@ int Config::TICKS_TIL_FUSION = 0;
 double Config::VIRUS_RADIUS = 0;
 double Config::VIRUS_SPLIT_MASS = 0;
 double Config::VISCOSITY = 0;
+
+::Point Config::MAP_CENTER;

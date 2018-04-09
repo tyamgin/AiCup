@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Point.hpp"
+#include "../Config.hpp"
 using namespace std;
 
 struct Unit : ::Point
@@ -25,7 +25,12 @@ struct Unit : ::Point
 
 	bool canEat(const Unit &unit) const
 	{
-		return mass + EPS >= 1.2*unit.mass;
+		return mass > MASS_EAT_FACTOR*unit.mass;
+	}
+
+	bool canEat(const Unit &unit, double additional_mass) const
+	{
+		return mass + additional_mass > MASS_EAT_FACTOR*unit.mass;
 	}
 
 	double getMaxSpeed() const

@@ -1,12 +1,11 @@
 #ifdef _DEBUG
 #define M_SOCKET_IO true
 #define M_VISUAL true
-//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\110169_dump.log"
+//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\127933_dump.log"
 #else
 #define M_SOCKET_IO false
 #define M_VISUAL false
 #endif
-#define EPS 1e-9
 
 #if defined(M_FROM_LOG) && M_SOCKET_IO
 #error "Define M_FROM_LOG and M_SOCKET_IO separately"

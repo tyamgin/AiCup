@@ -43,6 +43,8 @@ struct MyStrategy
 	{
 		if (world.me.fragments.empty())
 			return Move();
+		//if (world.tick < 100)
+		//	return Move();
 
 		//static bool asd = false;
 		//if (world.me.fragments[0].canEject())
@@ -71,12 +73,17 @@ struct MyStrategy
 		bool fight = false;
 		for (auto &oppFr : world.opponentFragments)
 			for (auto &myFr : world.me.fragments)
-				if (oppFr.canEat(myFr) || myFr.canEat(oppFr))
+				if (oppFr.canEat(myFr, Config::FOOD_MASS) || myFr.canEat(oppFr))
 					fight = true;
 
-		if (!world.foods.empty() || fight)
+		bool food_exists = false;
+		for (auto &food : world.foods)
+			if (Config::MAP_CENTER.getDistanceTo2(food) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS))
+				food_exists = true;
+
+		if (food_exists || fight)
 		{
-			return _doPP(world);
+			return _doPP(world, !fight);
 		}
 		
 		int minLastSeen = INT_MAX;
@@ -93,8 +100,11 @@ struct MyStrategy
 				if (lastSeen[i][j] < minLastSeen || 
 					lastSeen[i][j] == minLastSeen && mes.getDistanceTo2(target) > mes.getDistanceTo2(pt))
 				{
-					minLastSeen = lastSeen[i][j];
-					target = pt;
+					if (pt.getDistanceTo2(Config::MAP_CENTER) < sqr(M_SAFE_RAD_FACTOR*Config::MAP_SIZE))
+					{
+						minLastSeen = lastSeen[i][j];
+						target = pt;
+					}
 				}
 			}
 		}
@@ -102,16 +112,17 @@ struct MyStrategy
 		
 	}
 
-	Move _doPP(const World &world)
+	Move _doPP(const World &world, bool food_mode)
 	{
 		TIMER_START();
 
 		int steps = 15;
 		int angles = 24;
+		int angles2 = 12;
 		if (world.me.fragments.size() > 5)
 		{
 			steps = 10;
-			angles = 12;
+			angles = angles2;
 		}
 
 		Move best_move;
@@ -140,6 +151,8 @@ struct MyStrategy
 			Sandbox env = world;
 			env.opponentDummyStrategy = true;
 			env.viruses = closestViruses;
+			for (auto &frag : env.opponentFragments)
+				frag.isFast = frag.isFast2();
 			Move first_move;
 
 			for (int i = 0; i < steps; i++)
@@ -149,6 +162,9 @@ struct MyStrategy
 				env.move(mv);
 				if (i == 0)
 					first_move = mv;
+
+				if (!food_mode && i < steps - 1)
+					continue;
 
 				auto d = getDanger(world, env, steps);
 				if (d < best_danger)
@@ -170,6 +186,8 @@ struct MyStrategy
 				check_move_to(!!do_split, moveto);
 			}
 		}
+		
+
 		if (world.me.fragments.size() > 1)
 		{
 			auto rect = getBoundingRect(world.me.fragments);

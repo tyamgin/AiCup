@@ -19,7 +19,7 @@ struct Exponenter
 };
 
 template<typename Collection>
-double progressiveScore(const Collection &my_fragments, const Collection &opp_fragments, const Exponenter &dist_exp)
+double progressiveScore(const Collection &my_fragments, const Collection &opp_fragments, const Exponenter &dist_exp, double additional_mass)
 {
 	double res = 0;
 	for (auto &opp : opp_fragments)
@@ -27,7 +27,7 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 		vector<double> scores;
 		for (auto &frag : my_fragments)
 		{
-			if (frag.canEat(opp))
+			if (frag.canEat(opp, additional_mass))
 			{
 				auto dst = frag.getDistanceTo(opp);
 				scores.push_back(dist_exp(dst));
@@ -80,11 +80,20 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 	double oppScore = 120;
 	Exponenter oppExp(20, oppScore, Config::MAP_SIZE / 4.0, 2);
 
-	res -= progressiveScore(env.me.fragments, env.opponentFragments, oppExp);
-	res += progressiveScore(env.opponentFragments, env.me.fragments, oppExp);
+	res -= progressiveScore(env.me.fragments, env.opponentFragments, oppExp, 0);
+	res += progressiveScore(env.opponentFragments, env.me.fragments, oppExp, Config::FOOD_MASS);
 
 	res -= env.eatenFragmentEvents.size() * oppScore * 2;
 	res += env.lostFragmentEvents.size() * oppScore * 2;
+
+	auto safe_r = Config::MAP_SIZE * M_SAFE_RAD_FACTOR;
+	auto max_r = Config::MAP_SIZE / 2 * M_SQRT2;
+	for (auto &frag : env.me.fragments)
+	{
+		auto dst = frag.getDistanceTo(Config::MAP_CENTER);
+		if (dst > safe_r)
+			res += (dst - safe_r) / (max_r - safe_r) * 35;
+	}
 
 	return res;
 }

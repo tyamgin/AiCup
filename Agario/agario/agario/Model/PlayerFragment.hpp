@@ -80,6 +80,11 @@ struct PlayerFragment : CircularUnit
 		}
 	}
 
+	bool isFast2() const
+	{
+		return isFast || speed.length2() > getMaxSpeed2();
+	}
+
 	vector<PlayerFragment> burst(const Virus &virus, int max_fragment_id, int yet_cnt)
 	{
 		vector<PlayerFragment> fragments;
