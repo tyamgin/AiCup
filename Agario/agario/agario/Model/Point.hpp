@@ -191,6 +191,14 @@ struct Point
 	//		return 0;
 	//	return distToCenter - circle.radius;
 	//}
+
+
+	bool operator <(const Point &other) const
+	{
+		if (x != other.x)
+			return x < other.x;
+		return y < other.y;
+	}
 };
 
 struct Rect

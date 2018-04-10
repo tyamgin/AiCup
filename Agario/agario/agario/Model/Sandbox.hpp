@@ -115,7 +115,7 @@ private:
 		}
 	}
 
-	int _getNearestPredator(const vector<PlayerFragment> &collection, const CircularUnit &unit)
+	pair<double, int> _getNearestPredator(const vector<PlayerFragment> &collection, const CircularUnit &unit)
 	{
 		int nearest_predator_idx = -1;
 		double deeper_dist = -INFINITY;
@@ -129,7 +129,7 @@ private:
 				nearest_predator_idx = i;
 			}
 		}
-		return nearest_predator_idx;
+		return{ deeper_dist, nearest_predator_idx };
 	}
 
 	void _doEat()
@@ -154,35 +154,51 @@ private:
 		for (int i = 0; i < (int)foods.size(); i++)
 		{
 			auto &food = foods[i];
-			auto nearest_predator_idx = _getNearestPredator(me.fragments, food);
-			if (nearest_predator_idx != -1)
+			auto nearest_my_predator_idx = _getNearestPredator(me.fragments, food);
+			auto nearest_opp_predator_idx = _getNearestPredator(opponentFragments, food);
+			if (nearest_my_predator_idx.second == -1 && nearest_opp_predator_idx.second == -1)
+				continue;
+
+			if (nearest_my_predator_idx.first > nearest_opp_predator_idx.first)
 			{
 				eatenFoodEvents.push_back({ tick });
-				me.fragments[nearest_predator_idx].addMass(Config::FOOD_MASS);
-				foods.erase(foods.begin() + i);
-				i--;
+				me.fragments[nearest_my_predator_idx.second].addMass(Config::FOOD_MASS);
 			}
+			else
+			{
+				opponentFragments[nearest_opp_predator_idx.second].addMass(Config::FOOD_MASS);
+			}
+			foods.erase(foods.begin() + i);
+			i--;
 		}
 
 		// поедаю выбросы
 		for (int i = 0; i < (int)ejections.size(); i++)
 		{
 			auto &ej = ejections[i];
-			auto nearest_predator_idx = _getNearestPredator(me.fragments, ej);
-			if (nearest_predator_idx != -1)
+			auto nearest_my_predator_idx = _getNearestPredator(me.fragments, ej);
+			auto nearest_opp_predator_idx = _getNearestPredator(opponentFragments, ej);
+			if (nearest_my_predator_idx.second == -1 && nearest_opp_predator_idx.second == -1)
+				continue;
+
+			if (nearest_my_predator_idx.first > nearest_opp_predator_idx.first)
 			{
 				eatenEjectionEvents.push_back({ tick, ej.ownerPlayerId });
-				me.fragments[nearest_predator_idx].addMass(EJECT_MASS);
-				ejections.erase(ejections.begin() + i);
-				i--;
+				me.fragments[nearest_my_predator_idx.second].addMass(EJECT_MASS);
 			}
+			else
+			{
+				opponentFragments[nearest_opp_predator_idx.second].addMass(EJECT_MASS);
+			}
+			ejections.erase(ejections.begin() + i);
+			i--;
 		}
 
 		// я поедаю
 		for (int i = 0; i < (int)opponentFragments.size(); i++)
 		{
 			auto &opp = opponentFragments[i];
-			auto nearest_predator_idx = _getNearestPredator(me.fragments, opp);
+			auto nearest_predator_idx = _getNearestPredator(me.fragments, opp).second;
 			if (nearest_predator_idx != -1)
 			{
 				me.fragments[nearest_predator_idx].addMass(opp.mass);
@@ -196,7 +212,7 @@ private:
 		for (int i = 0; i < (int)me.fragments.size(); i++)
 		{
 			auto &my = me.fragments[i];
-			auto nearest_predator_idx = _getNearestPredator(opponentFragments, my);
+			auto nearest_predator_idx = _getNearestPredator(opponentFragments, my).second;
 			if (nearest_predator_idx != -1)
 			{
 				opponentFragments[nearest_predator_idx].addMass(my.mass);

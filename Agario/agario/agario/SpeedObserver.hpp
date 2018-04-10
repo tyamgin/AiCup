@@ -31,6 +31,15 @@ struct SpeedObserver
 				// можем узнать скорость
 				frag.speed = frag - it->second; // это скорость на предыдущий тик, но это лучшее приближение
 			}
+			else
+			{
+				// считаем, что он движется с максимальной скоростью на ближайшего (худший случай)
+				// TODO: может он едет к еде
+				pair<double, ::Point> nearest(INFINITY, ::Point());
+				for (auto &my : world.me.fragments)
+					nearest = min(nearest, { frag.getDistanceTo2(my), my });
+				frag.speed = (nearest.second - frag).take(frag.getMaxSpeed());
+			}
 		}
 
 		map<int, int> computed_ejections_map;
