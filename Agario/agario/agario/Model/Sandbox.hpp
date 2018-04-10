@@ -271,6 +271,8 @@ private:
 
 	void _doFix(PlayerFragment &frag)
 	{
+		frag.addMass(0); // fix radius
+
 		if (!frag.isFast)
 			frag.dropSpeed();
 		
@@ -312,12 +314,12 @@ private:
 			new_fusion_check = false;
 			for (int i = 0; i < (int) me.fragments.size(); i++)
 			{
-				auto &frag1 = me.fragments[i];
-				if (frag1.ttf)
+				if (me.fragments[i].ttf)
 					continue;
 
 				for (int j = i + 1; j < (int)me.fragments.size(); j++)
 				{
+					auto &frag1 = me.fragments[i];
 					auto &frag2 = me.fragments[j];
 					if (frag1.canFuse(frag2))
 					{

@@ -222,7 +222,7 @@ struct PlayerFragment : CircularUnit
 		speed.x = speed.x * currInfluence + frag.speed.x * fragInfluence;
 		speed.y = speed.y * currInfluence + frag.speed.y * fragInfluence;
 
-		addMass(frag.mass);
+		mass += frag.mass; // NOTE: do not use addMass
 	}
 
 	bool canEject() const
