@@ -23,6 +23,7 @@ struct SpeedObserver
 			}
 		}
 		
+		vector<CircularUnit*> targets;
 		for (auto &frag : world.opponentFragments)
 		{
 			auto it = _prevTickOpponentFragments.find({ frag.playerId, frag.fragmentId });
@@ -33,12 +34,24 @@ struct SpeedObserver
 			}
 			else
 			{
-				// считаем, что он движется с максимальной скоростью на ближайшего (худший случай)
-				// TODO: может он едет к еде
+				// считаем, что он движется с максимальной скоростью на ближайшую цель (я, еда, выброс)
+				if (targets.empty())
+				{
+					for (auto &my : world.me.fragments)
+						targets.push_back(&my);
+					for (auto &food : world.foods)
+						targets.push_back(&food);
+					for (auto &ej : world.ejections)
+						targets.push_back(&ej);
+				}
+
 				pair<double, ::Point> nearest(INFINITY, ::Point());
-				for (auto &my : world.me.fragments)
-					nearest = min(nearest, { frag.getDistanceTo2(my), my });
-				frag.speed = (nearest.second - frag).take(frag.getMaxSpeed());
+				for (auto tar : targets)
+					if (frag.canEat(*tar))
+						nearest = min(nearest, { frag.getDistanceTo2(*tar), *tar });
+
+				if (nearest.first < INFINITY)
+					frag.speed = (nearest.second - frag).take(frag.getMaxSpeed());
 			}
 		}
 
