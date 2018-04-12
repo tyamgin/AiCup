@@ -112,7 +112,7 @@ struct Runner
 				Logger::instance()->timerStart();
 
 			World world(world_json);
-			world.tick = ++tick;
+			world.tick = tick++;
 			Logger::instance()->tick = world.tick;
 
 			auto command = strategy.onTick(world, debug_real_move);

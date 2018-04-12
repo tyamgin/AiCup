@@ -82,7 +82,7 @@ struct PlayerFragment : CircularUnit
 
 	bool isFast2() const
 	{
-		return isFast || speed.length2() > getMaxSpeed2();
+		return isFast || speed.length2() > getMaxSpeed2() + EPS;
 	}
 
 	vector<PlayerFragment> burst(const Virus &virus, int max_fragment_id, int yet_cnt)
@@ -134,7 +134,7 @@ struct PlayerFragment : CircularUnit
 		return fragments;
 	}
 
-	PlayerFragment split(int max_fragment_id) 
+	PlayerFragment split(int &max_fragment_id) 
 	{
 		double new_mass = mass / 2;
 
@@ -145,10 +145,10 @@ struct PlayerFragment : CircularUnit
 		new_player.speed = speed.take(SPLIT_START_SPEED);
 		new_player.isFast = true;
 		new_player.playerId = playerId;
-		new_player.fragmentId = max_fragment_id + 1;
+		new_player.fragmentId = ++max_fragment_id;
 		new_player.ttf = Config::TICKS_TIL_FUSION;
 		
-		fragmentId = max_fragment_id + 2;
+		fragmentId = ++max_fragment_id;
 		ttf = Config::TICKS_TIL_FUSION;
 		addMass(-new_mass);
 

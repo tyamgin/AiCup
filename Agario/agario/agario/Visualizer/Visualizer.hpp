@@ -51,6 +51,8 @@ ref struct Visualizer
 			if (frag.isFast)
 				drawCircle(Color::Yellow, frag.x, frag.y, frag.radius * 0.5, 2);
 			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x*speed_line_factor, frag.y + frag.speed.y*speed_line_factor, 2);
+			if (frag.ttf)
+				drawText(frag.ttf.ToString(), 8, gcnew SolidBrush(Color::Green), frag.x + 5, frag.y - 16);
 		}
 
 		for (auto &frag : world.opponentFragments)
@@ -64,6 +66,9 @@ ref struct Visualizer
 			if (frag.isFast2())
 				drawCircle(Color::Yellow, frag.x, frag.y, frag.radius * 0.5, 2);
 			drawLine(Color::Green, frag.x, frag.y, frag.x + frag.speed.x*speed_line_factor, frag.y + frag.speed.y*speed_line_factor, 2);
+
+			if (frag.ttf)
+				drawText(frag.ttf.ToString(), 8, gcnew SolidBrush(Color::Green), frag.x + 5, frag.y - 16);
 		}
 
 		for (auto &ej : world.ejections)
@@ -110,6 +115,12 @@ ref struct Visualizer
 	static void drawLine(Color color, double x, double y, double X, double Y, float width)
 	{
 		_graphics->DrawLine(gcnew Pen(color, width), _x(x), _y(y), _x(X), _y(Y));
+	}
+
+	static void drawText(System::String ^text, int size, Brush ^brush, double x, double y)
+	{
+		auto font = gcnew Font("Comic Sans MS", _s(size));
+		_graphics->DrawString(text, font, brush, _x(x), _y(y));
 	}
 
 private:

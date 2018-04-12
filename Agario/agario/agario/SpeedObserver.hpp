@@ -55,6 +55,8 @@ struct SpeedObserver
 			}
 		}
 
+		guessTtf(world.opponentFragments);
+
 		map<int, int> computed_ejections_map;
 		for (int i = 0; i < (int)_prevWorld.ejections.size(); i++)
 			computed_ejections_map[_prevWorld.ejections[i].id] = i;
@@ -76,7 +78,7 @@ struct SpeedObserver
 				auto &computed = _prevWorld.ejections[it->second];
 #ifdef _DEBUG
 				if (ej.ownerPlayerId != computed.ownerPlayerId)
-					cerr << "Ejection computed wrong (0)" << endl;
+					LOG("Ejection computed wrong (0)");
 #endif
 				if (_prevTickEjections.count(ej.id))
 				{
@@ -92,7 +94,7 @@ struct SpeedObserver
 				}
 #ifdef _DEBUG
 				if (computed != ej)
-					cerr << "Ejection computed wrong" << endl;
+					LOG("Ejection computed wrong");
 #endif
 				ej.speed = computed.speed;
 			}
@@ -122,10 +124,55 @@ struct SpeedObserver
 		return _findEjectionOwner(world.opponentFragments, ej);
 	}
 
+	map<pair<int, int>, int> _ttf;
+
+	void guessTtf(vector<PlayerFragment> &predictiveCollection)
+	{
+		for (auto &p : _ttf)
+			if (p.second > 0)
+				p.second--;
+
+		for (auto &frag : predictiveCollection)
+		{
+			frag.ttf = _ttf[pair<int, int>(frag.playerId, frag.fragmentId)];
+
+			bool splitted = false;
+			for (auto &frag2 : predictiveCollection)
+			{
+				if (frag.playerId == frag2.playerId && frag.fragmentId != frag2.fragmentId && frag == frag2)
+				{
+					frag.ttf = Config::TICKS_TIL_FUSION;
+					splitted = true;
+					break;
+				}
+			}
+
+			if (!splitted && frag.isFast2())
+			{
+				auto speed = frag.speed.length();
+				auto ms = frag.getMaxSpeed();
+				static_assert((int)SPLIT_START_SPEED == 9, "Expected SPLIT_START_SPEED to be 9");
+				static_assert((int)BURST_START_SPEED == 8, "Expected BURST_START_SPEED to be 8");
+				auto if_split_ticks = (SPLIT_START_SPEED - speed) / Config::VISCOSITY;
+				auto if_burst_ticks = (BURST_START_SPEED - speed) / Config::VISCOSITY;
+				if (isWhole(if_split_ticks))
+					frag.ttf = Config::TICKS_TIL_FUSION - int(if_split_ticks + EPS) - 1;
+				else if (isWhole(if_burst_ticks))
+					frag.ttf = Config::TICKS_TIL_FUSION - int(if_burst_ticks + EPS) - 1;
+				else
+					LOG("Can't guess ttf");
+			}
+
+			_ttf[pair<int, int>(frag.playerId, frag.fragmentId)] = frag.ttf;
+		}
+	}
+
 	void afterTick(const World &world)
 	{
 		_prevWorld = world;
 	}
+
+	
 
 private:
 	World _prevWorld;

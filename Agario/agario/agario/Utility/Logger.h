@@ -56,7 +56,9 @@ public:
 #ifdef _DEBUG
 #define TIMER_START() Logger::instance()->timerStart()
 #define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 30)
+#define LOG(msg) Logger::instance()->log(msg)
 #else
 #define TIMER_START()
 #define TIMER_ENG_LOG(caption)
+#define LOG(msg)
 #endif

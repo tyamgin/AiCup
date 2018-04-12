@@ -162,11 +162,11 @@ private:
 			if (nearest_my_predator_idx.first > nearest_opp_predator_idx.first)
 			{
 				eatenFoodEvents.push_back({ tick });
-				me.fragments[nearest_my_predator_idx.second].addMass(Config::FOOD_MASS);
+				me.fragments[nearest_my_predator_idx.second].mass += Config::FOOD_MASS; // do not use addMass
 			}
 			else
 			{
-				opponentFragments[nearest_opp_predator_idx.second].addMass(Config::FOOD_MASS);
+				opponentFragments[nearest_opp_predator_idx.second].mass += Config::FOOD_MASS; // do not use addMass
 			}
 			foods.erase(foods.begin() + i);
 			i--;
@@ -184,11 +184,11 @@ private:
 			if (nearest_my_predator_idx.first > nearest_opp_predator_idx.first)
 			{
 				eatenEjectionEvents.push_back({ tick, ej.ownerPlayerId });
-				me.fragments[nearest_my_predator_idx.second].addMass(EJECT_MASS);
+				me.fragments[nearest_my_predator_idx.second].mass += EJECT_MASS; // do not use addMass
 			}
 			else
 			{
-				opponentFragments[nearest_opp_predator_idx.second].addMass(EJECT_MASS);
+				opponentFragments[nearest_opp_predator_idx.second].mass += EJECT_MASS; // do not use addMass
 			}
 			ejections.erase(ejections.begin() + i);
 			i--;
@@ -201,7 +201,7 @@ private:
 			auto nearest_predator_idx = _getNearestPredator(me.fragments, opp).second;
 			if (nearest_predator_idx != -1)
 			{
-				me.fragments[nearest_predator_idx].addMass(opp.mass);
+				me.fragments[nearest_predator_idx].mass += opp.mass;  // do not use addMass
 				eatenFragmentEvents.push_back({ tick, opp.mass });
 				opponentFragments.erase(opponentFragments.begin() + i);
 				i--;
@@ -215,7 +215,7 @@ private:
 			auto nearest_predator_idx = _getNearestPredator(opponentFragments, my).second;
 			if (nearest_predator_idx != -1)
 			{
-				opponentFragments[nearest_predator_idx].addMass(my.mass);
+				opponentFragments[nearest_predator_idx].mass += my.mass; // do not use addMass
 				lostFragmentEvents.push_back({ tick, my.mass });
 				me.fragments.erase(me.fragments.begin() + i);
 				i--;
