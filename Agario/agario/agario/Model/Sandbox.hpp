@@ -86,8 +86,8 @@ private:
 
 		for (auto &opp : opponentFragments)
 		{
-			::Point *predator_pt = nullptr;
-			::Point *target_pt = nullptr;
+			PlayerFragment *predator_pt = nullptr;
+			PlayerFragment *target_pt = nullptr;
 			double predator_dist2 = INFINITY;
 			double target_dist2 = INFINITY;
 
@@ -107,9 +107,38 @@ private:
 				}
 			}
 			if (target_pt && target_dist2 < predator_dist2)
-				opp.applyDirect(*target_pt);
+			{
+				if (target_pt->getDistanceTo2(opp) < sqr(20 + target_pt->radius + opp.radius))
+				{
+					::Point sel_dir;
+					double min_dist2 = INFINITY;
+					double ang = atan2(target_pt->y - opp.y, target_pt->x - opp.x);
+					const int steps = 8;
+					double max_speed = opp.getMaxSpeed();
+					for (int i = 0; i < steps; i++)
+					{
+						auto clone = opp;
+						auto n = ::Point::byAngle(ang + 2 * M_PI / steps * i);
+						clone.applyDirect2(n, max_speed);
+						clone.move();
+						auto dist2 = clone.getDistanceTo2(opp);
+						if (dist2 < min_dist2)
+						{
+							min_dist2 = dist2;
+							sel_dir = opp + n;
+						}
+					}
+					opp.applyDirect(sel_dir);
+				}
+				else
+				{
+					opp.applyDirect(*target_pt);
+				}
+			}
 			else if (predator_pt)
+			{
 				opp.applyDirect(opp + (opp - *predator_pt).take(100));
+			}
 			
 			opp.move();
 		}

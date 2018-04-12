@@ -280,6 +280,19 @@ struct PlayerFragment : CircularUnit
 	//	return changed;
 	//}
 
+	void applyDirect2(const Point &n, double max_speed)
+	{
+		if (isFast)
+			return;
+
+		double inertion = Config::INERTION_FACTOR;
+
+		speed.x += (n.x * max_speed - speed.x) * inertion / mass;
+		speed.y += (n.y * max_speed - speed.y) * inertion / mass;
+
+		dropSpeed();
+	}
+
 	void applyDirect(const Point &direct) 
 	{
 		if (isFast)
