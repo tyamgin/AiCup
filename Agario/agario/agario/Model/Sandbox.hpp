@@ -90,18 +90,20 @@ private:
 			PlayerFragment *target_pt = nullptr;
 			double predator_dist2 = INFINITY;
 			double target_dist2 = INFINITY;
+			auto opp2 = opp;
+			opp2.move();
 
 			for (auto &my : me.fragments)
 			{
 				if (opp.canEat(my))
 				{
-					auto dist2 = my.getDistanceTo2(opp);
+					auto dist2 = my.getDistanceTo2(opp2);
 					if (dist2 < target_dist2)
 						target_dist2 = dist2, target_pt = &my;
 				}
 				else if (my.canEat(opp))
 				{
-					auto dist2 = my.getDistanceTo2(opp);
+					auto dist2 = my.getDistanceTo2(opp2);
 					if (dist2 < predator_dist2)
 						predator_dist2 = dist2, predator_pt = &my;
 				}
@@ -121,7 +123,7 @@ private:
 						auto n = ::Point::byAngle(ang + 2 * M_PI / steps * i);
 						clone.applyDirect2(n, max_speed);
 						clone.move();
-						auto dist2 = clone.getDistanceTo2(opp);
+						auto dist2 = target_pt->getDistanceTo2(clone);
 						if (dist2 < min_dist2)
 						{
 							min_dist2 = dist2;
@@ -179,7 +181,7 @@ private:
 		//	return nearest_predator;
 		//};
 
-		// поедаю еду
+		// поедают еду
 		for (int i = 0; i < (int)foods.size(); i++)
 		{
 			auto &food = foods[i];
@@ -201,7 +203,7 @@ private:
 			i--;
 		}
 
-		// поедаю выбросы
+		// поедают выбросы
 		for (int i = 0; i < (int)ejections.size(); i++)
 		{
 			auto &ej = ejections[i];
@@ -344,9 +346,17 @@ private:
 			_doFix(frag);
 	}
 
-	void _doFuse() 
+	void _doFuse()
 	{
-		sort(me.fragments.begin(), me.fragments.end(), [](const PlayerFragment &a, const PlayerFragment &b)
+		_doFuse(me.fragments);
+		//if (opponentDummyStrategy)
+		//	_doFuse(opponentFragments);
+	}
+
+
+	void _doFuse(vector<PlayerFragment> &fragments) 
+	{
+		sort(fragments.begin(), fragments.end(), [](const PlayerFragment &a, const PlayerFragment &b)
 		{
 			if (a.mass == b.mass)
 				return a.fragmentId < b.fragmentId;
@@ -357,30 +367,30 @@ private:
 		while (new_fusion_check) 
 		{
 			new_fusion_check = false;
-			for (int i = 0; i < (int) me.fragments.size(); i++)
+			for (int i = 0; i < (int)fragments.size(); i++)
 			{
-				if (me.fragments[i].ttf)
+				if (fragments[i].ttf)
 					continue;
 
-				for (int j = i + 1; j < (int)me.fragments.size(); j++)
+				for (int j = i + 1; j < (int)fragments.size(); j++)
 				{
-					auto &frag1 = me.fragments[i];
-					auto &frag2 = me.fragments[j];
-					if (frag1.canFuse(frag2))
+					auto &frag1 = fragments[i];
+					auto &frag2 = fragments[j];
+					if (frag1.playerId == frag2.playerId && frag1.canFuse(frag2))
 					{
 						frag1.fusion(frag2);
 						new_fusion_check = true;
-						me.fragments.erase(me.fragments.begin() + j);
+						fragments.erase(fragments.begin() + j);
 						j--;
 					}
 				}
 			}
 			if (new_fusion_check) 
-				for (auto &frag : me.fragments)
+				for (auto &frag : fragments)
 					_doFix(frag);
 		}
-		if (me.fragments.size() == 1)
-			me.fragments[0].fragmentId = 0;
+		if (fragments.size() == 1)
+			fragments[0].fragmentId = 0;
 	}
 
 
