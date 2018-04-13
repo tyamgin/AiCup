@@ -119,8 +119,8 @@ ref struct Visualizer
 
 	static void drawText(System::String ^text, int size, Brush ^brush, double x, double y)
 	{
-		auto font = gcnew Font("Comic Sans MS", _s(size));
-		_graphics->DrawString(text, font, brush, _x(x), _y(y));
+		auto font = gcnew Font("Comic Sans MS", (float) _s(size));
+		_graphics->DrawString(text, font, brush, (float) _x(x), (float) _y(y));
 	}
 
 private:
