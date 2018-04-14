@@ -150,7 +150,7 @@ struct MyStrategy
 		{
 			Sandbox env = world;
 			env.opponentDummyStrategy = true;
-			env.opponentFuseStrategy = world.me.fragments.size() <= 2 || world.tick <= 1000;
+			env.opponentFuseStrategy = world.me.fragments.size() <= 3 || world.tick <= 1000;
 			env.viruses = closestViruses;
 			for (auto &frag : env.opponentFragments)
 				frag.isFast = frag.isFast2();

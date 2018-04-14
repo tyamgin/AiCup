@@ -1,12 +1,15 @@
 #ifdef _DEBUG
-#define M_SOCKET_IO false
+#define M_SOCKET_IO true
 #define M_VISUAL true
-//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\155022_dump.log" //1287 - min()
-#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\155282_dump.log" // 3136
+//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\155282_dump.log"
 #else
 #define M_SOCKET_IO false
 #define M_VISUAL false
 #endif
+
+//TODO: отслеживать гарантированный ttf=0
+//http://aicups.ru/session/156020/
+// Учитывать в ПП массу потерь, чтобы сплитились
 
 #if defined(M_FROM_LOG) && M_SOCKET_IO
 #error "Define M_FROM_LOG and M_SOCKET_IO separately"

@@ -29,8 +29,7 @@ struct SpeedObserver
 			auto it = _prevTickOpponentFragments.find({ frag.playerId, frag.fragmentId });
 			if (it != _prevTickOpponentFragments.end())
 			{
-				// можем узнать скорость
-				frag.speed = frag - it->second; // это скорость на предыдущий тик, но это лучшее приближение
+				frag.speed = frag - it->second;
 			}
 			else
 			{

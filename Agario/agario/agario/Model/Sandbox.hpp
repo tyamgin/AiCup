@@ -117,7 +117,7 @@ private:
 					::Point sel_dir;
 					double min_dist2 = INFINITY;
 					double ang = atan2(target_pt->y - opp.y, target_pt->x - opp.x);
-					const int steps = 8;
+					const int steps = 16;
 					double max_speed = opp.getMaxSpeed();
 					for (int i = 0; i < steps; i++)
 					{
