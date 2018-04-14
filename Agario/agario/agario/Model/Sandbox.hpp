@@ -349,8 +349,8 @@ private:
 	void _doFuse()
 	{
 		_doFuse(me.fragments);
-		if (opponentDummyStrategy)
-			_doFuse(opponentFragments);
+		//if (opponentDummyStrategy)
+		//	_doFuse(opponentFragments);
 	}
 
 
