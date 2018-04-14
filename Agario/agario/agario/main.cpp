@@ -1,7 +1,8 @@
 #ifdef _DEBUG
 #define M_SOCKET_IO false
 #define M_VISUAL true
-#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\153718_dump.log"
+//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\155022_dump.log" //1287 - min()
+#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\155282_dump.log" // 3136
 #else
 #define M_SOCKET_IO false
 #define M_VISUAL false

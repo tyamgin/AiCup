@@ -112,7 +112,7 @@ private:
 			if (target_pt && target_dist2 < predator_dist2)
 			{
 				// если цель для него близко, то перебираем ходы точнее
-				if (target_dist2 < sqr(20 + target_pt->radius + opp.radius))
+				if (target_dist2 < sqr(20 + target_pt->radius + 2*opp.radius))
 				{
 					::Point sel_dir;
 					double min_dist2 = INFINITY;
@@ -142,13 +142,14 @@ private:
 			else if (predator_pt)
 			{
 				PlayerFragment *nearest_fuser = nullptr;
-				if (opponentFuseStrategy && opp.ttf == 0 && predator_dist2 < sqr(50 + predator_pt->radius + opp.radius))
+				if (opponentFuseStrategy && opp.ttf == 0 && predator_dist2 < sqr(20 + 3*predator_pt->radius + opp.radius))
 				{
 					double nearest_fuser_dist2 = INFINITY;
 					for (auto &fuser : opponentFragments)
 					{
-						if (fuser.playerId == opp.playerId && fuser.fragmentId != opp.fragmentId && fuser.ttf == 0 &&
-							fuser.mass + opp.mass > MASS_EAT_FACTOR*predator_pt->mass)
+						if (fuser.playerId == opp.playerId && fuser.fragmentId != opp.fragmentId && fuser.ttf == 0 
+							//&& fuser.mass + opp.mass > MASS_EAT_FACTOR*predator_pt->mass
+							)
 						{
 							auto dist2 = opp.getDistanceTo2(fuser);
 							if (nearest_fuser == nullptr || 

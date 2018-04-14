@@ -170,9 +170,39 @@ struct MyStrategy
 				auto d = getDanger(world, env, steps);
 				if (d < best_danger)
 				{
-					best_danger = d;
-					best_move = first_move;
-					best_env = env;
+					if (env.opponentFuseStrategy && i == steps - 1)
+					{
+						Sandbox env2 = world;
+						env2.opponentDummyStrategy = true;
+						env2.opponentFuseStrategy = true;
+						env2.viruses = closestViruses;
+						for (auto &frag : env2.opponentFragments)
+						{
+							frag.isFast = frag.isFast2();
+							if (frag.ttf == 0)
+								frag.ttf = Config::TICKS_TIL_FUSION;
+						}
+
+						for (int i = 0; i < steps; i++)
+						{
+							Move mv{ moveto.x, moveto.y };
+							mv.split = do_split && i == 0;
+							env2.move(mv);
+						}
+						auto d2 = getDanger(world, env2, steps);
+						if (d2 > d)
+						{
+							d = d2;
+							env = env2;
+						}
+					}
+
+					if (d < best_danger)
+					{
+						best_danger = d;
+						best_move = first_move;
+						best_env = env;
+					}
 				}
 			}
 		};
