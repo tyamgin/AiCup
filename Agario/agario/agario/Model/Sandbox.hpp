@@ -32,6 +32,7 @@ struct Sandbox : public World
 	vector<EatenFragmentEvent> eatenFragmentEvents;
 	vector<LostFragmentEvent> lostFragmentEvents;
 	bool opponentDummyStrategy = false;
+	bool opponentFuseStrategy = true;
 
 	Sandbox(const World &world) : World(world)
 	{		
@@ -110,7 +111,8 @@ private:
 			}
 			if (target_pt && target_dist2 < predator_dist2)
 			{
-				if (target_pt->getDistanceTo2(opp) < sqr(20 + target_pt->radius + opp.radius))
+				// если цель для него близко, то перебираем ходы точнее
+				if (target_dist2 < sqr(20 + target_pt->radius + opp.radius))
 				{
 					::Point sel_dir;
 					double min_dist2 = INFINITY;
@@ -139,7 +141,32 @@ private:
 			}
 			else if (predator_pt)
 			{
-				opp.applyDirect(opp + (opp - *predator_pt).take(100));
+				PlayerFragment *nearest_fuser = nullptr;
+				if (opponentFuseStrategy && opp.ttf == 0 && predator_dist2 < sqr(50 + predator_pt->radius + opp.radius))
+				{
+					double nearest_fuser_dist2 = INFINITY;
+					for (auto &fuser : opponentFragments)
+					{
+						if (fuser.playerId == opp.playerId && fuser.fragmentId != opp.fragmentId && fuser.ttf == 0 &&
+							fuser.mass + opp.mass > MASS_EAT_FACTOR*predator_pt->mass)
+						{
+							auto dist2 = opp.getDistanceTo2(fuser);
+							if (nearest_fuser == nullptr || 
+								//dist - opp.radius - fuser.radius < nearest_fuser_dist - opp.radius - nearest_fuser->radius
+								//dist - fuser.radius < nearest_fuser_dist - nearest_fuser->radius
+								dist2 < sqr(sqrt(nearest_fuser_dist2) - nearest_fuser->radius + fuser.radius)
+								)
+							{
+								nearest_fuser_dist2 = dist2;
+								nearest_fuser = &fuser;
+							}
+						}
+					}
+				}
+				if (nearest_fuser == nullptr)
+					opp.applyDirect(opp + (opp - *predator_pt));
+				else
+					opp.applyDirect(*nearest_fuser);
 			}
 			
 			opp.move();
@@ -349,8 +376,8 @@ private:
 	void _doFuse()
 	{
 		_doFuse(me.fragments);
-		//if (opponentDummyStrategy)
-		//	_doFuse(opponentFragments);
+		if (opponentDummyStrategy && opponentFuseStrategy)
+			_doFuse(opponentFragments);
 	}
 
 
