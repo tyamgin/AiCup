@@ -1,7 +1,7 @@
 #ifdef _DEBUG
 #define M_SOCKET_IO true
 #define M_VISUAL true
-//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\162528_dump.log"
+//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\162710_dump.log"
 #else
 #define M_SOCKET_IO false
 #define M_VISUAL false

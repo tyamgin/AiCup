@@ -131,8 +131,14 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval, int 
 		}
 	}
 	for (int j = 0; j <= VISION_GRID_SIZE; j++)
+	{
 		for (int i = max(0, x_vis_min[j]); i <= VISION_GRID_SIZE && i <= x_vis_max[j]; i++)
-			vis_cells++, vis_sum += env.tick - lastSeen[i][j]; // TODO: не учитываются пробелы
+		{
+			vis_cells++;
+			vis_sum += max(0, env.tick - interval - lastSeen[i][j] - 40);
+			// TODO: не учитываются пробелы
+		}
+	}
 
 	double sumArea = 0;
 	for (auto &frag : env.me.fragments)
