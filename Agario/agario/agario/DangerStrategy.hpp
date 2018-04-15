@@ -2,7 +2,7 @@
 
 #include "Model/Sandbox.hpp"
 
-#define VISION_GRID_SIZE 32
+#define VISION_GRID_SIZE 48
 
 int x_vis_min[VISION_GRID_SIZE + 1];
 int x_vis_max[VISION_GRID_SIZE + 1];
@@ -134,8 +134,11 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval, int 
 		for (int i = max(0, x_vis_min[j]); i <= VISION_GRID_SIZE && i <= x_vis_max[j]; i++)
 			vis_cells++, vis_sum += env.tick - lastSeen[i][j]; // TODO: не учитываются пробелы
 
+	double sumArea = 0;
+	for (auto &frag : env.me.fragments)
+		sumArea += frag.radius*frag.radius*M_PI;
 	if (vis_cells > 0)
-		res -= vis_sum / vis_cells / 50;
+		res -= vis_sum / sumArea / 10;
 
 	if (res != res)
 	{
