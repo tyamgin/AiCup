@@ -2,6 +2,11 @@
 
 #include "Model/Sandbox.hpp"
 
+#define VISION_GRID_SIZE 32
+
+int x_vis_min[VISION_GRID_SIZE + 1];
+int x_vis_max[VISION_GRID_SIZE + 1];
+
 struct Exponenter
 {
 	double x1, y1, x2, y2, a, b;
@@ -42,7 +47,7 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 	return res;
 }
 
-double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
+double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval, int lastSeen[][VISION_GRID_SIZE + 1])
 {
 	double foodScore = 15;
 	Exponenter foodExp(1, foodScore * 0.5, Config::MAP_SIZE / 4.0, 0.3);
@@ -58,22 +63,28 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 
 	for (auto &food : env.foods)
 	{
-		for (auto &frag : env.me.fragments)
+		if (Config::MAP_CENTER.getDistanceTo2(food) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS))
 		{
-			auto dst = frag.getDistanceTo(food);
-			auto e = foodExp(dst);
-		
-			res -= e / env.me.fragments.size();
+			for (auto &frag : env.me.fragments)
+			{
+				auto dst = frag.getDistanceTo(food);
+				auto e = foodExp(dst);
+
+				res -= e / env.me.fragments.size();
+			}
 		}
 	}
 	for (auto &ej : env.ejections)
 	{
-		for (auto &frag : env.me.fragments)
+		if (Config::MAP_CENTER.getDistanceTo2(ej) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + EJECT_RADIUS))
 		{
-			auto dst = frag.getDistanceTo(ej);
-			auto e = ejectExp(dst);
+			for (auto &frag : env.me.fragments)
+			{
+				auto dst = frag.getDistanceTo(ej);
+				auto e = ejectExp(dst);
 
-			res -= e / env.me.fragments.size();
+				res -= e / env.me.fragments.size();
+			}
 		}
 	}
 
@@ -93,6 +104,52 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval)
 		auto dst = frag.getDistanceTo(Config::MAP_CENTER);
 		if (dst > safe_r)
 			res += (dst - safe_r) / (max_r - safe_r) * 35;
+	}
+
+	memset(x_vis_min, 63, sizeof(x_vis_min));
+	memset(x_vis_max, 0, sizeof(x_vis_max));
+
+	auto vis_d = Config::MAP_SIZE / VISION_GRID_SIZE;
+	double vis_sum = 0;
+	int vis_cells = 0;
+	for (auto &frag : env.me.fragments)
+	{
+		auto vis = frag.getVisionCenter();
+		auto vis_rad = frag.radius * (env.me.fragments.size() <= 1 ? VIS_FACTOR : VIS_FACTOR_FR * sqrt(1.0 * env.me.fragments.size()));
+
+		double x, y;
+		for (int j = max(0, int((vis.y - vis_rad) / vis_d - EPS) + 1);
+			j <= VISION_GRID_SIZE && (y = j * vis_d) <= vis.y + vis_rad;
+			j++)
+		{
+			auto sqrt_val = vis_rad*vis_rad - (y - vis.y)*(y - vis.y);
+			if (sqrt_val < 0)
+				continue;
+			sqrt_val = sqrt(sqrt_val);
+			x_vis_min[j] = min(x_vis_min[j], int((vis.x - sqrt_val) / vis_d - EPS) + 1);
+			x_vis_max[j] = max(x_vis_max[j], int((vis.x + sqrt_val) / vis_d + EPS));
+			
+
+			//for (int i = max(0, int((vis.x - sqrt_val) / vis_d - EPS) + 1);
+			//	i <= VISION_GRID_SIZE && (x = i * vis_d) <= vis.x + sqrt_val;
+			//	i++)
+			//{
+			//	vis_sum += env.tick - lastSeen[i][j];
+			//	vis_cells++;
+			//}
+		}
+	}
+	for (int j = 0; j <= VISION_GRID_SIZE; j++)
+		for (int i = max(0, x_vis_min[j]); i <= VISION_GRID_SIZE && i <= x_vis_max[j]; i++)
+			vis_cells++, vis_sum += env.tick - lastSeen[i][j]; // TODO: не учитываются пробелы
+
+	if (vis_cells > 0)
+		res -= vis_sum / vis_cells / 50;
+
+	if (res != res)
+	{
+		LOG("NaaaaaaN");
+		exit(0);
 	}
 
 	return res;

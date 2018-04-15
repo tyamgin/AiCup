@@ -27,20 +27,9 @@ struct Player
 	{
 		auto coeff = fragments.size() <= 1 ? VIS_FACTOR : VIS_FACTOR_FR * sqrt(1.0 * fragments.size());
 		for (auto &frag : fragments)
-		{
-			auto visionCenter = frag.getVisionCenter();
-			if (visionCenter.getDistanceTo2(p) <= (frag.radius*coeff)*(frag.radius*coeff) + EPS)
+			if (frag.isPointVisible(p, coeff))
 				return true;
-		}
+		
 		return false;
 	}
-
-	bool canEat(const PlayerFragment &unit) const
-	{
-		for (auto &frag : fragments)
-			if (frag.canEat(unit))
-				return true;
-		return false;
-	}
-
 };

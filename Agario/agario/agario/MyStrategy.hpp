@@ -8,12 +8,10 @@
 #include "Visualizer/Visualizer.hpp"
 #endif
 
-#define GRID_SIZE 32
-
 struct MyStrategy
 {
 	SpeedObserver speedObserver;
-	int lastSeen[GRID_SIZE + 1][GRID_SIZE + 1];
+	int lastSeen[VISION_GRID_SIZE + 1][VISION_GRID_SIZE + 1];
 
 	MyStrategy()
 	{
@@ -57,11 +55,11 @@ struct MyStrategy
 		//if (asd)
 		//	return Move(world.me.fragments[0] - world.me.fragments[0].speed);
 
-		for (int i = 0; i <= GRID_SIZE; i++)
+		for (int i = 0; i <= VISION_GRID_SIZE; i++)
 		{
-			for (int j = 0; j <= GRID_SIZE; j++)
+			for (int j = 0; j <= VISION_GRID_SIZE; j++)
 			{
-				::Point pt(1.0 * Config::MAP_SIZE / GRID_SIZE * i, 1.0 * Config::MAP_SIZE / GRID_SIZE * j);
+				::Point pt(1.0 * Config::MAP_SIZE / VISION_GRID_SIZE * i, 1.0 * Config::MAP_SIZE / VISION_GRID_SIZE * j);
 				if (world.me.isPointVisible(pt))
 					lastSeen[i][j] = world.tick;
 			}
@@ -76,40 +74,7 @@ struct MyStrategy
 				if (oppFr.canEat(myFr, Config::FOOD_MASS) || myFr.canEat(oppFr))
 					fight = true;
 
-		bool food_exists = false;
-		for (auto &food : world.foods)
-			if (Config::MAP_CENTER.getDistanceTo2(food) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS))
-				food_exists = true;
-
-		if (food_exists || fight)
-		{
-			return _doPP(world, !fight);
-		}
-		
-		int minLastSeen = INT_MAX;
-		::Point target;
-
-		for (int i = 0; i <= GRID_SIZE; i++)
-		{
-			for (int j = 0; j <= GRID_SIZE; j++)
-			{
-				::Point pt(1.0 * Config::MAP_SIZE / GRID_SIZE * i, 1.0 * Config::MAP_SIZE / GRID_SIZE * j);
-				if (mes.getDistanceTo2(pt) > sqr(Config::MAP_SIZE / 3.0))
-					continue;
-
-				if (lastSeen[i][j] < minLastSeen || 
-					lastSeen[i][j] == minLastSeen && mes.getDistanceTo2(target) > mes.getDistanceTo2(pt))
-				{
-					if (pt.getDistanceTo2(Config::MAP_CENTER) < sqr(M_SAFE_RAD_FACTOR*Config::MAP_SIZE))
-					{
-						minLastSeen = lastSeen[i][j];
-						target = pt;
-					}
-				}
-			}
-		}
-		return Move(target.x, target.y);
-		
+		return _doPP(world, !fight);
 	}
 
 	Move _doPP(const World &world, bool food_mode)
@@ -167,7 +132,7 @@ struct MyStrategy
 				if (!food_mode && i < steps - 1)
 					continue;
 
-				auto d = getDanger(world, env, steps);
+				auto d = getDanger(world, env, steps, lastSeen);
 				if (d < best_danger)
 				{
 					if (env.opponentFuseStrategy && i == steps - 1)
@@ -176,24 +141,28 @@ struct MyStrategy
 						env2.opponentDummyStrategy = true;
 						env2.opponentFuseStrategy = true;
 						env2.viruses = closestViruses;
+						bool changed = false;
 						for (auto &frag : env2.opponentFragments)
 						{
 							frag.isFast = frag.isFast2();
 							if (frag.ttf == 0)
-								frag.ttf = Config::TICKS_TIL_FUSION;
+								frag.ttf = Config::TICKS_TIL_FUSION, changed = true;
 						}
 
-						for (int i = 0; i < steps; i++)
+						if (changed)
 						{
-							Move mv{ moveto.x, moveto.y };
-							mv.split = do_split && i == 0;
-							env2.move(mv);
-						}
-						auto d2 = getDanger(world, env2, steps);
-						if (d2 > d)
-						{
-							d = d2;
-							env = env2;
+							for (int i = 0; i < steps; i++)
+							{
+								Move mv{ moveto.x, moveto.y };
+								mv.split = do_split && i == 0;
+								env2.move(mv);
+							}
+							auto d2 = getDanger(world, env2, steps, lastSeen);
+							if (d2 > d)
+							{
+								d = d2;
+								env = env2;
+							}
 						}
 					}
 

@@ -38,6 +38,12 @@ struct PlayerFragment : CircularUnit
 		return *this + speed.take(10);
 	}
 
+	bool isPointVisible(const ::Point &p, double coeff) const
+	{
+		auto visionCenter = getVisionCenter();
+		return visionCenter.getDistanceTo2(p) <= (radius*coeff)*(radius*coeff);
+	}
+
 	void addMass(double add)
 	{
 		mass += add;
