@@ -176,18 +176,18 @@ struct MyStrategy
 			}
 		};
 
+		auto cen = avg(world.me.fragments);
 		for (int do_split = 0; do_split <= (int)can_split_any; do_split++)
 		{
 			for (int angIdx = 0; angIdx < angles; angIdx++)
 			{
 				double ang = M_PI * 2 / angles * angIdx;
 				auto dir = ::Point::byAngle(ang);
-				auto moveto = getBorderPoint(world.me.fragments[0], dir);
+				auto moveto = getBorderPoint(cen, dir);
 				check_move_to(!!do_split, moveto);
 			}
 		}
 		
-
 		if (world.me.fragments.size() > 1)
 		{
 			auto rect = getBoundingRect(world.me.fragments);
@@ -195,6 +195,8 @@ struct MyStrategy
 			for (int i = 0; i < side; i++)
 				for (int j = 0; j < side; j++)
 					check_move_to(false, ::Point(rect.width() / (side - 1) * i, rect.height() / (side - 1) * j));
+			for (auto &opp : world.opponentFragments)
+				check_move_to(false, opp);
 		}
 
 		TIMER_ENG_LOG("pp");

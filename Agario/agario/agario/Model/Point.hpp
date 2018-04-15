@@ -237,3 +237,14 @@ Rect getBoundingRect(const Collection &arr)
 	}
 	return Rect(minX, minY, maxX, maxY);
 }
+
+template<typename Collection>
+::Point avg(const Collection &collection)
+{
+	::Point sum;
+	int count = 0;
+	for (auto &x : collection)
+		sum += x, count++;
+	sum /= count;
+	return sum;
+}

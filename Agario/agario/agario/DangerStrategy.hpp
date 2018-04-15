@@ -128,15 +128,6 @@ double getDanger(const Sandbox &startEnv, const Sandbox &env, int interval, int 
 			sqrt_val = sqrt(sqrt_val);
 			x_vis_min[j] = min(x_vis_min[j], int((vis.x - sqrt_val) / vis_d - EPS) + 1);
 			x_vis_max[j] = max(x_vis_max[j], int((vis.x + sqrt_val) / vis_d + EPS));
-			
-
-			//for (int i = max(0, int((vis.x - sqrt_val) / vis_d - EPS) + 1);
-			//	i <= VISION_GRID_SIZE && (x = i * vis_d) <= vis.x + sqrt_val;
-			//	i++)
-			//{
-			//	vis_sum += env.tick - lastSeen[i][j];
-			//	vis_cells++;
-			//}
 		}
 	}
 	for (int j = 0; j <= VISION_GRID_SIZE; j++)
