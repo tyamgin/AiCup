@@ -25,17 +25,22 @@ struct LostFragmentEvent
 	double mass;
 };
 
+#define VISION_GRID_SIZE 48
+
 struct Sandbox : public World 
 {
+	int lastSeen[VISION_GRID_SIZE + 1][VISION_GRID_SIZE + 1];
 	vector<EatenFoodEvent> eatenFoodEvents;
 	vector<EatenEjectionEvent> eatenEjectionEvents;
 	vector<EatenFragmentEvent> eatenFragmentEvents;
 	vector<LostFragmentEvent> lostFragmentEvents;
+	bool useVisionMap = false;
 	bool opponentDummyStrategy = false;
 	bool opponentFuseStrategy = true;
 
-	Sandbox(const World &world) : World(world)
-	{		
+	Sandbox(const World &world, int lastSeen[][VISION_GRID_SIZE + 1]) : World(world)
+	{
+		memcpy(this->lastSeen, lastSeen, sizeof(this->lastSeen));
 	}
 
 	void move(Move move)
@@ -54,6 +59,7 @@ struct Sandbox : public World
 		_doFixes();
 		//update_scores();
 		//split_viruses();
+		_updateVisionMap();
 	}
 
 	
@@ -78,6 +84,31 @@ private:
 			frag.move();
 
 		_doOpponentDummyMove();
+	}
+
+	void _updateVisionMap()
+	{
+		if (!useVisionMap)
+			return;
+
+		for (auto &frag : me.fragments)
+		{
+			auto &cen = frag.getVisionCenter();
+			auto vis_rad = frag.radius * (me.fragments.size() <= 1 ? VIS_FACTOR : VIS_FACTOR_FR * sqrt(1.0 * me.fragments.size()));
+			auto vis_rad2 = vis_rad*vis_rad;
+
+			double d = 1.0 * Config::MAP_SIZE / VISION_GRID_SIZE;
+			for (int i = 0; i <= VISION_GRID_SIZE; i++)
+			{
+				double x = d * i;
+				for (int j = 0; j <= VISION_GRID_SIZE; j++)
+				{
+					double y = d * j;
+					if (cen.getDistanceTo2(x, y) <= vis_rad2)
+						lastSeen[i][j] = tick;
+				}
+			}
+		}
 	}
 
 	void _doOpponentDummyMove()

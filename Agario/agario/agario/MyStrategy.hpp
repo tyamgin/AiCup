@@ -29,7 +29,7 @@ struct MyStrategy
 		auto res = _onTick(world);
 		assert(!res.split || !res.eject);
 		
-		Sandbox env(world);
+		Sandbox env(world, lastSeen);
 		env.move(res);
 		speedObserver.afterTick(env);
 
@@ -92,11 +92,16 @@ struct MyStrategy
 
 		Move best_move;
 		double best_danger = INT_MAX;
-		Sandbox best_env(world);
+		Sandbox best_env(world, lastSeen);
 		
 		bool can_split_any = false;
 		for (auto &frag : world.me.fragments)
 			can_split_any |= frag.canSplit(world.me.fragments.size());
+
+		int foods_count = 0;
+		for (auto &food : world.foods)
+			if (Config::MAP_CENTER.getDistanceTo2(food) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS))
+				foods_count++;
 
 		vector<Virus> closestViruses;
 		for (auto &virus : world.viruses)
@@ -113,10 +118,11 @@ struct MyStrategy
 
 		auto check_move_to = [&](bool do_split, ::Point moveto)
 		{
-			Sandbox env = world;
+			Sandbox env(world, lastSeen);
 			env.opponentDummyStrategy = true;
 			env.opponentFuseStrategy = world.me.fragments.size() <= 3 || world.tick <= 1000;
 			env.viruses = closestViruses;
+			env.useVisionMap = foods_count <= 1;
 			for (auto &frag : env.opponentFragments)
 				frag.isFast = frag.isFast2();
 			Move first_move;
@@ -137,10 +143,11 @@ struct MyStrategy
 				{
 					if (env.opponentFuseStrategy && i == steps - 1)
 					{
-						Sandbox env2 = world;
+						Sandbox env2(world, lastSeen);
 						env2.opponentDummyStrategy = true;
 						env2.opponentFuseStrategy = true;
 						env2.viruses = closestViruses;
+						env2.useVisionMap = env.useVisionMap;
 						bool changed = false;
 						for (auto &frag : env2.opponentFragments)
 						{
