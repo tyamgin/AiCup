@@ -120,7 +120,7 @@ struct MyStrategy
 		{
 			Sandbox env(world, lastSeen);
 			env.opponentDummyStrategy = true;
-			env.opponentFuseStrategy = world.me.fragments.size() <= 3 || world.tick <= 1000;
+			env.opponentFuseStrategy = true;// world.me.fragments.size() <= 3 || world.tick <= 1000;
 			env.viruses = closestViruses;
 			env.useVisionMap = foods_count <= 1;
 			for (auto &frag : env.opponentFragments)
