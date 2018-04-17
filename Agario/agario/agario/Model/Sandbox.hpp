@@ -93,11 +93,12 @@ private:
 
 		for (auto &frag : me.fragments)
 		{
-			auto &cen = frag.getVisionCenter();
+			auto cen = frag.getVisionCenter();
 			auto vis_rad = frag.radius * (me.fragments.size() <= 1 ? VIS_FACTOR : VIS_FACTOR_FR * sqrt(1.0 * me.fragments.size()));
 			auto vis_rad2 = vis_rad*vis_rad;
 
 			double d = 1.0 * Config::MAP_SIZE / VISION_GRID_SIZE;
+			int h = 0;
 			for (int i = 0; i <= VISION_GRID_SIZE; i++)
 			{
 				double x = d * i;
@@ -105,9 +106,13 @@ private:
 				{
 					double y = d * j;
 					if (cen.getDistanceTo2(x, y) <= vis_rad2)
+					{
+						h += tick - lastSeen[i][j] > 50;
 						lastSeen[i][j] = tick;
+					}
 				}
 			}
+			h += 0;
 		}
 	}
 

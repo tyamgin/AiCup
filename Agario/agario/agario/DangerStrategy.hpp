@@ -154,7 +154,7 @@ double getDanger(const World &startEnv, const Sandbox &env, int interval, int la
 		int vis_sum = 0;
 		for (int i = 0; i <= VISION_GRID_SIZE; i++)
 			for (int j = 0; j <= VISION_GRID_SIZE; j++)
-				vis_sum += env.tick - min(500, max(0, env.tick - (env.lastSeen[i][j] - lastSeen[i][j])));
+				vis_sum += min(500, max(0, env.lastSeen[i][j] - lastSeen[i][j]));
 
 		double sumArea = 0;
 		for (auto &frag : env.me.fragments)
