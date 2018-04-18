@@ -37,6 +37,8 @@ struct Sandbox : public World
 	bool useVisionMap = false;
 	bool opponentDummyStrategy = false;
 	bool opponentFuseStrategy = true;
+	bool opponentForseFuseStrategy = false;
+	bool opponentForseFuseStrategy2 = false;
 
 	Sandbox(const World &world, int lastSeen[][VISION_GRID_SIZE + 1]) : World(world)
 	{
@@ -145,7 +147,7 @@ private:
 						predator_dist2 = dist2, predator_pt = &my;
 				}
 			}
-			if (target_pt && target_dist2 < predator_dist2)
+			if (target_pt && target_dist2 < predator_dist2 && !opponentForseFuseStrategy)
 			{
 				// если цель для него близко, то перебираем ходы точнее
 				if (target_dist2 < sqr(20 + target_pt->radius + 2*opp.radius))
@@ -175,15 +177,16 @@ private:
 					opp.applyDirect(*target_pt);
 				}
 			}
-			else if (predator_pt)
+			else if (predator_pt || opponentForseFuseStrategy || opponentForseFuseStrategy2)
 			{
 				PlayerFragment *nearest_fuser = nullptr;
-				if (opponentFuseStrategy && opp.ttf == 0 && predator_dist2 < sqr(20 + 3*predator_pt->radius + opp.radius))
+				if (opponentForseFuseStrategy || predator_pt == nullptr ||
+					opponentFuseStrategy && opp.ttf == 0 && predator_dist2 < sqr(20 + 3*predator_pt->radius + opp.radius))
 				{
 					double nearest_fuser_dist2 = INFINITY;
 					for (auto &fuser : opponentFragments)
 					{
-						if (fuser.playerId == opp.playerId && fuser.fragmentId != opp.fragmentId && fuser.ttf == 0 
+						if (fuser.playerId == opp.playerId && fuser.fragmentId != opp.fragmentId && (fuser.ttf == 0 || opponentForseFuseStrategy)
 							//&& fuser.mass + opp.mass > MASS_EAT_FACTOR*predator_pt->mass
 							)
 						{
@@ -200,12 +203,11 @@ private:
 						}
 					}
 				}
-				if (nearest_fuser == nullptr)
-					opp.applyDirect(opp + (opp - *predator_pt));
-				else
+				if (nearest_fuser != nullptr)
 					opp.applyDirect(*nearest_fuser);
+				else if (predator_pt != nullptr)
+					opp.applyDirect(opp + (opp - *predator_pt));
 			}
-			
 			opp.move();
 		}
 	}

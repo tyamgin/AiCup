@@ -68,16 +68,23 @@ struct MyStrategy
 		auto me = world.me.fragments[0];
 		auto mes = me + me.speed*6;
 
-		bool fight = false;
+		bool allow_partial = true;
 		for (auto &oppFr : world.opponentFragments)
-			for (auto &myFr : world.me.fragments)
-				if (oppFr.canEat(myFr, Config::FOOD_MASS) || myFr.canEat(oppFr))
-					fight = true;
+		{
+			double addMass = 0;
+			for (auto &opp2 : world.opponentFragments)
+				if (opp2.playerId == oppFr.playerId && opp2.fragmentId != oppFr.fragmentId && oppFr.ttf <= 20 && opp2.ttf <= 20)
+					addMass += opp2.mass;
 
-		return _doPP(world, !fight);
+			for (auto &myFr : world.me.fragments)
+				if (oppFr.canEat(myFr, addMass + Config::FOOD_MASS) || myFr.canEat(oppFr))
+					allow_partial = false;
+		}
+
+		return _doPP(world, allow_partial);
 	}
 
-	Move _doPP(const World &world, bool food_mode)
+	Move _doPP(const World &world, bool allow_partial)
 	{
 		TIMER_START();
 
@@ -120,12 +127,27 @@ struct MyStrategy
 		{
 			Sandbox env(world, lastSeen);
 			env.opponentDummyStrategy = true;
-			env.opponentFuseStrategy = true;// world.me.fragments.size() <= 3 || world.tick <= 1000;
 			env.viruses = closestViruses;
 			env.useVisionMap = foods_count <= 1;
 			for (auto &frag : env.opponentFragments)
 				frag.isFast = frag.isFast2();
 			Move first_move;
+
+			auto try_strategy = [&](double &d, Sandbox &env2)
+			{
+				for (int i = 0; i < steps; i++)
+				{
+					Move mv{ moveto.x, moveto.y };
+					mv.split = do_split && i == 0;
+					env2.move(mv);
+				}
+				auto d2 = getDanger(world, env2, steps, lastSeen);
+				if (d2 > d)
+				{
+					d = d2;
+					env = env2;
+				}
+			};
 
 			for (int i = 0; i < steps; i++)
 			{
@@ -135,7 +157,7 @@ struct MyStrategy
 				if (i == 0)
 					first_move = mv;
 
-				if (!food_mode && i < steps - 1)
+				if (!allow_partial && i < steps - 1)
 					continue;
 
 				auto d = getDanger(world, env, steps, lastSeen);
@@ -145,7 +167,6 @@ struct MyStrategy
 					{
 						Sandbox env2(world, lastSeen);
 						env2.opponentDummyStrategy = true;
-						env2.opponentFuseStrategy = true;
 						env2.viruses = closestViruses;
 						env2.useVisionMap = env.useVisionMap;
 						bool changed = false;
@@ -157,28 +178,40 @@ struct MyStrategy
 						}
 
 						if (changed)
+							try_strategy(d, env2);
+
+
+						int can_fuse_count = 0;
+						for (auto &opp : world.opponentFragments)
+							can_fuse_count += opp.ttf <= 20;
+
+						if (d < best_danger && can_fuse_count > 1)
 						{
-							for (int i = 0; i < steps; i++)
-							{
-								Move mv{ moveto.x, moveto.y };
-								mv.split = do_split && i == 0;
-								env2.move(mv);
-							}
-							auto d2 = getDanger(world, env2, steps, lastSeen);
-							if (d2 > d)
-							{
-								d = d2;
-								env = env2;
-							}
+							Sandbox env3(world, lastSeen);
+							env3.opponentDummyStrategy = true;
+							env3.viruses = closestViruses;
+							env3.useVisionMap = env.useVisionMap;
+							env3.opponentForseFuseStrategy = true;
+							try_strategy(d, env3);
+						}
+
+						if (d < best_danger && can_fuse_count > 1)
+						{
+							Sandbox env3(world, lastSeen);
+							env3.opponentDummyStrategy = true;
+							env3.viruses = closestViruses;
+							env3.useVisionMap = env.useVisionMap;
+							env3.opponentForseFuseStrategy2 = true;
+							try_strategy(d, env3);
 						}
 					}
+				}
 
-					if (d < best_danger)
-					{
-						best_danger = d;
-						best_move = first_move;
-						best_env = env;
-					}
+				if (d < best_danger)
+				{
+					best_danger = d;
+					best_move = first_move;
+					best_env = env;
 				}
 			}
 		};
