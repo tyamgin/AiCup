@@ -2,7 +2,7 @@
 
 #include "Model/Sandbox.hpp"
 
-#define FOOD_EXPIRATION_TICKS 200
+#define FOOD_EXPIRATION_TICKS 350
 
 struct Exponenter
 {

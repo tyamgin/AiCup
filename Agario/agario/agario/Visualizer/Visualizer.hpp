@@ -15,7 +15,7 @@ ref struct Visualizer
 {
 	static agario::MainForm ^form;
 
-	static void update(const World &world, const FoodObserver &foodObserver)
+	static void update(const World &world, const vector<FoodInfo> &foods)
 	{
 		form->tickLabel->Text = world.tick.ToString();
 
@@ -32,20 +32,17 @@ ref struct Visualizer
 		}
 
 		drawCircle(Color::Black, Config::MAP_CENTER.x, Config::MAP_CENTER.y, Config::MAP_SIZE*M_SAFE_RAD_FACTOR, 1);
-
-		for (auto &food : world.foods)
+		
+		for (auto &food_info : foods)
 		{
-			fillCircle(Color::Chocolate, food.x, food.y, food.radius);
-		}
+			auto &food = food_info.food;
 
-		for (auto &p : foodObserver.foods)
-		{
-			for (auto &food_info : p.second)
-			{
-				auto &food = food_info.food;
-				if (food_info.lastSeenTick != world.tick)
-					fillCircle(Color::Cyan, food.x, food.y, food.radius);
-			}
+			if (food_info.lastSeenTick == world.tick)
+				fillCircle(Color::Chocolate, food.x, food.y, food.radius);
+			else if (food_info.isMirror)
+				fillCircle(Color::DarkBlue, food.x, food.y, food.radius);
+			else
+				fillCircle(Color::Red, food.x, food.y, food.radius);
 		}
 
 		for (auto &virus : world.viruses)

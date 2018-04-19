@@ -104,21 +104,32 @@ private:
 			auto vis_rad2 = vis_rad*vis_rad;
 
 			double d = 1.0 * Config::MAP_SIZE / VISION_GRID_SIZE;
-			int h = 0;
-			for (int i = 0; i <= VISION_GRID_SIZE; i++)
+
+			int startI = max(0, int((cen.x - vis_rad) / d - EPS) + 1);
+			int startJ = max(0, int((cen.y - vis_rad) / d - EPS) + 1);
+
+			bool anyI = false;
+			for (int i = startI; i <= VISION_GRID_SIZE; i++)
 			{
 				double x = d * i;
-				for (int j = 0; j <= VISION_GRID_SIZE; j++)
+				bool anyJ = false;
+				for (int j = startJ; j <= VISION_GRID_SIZE; j++)
 				{
 					double y = d * j;
 					if (cen.getDistanceTo2(x, y) <= vis_rad2)
 					{
-						h += tick - lastSeen[i][j] > 50;
 						lastSeen[i][j] = tick;
+						anyJ = true;
+					}
+					else if (anyJ)
+					{
+						break;
 					}
 				}
+				if (anyI && !anyJ)
+					break;
+				anyI = anyJ;
 			}
-			h += 0;
 		}
 	}
 

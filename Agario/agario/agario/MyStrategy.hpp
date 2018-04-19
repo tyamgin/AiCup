@@ -14,6 +14,7 @@ struct MyStrategy
 	SpeedObserver speedObserver;
 	FoodObserver foodObserver;
 	int lastSeen[VISION_GRID_SIZE + 1][VISION_GRID_SIZE + 1];
+	vector<FoodInfo> foods;
 
 	MyStrategy()
 	{
@@ -24,8 +25,15 @@ struct MyStrategy
 	{
 		speedObserver.beforeTick(world);
 		foodObserver.beforeTick(world);
+
+		foods.clear();
+		for (auto &p : foodObserver.foods)
+			for (auto &fi : p.second)
+				if (world.tick - fi.lastSeenTick < FOOD_EXPIRATION_TICKS)
+					foods.emplace_back(fi);
+
 #if M_VISUAL
-		Visualizer::update(world, foodObserver);
+		Visualizer::update(world, foods);
 #endif
 		TIMER_START();
 
@@ -44,19 +52,6 @@ struct MyStrategy
 	{
 		if (world.me.fragments.empty())
 			return Move();
-		//if (world.tick < 100)
-		//	return Move();
-
-		//static bool asd = false;
-		//if (world.me.fragments[0].canEject())
-		//{
-		//	Move move;
-		//	move.eject = true;
-		//	//asd = true;
-		//	return move;
-		//}
-		//if (asd)
-		//	return Move(world.me.fragments[0] - world.me.fragments[0].speed);
 
 		for (int i = 0; i <= VISION_GRID_SIZE; i++)
 		{
@@ -89,12 +84,6 @@ struct MyStrategy
 
 	Move _doPP(const World &world, bool allow_partial)
 	{
-		vector<FoodInfo> foods;
-		for (auto &p : foodObserver.foods)
-			for (auto &fi : p.second)
-				if (world.tick - fi.lastSeenTick < FOOD_EXPIRATION_TICKS)
-					foods.emplace_back(fi);
-
 		TIMER_START();
 
 		int steps = 15;
