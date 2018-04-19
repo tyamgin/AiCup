@@ -95,6 +95,9 @@
     <ClInclude Include="Utility\Logger.h">
       <Filter>Source Files\Utility</Filter>
     </ClInclude>
+    <ClInclude Include="FoodObserver.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Visualizer\MainForm.resx">

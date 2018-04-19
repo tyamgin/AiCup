@@ -4,13 +4,25 @@
 #include <ctime>
 #include <iostream>
 #include <string>
+#include <chrono>
+#include <sstream>
 using namespace std;
 
-class Logger
+struct Logger
 {
-	vector<clock_t> _timers;
+	enum Action
+	{
+		ALL,
+		DANGER_STRATEGY,
+		SANDBOX,
 
-public:
+		ACTIONS_COUNT
+	};
+
+	vector<chrono::time_point<chrono::steady_clock>> _timers;
+	long long _cumulativeDuration[ACTIONS_COUNT];
+
+
 	int tick;
 
 	static Logger* instance()
@@ -23,27 +35,47 @@ public:
 
 	void timerStart()
 	{
-		_timers.push_back(clock());
+		_timers.push_back(chrono::high_resolution_clock::now());
 	}
 
-	int timerGet()
+	long long timerGet()
 	{
-		auto start_clock = _timers.back();
-		return (clock() - start_clock) * 1000 / CLOCKS_PER_SEC;
+		auto microseconds = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - _timers.back());
+		return microseconds.count();
 	}
 
-	int timerEnd()
+	long long timerEnd()
 	{
-		auto start_clock = _timers.back();
+		auto res = timerGet();
 		_timers.pop_back();
-		return (clock() - start_clock) * 1000 / CLOCKS_PER_SEC;
+		return res;
 	}
 
 	void timerEndLog(string caption, int limit)
 	{
-		auto time = timerEnd();
+		auto time = timerEnd() / 1000;
 		if (time > limit)
 			log(to_string(tick) + ">" + string(_timers.size() * 2, '-') + " " + caption + ":" + to_string(time));
+	}
+
+	void cumulativeTimerStart(Action action)
+	{
+		timerStart();
+	}
+
+	void cumulativeTimerEnd(Action action)
+	{
+		_cumulativeDuration[action] += timerEnd();
+	}
+
+	string getSummary()
+	{
+		stringstream out;
+		out << "[Summary]" << endl;
+		out << "] ALL             " << _cumulativeDuration[ALL]             / 1000 << "ms" << endl;
+		out << "] DANGER_STRATEGY " << _cumulativeDuration[DANGER_STRATEGY] / 1000 << "ms" << endl;
+		out << "] SANDBOX         " << _cumulativeDuration[SANDBOX]         / 1000 << "ms" << endl;
+		return out.str();
 	}
 
 	template <typename T>
@@ -57,8 +89,12 @@ public:
 #define TIMER_START() Logger::instance()->timerStart()
 #define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 30)
 #define LOG(msg) Logger::instance()->log(msg)
+#define OP_START(action) Logger::instance()->cumulativeTimerStart(Logger:: ## action)
+#define OP_END(action) Logger::instance()->cumulativeTimerEnd(Logger:: ## action)
 #else
 #define TIMER_START()
 #define TIMER_ENG_LOG(caption)
 #define LOG(msg)
+#define OP_START(action)
+#define OP_END(action)
 #endif

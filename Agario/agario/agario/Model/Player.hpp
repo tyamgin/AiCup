@@ -32,4 +32,14 @@ struct Player
 		
 		return false;
 	}
+
+	bool isUnitVisible(const CircularUnit &p) const
+	{
+		auto coeff = fragments.size() <= 1 ? VIS_FACTOR : VIS_FACTOR_FR * sqrt(1.0 * fragments.size());
+		for (auto &frag : fragments)
+			if (frag.isUnitVisible(p, coeff))
+				return true;
+
+		return false;
+	}
 };

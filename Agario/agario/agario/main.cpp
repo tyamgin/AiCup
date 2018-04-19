@@ -119,13 +119,24 @@ struct Runner
 			if (tick == 0)
 				Logger::instance()->timerStart();
 
+			Logger::instance()->cumulativeTimerStart(Logger::ALL);
 			World world(world_json);
 			world.tick = tick++;
 			Logger::instance()->tick = world.tick;
 
 			auto command = strategy.onTick(world, debug_real_move);
+
+			Logger::instance()->cumulativeTimerEnd(Logger::ALL);
+
 			if (tick % 100 == 0)
-				command.debug += "Time: " + to_string(Logger::instance()->timerGet()) + "ms\n";
+			{
+				command.debug += "Time: " + to_string(Logger::instance()->timerGet() / 1000) + "ms\n";
+				auto summary = Logger::instance()->getSummary();
+				command.debug += summary;
+#ifdef _DEBUG
+				cerr << summary;
+#endif
+			}
 #if M_VISUAL
 			Visualizer::updateMove(command);
 #endif

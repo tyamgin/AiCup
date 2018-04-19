@@ -1,6 +1,7 @@
 #include "Model/World.hpp"
 #include "Model/Sandbox.hpp"
 #include "SpeedObserver.hpp"
+#include "FoodObserver.hpp"
 #include "DangerStrategy.hpp"
 #include "Utility/Logger.h"
 
@@ -11,6 +12,7 @@
 struct MyStrategy
 {
 	SpeedObserver speedObserver;
+	FoodObserver foodObserver;
 	int lastSeen[VISION_GRID_SIZE + 1][VISION_GRID_SIZE + 1];
 
 	MyStrategy()
@@ -21,8 +23,9 @@ struct MyStrategy
 	Move onTick(World world, const Move &debug_real_move)
 	{
 		speedObserver.beforeTick(world);
+		foodObserver.beforeTick(world);
 #if M_VISUAL
-		Visualizer::update(world);
+		Visualizer::update(world, foodObserver);
 #endif
 		TIMER_START();
 
@@ -86,6 +89,12 @@ struct MyStrategy
 
 	Move _doPP(const World &world, bool allow_partial)
 	{
+		vector<FoodInfo> foods;
+		for (auto &p : foodObserver.foods)
+			for (auto &fi : p.second)
+				if (world.tick - fi.lastSeenTick < FOOD_EXPIRATION_TICKS)
+					foods.emplace_back(fi);
+
 		TIMER_START();
 
 		int steps = 15;
@@ -141,7 +150,7 @@ struct MyStrategy
 					mv.split = do_split && i == 0;
 					env2.move(mv);
 				}
-				auto d2 = getDanger(world, env2, steps, lastSeen);
+				auto d2 = getDanger(foods, world, env2, steps, lastSeen);
 				if (d2 > d)
 				{
 					d = d2;
@@ -160,7 +169,7 @@ struct MyStrategy
 				if (!allow_partial && i < steps - 1)
 					continue;
 
-				auto d = getDanger(world, env, steps, lastSeen);
+				auto d = getDanger(foods, world, env, steps, lastSeen);
 				if (d < best_danger)
 				{
 					if (env.opponentFuseStrategy && i == steps - 1)

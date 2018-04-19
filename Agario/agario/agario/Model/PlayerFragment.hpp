@@ -44,6 +44,14 @@ struct PlayerFragment : CircularUnit
 		return visionCenter.getDistanceTo2(p) <= (radius*coeff)*(radius*coeff);
 	}
 
+	bool isUnitVisible(const CircularUnit &circle, double coeff) const
+	{
+		auto cen = getVisionCenter();
+		double dist2 = circle.getDistanceTo2(cen);
+
+		return dist2 < sqr(radius*coeff + circle.radius);
+	}
+
 	void addMass(double add)
 	{
 		mass += add;

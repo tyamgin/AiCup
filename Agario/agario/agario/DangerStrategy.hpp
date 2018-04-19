@@ -2,10 +2,7 @@
 
 #include "Model/Sandbox.hpp"
 
-
-
-int x_vis_min[VISION_GRID_SIZE + 1];
-int x_vis_max[VISION_GRID_SIZE + 1];
+#define FOOD_EXPIRATION_TICKS 200
 
 struct Exponenter
 {
@@ -47,8 +44,10 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 	return res;
 }
 
-double getDanger(const World &startEnv, const Sandbox &env, int interval, int lastSeen[][VISION_GRID_SIZE + 1])
+double getDanger(const vector<FoodInfo> &foods, const World &startEnv, const Sandbox &env, int interval, int lastSeen[][VISION_GRID_SIZE + 1])
 {
+	OP_START(DANGER_STRATEGY);
+
 	double foodScore = 15;
 	Exponenter foodExp(1, foodScore * 0.5, Config::MAP_SIZE / 4.0, 0.3);
 
@@ -62,8 +61,10 @@ double getDanger(const World &startEnv, const Sandbox &env, int interval, int la
 		res -= ejectScore * (interval - (eatenEjectionEvent.tick - startEnv.tick)) / interval;
 
 	int itemsCount = 0;
-	for (auto &food : env.foods)
+	double food_sum = 0;
+	for (auto &food_info : foods)
 	{
+		auto &food = food_info.food;
 		if (Config::MAP_CENTER.getDistanceTo2(food) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS))
 		{
 			for (auto &frag : env.me.fragments)
@@ -71,10 +72,15 @@ double getDanger(const World &startEnv, const Sandbox &env, int interval, int la
 				auto dst = frag.getDistanceTo(food);
 				auto e = foodExp(dst);
 
-				res -= e / env.me.fragments.size();
+				auto t = startEnv.tick - food_info.lastSeenTick;
+
+				food_sum += e * (FOOD_EXPIRATION_TICKS - t) / (double)FOOD_EXPIRATION_TICKS;
 			}
 		}
 	}
+	if (env.me.fragments.size())
+		res -= food_sum / env.me.fragments.size();
+
 	for (auto &ej : env.ejections)
 	{
 		if (Config::MAP_CENTER.getDistanceTo2(ej) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + EJECT_RADIUS))
@@ -109,48 +115,6 @@ double getDanger(const World &startEnv, const Sandbox &env, int interval, int la
 
 	if (env.tick - startEnv.tick == interval && env.useVisionMap && env.me.fragments.size() > 0)
 	{
-		//memset(x_vis_min, 63, sizeof(x_vis_min));
-		//memset(x_vis_max, 0, sizeof(x_vis_max));
-
-		//auto vis_d = Config::MAP_SIZE / VISION_GRID_SIZE;
-		//double vis_sum = 0;
-		//int vis_cells = 0;
-		//for (auto &frag : env.me.fragments)
-		//{
-		//	auto vis = frag.getVisionCenter();
-		//	auto vis_rad = frag.radius * (env.me.fragments.size() <= 1 ? VIS_FACTOR : VIS_FACTOR_FR * sqrt(1.0 * env.me.fragments.size()));
-
-		//	double x, y;
-		//	for (int j = max(0, int((vis.y - vis_rad) / vis_d - EPS) + 1);
-		//		j <= VISION_GRID_SIZE && (y = j * vis_d) <= vis.y + vis_rad;
-		//		j++)
-		//	{
-		//		auto sqrt_val = vis_rad*vis_rad - (y - vis.y)*(y - vis.y);
-		//		if (sqrt_val < 0)
-		//			continue;
-		//		sqrt_val = sqrt(sqrt_val);
-		//		x_vis_min[j] = min(x_vis_min[j], int((vis.x - sqrt_val) / vis_d - EPS) + 1);
-		//		x_vis_max[j] = max(x_vis_max[j], int((vis.x + sqrt_val) / vis_d + EPS));
-		//	}
-		//}
-	
-		//vector<tuple<int, int, int> > pts;
-		//for (int j = 0; j <= VISION_GRID_SIZE; j++)
-		//{
-		//	for (int i = max(0, x_vis_min[j]); i <= VISION_GRID_SIZE && i <= x_vis_max[j]; i++)
-		//	{
-		//		vis_cells++;
-		//		auto v = env.tick - interval - lastSeen[i][j] - 30;
-		//		if (v < 0)
-		//			v = 0;
-		//		else if (v > 500)
-		//			v = 500;
-
-		//		vis_sum += v;
-		//		// TODO: не учитываются пробелы
-		//		pts.push_back({ i, j, v });
-		//	}
-		//}
 		int vis_sum = 0;
 		for (int i = 0; i <= VISION_GRID_SIZE; i++)
 			for (int j = 0; j <= VISION_GRID_SIZE; j++)
@@ -168,6 +132,8 @@ double getDanger(const World &startEnv, const Sandbox &env, int interval, int la
 		LOG("danger is not finite");
 		exit(0);
 	}
+
+	OP_END(DANGER_STRATEGY);
 
 	return res;
 }

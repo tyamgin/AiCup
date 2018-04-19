@@ -47,6 +47,8 @@ struct Sandbox : public World
 
 	void move(Move move)
 	{
+		OP_START(SANDBOX);
+
 		_doApply(move);
 		tick++;
 		_doMove(move);
@@ -62,6 +64,8 @@ struct Sandbox : public World
 		//update_scores();
 		//split_viruses();
 		_updateVisionMap();
+
+		OP_END(SANDBOX);
 	}
 
 	
