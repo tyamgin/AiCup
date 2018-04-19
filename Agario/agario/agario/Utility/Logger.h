@@ -19,9 +19,9 @@ struct Logger
 		ACTIONS_COUNT
 	};
 
-	vector<chrono::time_point<chrono::steady_clock>> _timers;
+	vector<chrono::system_clock::time_point> _timers;
 	long long _cumulativeDuration[ACTIONS_COUNT];
-
+		
 
 	int tick;
 
@@ -35,12 +35,12 @@ struct Logger
 
 	void timerStart()
 	{
-		_timers.push_back(chrono::high_resolution_clock::now());
+		_timers.push_back(chrono::system_clock::now());
 	}
 
 	long long timerGet()
 	{
-		auto microseconds = chrono::duration_cast<chrono::microseconds>(chrono::high_resolution_clock::now() - _timers.back());
+		auto microseconds = chrono::duration_cast<chrono::microseconds>(chrono::system_clock::now() - _timers.back());
 		return microseconds.count();
 	}
 
