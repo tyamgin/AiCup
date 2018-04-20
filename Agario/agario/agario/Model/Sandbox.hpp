@@ -82,9 +82,26 @@ private:
 		for (auto &ej : ejections)
 			ej.move();
 		
-		for (int i = 0; i < (int) me.fragments.size(); i++)
-			for (int j = i + 1; j < (int) me.fragments.size(); j++)
-				me.fragments[i].collisionCalc(me.fragments[j]);
+		for (int i = 0, size = (int)me.fragments.size(); i < size; i++)
+		{
+			auto &frag1 = me.fragments[i];
+			if (!frag1.isFast)
+				for (int j = i + 1; j < size; j++)
+					frag1.collisionCalc(me.fragments[j]);
+		}
+		for (int i = 0, size = (int)opponentFragments.size(); i < size; i++)
+		{
+			auto &frag1 = opponentFragments[i];
+			if (!frag1.isFast)
+			{
+				for (int j = i + 1; j < size; j++)
+				{
+					auto &frag2 = opponentFragments[j];
+					if (frag1.playerId == frag2.playerId)
+						frag1.collisionCalc(frag2);
+				}
+			}
+		}
 
 		for (auto &frag : me.fragments)
 			frag.move();
