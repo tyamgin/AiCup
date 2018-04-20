@@ -232,7 +232,7 @@ struct MyStrategy
 			const int side = 3;
 			for (int i = 0; i < side; i++)
 				for (int j = 0; j < side; j++)
-					check_move_to(false, ::Point(rect.width() / (side - 1) * i, rect.height() / (side - 1) * j));
+					check_move_to(false, ::Point(rect.x1 + rect.width() / (side - 1) * i, rect.y1 + rect.height() / (side - 1) * j));
 			for (auto &opp : world.opponentFragments)
 				check_move_to(false, opp);
 		}
