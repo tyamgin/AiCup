@@ -15,6 +15,7 @@ struct Logger
 		ALL,
 		DANGER_STRATEGY,
 		SANDBOX,
+		SANDBOX_OPPONENT_DUMMY_MOVE,
 
 		ACTIONS_COUNT
 	};
@@ -72,9 +73,11 @@ struct Logger
 	{
 		stringstream out;
 		out << "[Summary]" << endl;
-		out << "] ALL             " << _cumulativeDuration[ALL]             / 1000 << "ms" << endl;
-		out << "] DANGER_STRATEGY " << _cumulativeDuration[DANGER_STRATEGY] / 1000 << "ms" << endl;
-		out << "] SANDBOX         " << _cumulativeDuration[SANDBOX]         / 1000 << "ms" << endl;
+		out << "] ALL                         " << _cumulativeDuration[ALL]                         / 1000 << "ms" << endl;
+		out << "] DANGER_STRATEGY             " << _cumulativeDuration[DANGER_STRATEGY]             / 1000 << "ms" << endl;
+		out << "] SANDBOX                     " << _cumulativeDuration[SANDBOX]                     / 1000 << "ms" << endl;
+		out << "] SANDBOX_OPPONENT_DUMMY_MOVE " << _cumulativeDuration[SANDBOX_OPPONENT_DUMMY_MOVE] / 1000 << "ms" << endl;
+		
 		return out.str();
 	}
 

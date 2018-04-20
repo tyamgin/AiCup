@@ -106,6 +106,7 @@ private:
 		for (auto &frag : me.fragments)
 			frag.move();
 
+		
 		_doOpponentDummyMove();
 	}
 
@@ -152,8 +153,10 @@ private:
 
 	void _doOpponentDummyMove()
 	{
-		if (!opponentDummyStrategy)
+		if (!opponentDummyStrategy || opponentFragments.empty())
 			return;
+
+		OP_START(SANDBOX_OPPONENT_DUMMY_MOVE);
 
 		for (auto &opp : opponentFragments)
 		{
@@ -242,8 +245,29 @@ private:
 				else if (predator_pt != nullptr)
 					opp.applyDirect(opp + (opp - *predator_pt));
 			}
+			else
+			{
+				// к ближайшей еде
+				opp2.move();
+				opp2.move();
+				Food *nearest_food = nullptr;
+				double nearest_food_dist2 = INFINITY;
+				for (auto &food : foods)
+				{
+					auto dist2 = opp2.getDistanceTo2(food);
+					if (dist2 < nearest_food_dist2)
+					{
+						nearest_food_dist2 = dist2;
+						nearest_food = &food;
+					}
+				}
+				if (nearest_food_dist2 < sqr(opp2.radius + 70) && nearest_food != nullptr)
+					opp.applyDirect(*nearest_food);
+			}
 			opp.move();
 		}
+
+		OP_END(SANDBOX_OPPONENT_DUMMY_MOVE);
 	}
 
 	pair<double, int> _getNearestPredator(const vector<PlayerFragment> &collection, const CircularUnit &unit)
@@ -265,22 +289,6 @@ private:
 
 	void _doEat()
 	{
-
-
-
-		//auto nearest_virus = [this](Ejection *eject) {
-		//	Virus *nearest_predator = NULL;
-		//	double deeper_dist = -INFINITY;
-		//	for (Virus *predator : virus_array) {
-		//		double qdist = predator->can_eat(eject);
-		//		if (qdist > deeper_dist) {
-		//			deeper_dist = qdist;
-		//			nearest_predator = predator;
-		//		}
-		//	}
-		//	return nearest_predator;
-		//};
-
 		// поедают еду
 		for (int i = 0; i < (int)foods.size(); i++)
 		{
