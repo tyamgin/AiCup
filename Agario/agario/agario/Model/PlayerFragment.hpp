@@ -261,48 +261,13 @@ struct PlayerFragment : CircularUnit
 		return new_eject;
 	}
 
-	//bool update_by_mass(int max_x, int max_y) {
-	//	bool changed = false;
-	//	double new_radius = Config::RADIUS_FACTOR * qSqrt(mass);
-	//	if (radius != new_radius) {
-	//		radius = new_radius;
-	//		changed = true;
-	//	}
-
-	//	double new_speed = Config::SPEED_FACTOR / qSqrt(mass);
-	//	if (speed > new_speed && !is_fast) {
-	//		speed = new_speed;
-	//	}
-
-	//	if (x - radius < 0) {
-	//		x += (radius - x);
-	//		changed = true;
-	//	}
-	//	if (y - radius < 0) {
-	//		y += (radius - y);
-	//		changed = true;
-	//	}
-	//	if (x + radius > max_x) {
-	//		x -= (radius + x - max_x);
-	//		changed = true;
-	//	}
-	//	if (y + radius > max_y) {
-	//		y -= (radius + y - max_y);
-	//		changed = true;
-	//	}
-
-	//	return changed;
-	//}
-
 	void applyDirect2(const Point &n, double max_speed)
 	{
 		if (isFast)
 			return;
 
-		double inertion = Config::INERTION_FACTOR;
-
-		speed.x += (n.x * max_speed - speed.x) * inertion / mass;
-		speed.y += (n.y * max_speed - speed.y) * inertion / mass;
+		speed.x += (n.x * max_speed - speed.x) * Config::INERTION_FACTOR / mass;
+		speed.y += (n.y * max_speed - speed.y) * Config::INERTION_FACTOR / mass;
 
 		dropSpeed();
 	}
@@ -318,10 +283,9 @@ struct PlayerFragment : CircularUnit
 		double dist = sqrt(dx * dx + dy * dy);
 		double ny = (dist > 0) ? (dy / dist) : 0;
 		double nx = (dist > 0) ? (dx / dist) : 0;
-		double inertion = Config::INERTION_FACTOR;
 
-		speed.x += (nx * max_speed - speed.x) * inertion / mass;
-		speed.y += (ny * max_speed - speed.y) * inertion / mass;
+		speed.x += (nx * max_speed - speed.x) * Config::INERTION_FACTOR / mass;
+		speed.y += (ny * max_speed - speed.y) * Config::INERTION_FACTOR / mass;
 
 		dropSpeed();
 	}

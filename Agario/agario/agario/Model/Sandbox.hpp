@@ -170,12 +170,14 @@ private:
 					::Point sel_dir;
 					double min_dist2 = INFINITY;
 					double ang = atan2(target_pt->y - opp.y, target_pt->x - opp.x);
-					const int steps = 16;
+					double ang_from = ang - M_PI / 4;
+					double ang_to = ang + M_PI / 4;
+					const int grid = 16;
 					double max_speed = opp.getMaxSpeed();
-					for (int i = 0; i < steps; i++)
+					for (int i = 0; i <= grid; i++)
 					{
 						auto clone = opp;
-						auto n = ::Point::byAngle(ang + 2 * M_PI / steps * i);
+						auto n = ::Point::byAngle((ang_to - ang_from) / grid * i + ang_from);
 						clone.applyDirect2(n, max_speed);
 						clone.move();
 						auto dist2 = target_pt->getDistanceTo2(clone);
