@@ -15,6 +15,8 @@
 //http://aicups.ru/session/156020/
 // Учитывать в ПП массу потерь, чтобы сплитились
 
+// http://aicups.ru/session_debug/186097/  1664
+
 #if defined(M_FROM_LOG) && M_SOCKET_IO
 #error "Define M_FROM_LOG and M_SOCKET_IO separately"
 #endif
