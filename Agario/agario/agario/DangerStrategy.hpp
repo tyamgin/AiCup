@@ -5,7 +5,7 @@
 #define FOOD_EXPIRATION_TICKS 350
 
 #define M_USE_FAST_EXP false
-#define M_USE_FAST_SQRT true
+#define M_USE_FAST_SQRT false
 
 struct Exponenter
 {
@@ -28,7 +28,7 @@ struct Exponenter
 };
 
 #if M_USE_FAST_SQRT
-#define EXP_SCORE(fn, a, b) (fn)(sqrt_lookup((a).getDistanceTo2((b))));
+#define EXP_SCORE(fn, a, b) (fn)(fsqrt((a).getDistanceTo2((b))));
 #else
 #define EXP_SCORE(fn, a, b) (fn)((a).getDistanceTo((b)));
 #endif

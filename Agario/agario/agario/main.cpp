@@ -96,8 +96,6 @@ struct Runner
 		}
 #endif
 
-		sqrt_lookup_init();
-
 		auto config_json = readJson();
 		Config::parse(config_json);
 		int tick = 0;

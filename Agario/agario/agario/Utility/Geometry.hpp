@@ -15,5 +15,4 @@ inline bool isWhole(double x, double eps = 1e-9)
 
 double exp256(double x);
 
-double sqrt_lookup(double x);
-void sqrt_lookup_init();
+double fsqrt(double x);
