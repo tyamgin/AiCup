@@ -20,6 +20,11 @@ struct Exponenter
 	};
 };
 
+bool isDangerFood(const FoodInfo &food)
+{
+	return Config::MAP_CENTER.getDistanceTo2(food.food) >= sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS);
+}
+
 template<typename Collection>
 double progressiveScore(const Collection &my_fragments, const Collection &opp_fragments, const Exponenter &dist_exp, double additional_mass)
 {
@@ -44,7 +49,7 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 	return res;
 }
 
-double getDanger(const vector<FoodInfo> &foods, const World &startEnv, const Sandbox &env, int interval, int lastSeen[][VISION_GRID_SIZE + 1])
+double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, const Sandbox &env, int interval, int lastSeen[][VISION_GRID_SIZE + 1])
 {
 	OP_START(DANGER_STRATEGY);
 
@@ -62,20 +67,18 @@ double getDanger(const vector<FoodInfo> &foods, const World &startEnv, const San
 
 	int itemsCount = 0;
 	double food_sum = 0;
-	for (auto &food_info : foods)
+	for (auto &food_info : safe_foods)
 	{
 		auto &food = food_info.food;
-		if (Config::MAP_CENTER.getDistanceTo2(food) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS))
+		
+		for (auto &frag : env.me.fragments)
 		{
-			for (auto &frag : env.me.fragments)
-			{
-				auto dst = frag.getDistanceTo(food);
-				auto e = foodExp(dst);
+			auto dst = frag.getDistanceTo(food);
+			auto e = foodExp(dst);
 
-				auto t = startEnv.tick - food_info.lastSeenTick;
+			auto t = startEnv.tick - food_info.lastSeenTick;
 
-				food_sum += e * (FOOD_EXPIRATION_TICKS - t) / (double)FOOD_EXPIRATION_TICKS;
-			}
+			food_sum += e * (FOOD_EXPIRATION_TICKS - t) / (double)FOOD_EXPIRATION_TICKS;
 		}
 	}
 	if (env.me.fragments.size())

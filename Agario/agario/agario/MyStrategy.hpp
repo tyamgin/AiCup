@@ -38,6 +38,8 @@ struct MyStrategy
 #endif
 		TIMER_START();
 
+		foods.erase(remove_if(foods.begin(), foods.end(), isDangerFood), foods.end());
+
 		auto res = _onTick(world);
 		assert(!res.split || !res.eject);
 		
@@ -82,6 +84,7 @@ struct MyStrategy
 
 		return _doPP(world, allow_partial);
 	}
+
 
 	Move _doPP(const World &world, bool allow_partial)
 	{
