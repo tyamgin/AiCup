@@ -34,6 +34,7 @@ struct MyStrategy
 
 #if M_VISUAL
 		Visualizer::update(world, foods);
+		System::Threading::Thread::Sleep(2);
 #endif
 		TIMER_START();
 

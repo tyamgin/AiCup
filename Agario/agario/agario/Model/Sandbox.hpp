@@ -194,10 +194,6 @@ private:
 						predator_dist2 = dist2, predator_pt = other;
 				}
 			}
-			if (target_pt != nullptr && target_pt->playerId != me.id)
-				target_pt = target_pt;
-			if (predator_pt != nullptr && predator_pt->playerId != me.id)
-				predator_pt = predator_pt;
 
 			if (target_pt && target_dist2 < predator_dist2 && !opponentForseFuseStrategy)
 			{
