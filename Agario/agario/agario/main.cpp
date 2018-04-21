@@ -1,6 +1,6 @@
 #ifdef _DEBUG
 #define M_VISUAL true
-#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\186948_dump.log"
+//#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\187506_dump.log"
 #ifdef M_FROM_LOG
 #define M_SOCKET_IO false
 #else
@@ -12,9 +12,6 @@
 #define M_VISUAL false
 #define M_LOGS false
 #endif
-
-#define M_LOGS true
-#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\186948_dump.log"
 
 
 //TODO: отслеживать гарантированный ttf=0

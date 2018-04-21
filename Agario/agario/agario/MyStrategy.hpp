@@ -95,13 +95,14 @@ struct MyStrategy
 		int angles2 = 12;
 		if (world.me.fragments.size() > 5)
 		{
-			steps = 10;
+			steps = 12;
 			angles = angles2;
 		}
 
 		Move best_move;
 		double best_danger = INT_MAX;
 		Sandbox best_env(world, lastSeen);
+		double need_try_eject = false;
 		
 		bool can_split_any = false;
 		for (auto &frag : world.me.fragments)
@@ -125,7 +126,7 @@ struct MyStrategy
 			}
 		}
 
-		auto check_move_to = [&](bool do_split, ::Point moveto)
+		auto check_move_to = [&](bool do_split, int do_eject_count, ::Point moveto)
 		{
 			Sandbox env(world, lastSeen);
 			env.opponentDummyStrategy = true;
@@ -141,6 +142,7 @@ struct MyStrategy
 				{
 					Move mv{ moveto.x, moveto.y };
 					mv.split = do_split && i == 0;
+					mv.eject = i < do_eject_count;
 					env2.move(mv);
 				}
 				auto d2 = getDanger(foods, world, env2, steps, lastSeen);
@@ -155,6 +157,7 @@ struct MyStrategy
 			{
 				Move mv{ moveto.x, moveto.y };
 				mv.split = do_split && i == 0;
+				mv.eject = i < do_eject_count;
 				env.move(mv);
 				if (i == 0)
 					first_move = mv;
@@ -213,6 +216,7 @@ struct MyStrategy
 				{
 					best_danger = d;
 					best_move = first_move;
+					need_try_eject = !env.lostFragmentEvents.empty();
 					best_env = env;
 				}
 			}
@@ -226,7 +230,7 @@ struct MyStrategy
 				double ang = M_PI * 2 / angles * angIdx;
 				auto dir = ::Point::byAngle(ang);
 				auto moveto = getBorderPoint(cen, dir);
-				check_move_to(!!do_split, moveto);
+				check_move_to(!!do_split, 0, moveto);
 			}
 		}
 		
@@ -236,9 +240,23 @@ struct MyStrategy
 			const int side = 3;
 			for (int i = 0; i < side; i++)
 				for (int j = 0; j < side; j++)
-					check_move_to(false, ::Point(rect.x1 + rect.width() / (side - 1) * i, rect.y1 + rect.height() / (side - 1) * j));
+					check_move_to(false, 0, ::Point(rect.x1 + rect.width() / (side - 1) * i, rect.y1 + rect.height() / (side - 1) * j));
 			for (auto &opp : world.opponentFragments)
-				check_move_to(false, opp);
+				check_move_to(false, 0, opp);
+		}
+
+		if (need_try_eject && world.me.fragments.size() <= 2)
+		{
+			for (int ejects_count = 1; ejects_count <= 4; ejects_count++)
+			{
+				for (int angIdx = 0; angIdx < angles; angIdx++)
+				{
+					double ang = M_PI * 2 / angles * angIdx;
+					auto dir = ::Point::byAngle(ang);
+					auto moveto = getBorderPoint(cen, dir);
+					check_move_to(false, ejects_count, moveto);
+				}
+			}
 		}
 
 		TIMER_ENG_LOG("pp");
