@@ -151,12 +151,20 @@ private:
 		}
 	}
 
+	PlayerFragment *all_fragments_buf[128];
+
 	void _doOpponentDummyMove()
 	{
 		if (!opponentDummyStrategy || opponentFragments.empty())
 			return;
 
 		OP_START(SANDBOX_OPPONENT_DUMMY_MOVE);
+
+		int all_fragments_size = 0;
+		for (auto &frag : me.fragments)
+			all_fragments_buf[all_fragments_size++] = &frag;
+		for (auto &frag : opponentFragments)
+			all_fragments_buf[all_fragments_size++] = &frag;
 
 		for (auto &opp : opponentFragments)
 		{
@@ -167,21 +175,30 @@ private:
 			auto opp2 = opp;
 			opp2.move();
 
-			for (auto &my : me.fragments)
+			for (int i = 0; i < all_fragments_size; i++)
 			{
-				if (opp.canEat(my))
+				auto other = all_fragments_buf[i];
+				if (opp.playerId == other->playerId)
+					continue;
+
+				if (opp.canEat(*other))
 				{
-					auto dist2 = my.getDistanceTo2(opp2);
+					auto dist2 = other->getDistanceTo2(opp2);
 					if (dist2 < target_dist2)
-						target_dist2 = dist2, target_pt = &my;
+						target_dist2 = dist2, target_pt = other;
 				}
-				else if (my.canEat(opp))
+				else if (other->canEat(opp))
 				{
-					auto dist2 = my.getDistanceTo2(opp2);
+					auto dist2 = other->getDistanceTo2(opp2);
 					if (dist2 < predator_dist2)
-						predator_dist2 = dist2, predator_pt = &my;
+						predator_dist2 = dist2, predator_pt = other;
 				}
 			}
+			if (target_pt != nullptr && target_pt->playerId != me.id)
+				target_pt = target_pt;
+			if (predator_pt != nullptr && predator_pt->playerId != me.id)
+				predator_pt = predator_pt;
+
 			if (target_pt && target_dist2 < predator_dist2 && !opponentForseFuseStrategy)
 			{
 				// если цель для него близко, то перебираем ходы точнее
@@ -287,6 +304,33 @@ private:
 		return{ deeper_dist, nearest_predator_idx };
 	}
 
+	pair<double, int> _getNearestPredator2(const vector<PlayerFragment> &collection1, const vector<PlayerFragment> &collection2, const PlayerFragment &unit)
+	{
+		int nearest_predator_idx = -1;
+		double deeper_dist = -INFINITY;
+		for (int i = 0; i < (int)collection1.size(); i++)
+		{
+			auto &predator = collection1[i];
+			double qdist = predator.eatDepth(unit);
+			if (qdist > deeper_dist && unit.playerId != predator.playerId)
+			{
+				deeper_dist = qdist;
+				nearest_predator_idx = i;
+			}
+		}
+		for (int i = 0; i < (int)collection2.size(); i++)
+		{
+			auto &predator = collection2[i];
+			double qdist = predator.eatDepth(unit);
+			if (qdist > deeper_dist && unit.playerId != predator.playerId)
+			{
+				deeper_dist = qdist;
+				nearest_predator_idx = (int)collection1.size() + i;
+			}
+		}
+		return{ deeper_dist, nearest_predator_idx };
+	}
+
 	void _doEat()
 	{
 		// поедают еду
@@ -333,15 +377,23 @@ private:
 			i--;
 		}
 
-		// я поедаю
+
+		// противника поедают
 		for (int i = 0; i < (int)opponentFragments.size(); i++)
 		{
 			auto &opp = opponentFragments[i];
-			auto nearest_predator_idx = _getNearestPredator(me.fragments, opp).second;
+			auto nearest_predator_idx = _getNearestPredator2(me.fragments, opponentFragments, opp).second;
 			if (nearest_predator_idx != -1)
 			{
-				me.fragments[nearest_predator_idx].mass += opp.mass;  // do not use addMass
-				eatenFragmentEvents.push_back({ tick, opp.mass });
+				if (nearest_predator_idx < (int)me.fragments.size())
+				{
+					me.fragments[nearest_predator_idx].mass += opp.mass;  // do not use addMass
+					eatenFragmentEvents.push_back({ tick, opp.mass });
+				}
+				else
+				{
+					opponentFragments[nearest_predator_idx - (int)me.fragments.size()].mass += opp.mass;  // do not use addMass
+				}
 				opponentFragments.erase(opponentFragments.begin() + i);
 				i--;
 			}
