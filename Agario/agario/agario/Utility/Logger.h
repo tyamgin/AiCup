@@ -14,6 +14,9 @@ struct Logger
 	{
 		ALL,
 		DANGER_STRATEGY,
+		DANGER_STRATEGY_1,
+		DANGER_STRATEGY_2,
+		DANGER_STRATEGY_3,
 		SANDBOX,
 		SANDBOX_OPPONENT_DUMMY_MOVE,
 
@@ -75,6 +78,9 @@ struct Logger
 		out << "[Summary]" << endl;
 		out << "] ALL                         " << _cumulativeDuration[ALL]                         / 1000 << "ms" << endl;
 		out << "] DANGER_STRATEGY             " << _cumulativeDuration[DANGER_STRATEGY]             / 1000 << "ms" << endl;
+		out << "] DANGER_STRATEGY_1           " << _cumulativeDuration[DANGER_STRATEGY_1]           / 1000 << "ms" << endl;
+		out << "] DANGER_STRATEGY_2           " << _cumulativeDuration[DANGER_STRATEGY_2]           / 1000 << "ms" << endl;
+		out << "] DANGER_STRATEGY_3           " << _cumulativeDuration[DANGER_STRATEGY_3]           / 1000 << "ms" << endl;
 		out << "] SANDBOX                     " << _cumulativeDuration[SANDBOX]                     / 1000 << "ms" << endl;
 		out << "] SANDBOX_OPPONENT_DUMMY_MOVE " << _cumulativeDuration[SANDBOX_OPPONENT_DUMMY_MOVE] / 1000 << "ms" << endl;
 		
@@ -88,7 +94,7 @@ struct Logger
 	}
 };
 
-#ifdef _DEBUG
+#if M_LOGS
 #define TIMER_START() Logger::instance()->timerStart()
 #define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 30)
 #define LOG(msg) Logger::instance()->log(msg)

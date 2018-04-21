@@ -6,10 +6,16 @@
 #else
 #define M_SOCKET_IO true
 #endif
+#define M_LOGS true
 #else
 #define M_SOCKET_IO false
 #define M_VISUAL false
+#define M_LOGS false
 #endif
+
+#define M_LOGS true
+#define M_FROM_LOG "C:\\Users\\tyamgin\\Downloads\\186948_dump.log"
+
 
 //TODO: отслеживать гарантированный ttf=0
 //http://aicups.ru/session/156020/
@@ -90,6 +96,8 @@ struct Runner
 		}
 #endif
 
+		sqrt_lookup_init();
+
 		auto config_json = readJson();
 		Config::parse(config_json);
 		int tick = 0;
@@ -135,7 +143,7 @@ struct Runner
 				command.debug += "Time: " + to_string(Logger::instance()->timerGet() / 1000) + "ms\n";
 				auto summary = Logger::instance()->getSummary();
 				command.debug += summary;
-#ifdef _DEBUG
+#if M_LOGS
 				cerr << summary;
 #endif
 			}
@@ -144,9 +152,11 @@ struct Runner
 #endif
 
 #ifdef M_FROM_LOG
-			if (has_move && debug_real_move != command)
+			if (has_move && debug_real_move != command && world.me.fragments.size())
 			{
 				cerr << "Commands defferernt at " << world.tick << endl;
+				cerr << command.x << " " << command.y << " " << command.split << command.eject << endl;
+				cerr << debug_real_move.x << " " << debug_real_move.y << " " << debug_real_move.split << debug_real_move.eject << endl;
 			}
 #else
 			writeJson(command.toJson());

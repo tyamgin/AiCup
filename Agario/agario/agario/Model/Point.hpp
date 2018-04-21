@@ -184,15 +184,6 @@ struct Point
 		return pt.rotateCounterClockwise(angle) + center;
 	}
 
-	//double getDistanceToCircle(const CircularUnit &circle)
-	//{
-	//	auto distToCenter = getDistanceTo(circle);
-	//	if (distToCenter <= circle.radius)
-	//		return 0;
-	//	return distToCenter - circle.radius;
-	//}
-
-
 	bool operator <(const Point &other) const
 	{
 		if (x != other.x)

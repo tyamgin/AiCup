@@ -133,6 +133,7 @@
   <ItemGroup>
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Utility\Geometry.cpp" />
     <ClCompile Include="Visualizer\MainForm.cpp" />
   </ItemGroup>
   <ItemGroup>

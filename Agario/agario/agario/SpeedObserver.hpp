@@ -159,7 +159,7 @@ struct SpeedObserver
 				else if (isWhole(if_burst_ticks))
 					frag.ttf = Config::TICKS_TIL_FUSION - int(if_burst_ticks + EPS) - 1;
 				else
-					LOG("Can't guess ttf");
+					/*LOG("Can't guess ttf")*/;
 			}
 
 			_ttf[pair<int, int>(frag.playerId, frag.fragmentId)] = frag.ttf;

@@ -10,5 +10,10 @@ inline T sqr(T x)
 
 inline bool isWhole(double x, double eps = 1e-9)
 {
-	return abs(int(x + eps) - x) < eps;
+	return fabs(int(x + eps) - x) < eps;
 }
+
+double exp256(double x);
+
+double sqrt_lookup(double x);
+void sqrt_lookup_init();

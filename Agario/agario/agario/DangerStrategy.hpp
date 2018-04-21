@@ -4,6 +4,9 @@
 
 #define FOOD_EXPIRATION_TICKS 350
 
+#define M_USE_FAST_EXP false
+#define M_USE_FAST_SQRT true
+
 struct Exponenter
 {
 	double x1, y1, x2, y2, a, b;
@@ -13,12 +16,22 @@ struct Exponenter
 		b = log(y1 / y2) / (x2 - x1);
 		a = y1 / exp(-b*x1);
 	}
-	
+
 	double operator ()(double x) const
 	{
+#if M_USE_FAST_EXP
+		return a*exp256(-x*b);
+#else
 		return a*exp(-x*b);
-	};
+#endif
+	}
 };
+
+#if M_USE_FAST_SQRT
+#define EXP_SCORE(fn, a, b) (fn)(sqrt_lookup((a).getDistanceTo2((b))));
+#else
+#define EXP_SCORE(fn, a, b) (fn)((a).getDistanceTo((b)));
+#endif
 
 bool isDangerFood(const FoodInfo &food)
 {
@@ -31,19 +44,16 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 	double res = 0;
 	for (auto &opp : opp_fragments)
 	{
-		vector<double> scores;
+		static double scores[128];
+		int size = 0;
 		for (auto &frag : my_fragments)
-		{
 			if (frag.canEat(opp, additional_mass))
-			{
-				auto dst = frag.getDistanceTo(opp);
-				scores.push_back(dist_exp(dst));
-			}
-		}
-		sort(scores.begin(), scores.end(), greater<double>());
+				scores[size++] = EXP_SCORE(dist_exp, frag, opp);
+				
+		sort(scores, scores + size, greater<double>());
 		double score = 0, pw = 1;
-		for (auto x : scores)
-			score += x * pw, pw *= 0.5;
+		for (int i = 0; i < size; i++)
+			score += scores[i] * pw, pw *= 0.5;
 		res += score;
 	}
 	return res;
@@ -52,6 +62,8 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, const Sandbox &env, int interval, int lastSeen[][VISION_GRID_SIZE + 1])
 {
 	OP_START(DANGER_STRATEGY);
+
+	OP_START(DANGER_STRATEGY_1);
 
 	double foodScore = 15;
 	Exponenter foodExp(1, foodScore * 0.5, Config::MAP_SIZE / 4.0, 0.3);
@@ -73,9 +85,7 @@ double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, cons
 		
 		for (auto &frag : env.me.fragments)
 		{
-			auto dst = frag.getDistanceTo(food);
-			auto e = foodExp(dst);
-
+			auto e = EXP_SCORE(foodExp, frag, food);
 			auto t = startEnv.tick - food_info.lastSeenTick;
 
 			food_sum += e * (FOOD_EXPIRATION_TICKS - t) / (double)FOOD_EXPIRATION_TICKS;
@@ -90,13 +100,15 @@ double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, cons
 		{
 			for (auto &frag : env.me.fragments)
 			{
-				auto dst = frag.getDistanceTo(ej);
-				auto e = ejectExp(dst);
-
+				auto e = EXP_SCORE(ejectExp, frag, ej);
 				res -= e / env.me.fragments.size();
 			}
 		}
 	}
+
+	OP_END(DANGER_STRATEGY_1);
+
+	OP_START(DANGER_STRATEGY_2);
 
 	double oppScore = 120;
 	Exponenter oppExp(20, oppScore, Config::MAP_SIZE / 4.0, 2);
@@ -116,8 +128,12 @@ double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, cons
 			res += (dst - safe_r) / (max_r - safe_r) * 35;
 	}
 
+	OP_END(DANGER_STRATEGY_2);
+
 	if (env.tick - startEnv.tick == interval && env.useVisionMap && env.me.fragments.size() > 0)
 	{
+		OP_START(DANGER_STRATEGY_3);
+
 		int vis_sum = 0;
 		for (int i = 0; i <= VISION_GRID_SIZE; i++)
 			for (int j = 0; j <= VISION_GRID_SIZE; j++)
@@ -128,15 +144,18 @@ double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, cons
 			sumArea += frag.radius*frag.radius*M_PI;
 		
 		res -= vis_sum / sumArea / 10000;
+
+		OP_END(DANGER_STRATEGY_3);
 	}
+
+
+	OP_END(DANGER_STRATEGY);
 
 	if (res != res || res <= -INFINITY || res >= INFINITY)
 	{
 		LOG("danger is not finite");
 		exit(0);
 	}
-
-	OP_END(DANGER_STRATEGY);
 
 	return res;
 }
