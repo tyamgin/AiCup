@@ -148,6 +148,7 @@ double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, cons
 		OP_END(DANGER_STRATEGY_3);
 	}
 
+	res += env.ejectEvents.size() * 11;
 
 	OP_END(DANGER_STRATEGY);
 

@@ -7,6 +7,11 @@ struct EatenFoodEvent
 	int tick;
 };
 
+struct EjectEvent
+{
+	int tick;
+};
+
 struct EatenEjectionEvent
 {
 	int tick;
@@ -34,6 +39,7 @@ struct Sandbox : public World
 	vector<EatenEjectionEvent> eatenEjectionEvents;
 	vector<EatenFragmentEvent> eatenFragmentEvents;
 	vector<LostFragmentEvent> lostFragmentEvents;
+	vector<EjectEvent> ejectEvents;
 	bool useVisionMap = false;
 	bool opponentDummyStrategy = false;
 	bool opponentFuseStrategy = true;
@@ -468,6 +474,7 @@ private:
 			{
 				auto new_ej = frag.eject();
 				ejections.push_back(new_ej);
+				ejectEvents.push_back({ tick });
 			}
 		}
 	}
