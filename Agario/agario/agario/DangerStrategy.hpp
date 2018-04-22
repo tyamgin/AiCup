@@ -3,6 +3,7 @@
 #include "Model/Sandbox.hpp"
 
 #define FOOD_EXPIRATION_TICKS 350
+#define EJECTION_EXPIRATION_TICKS 450
 
 #define M_USE_FAST_EXP false
 #define M_USE_FAST_SQRT false
@@ -38,6 +39,11 @@ bool isDangerFood(const FoodInfo &food)
 	return Config::MAP_CENTER.getDistanceTo2(food.food) >= sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS);
 }
 
+bool isDangerEjection(const EjectionInfo &ej)
+{
+	return Config::MAP_CENTER.getDistanceTo2(ej.ejection) >= sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + EJECT_RADIUS);
+}
+
 template<typename Collection>
 double progressiveScore(const Collection &my_fragments, const Collection &opp_fragments, const Exponenter &dist_exp, double additional_mass)
 {
@@ -59,7 +65,12 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 	return res;
 }
 
-double getDanger(const vector<FoodInfo> &safe_foods, const Sandbox &startEnv, const Sandbox &env, int interval)
+double getDanger(
+	const vector<FoodInfo> &safe_foods, 
+	const vector<EjectionInfo> &safe_ejections,
+	const Sandbox &startEnv, 
+	const Sandbox &env, 
+	int interval)
 {
 	OP_START(DANGER_STRATEGY);
 
@@ -94,15 +105,16 @@ double getDanger(const vector<FoodInfo> &safe_foods, const Sandbox &startEnv, co
 	if (env.me.fragments.size())
 		res -= food_sum / env.me.fragments.size();
 
-	for (auto &ej : env.ejections)
+	for (auto &ej_info : safe_ejections)
 	{
-		if (Config::MAP_CENTER.getDistanceTo2(ej) < sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + EJECT_RADIUS))
+		auto &ej = ej_info.ejection;
+		
+		for (auto &frag : env.me.fragments)
 		{
-			for (auto &frag : env.me.fragments)
-			{
-				auto e = EXP_SCORE(ejectExp, frag, ej);
-				res -= e / env.me.fragments.size();
-			}
+			auto e = EXP_SCORE(ejectExp, frag, ej);
+			auto t = startEnv.tick - ej_info.lastSeenTick;
+
+			res -= e * (FOOD_EXPIRATION_TICKS - t) / (double)EJECTION_EXPIRATION_TICKS;
 		}
 	}
 

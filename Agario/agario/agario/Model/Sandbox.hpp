@@ -40,6 +40,7 @@ struct Sandbox : public World
 	vector<EatenFragmentEvent> eatenFragmentEvents;
 	vector<LostFragmentEvent> lostFragmentEvents;
 	vector<EjectEvent> ejectEvents;
+	bool forbidEating = false;
 	bool useVisionMap = false;
 	bool opponentDummyStrategy = false;
 	bool opponentFuseStrategy = true;
@@ -66,7 +67,8 @@ struct Sandbox : public World
 		_doEject(move);
 		_doSplit(move);
 		_doShrink();
-		_doEat();
+		if (!forbidEating)
+			_doEat();
 
 		_doFuse();
 		_doBurst();

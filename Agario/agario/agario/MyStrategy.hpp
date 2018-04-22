@@ -2,6 +2,7 @@
 #include "Model/Sandbox.hpp"
 #include "SpeedObserver.hpp"
 #include "FoodObserver.hpp"
+#include "EjectionObserver.hpp"
 #include "VisionObserver.hpp"
 #include "DangerStrategy.hpp"
 #include "Utility/Logger.h"
@@ -14,15 +15,18 @@ struct MyStrategy
 {
 	SpeedObserver speedObserver;
 	FoodObserver foodObserver;
+	EjectionObserver ejectionObserver;
 	VisionObserver visionObserver;
 	Sandbox environment;
 	vector<FoodInfo> foods;
+	vector<EjectionInfo> ejections;
 
 	Move onTick(World world, const Move &debug_real_move)
 	{
 		environment = Sandbox(world, environment.lastSeen);
 		speedObserver.beforeTick(environment);
 		foodObserver.beforeTick(environment);
+		ejectionObserver.beforeTick(environment);
 		visionObserver.beforeTick(environment);
 
 		foods.clear();
@@ -30,19 +34,26 @@ struct MyStrategy
 			for (auto &fi : p.second)
 				if (world.tick - fi.lastSeenTick < FOOD_EXPIRATION_TICKS)
 					foods.emplace_back(fi);
+		ejections.clear();
+		for (auto &p : ejectionObserver.ejections)
+			if (world.tick - p.second.lastSeenTick < EJECTION_EXPIRATION_TICKS)
+				ejections.emplace_back(p.second);
 
 #if M_VISUAL
-		Visualizer::update(world, foods);
+		Visualizer::update(world, foods, ejections);
 		System::Threading::Thread::Sleep(2);
 #endif
 		TIMER_START();
 
 		foods.erase(remove_if(foods.begin(), foods.end(), isDangerFood), foods.end());
+		ejections.erase(remove_if(ejections.begin(), ejections.end(), isDangerEjection), ejections.end());
 
 		auto res = _onTick(environment);
 		assert(!res.split || !res.eject);
 		
+		environment.forbidEating = true;
 		environment.move(res);
+		environment.forbidEating = false;
 		speedObserver.afterTick(environment);
 
 		TIMER_ENG_LOG("all");
@@ -53,6 +64,13 @@ struct MyStrategy
 	{
 		if (world.me.fragments.empty())
 			return Move();
+
+		//if (world.me.fragments[0].canEject())
+		//{
+		//	Move res;
+		//	res.eject = true;
+		//	return res;
+		//}
 
 		bool allow_partial = true;
 		for (auto &oppFr : world.opponentFragments)
@@ -130,7 +148,7 @@ struct MyStrategy
 					mv.eject = i < do_eject_count;
 					env2.move(mv);
 				}
-				auto d2 = getDanger(foods, world, env2, steps);
+				auto d2 = getDanger(foods, ejections, world, env2, steps);
 				if (d2 > d)
 				{
 					d = d2;
@@ -150,7 +168,7 @@ struct MyStrategy
 				if (!allow_partial && i < steps - 1)
 					continue;
 
-				auto d = getDanger(foods, world, env, steps);
+				auto d = getDanger(foods, ejections, world, env, steps);
 				if (d < best_danger)
 				{
 					if (env.opponentFuseStrategy && i == steps - 1)

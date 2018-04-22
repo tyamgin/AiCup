@@ -20,9 +20,14 @@ struct Ejection : CircularUnit
 		id = stoi(obj["Id"].get<string>());
 	}
 
+	bool isStopped() const
+	{
+		return abs(speed.x) < EPS && abs(speed.y) < EPS;
+	}
+
 	void move() 
 	{
-		if (abs(speed.x) < EPS && abs(speed.y) < EPS)
+		if (isStopped())
 			return;
 		
 		x = max(radius, min(Config::MAP_SIZE - radius, x + speed.x));

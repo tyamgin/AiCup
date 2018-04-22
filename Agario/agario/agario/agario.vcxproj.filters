@@ -104,6 +104,9 @@
     <ClInclude Include="VisionObserver.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="EjectionObserver.hpp">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Visualizer\MainForm.resx">

@@ -66,9 +66,7 @@ struct SpeedObserver
 			if (it == computed_ejections_map.end())
 			{
 				// проверяем, что этот выброс создался только что
-				auto owner = _findEjectionOwner(world, ej);
-				if (owner != nullptr)
-					ej.speed = owner->speed.take(EJECT_START_SPEED);
+				auto found = _findCreatedEjectionSpeed(world, ej, ej.speed);
 			}
 			else
 			{
@@ -106,21 +104,34 @@ struct SpeedObserver
 			_prevTickEjections[ej.id] = ej;
 	}
 
-	const PlayerFragment* _findEjectionOwner(const vector<PlayerFragment> &frags, const Ejection &ej)
+	bool _findCreatedEjectionSpeed(const vector<PlayerFragment> &frags, const Ejection &ej, ::Point &res)
 	{
 		for (auto &frag : frags)
 		{
 			if (frag + frag.speed.normalized() * (RADIUS_FACTOR * sqrt(frag.mass + EJECT_MASS) + 1) == ej)
-				return &frag;
+			{
+				res = frag.speed.take(EJECT_START_SPEED);
+				return true;
+			}
 		}
-		return nullptr;
+		
+		for (auto &prev_ej : _prevWorld.ejections)
+		{
+			if (prev_ej.id == 0 && ej == prev_ej)
+			{
+				res = prev_ej.speed;
+				return true;
+			}
+		}
+
+		return false;
 	}
 
-	const PlayerFragment* _findEjectionOwner(const World &world, const Ejection &ej)
+	bool _findCreatedEjectionSpeed(const World &world, const Ejection &ej, ::Point &res)
 	{
-		if (ej.ownerPlayerId == world.me.id)
-			return _findEjectionOwner(world.me.fragments, ej);
-		return _findEjectionOwner(world.opponentFragments, ej);
+		if (ej.ownerPlayerId == world.me.id && _findCreatedEjectionSpeed(world.me.fragments, ej, res))
+			return true;
+		return _findCreatedEjectionSpeed(world.opponentFragments, ej, res);
 	}
 
 	map<pair<int, int>, int> _ttf;

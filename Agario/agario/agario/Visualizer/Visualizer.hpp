@@ -15,7 +15,7 @@ ref struct Visualizer
 {
 	static agario::MainForm ^form;
 
-	static void update(const World &world, const vector<FoodInfo> &foods)
+	static void update(const World &world, const vector<FoodInfo> &foods, const vector<EjectionInfo> ejections)
 	{
 		form->tickLabel->Text = world.tick.ToString();
 
@@ -78,9 +78,13 @@ ref struct Visualizer
 				drawText(frag.ttf.ToString(), 8, gcnew SolidBrush(Color::Green), frag.x + 5, frag.y - 16);
 		}
 
-		for (auto &ej : world.ejections)
+		for (auto &ej_info : ejections)
 		{
-			fillCircle(Color::DarkViolet, ej.x, ej.y, ej.radius);
+			auto &ej = ej_info.ejection;
+			if (ej_info.lastSeenTick != world.tick)
+				fillCircle(Color::Violet, ej.x, ej.y, ej.radius);
+			else
+				fillCircle(Color::DarkViolet, ej.x, ej.y, ej.radius);
 		}
 	}
 
