@@ -45,8 +45,15 @@ struct MyStrategy
 #endif
 		TIMER_START();
 
-		foods.erase(remove_if(foods.begin(), foods.end(), isDangerFood), foods.end());
-		ejections.erase(remove_if(ejections.begin(), ejections.end(), isDangerEjection), ejections.end());
+		foods.erase(remove_if(foods.begin(), foods.end(), [&world](const FoodInfo &x)
+		{
+			return x.lastSeenTick == world.tick || isDangerFood(x.food);
+		}), foods.end());
+
+		ejections.erase(remove_if(ejections.begin(), ejections.end(), [&world](const EjectionInfo &x)
+		{
+			return x.lastSeenTick == world.tick || isDangerEjection(x.ejection);
+		}), ejections.end());
 
 		auto res = _onTick(environment);
 		assert(!res.split || !res.eject);

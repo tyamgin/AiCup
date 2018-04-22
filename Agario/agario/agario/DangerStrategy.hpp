@@ -34,14 +34,14 @@ struct Exponenter
 #define EXP_SCORE(fn, a, b) (fn)((a).getDistanceTo((b)));
 #endif
 
-bool isDangerFood(const FoodInfo &food)
+bool isDangerFood(const Food &food)
 {
-	return Config::MAP_CENTER.getDistanceTo2(food.food) >= sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS);
+	return Config::MAP_CENTER.getDistanceTo2(food) >= sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + FOOD_RADIUS);
 }
 
-bool isDangerEjection(const EjectionInfo &ej)
+bool isDangerEjection(const Ejection &ej)
 {
-	return Config::MAP_CENTER.getDistanceTo2(ej.ejection) >= sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + EJECT_RADIUS);
+	return Config::MAP_CENTER.getDistanceTo2(ej) >= sqr(Config::MAP_SIZE*M_SAFE_RAD_FACTOR + EJECT_RADIUS);
 }
 
 template<typename Collection>
@@ -66,8 +66,8 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 }
 
 double getDanger(
-	const vector<FoodInfo> &safe_foods, 
-	const vector<EjectionInfo> &safe_ejections,
+	const vector<FoodInfo> &safe_invisible_foods, 
+	const vector<EjectionInfo> &safe_invisible_ejections,
 	const Sandbox &startEnv, 
 	const Sandbox &env, 
 	int interval)
@@ -88,35 +88,43 @@ double getDanger(
 	for (auto &eatenEjectionEvent : env.eatenEjectionEvents)
 		res -= ejectScore * (interval - (eatenEjectionEvent.tick - startEnv.tick)) / interval;
 
-	int itemsCount = 0;
 	double food_sum = 0;
-	for (auto &food_info : safe_foods)
+	for (auto &food : env.foods)
+		if (!isDangerFood(food))
+			for (auto &frag : env.me.fragments)
+				food_sum += EXP_SCORE(foodExp, frag, food);
+	for (auto &food_info : safe_invisible_foods)
 	{
+		auto t = startEnv.tick - food_info.lastSeenTick;
 		auto &food = food_info.food;
 		
 		for (auto &frag : env.me.fragments)
 		{
 			auto e = EXP_SCORE(foodExp, frag, food);
-			auto t = startEnv.tick - food_info.lastSeenTick;
-
 			food_sum += e * (FOOD_EXPIRATION_TICKS - t) / (double)FOOD_EXPIRATION_TICKS;
 		}
 	}
+
 	if (env.me.fragments.size())
 		res -= food_sum / env.me.fragments.size();
 
-	for (auto &ej_info : safe_ejections)
+	double ej_sum = 0;
+	for (auto &ej : env.ejections)
+		if (!isDangerEjection(ej))
+			for (auto &frag : env.me.fragments)
+				ej_sum += EXP_SCORE(ejectExp, frag, ej);
+	for (auto &ej_info : safe_invisible_ejections)
 	{
+		auto t = startEnv.tick - ej_info.lastSeenTick;
 		auto &ej = ej_info.ejection;
 		
 		for (auto &frag : env.me.fragments)
 		{
 			auto e = EXP_SCORE(ejectExp, frag, ej);
-			auto t = startEnv.tick - ej_info.lastSeenTick;
-
-			res -= e * (FOOD_EXPIRATION_TICKS - t) / (double)EJECTION_EXPIRATION_TICKS;
+			ej_sum += e * (FOOD_EXPIRATION_TICKS - t) / (double)EJECTION_EXPIRATION_TICKS;
 		}
 	}
+	res -= ej_sum;
 
 	OP_END(DANGER_STRATEGY_1);
 
