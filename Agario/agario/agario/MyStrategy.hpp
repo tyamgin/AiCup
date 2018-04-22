@@ -247,7 +247,8 @@ struct MyStrategy
 
 		if (need_try_eject && world.me.fragments.size() <= 2)
 		{
-			for (int ejects_count = 1; ejects_count <= 4; ejects_count++)
+			angles *= 2;
+			for (int ejects_count = 1; ejects_count <= 7; ejects_count++)
 			{
 				for (int angIdx = 0; angIdx < angles; angIdx++)
 				{
