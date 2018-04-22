@@ -22,6 +22,7 @@
 #define BURST_START_SPEED 8.0
 #define BURST_ANGLE_SPECTRUM M_PI
 #define MASS_EAT_FACTOR 1.2
+#define ADD_FOOD_DELAY 40
 
 struct Config
 {
