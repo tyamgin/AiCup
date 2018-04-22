@@ -2,6 +2,7 @@
 #include "Model/Sandbox.hpp"
 #include "SpeedObserver.hpp"
 #include "FoodObserver.hpp"
+#include "VisionObserver.hpp"
 #include "DangerStrategy.hpp"
 #include "Utility/Logger.h"
 
@@ -13,18 +14,16 @@ struct MyStrategy
 {
 	SpeedObserver speedObserver;
 	FoodObserver foodObserver;
-	int lastSeen[VISION_GRID_SIZE + 1][VISION_GRID_SIZE + 1];
+	VisionObserver visionObserver;
+	Sandbox environment;
 	vector<FoodInfo> foods;
-
-	MyStrategy()
-	{
-		memset(lastSeen, 0, sizeof(lastSeen));
-	}
 
 	Move onTick(World world, const Move &debug_real_move)
 	{
-		speedObserver.beforeTick(world);
-		foodObserver.beforeTick(world);
+		environment = Sandbox(world, environment.lastSeen);
+		speedObserver.beforeTick(environment);
+		foodObserver.beforeTick(environment);
+		visionObserver.beforeTick(environment);
 
 		foods.clear();
 		for (auto &p : foodObserver.foods)
@@ -40,34 +39,20 @@ struct MyStrategy
 
 		foods.erase(remove_if(foods.begin(), foods.end(), isDangerFood), foods.end());
 
-		auto res = _onTick(world);
+		auto res = _onTick(environment);
 		assert(!res.split || !res.eject);
 		
-		Sandbox env(world, lastSeen);
-		env.move(res);
-		speedObserver.afterTick(env);
+		environment.move(res);
+		speedObserver.afterTick(environment);
 
 		TIMER_ENG_LOG("all");
 		return res;
 	}
 
-	Move _onTick(const World &world)
+	Move _onTick(const Sandbox &world)
 	{
 		if (world.me.fragments.empty())
 			return Move();
-
-		for (int i = 0; i <= VISION_GRID_SIZE; i++)
-		{
-			for (int j = 0; j <= VISION_GRID_SIZE; j++)
-			{
-				::Point pt(1.0 * Config::MAP_SIZE / VISION_GRID_SIZE * i, 1.0 * Config::MAP_SIZE / VISION_GRID_SIZE * j);
-				if (world.me.isPointVisible(pt))
-					lastSeen[i][j] = world.tick;
-			}
-		}
-
-		auto me = world.me.fragments[0];
-		auto mes = me + me.speed*6;
 
 		bool allow_partial = true;
 		for (auto &oppFr : world.opponentFragments)
@@ -86,7 +71,7 @@ struct MyStrategy
 	}
 
 
-	Move _doPP(const World &world, bool allow_partial)
+	Move _doPP(const Sandbox &world, bool allow_partial)
 	{
 		TIMER_START();
 
@@ -101,7 +86,7 @@ struct MyStrategy
 
 		Move best_move;
 		double best_danger = INT_MAX;
-		Sandbox best_env(world, lastSeen);
+		Sandbox best_env = world;
 		double need_try_eject = false;
 		
 		bool can_split_any = false;
@@ -128,7 +113,7 @@ struct MyStrategy
 
 		auto check_move_to = [&](bool do_split, int do_eject_count, ::Point moveto)
 		{
-			Sandbox env(world, lastSeen);
+			Sandbox env = world;
 			env.opponentDummyStrategy = true;
 			env.viruses = closestViruses;
 			env.useVisionMap = foods_count <= 1;
@@ -145,7 +130,7 @@ struct MyStrategy
 					mv.eject = i < do_eject_count;
 					env2.move(mv);
 				}
-				auto d2 = getDanger(foods, world, env2, steps, lastSeen);
+				auto d2 = getDanger(foods, world, env2, steps);
 				if (d2 > d)
 				{
 					d = d2;
@@ -165,12 +150,12 @@ struct MyStrategy
 				if (!allow_partial && i < steps - 1)
 					continue;
 
-				auto d = getDanger(foods, world, env, steps, lastSeen);
+				auto d = getDanger(foods, world, env, steps);
 				if (d < best_danger)
 				{
 					if (env.opponentFuseStrategy && i == steps - 1)
 					{
-						Sandbox env2(world, lastSeen);
+						Sandbox env2 = world;
 						env2.opponentDummyStrategy = true;
 						env2.viruses = closestViruses;
 						env2.useVisionMap = env.useVisionMap;
@@ -192,7 +177,7 @@ struct MyStrategy
 
 						if (d < best_danger && can_fuse_count > 1)
 						{
-							Sandbox env3(world, lastSeen);
+							Sandbox env3 = world;
 							env3.opponentDummyStrategy = true;
 							env3.viruses = closestViruses;
 							env3.useVisionMap = env.useVisionMap;
@@ -202,7 +187,7 @@ struct MyStrategy
 
 						if (d < best_danger && can_fuse_count > 1)
 						{
-							Sandbox env3(world, lastSeen);
+							Sandbox env3 = world;
 							env3.opponentDummyStrategy = true;
 							env3.viruses = closestViruses;
 							env3.useVisionMap = env.useVisionMap;

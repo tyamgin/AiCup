@@ -59,7 +59,7 @@ double progressiveScore(const Collection &my_fragments, const Collection &opp_fr
 	return res;
 }
 
-double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, const Sandbox &env, int interval, int lastSeen[][VISION_GRID_SIZE + 1])
+double getDanger(const vector<FoodInfo> &safe_foods, const Sandbox &startEnv, const Sandbox &env, int interval)
 {
 	OP_START(DANGER_STRATEGY);
 
@@ -137,7 +137,7 @@ double getDanger(const vector<FoodInfo> &safe_foods, const World &startEnv, cons
 		int vis_sum = 0;
 		for (int i = 0; i <= VISION_GRID_SIZE; i++)
 			for (int j = 0; j <= VISION_GRID_SIZE; j++)
-				vis_sum += min(500, max(0, env.lastSeen[i][j] - lastSeen[i][j]));
+				vis_sum += min(500, max(0, env.lastSeen[i][j] - startEnv.lastSeen[i][j]));
 
 		double sumArea = 0;
 		for (auto &frag : env.me.fragments)

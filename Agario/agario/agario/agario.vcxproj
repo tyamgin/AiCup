@@ -140,6 +140,7 @@
     <ClInclude Include="Config.hpp" />
     <ClInclude Include="DangerStrategy.hpp" />
     <ClInclude Include="FoodObserver.hpp" />
+    <ClInclude Include="VisionObserver.hpp" />
     <ClInclude Include="Visualizer\MainForm.h">
       <FileType>CppForm</FileType>
     </ClInclude>
