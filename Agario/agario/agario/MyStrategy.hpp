@@ -5,7 +5,7 @@
 #include "EjectionObserver.hpp"
 #include "VisionObserver.hpp"
 #include "DangerStrategy.hpp"
-#include "Utility/Logger.h"
+#include "Utility/Logger.hpp"
 
 #if M_VISUAL
 #include "Visualizer/Visualizer.hpp"
@@ -72,13 +72,6 @@ struct MyStrategy
 		if (world.me.fragments.empty())
 			return Move();
 
-		//if (world.me.fragments[0].canEject())
-		//{
-		//	Move res;
-		//	res.eject = true;
-		//	return res;
-		//}
-
 		bool allow_partial = true;
 		for (auto &oppFr : world.opponentFragments)
 		{
@@ -116,7 +109,7 @@ struct MyStrategy
 		
 		bool can_split_any = false;
 		for (auto &frag : world.me.fragments)
-			can_split_any |= frag.canSplit(world.me.fragments.size());
+			can_split_any |= frag.canSplit((int)world.me.fragments.size());
 
 		int foods_count = 0;
 		for (auto &food : world.foods)

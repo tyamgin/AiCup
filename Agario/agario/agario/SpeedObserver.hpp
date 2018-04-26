@@ -192,8 +192,5 @@ private:
 	bool _isSameFrag(const PlayerFragment &a, const PlayerFragment &b)
 	{
 		return a.playerId == b.playerId && a.fragmentId == b.fragmentId;
-		//const double eps = 1e-4;
-		//return abs(a.x - b.x) < eps && abs(a.y - b.y) < eps && abs(a.mass - b.mass) < eps && abs(a.radius - b.radius) < eps;
-		// TODO: maybe compare ids, ttf
 	}
 };

@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 
-#include "Utility/Logger.h"
+#include "Utility/Logger.hpp"
 #include "Config.hpp"
 #include "Model/World.hpp"
 #include "MyStrategy.hpp"
@@ -73,7 +73,7 @@ void writeJson(nlohmann::json json)
 {
 	string output = json.dump();
 #if M_SOCKET_IO
-	send(server, output.c_str(), output.size(), 0);
+	send(server, output.c_str(), (int)output.size(), 0);
 #else
 	puts(output.c_str());
 	fflush(stdout);

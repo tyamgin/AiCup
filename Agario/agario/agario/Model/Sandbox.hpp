@@ -442,7 +442,7 @@ private:
 		if (!move.split)
 			return;
 
-		int yet_cnt = me.fragments.size();
+		int yet_cnt = (int)me.fragments.size();
 		int size = yet_cnt;
 
 		int max_id = _maxMeId();
@@ -565,7 +565,7 @@ private:
 		double nearest_dist = INFINITY;
 		int nearest_fragment_idx = -1;
 
-		int yet_cnt = me.fragments.size();
+		int yet_cnt = (int)me.fragments.size();
 		for (int i = 0; i < yet_cnt; i++)
 		{
 			auto &frag = me.fragments[i];
@@ -592,7 +592,7 @@ private:
 				continue;
 
 			auto &target = me.fragments[frag_idx];
-			int yet_cnt = me.fragments.size();
+			int yet_cnt = (int)me.fragments.size();
 			int max_fragment_id = _maxMeId();
 
 			auto new_fragments = target.burst(virus, max_fragment_id, yet_cnt);

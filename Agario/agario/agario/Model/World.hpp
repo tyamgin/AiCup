@@ -3,7 +3,6 @@
 #include "Player.hpp"
 #include "Food.hpp"
 #include "Virus.hpp"
-#include "../Utility/Iterators.hpp"
 
 #include <climits>
 

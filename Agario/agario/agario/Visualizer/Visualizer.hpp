@@ -53,7 +53,7 @@ ref struct Visualizer
 		for (auto &frag : world.me.fragments)
 		{
 			fillCircle(Color::Violet, frag.x, frag.y, frag.radius);
-			if (frag.canSplit(world.me.fragments.size()))
+			if (frag.canSplit((int)world.me.fragments.size()))
 				drawCircle(Color::White, frag.x, frag.y, frag.radius * 0.8, 2);
 			if (frag.isFast)
 				drawCircle(Color::Yellow, frag.x, frag.y, frag.radius * 0.5, 2);

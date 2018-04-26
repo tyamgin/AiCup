@@ -83,9 +83,6 @@
     <ClInclude Include="Utility\Geometry.hpp">
       <Filter>Source Files\Utility</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\Iterators.hpp">
-      <Filter>Source Files\Utility</Filter>
-    </ClInclude>
     <ClInclude Include="DangerStrategy.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -95,9 +92,6 @@
     <ClInclude Include="SpeedObserver.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility\Logger.h">
-      <Filter>Source Files\Utility</Filter>
-    </ClInclude>
     <ClInclude Include="FoodObserver.hpp">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -106,6 +100,9 @@
     </ClInclude>
     <ClInclude Include="EjectionObserver.hpp">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility\Logger.hpp">
+      <Filter>Source Files\Utility</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
