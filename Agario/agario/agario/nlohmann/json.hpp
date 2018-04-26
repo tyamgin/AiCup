@@ -1805,7 +1805,8 @@ class input_adapter
         else
         {
             // the address of first cannot be used: use nullptr
-            ia = std::make_shared<input_buffer_adapter>(nullptr, len);
+			const char *nullptr_var = nullptr;
+            ia = std::make_shared<input_buffer_adapter>(nullptr_var, len);
         }
     }
 
