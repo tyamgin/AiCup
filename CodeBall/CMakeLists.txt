@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.12)
+project(CodeBall)
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(SOURCE_FILES
+        Runner.cpp
+        Strategy.cpp
+        MyStrategy.cpp
+        csimplesocket/ActiveSocket.cpp
+        csimplesocket/HTTPActiveSocket.cpp
+        csimplesocket/PassiveSocket.cpp
+        csimplesocket/SimpleSocket.cpp
+        RemoteProcessClient.cpp)
+
+add_executable(CodeBall ${SOURCE_FILES})

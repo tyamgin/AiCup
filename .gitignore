@@ -152,6 +152,12 @@ $RECYCLE.BIN/
 
 
 
+# CMake
+cmake-build-*/
+
+# Idea
+.idea/
+
 
 # Python
 *.pyc
