@@ -50,6 +50,8 @@ public:
     }
 
     void act(ARobot me, const model::Rules &rules, const model::Game &game, AAction &action) {
+        std::vector<int> s = {1,2,3,4,3,5,3};
+
         ABall ball = game.ball;
         env = Sandbox(game, rules);
         if (env.tick == lastTick) {

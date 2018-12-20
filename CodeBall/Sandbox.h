@@ -13,7 +13,7 @@
 
 struct Sandbox {
     ABall ball;
-    ARobot my[3], opp[3];
+    std::vector<ARobot> my, opp;
     model::Arena arena;
     bool isFinal = false;
     int tick = 0;
@@ -25,19 +25,18 @@ struct Sandbox {
         tick = game.current_tick;
         isFinal = game.robots.size() > 4;
         arena = rules.arena;
-        size_t mySize = 0, oppSize = 0;
         for (auto& r : game.robots) {
             if (r.is_teammate) {
-                my[mySize++] = r;
+                my.emplace_back(r);
             } else {
-                opp[oppSize++] = r;
+                opp.emplace_back(r);
             }
         }
         ball = game.ball;
     }
 
     ARobot* robot(int id) {
-        for (int i = 0; i < (2 + isFinal); i++) {
+        for (size_t i = 0; i < my.size(); i++) {
             if (my[i].id == id) {
                 return &my[i];
             }
@@ -51,7 +50,7 @@ struct Sandbox {
 
     std::vector<ARobot*> teammates(int excludeId = -1) {
         std::vector<ARobot*> ret;
-        for (int i = 0; i < 2 + isFinal; i++)
+        for (size_t i = 0; i < my.size(); i++)
             if (my[i].id != excludeId)
                 ret.push_back(&my[i]);
         return ret;

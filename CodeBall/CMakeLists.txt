@@ -20,3 +20,7 @@ add_executable(CodeBall ${SOURCE_FILES})
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
 endif()
+
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
