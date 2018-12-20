@@ -1,4 +1,7 @@
 #include <memory>
+#include <iostream>
+#include <cstdlib>
+#include <thread>
 
 #include "Runner.h"
 #include "MyStrategy.h"
@@ -7,6 +10,15 @@ using namespace model;
 using namespace std;
 
 int main(int argc, char* argv[]) {
+#ifdef DEBUG
+    cerr << "Starting local runner" << endl;
+    //thread localRunner([&]() {
+        system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --seed 123 &");
+    //});
+    usleep(4000 * 1000);
+    cerr << "local runner started" << endl;
+#endif
+
     if (argc == 4) {
         Runner runner(argv[1], argv[2], argv[3]);
         runner.run();
@@ -15,6 +27,9 @@ int main(int argc, char* argv[]) {
         runner.run();
     }
 
+#ifdef DEBUG
+    //localRunner.join();
+#endif
     return 0;
 }
 

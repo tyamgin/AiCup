@@ -11,6 +11,12 @@ set(SOURCE_FILES
         csimplesocket/HTTPActiveSocket.cpp
         csimplesocket/PassiveSocket.cpp
         csimplesocket/SimpleSocket.cpp
-        RemoteProcessClient.cpp)
+        RemoteProcessClient.cpp
+        )
 
 add_executable(CodeBall ${SOURCE_FILES})
+
+
+if (CMAKE_BUILD_TYPE MATCHES Debug)
+    add_definitions(-DDEBUG)
+endif()
