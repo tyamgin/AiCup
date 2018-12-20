@@ -5,10 +5,10 @@
 #include "model/Ball.h"
 
 struct ABall : public Unit {
-    ABall() {
+    ABall() : Unit() {
     }
 
-    ABall(model::Ball robot) {
+    explicit ABall(model::Ball robot) {
         x = robot.x;
         y = robot.y;
         z = robot.z;

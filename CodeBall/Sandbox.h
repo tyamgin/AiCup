@@ -32,7 +32,7 @@ struct Sandbox {
                 opp.emplace_back(r);
             }
         }
-        ball = game.ball;
+        ball = ABall(game.ball);
     }
 
     ARobot* robot(int id) {
@@ -501,7 +501,7 @@ struct Sandbox {
         tick++;
     }
 
-    bool hasRandomCollision;
+    bool hasRandomCollision = false;
 };
 
 #endif //CODEBALL_SANDBOX_H

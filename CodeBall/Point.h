@@ -6,11 +6,12 @@
 #define EPS 1e-9
 
 struct Point {
-    double x = 0;
-    double y = 0;
-    double z = 0;
+    double x;
+    double y;
+    double z;
 
     Point() {
+        x = y = z = 0;
     }
 
     explicit Point(double x, double y, double z) {

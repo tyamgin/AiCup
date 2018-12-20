@@ -52,7 +52,7 @@ public:
     void act(ARobot me, const model::Rules &rules, const model::Game &game, AAction &action) {
         std::vector<int> s = {1,2,3,4,3,5,3};
 
-        ABall ball = game.ball;
+        ABall ball = ABall(game.ball);
         env = Sandbox(game, rules);
         if (env.tick == lastTick) {
             for (auto tm : env.teammates(me.id))
@@ -62,7 +62,7 @@ public:
             prevEnv.doTick();
             checkEvalState();
         }
-
+return;
         // Наша стратегия умеет играть только на земле
         // Поэтому, если мы не касаемся земли, будет использовать нитро
         // чтобы как можно быстрее попасть обратно на землю
@@ -86,7 +86,7 @@ public:
         // находящийся ближе к нашим воротам
         auto is_attacker = game.robots.size() == 2;
         for (const auto &_robot : game.robots) {
-            ARobot robot = _robot;
+            ARobot robot(_robot);
             if (robot.is_teammate && robot.id != me.id) {
                 if (robot.z < me.z) {
                     is_attacker = true;
@@ -165,7 +165,7 @@ void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const mo
     cerr << "(" << me.id << ") Tick " << game.current_tick << endl;
 
     AAction a;
-    strat.act(me, rules, game, a);
+    strat.act(ARobot(me), rules, game, a);
     action.use_nitro = a.useNitro;
     action.jump_speed = a.jumpSpeed;
     action.target_velocity_x = a.targetVelocity.x;

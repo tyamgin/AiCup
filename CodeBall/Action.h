@@ -10,6 +10,8 @@ struct AAction {
     bool useNitro;
 
     AAction() {
+        jumpSpeed = 0;
+        useNitro = false;
     }
 
     AAction(const model::Action& action) {

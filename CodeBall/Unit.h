@@ -6,9 +6,9 @@
 
 struct Unit : public Point {
     Point velocity;
-    double radius;
-    double mass;
-    double radius_change_speed; // tmp field for simulator
+    double radius = 0;
+    double mass = 0;
+    double radius_change_speed = 0; // tmp field for simulator
 
     void move(double delta_time) {
         if (velocity.length2() > MAX_ENTITY_SPEED*MAX_ENTITY_SPEED)
@@ -18,7 +18,6 @@ struct Unit : public Point {
         y -= GRAVITY * delta_time * delta_time / 2;
         velocity.y -= GRAVITY * delta_time;
     }
-
 };
 
 #endif //CODEBALL_UNIT_H

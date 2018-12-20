@@ -15,9 +15,14 @@ struct ARobot : public Unit {
     AAction action; // field for simulator
 
     ARobot() {
+        touch = false;
+        nitro_amount = 0;
+        player_id = 0;
+        id = 0;
+        is_teammate = false;
     }
 
-    ARobot(model::Robot robot) {
+    explicit ARobot(model::Robot robot) {
         id = robot.id;
         player_id = robot.player_id;
         is_teammate = robot.is_teammate;
