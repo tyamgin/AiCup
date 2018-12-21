@@ -54,16 +54,28 @@ public:
         if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS)
             return false;
 
-        Sandbox e = env;
+        Sandbox startEnv = env;
+        startEnv.rnd = RandomGenerator(RandomGenerator::Simple);
         AAction action;
         action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
-        e.me()->action = action;
-        for (int i = 0; i < 2 * TICKS_PER_SECOND; i++) {
-            e.doTick();
-            if (e.hasGoal > 0) {
-                resAction = action;
-                return true;
+        startEnv.me()->action = action;
+
+        double sumProbs = 0;
+        int countProbs = 10;
+        for (int p = 0; p < countProbs; p++) {
+            auto e = startEnv;
+            for (int i = 0; i < 2 * TICKS_PER_SECOND; i++) {
+                e.doTick();
+                if (e.hasGoal != 0) {
+                    sumProbs += e.hasGoal;
+                    break;
+                }
             }
+        }
+        auto prob = sumProbs / countProbs;
+        if (prob > 0.49) {
+            resAction = action;
+            return true;
         }
         return false;
     }

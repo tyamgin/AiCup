@@ -11,6 +11,7 @@
 #include "Ball.h"
 #include "Robot.h"
 #include "RenderFigures.h"
+#include "RandomGenerators.h"
 
 struct Sandbox {
     ABall ball;
@@ -19,6 +20,8 @@ struct Sandbox {
     bool isFinal = false;
     int tick = 0;
     int meId = 0;
+
+    RandomGenerator rnd;
 
     Sandbox() {
     }
@@ -429,7 +432,7 @@ struct Sandbox {
                 + b.radius_change_speed - a.radius_change_speed;
             if (delta_velocity < 0) {
                 hasRandomCollision = true;
-                auto impulse = normal * (1 + (MIN_HIT_E + MAX_HIT_E) / 2) * delta_velocity;
+                auto impulse = normal * (1 + rnd.randDouble(MIN_HIT_E, MAX_HIT_E)) * delta_velocity;
                 a.velocity += impulse * k_a;
                 b.velocity -= impulse * k_b;
             }
