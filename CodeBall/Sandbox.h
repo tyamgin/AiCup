@@ -10,6 +10,7 @@
 #include "model/Rules.h"
 #include "Ball.h"
 #include "Robot.h"
+#include "RenderFigures.h"
 
 struct Sandbox {
     ABall ball;

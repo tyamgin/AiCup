@@ -6,6 +6,7 @@ using namespace std;
 
 MyStrategy::MyStrategy() { }
 
+std::vector<RSphere> renderBalls;
 
 class Strat {
 public:
@@ -64,33 +65,49 @@ public:
             checkEvalState();
         }
 
+
+        if (me.id == 2) {
+            Sandbox ballEnv = env;
+            ballEnv.my.clear();
+            ballEnv.opp.clear();
+            for (int i = 0; i < 200; i++) {
+                if (i % 10 == 0)
+                    renderBalls.emplace_back(ballEnv.ball, 1, 0, 0, 0.2);
+                ballEnv.doTick();
+            }
+        }
+
 //        Sandbox tst = env;
 //        tst.my.clear();
 //        tst.opp.clear();
 //        tst.ball = env.ball;
 //        tst.ball.x = -22.926647;
-//        tst.ball.y = 17.994172;
+//        tst.ball.y = 17.9941;
 //        tst.ball.z = 28.956842;
 //        tst.ball.velocity = Point(3.139231, 0.547068, -26.599181);
-//        tst.doTick();
-
-
+//        renderBalls.push_back(RSphere(tst.ball, 0.5, 0.5, 0.5, 0.5));
+//        //tst.doTick();
+//
+//
 //        tst.ball.x = -27.995519339371629286;
 //        tst.ball.y = 2.9054418436248079516;
 //        tst.ball.z = 6.1702947673222912073;
 //        tst.ball.velocity = Point(0.57403220611490801684, 6.0725454135943017775, -12.125100730674212457);
-//        tst.doTick();
-return;
+//        renderBalls.push_back(RSphere(tst.ball, 0.5, 0.5, 0.5, 0.5));
+//        //tst.doTick();
+
+
+//return;
 
         // Наша стратегия умеет играть только на земле
         // Поэтому, если мы не касаемся земли, будет использовать нитро
         // чтобы как можно быстрее попасть обратно на землю
-        if (!me.touch) {
-            action.targetVelocity = Point(0.0, -MAX_ENTITY_SPEED, 0.0);
-            action.jumpSpeed = 0.0;
-            action.useNitro = true;
-            return;
-        }
+//        if (!me.touch) {
+//            action.targetVelocity = Point(0.0, -MAX_ENTITY_SPEED, 0.0);
+//            action.jumpSpeed = 0.0;
+//            action.useNitro = true;
+//            return;
+//        }
 
         const double JUMP_TIME = 0.2;
         const double MAX_JUMP_HEIGHT = 3.0;
@@ -103,7 +120,7 @@ return;
         // Так как роботов несколько, определим нашу роль - защитник, или нападающий
         // Нападающим будем в том случае, если есть дружественный робот,
         // находящийся ближе к нашим воротам
-        auto is_attacker = game.robots.size() == 2;
+        auto is_attacker = false;
         for (const auto &_robot : game.robots) {
             ARobot robot(_robot);
             if (robot.is_teammate && robot.id != me.id) {
@@ -150,6 +167,10 @@ return;
             }
         }
 
+        RSphere sp(me, 1, 0.7, 0);
+        sp.radius *= 1.1;
+        renderBalls.emplace_back(sp);
+
         // Стратегия защитника (или атакующего, не нашедшего хорошего момента для удара):
         // Будем стоять посередине наших ворот
         auto target_pos = Point(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius);
@@ -157,12 +178,9 @@ return;
         if (ball.velocity.z < -EPS) {
             // Найдем время и место, в котором мяч пересечет линию ворот
             auto t = (target_pos.z - ball.z) / ball.velocity.z;
-            auto x = ball.x + ball.x * t;
-            // Если это место - внутри ворот
-            if (abs(x) < (rules.arena.goal_width / 2.0)) {
-                // То пойдем защищать его
-                target_pos.x = x;
-            }
+            auto x = ball.x + ball.velocity.x * t;
+
+            target_pos.x = clamp(x, -rules.arena.goal_width / 2.0, rules.arena.goal_width / 2.0);
         }
 
         // Установка нужных полей для желаемого действия
@@ -194,4 +212,13 @@ void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const mo
     strat.env.robot(me.id)->action = a;
     strat.prevEnv = strat.env;
     strat.lastTick = game.current_tick;
+}
+
+std::string MyStrategy::custom_rendering() {
+    nlohmann::json ret = nlohmann::json::array();
+    for (auto& x : renderBalls) {
+        ret.push_back(x.toJson());
+    }
+    renderBalls.clear();
+    return ret.dump();
 }

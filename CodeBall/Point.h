@@ -48,7 +48,15 @@ struct Point {
     Point clamp(double maxLength) const {
         auto len2 = length2();
         auto maxLen2 = maxLength * maxLength;
+
+
         if (len2 > maxLen2) {
+            if (len2 < EPS) {
+                len2 = len2;
+                std::cout << "AAAAAAAAAAAAAAAAAAAA" << std::endl;
+                maxLength = maxLength;
+            }
+
             auto factor = maxLength / sqrt(len2);
             return *this * factor;
         }

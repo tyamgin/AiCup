@@ -80,7 +80,7 @@ void RemoteProcessClient::write(const unordered_map<int, Action>& actions, const
     d.SetObject();
     Document::AllocatorType& allocator = d.GetAllocator();
     for (auto it : actions) {
-        d.AddMember(Value(to_string(it.first).c_str(), allocator).Move(), it.second.to_json(allocator).Move(), allocator);
+        d.AddMember(rapidjson::Value(to_string(it.first).c_str(), allocator).Move(), it.second.to_json(allocator).Move(), allocator);
     }
     StringBuffer buffer;
     Writer<StringBuffer> writer(buffer);
