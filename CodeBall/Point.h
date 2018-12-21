@@ -104,6 +104,14 @@ struct Point {
         return *this;
     }
 
+    bool equals(const Point &other, double eps = EPS) const {
+        return abs(x - other.x) < eps && abs(y - other.y) < eps && abs(z - other.z) < eps;
+    }
+
+    bool notEquals(const Point &other, double eps = EPS) const {
+        return abs(x - other.x) >= eps || abs(y - other.y) >= eps || abs(z - other.z) >= eps;
+    }
+
     bool operator ==(const Point &other) const {
         return abs(x - other.x) < EPS && abs(y - other.y) < EPS && abs(z - other.z) < EPS;
     }

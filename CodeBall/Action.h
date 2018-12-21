@@ -14,7 +14,7 @@ struct AAction {
         useNitro = false;
     }
 
-    AAction(const model::Action& action) {
+    explicit AAction(const model::Action& action) {
         targetVelocity.x = action.target_velocity_x;
         targetVelocity.y = action.target_velocity_y;
         targetVelocity.z = action.target_velocity_z;

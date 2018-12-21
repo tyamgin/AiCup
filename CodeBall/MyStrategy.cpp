@@ -19,25 +19,25 @@ public:
             return;
         }
 
-        if (env.ball != prevEnv.ball) {
+        if (env.ball.notEquals(prevEnv.ball, 1e-6)) {
             cerr << "ball position calculated wrong" << endl;
         }
-        if (env.ball.velocity != prevEnv.ball.velocity) {
+        if (env.ball.velocity.notEquals(prevEnv.ball.velocity, 1e-6)) {
             cerr << "ball velocity calculated wrong" << endl;
         }
 
         for (auto& me : env.teammates()) {
             auto prev = prevEnv.robot(me->id);
-            if (*prev != *me) {
+            if (prev->notEquals(*me, 1e-6)) {
                 cerr << "position calculated wrong" << endl;
             }
-            if (prev->velocity != me->velocity) {
+            if (prev->velocity.notEquals(me->velocity, 1e-6)) {
                 cerr << "velocity calculated wrong" << endl;
             }
             if (prev->touch != me->touch) {
                 cerr << "touch calculated wrong" << endl;
             }
-            if (me->touch && prev->touch_normal != me->touch_normal) {
+            if (me->touch && prev->touch_normal.notEquals(me->touch_normal, 1e-6)) {
                 cerr << "touch_normal calculated wrong" << endl;
             }
             if (prev->radius != me->radius) {
@@ -52,7 +52,8 @@ public:
     void act(ARobot me, const model::Rules &rules, const model::Game &game, AAction &action) {
         std::vector<int> s = {1,2,3,4,3,5,3};
 
-        ABall ball = ABall(game.ball);
+
+        ABall ball(game.ball);
         env = Sandbox(game, rules);
         if (env.tick == lastTick) {
             for (auto tm : env.teammates(me.id))
@@ -62,7 +63,25 @@ public:
             prevEnv.doTick();
             checkEvalState();
         }
+
+//        Sandbox tst = env;
+//        tst.my.clear();
+//        tst.opp.clear();
+//        tst.ball = env.ball;
+//        tst.ball.x = -22.926647;
+//        tst.ball.y = 17.994172;
+//        tst.ball.z = 28.956842;
+//        tst.ball.velocity = Point(3.139231, 0.547068, -26.599181);
+//        tst.doTick();
+
+
+//        tst.ball.x = -27.995519339371629286;
+//        tst.ball.y = 2.9054418436248079516;
+//        tst.ball.z = 6.1702947673222912073;
+//        tst.ball.velocity = Point(0.57403220611490801684, 6.0725454135943017775, -12.125100730674212457);
+//        tst.doTick();
 return;
+
         // Наша стратегия умеет играть только на земле
         // Поэтому, если мы не касаемся земли, будет использовать нитро
         // чтобы как можно быстрее попасть обратно на землю

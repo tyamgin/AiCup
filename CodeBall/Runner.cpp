@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
     //thread localRunner([&]() {
         system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --seed 123 &");
     //});
-    usleep(4000 * 1000);
+    usleep(5000 * 1000);
     cerr << "local runner started" << endl;
 #endif
 

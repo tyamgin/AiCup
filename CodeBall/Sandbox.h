@@ -421,7 +421,12 @@ struct Sandbox {
 
     void update(double delta_time) {
         //shuffle(robots)
-        std::vector<ARobot*> robots = {&my[0], &my[1], &opp[0], &opp[1]};
+        std::vector<ARobot*> robots;
+        for (auto &x : my)
+            robots.push_back(&x);
+        for (auto &x : opp)
+            robots.push_back(&x);
+
         for (auto robotPtr : robots) {
             auto& robot = *robotPtr;
             if (robot.touch) {
