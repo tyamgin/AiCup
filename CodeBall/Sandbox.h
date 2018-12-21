@@ -18,11 +18,12 @@ struct Sandbox {
     model::Arena arena;
     bool isFinal = false;
     int tick = 0;
+    int meId = 0;
 
     Sandbox() {
     }
 
-    Sandbox(const model::Game& game, const model::Rules& rules) {
+    Sandbox(const model::Game& game, const model::Rules& rules, int meId) : meId(meId) {
         tick = game.current_tick;
         isFinal = game.robots.size() > 4;
         arena = rules.arena;
@@ -34,6 +35,20 @@ struct Sandbox {
             }
         }
         ball = ABall(game.ball);
+    }
+
+    ARobot* me() {
+        for (auto& x : my)
+            if (x.id == meId)
+                return &x;
+        return nullptr;
+    }
+
+    ARobot* teammate1() {
+        for (auto& x : my)
+            if (x.id != meId)
+                return &x;
+        return nullptr;
     }
 
     ARobot* robot(int id) {
@@ -475,7 +490,7 @@ struct Sandbox {
 
         collide_with_arena(ball);
         if (abs(ball.z) > arena.depth / 2 + ball.radius) {
-            //goal_scored();
+            hasGoal = ball.z < 0 ? -1 : 1;
         }
 
         for (auto& robot : robots) {
@@ -505,9 +520,11 @@ struct Sandbox {
 //                pack.alive = true
 
         tick++;
+        // TODO: clear actions
     }
 
     bool hasRandomCollision = false;
+    int hasGoal = 0; // -1, 0, 1
 };
 
 #endif //CODEBALL_SANDBOX_H

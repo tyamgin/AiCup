@@ -50,12 +50,30 @@ public:
         }
     }
 
+    bool tryShot(AAction &resAction) {
+        if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS)
+            return false;
+
+        Sandbox e = env;
+        AAction action;
+        action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+        e.me()->action = action;
+        for (int i = 0; i < 2 * TICKS_PER_SECOND; i++) {
+            e.doTick();
+            if (e.hasGoal > 0) {
+                resAction = action;
+                return true;
+            }
+        }
+        return false;
+    }
+
     void act(ARobot me, const model::Rules &rules, const model::Game &game, AAction &action) {
         std::vector<int> s = {1,2,3,4,3,5,3};
 
 
         ABall ball(game.ball);
-        env = Sandbox(game, rules);
+        env = Sandbox(game, rules, me.id);
         if (env.tick == lastTick) {
             for (auto tm : env.teammates(me.id))
                 tm->action = prevEnv.robot(tm->id)->action;
@@ -109,90 +127,91 @@ public:
 //            return;
 //        }
 
-        const double JUMP_TIME = 0.2;
-        const double MAX_JUMP_HEIGHT = 3.0;
 
-        // Если при прыжке произойдет столкновение с мячом, и мы находимся
-        // с той же стороны от мяча, что и наши ворота, прыгнем, тем самым
-        // ударив по мячу сильнее в сторону противника
-        auto jump = me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_MAX_RADIUS && me.z < ball.z;
+        if (tryShot(action)) {
+            cout << "SHOT" << endl;
+        } else {
 
-        // Так как роботов несколько, определим нашу роль - защитник, или нападающий
-        // Нападающим будем в том случае, если есть дружественный робот,
-        // находящийся ближе к нашим воротам
-        auto is_attacker = false;
-        for (const auto &_robot : game.robots) {
-            ARobot robot(_robot);
-            if (robot.is_teammate && robot.id != me.id) {
-                if (robot.z < me.z) {
-                    is_attacker = true;
-                }
-            }
-        }
 
-        if (is_attacker) {
-            Point selTargetVel;
-            double minSpeedDelta = 1e100;
+            auto jump = false;//me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_MAX_RADIUS && me.z < ball.z;
 
-            // Стратегия нападающего:
-            // Просимулирем примерное положение мяча в следующие 10 секунд, с точностью 0.1 секунда
-            for (auto i = 1; i <= 100; i++) {
-                auto t = i * 0.1;
-                auto ball_pos = ball + ball.velocity * t;
-                // Если мяч не вылетит за пределы арены
-                // (произойдет столкновение со стеной, которое мы не рассматриваем),
-                // и при этом мяч будет находится ближе к вражеским воротам, чем робот,
-                if (ball_pos.z > me.z
-                    //&& abs(ball_pos.x) < (rules.arena.width / 2.0)
-                    //&& abs(ball_pos.z) < (rules.arena.depth / 2.0)
-
-                        ) {
-                    // Посчитаем, с какой скоростью робот должен бежать,
-                    // Чтобы прийти туда же, где будет мяч, в то же самое время
-                    auto delta_pos = ball_pos - me;
-                    delta_pos.y = 0;
-                    auto need_speed = delta_pos.length() / t;
-                    // Если эта скорость лежит в допустимом отрезке
-                    if (need_speed < ROBOT_MAX_GROUND_SPEED || i == 100) {
-                        // То это и будет наше текущее дейтвие
-                        auto target_velocity = delta_pos.normalized() * min(ROBOT_MAX_GROUND_SPEED, need_speed);
-
-                        action.targetVelocity = target_velocity;
-                        action.jumpSpeed = jump ? ROBOT_MAX_JUMP_SPEED : 0.0;
-                        action.useNitro = false;
-                        return;
+            // Так как роботов несколько, определим нашу роль - защитник, или нападающий
+            // Нападающим будем в том случае, если есть дружественный робот,
+            // находящийся ближе к нашим воротам
+            auto is_attacker = false;
+            for (const auto &_robot : game.robots) {
+                ARobot robot(_robot);
+                if (robot.is_teammate && robot.id != me.id) {
+                    if (robot.z < me.z) {
+                        is_attacker = true;
                     }
-
                 }
             }
+
+            if (is_attacker) {
+                Point selTargetVel;
+                double minSpeedDelta = 1e100;
+
+                // Стратегия нападающего:
+                // Просимулирем примерное положение мяча в следующие 10 секунд, с точностью 0.1 секунда
+                for (auto i = 1; i <= 100; i++) {
+                    auto t = i * 0.1;
+                    auto ball_pos = ball + ball.velocity * t;
+                    // Если мяч не вылетит за пределы арены
+                    // (произойдет столкновение со стеной, которое мы не рассматриваем),
+                    // и при этом мяч будет находится ближе к вражеским воротам, чем робот,
+                    if (ball_pos.z > me.z
+                        //&& abs(ball_pos.x) < (rules.arena.width / 2.0)
+                        //&& abs(ball_pos.z) < (rules.arena.depth / 2.0)
+
+                            ) {
+                        // Посчитаем, с какой скоростью робот должен бежать,
+                        // Чтобы прийти туда же, где будет мяч, в то же самое время
+                        auto delta_pos = ball_pos - me;
+                        delta_pos.y = 0;
+                        auto need_speed = delta_pos.length() / t;
+                        // Если эта скорость лежит в допустимом отрезке
+                        if (need_speed < ROBOT_MAX_GROUND_SPEED || i == 100) {
+                            // То это и будет наше текущее дейтвие
+                            auto target_velocity = delta_pos.normalized() * min(ROBOT_MAX_GROUND_SPEED, need_speed);
+
+                            action.targetVelocity = target_velocity;
+                            action.jumpSpeed = jump ? ROBOT_MAX_JUMP_SPEED : 0.0;
+                            action.useNitro = false;
+                            return;
+                        }
+
+                    }
+                }
+            }
+
+            RSphere sp(me, 1, 0.7, 0);
+            sp.radius *= 1.1;
+            renderBalls.emplace_back(sp);
+
+            // Стратегия защитника (или атакующего, не нашедшего хорошего момента для удара):
+            // Будем стоять посередине наших ворот
+            auto target_pos = Point(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius);
+            // Причем, если мяч движется в сторону наших ворот
+            if (ball.velocity.z < -EPS) {
+                // Найдем время и место, в котором мяч пересечет линию ворот
+                auto t = (target_pos.z - ball.z) / ball.velocity.z;
+                auto x = ball.x + ball.velocity.x * t;
+
+                target_pos.x = clamp(x, -rules.arena.goal_width / 2.0, rules.arena.goal_width / 2.0);
+            }
+
+            // Установка нужных полей для желаемого действия
+            auto target_velocity = Point(
+                    target_pos.x - me.x,
+                    0.0,
+                    target_pos.z - me.z
+            ) * ROBOT_MAX_GROUND_SPEED;
+
+            action.targetVelocity = target_velocity;
+            action.jumpSpeed = jump ? ROBOT_MAX_JUMP_SPEED : 0.0;
+            action.useNitro = false;
         }
-
-        RSphere sp(me, 1, 0.7, 0);
-        sp.radius *= 1.1;
-        renderBalls.emplace_back(sp);
-
-        // Стратегия защитника (или атакующего, не нашедшего хорошего момента для удара):
-        // Будем стоять посередине наших ворот
-        auto target_pos = Point(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius);
-        // Причем, если мяч движется в сторону наших ворот
-        if (ball.velocity.z < -EPS) {
-            // Найдем время и место, в котором мяч пересечет линию ворот
-            auto t = (target_pos.z - ball.z) / ball.velocity.z;
-            auto x = ball.x + ball.velocity.x * t;
-
-            target_pos.x = clamp(x, -rules.arena.goal_width / 2.0, rules.arena.goal_width / 2.0);
-        }
-
-        // Установка нужных полей для желаемого действия
-        auto target_velocity = Point(
-                target_pos.x - me.x,
-                0.0,
-                target_pos.z - me.z
-        ) * ROBOT_MAX_GROUND_SPEED;
-
-        action.targetVelocity = target_velocity;
-        action.jumpSpeed = jump ? ROBOT_MAX_JUMP_SPEED : 0.0;
-        action.useNitro = false;
     }
 };
 
