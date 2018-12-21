@@ -68,12 +68,10 @@ public:
         return false;
     }
 
-    void act(ARobot me, const model::Rules &rules, const model::Game &game, AAction &action) {
-        std::vector<int> s = {1,2,3,4,3,5,3};
+    void act(AAction &action) {
+        auto& ball = env.ball;
+        auto& me = *env.me();
 
-
-        ABall ball(game.ball);
-        env = Sandbox(game, rules, me.id);
         if (env.tick == lastTick) {
             for (auto tm : env.teammates(me.id))
                 tm->action = prevEnv.robot(tm->id)->action;
@@ -135,18 +133,7 @@ public:
 
             auto jump = false;//me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_MAX_RADIUS && me.z < ball.z;
 
-            // Так как роботов несколько, определим нашу роль - защитник, или нападающий
-            // Нападающим будем в том случае, если есть дружественный робот,
-            // находящийся ближе к нашим воротам
-            auto is_attacker = false;
-            for (const auto &_robot : game.robots) {
-                ARobot robot(_robot);
-                if (robot.is_teammate && robot.id != me.id) {
-                    if (robot.z < me.z) {
-                        is_attacker = true;
-                    }
-                }
-            }
+            bool is_attacker = env.teammate1()->z < me.z;
 
             if (is_attacker) {
                 Point selTargetVel;
@@ -191,14 +178,14 @@ public:
 
             // Стратегия защитника (или атакующего, не нашедшего хорошего момента для удара):
             // Будем стоять посередине наших ворот
-            auto target_pos = Point(0.0, 0.0, -(rules.arena.depth / 2.0) + rules.arena.bottom_radius);
+            auto target_pos = Point(0.0, 0.0, -(env.arena.depth / 2.0) + env.arena.bottom_radius);
             // Причем, если мяч движется в сторону наших ворот
             if (ball.velocity.z < -EPS) {
                 // Найдем время и место, в котором мяч пересечет линию ворот
                 auto t = (target_pos.z - ball.z) / ball.velocity.z;
                 auto x = ball.x + ball.velocity.x * t;
 
-                target_pos.x = clamp(x, -rules.arena.goal_width / 2.0, rules.arena.goal_width / 2.0);
+                target_pos.x = clamp(x, -env.arena.goal_width / 2.0, env.arena.goal_width / 2.0);
             }
 
             // Установка нужных полей для желаемого действия
@@ -216,12 +203,26 @@ public:
 };
 
 Strat strat;
+int waitForTick = -1;
 
 void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
     cerr << "(" << me.id << ") Tick " << game.current_tick << endl;
 
     AAction a;
-    strat.act(ARobot(me), rules, game, a);
+    strat.env = Sandbox(game, rules, me.id);
+    auto& env = strat.env;
+    if (env.tick < waitForTick) {
+        cout << "Wait for start" << endl;
+        return;
+    }
+    if (env.hasGoal) {
+        waitForTick = env.tick + RESET_TICKS - 1;
+        cout << "Wait for start" << endl;
+        return;
+    }
+    waitForTick = -1;
+
+    strat.act(a);
     action.use_nitro = a.useNitro;
     action.jump_speed = a.jumpSpeed;
     action.target_velocity_x = a.targetVelocity.x;

@@ -35,6 +35,7 @@ struct Sandbox {
             }
         }
         ball = ABall(game.ball);
+        checkGoal();
     }
 
     ARobot* me() {
@@ -489,9 +490,7 @@ struct Sandbox {
         }
 
         collide_with_arena(ball);
-        if (abs(ball.z) > arena.depth / 2 + ball.radius) {
-            hasGoal = ball.z < 0 ? -1 : 1;
-        }
+        checkGoal();
 
         for (auto& robot : robots) {
             if (robot->nitro_amount == MAX_NITRO_AMOUNT)
@@ -504,6 +503,12 @@ struct Sandbox {
 //                    robot.nitro = MAX_NITRO_AMOUNT
 //                    pack.alive = false
 //                    pack.respawn_ticks = NITRO_PACK_RESPAWN_TICKS
+        }
+    }
+
+    void checkGoal() {
+        if (abs(ball.z) > arena.depth / 2 + ball.radius) {
+            hasGoal = ball.z < 0 ? -1 : 1;
         }
     }
 
