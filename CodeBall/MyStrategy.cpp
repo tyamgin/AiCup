@@ -128,7 +128,9 @@ public:
             bool is_attacker = env.teammate1()->z < me.z;
 
             if (is_attacker) {
-                if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
+                if (0) {
+
+                } else if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
                     int angles = 8;
                     Point bestV;
                     double minDist = 1e10;
@@ -190,6 +192,33 @@ public:
                 sp.radius *= 1.1;
                 Visualizer::addSphere(sp);
 
+
+                auto goToGoalCenterStrat = [](Sandbox &e) {
+                    AAction sAct;
+                    auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0));
+                    double t = 1;
+                    // Причем, если мяч движется в сторону наших ворот
+                    if (e.ball.velocity.z < -EPS) {
+                        // Найдем время и место, в котором мяч пересечет линию ворот
+                        t = (target_pos.z - e.ball.z) / e.ball.velocity.z;
+                        auto x = e.ball.x + e.ball.velocity.x * t;
+
+                        target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
+                    }
+
+                    // Установка нужных полей для желаемого действия
+                    auto target_velocity = Point(target_pos.x - e.me()->x, 0.0, target_pos.z - e.me()->z) / t;
+                    sAct.targetVelocity = target_velocity;
+
+                    if (e.me()->getDistanceTo(e.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS) {
+                        sAct.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+                    }
+
+                    return sAct;
+                };
+
+
+
                 optional<AAction> defend;
                 Sandbox e1 = env;
                 for (int i = 0; i < 30; i++) {
@@ -208,32 +237,37 @@ public:
                         if (e2.hasGoal < 0)
                             break;
                     }
-                    if (e2.hasGoal >= 0) {
+                    if (e2.hasGoal >= 0) { // если есть спасение
                         defend = act;
+                        for (int wt = 1; wt <= 7; wt++) {
+                            Sandbox e3 = env;
+                            auto firstAction = goToGoalCenterStrat(e3);
+                            e3.me()->action = firstAction;
+                            e3.doTick();
+
+                            for (int j = 1; j < wt; j++) {
+                                e3.me()->action = goToGoalCenterStrat(e3);
+                                e3.doTick();
+                            }
+
+                            e3.me()->action = act;
+                            for (int i = 0; i < 30 - wt; i++) {
+                                e3.doTick();
+                                if (e3.hasGoal < 0)
+                                    break;
+                            }
+                            if (e3.hasGoal >= 0 && e3.ball.getDistanceTo(Point(0.0, 0.0, -(ARENA_DEPTH / 2.0))) > e2.ball.getDistanceTo(Point(0.0, 0.0, -(ARENA_DEPTH / 2.0)))) {
+                                defend = firstAction;
+                                break;
+                            }
+                        }
                     }
                 }
 
                 if (defend) {
                     action = defend.value();
                 } else {
-                    auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0));
-                    double t = 1;
-                    // Причем, если мяч движется в сторону наших ворот
-                    if (ball.velocity.z < -EPS) {
-                        // Найдем время и место, в котором мяч пересечет линию ворот
-                        t = (target_pos.z - ball.z) / ball.velocity.z;
-                        auto x = ball.x + ball.velocity.x * t;
-
-                        target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
-                    }
-
-                    // Установка нужных полей для желаемого действия
-                    auto target_velocity = Point(target_pos.x - me.x, 0.0, target_pos.z - me.z) / t;
-                    action.targetVelocity = target_velocity;
-
-                    if (me.getDistanceTo(env.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS) {
-                        action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
-                    }
+                    action = goToGoalCenterStrat(env);
                 }
             }
         }
