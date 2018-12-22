@@ -160,7 +160,24 @@ public:
 
             if (is_attacker) {
                 if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
-                    action.targetVelocity = (oppGoal - me).take(ROBOT_MAX_GROUND_SPEED);
+                    int angles = 8;
+                    Point bestV;
+                    double minDist = 1e10;
+                    for (int i = 0; i < angles; i++) {
+                        double ang = 2 * M_PI / angles + i;
+                        Sandbox s = env;
+                        auto v = Point(cos(ang), 0, sin(ang)) * ROBOT_MAX_GROUND_SPEED;
+
+                        for (int tk = 0; tk < 10; tk++) {
+                            s.me()->action.targetVelocity = v;
+                            s.doTick(10);
+                        }
+                        if (s.ball.getDistanceTo(oppGoal) < minDist)
+                            minDist = s.ball.getDistanceTo(oppGoal), bestV = v;
+                    }
+
+                    action.targetVelocity = bestV;//(oppGoal - me).take(ROBOT_MAX_GROUND_SPEED);
+                    renderLines.emplace_back(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, 1, 1, 0);
                     renderLines.emplace_back(me, oppGoal, 0.2, 0, 0, 1);
                 } else {
                     Sandbox snd = env;
