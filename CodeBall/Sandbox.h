@@ -141,43 +141,27 @@ struct Sandbox {
         dan = std::min(dan, dan_to_plane(point, Point(0, arena.height, 0), Point(0, -1, 0)));
         // Side x
         dan = std::min(dan, dan_to_plane(point, Point(arena.width / 2, 0, 0), Point(-1, 0, 0)));
-
-
         // Side z (goal)
-        dan = std::min(dan, dan_to_plane(
-                point,
-                Point(0, 0, (arena.depth / 2) + arena.goal_depth),
-                Point(0, 0, -1)));
+        dan = std::min(dan, dan_to_plane(point, Point(0, 0, (arena.depth / 2) + arena.goal_depth), Point(0, 0, -1))); // No need
 
         // Side z
-        auto v = Point(point.x, point.y, 0) - Point(
-                (arena.goal_width / 2) - arena.goal_top_radius,
-                        arena.goal_height - arena.goal_top_radius, 0);
+        auto v = Point(point.x, point.y, 0) - Point((arena.goal_width / 2) - arena.goal_top_radius, arena.goal_height - arena.goal_top_radius, 0);
 
-        if (point.x >= (arena.goal_width / 2) + arena.goal_side_radius
-           or point.y >= arena.goal_height + arena.goal_side_radius
-           or (
-                   v.x > 0
-                   and v.y > 0
-                   and v.length() >= arena.goal_top_radius + arena.goal_side_radius)) {
-
+        if (point.x >= (arena.goal_width / 2) + arena.goal_side_radius or point.y >= arena.goal_height + arena.goal_side_radius
+           or (v.x > 0 and v.y > 0 and v.length() >= arena.goal_top_radius + arena.goal_side_radius)) {
             dan = std::min(dan, dan_to_plane(point, Point(0, 0, arena.depth / 2), Point(0, 0, -1)));
         }
 
         // Side x & ceiling (goal)
         if (point.z >= (arena.depth / 2) + arena.goal_side_radius) {
             // x
-            dan = std::min(dan, dan_to_plane(
-                point,
-                Point(arena.goal_width / 2, 0, 0),
-                Point(-1, 0, 0)));
+            dan = std::min(dan, dan_to_plane(point, Point(arena.goal_width / 2, 0, 0), Point(-1, 0, 0)));
             // y
             dan = std::min(dan, dan_to_plane(point, Point(0, arena.goal_height, 0), Point(0, -1, 0)));
         }
 
         // Goal back corners
         //assert arena.bottom_radius == arena.goal_top_radius
-
         if (point.z > (arena.depth / 2) + arena.goal_depth - arena.bottom_radius) {
             dan = std::min(dan, dan_to_sphere_inner(
                 point,
@@ -196,7 +180,6 @@ struct Sandbox {
                 ),
                 arena.bottom_radius));
         }
-
 
 
         // Corner
@@ -236,11 +219,7 @@ struct Sandbox {
                         arena.goal_side_radius));
             }
             // Top corner
-            auto o = Point(
-                    (arena.goal_width / 2) - arena.goal_top_radius,
-                            arena.goal_height - arena.goal_top_radius,
-                            0
-            );
+            auto o = Point((arena.goal_width / 2) - arena.goal_top_radius, arena.goal_height - arena.goal_top_radius, 0);
             auto v = Point(point.x, point.y, 0) - o;
             if (v.x > 0 and v.y > 0) {
                 o = o + v.normalized() * (arena.goal_top_radius + arena.goal_side_radius);
