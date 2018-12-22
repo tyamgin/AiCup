@@ -51,6 +51,8 @@ public:
     bool tryShot(AAction &resAction) {
         if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 2)
             return false;
+        if (env.me()->radius >= ROBOT_MAX_RADIUS)
+            return false;
 
         Sandbox startEnv = env;
         AAction action;
@@ -62,7 +64,7 @@ public:
         for (int p = 0; p < countProbs; p++) {
             auto e = startEnv;
             e.rnd = RandomGenerator(RandomGenerator::Simple, 1232u + p);
-            for (int i = 0; i < 3 * TICKS_PER_SECOND; i++) {
+            for (int i = 0; i < 2.5 * TICKS_PER_SECOND; i++) {
                 e.doTick(i <= 6 ? MICROTICKS_PER_TICK : 1);
                 if (e.hasGoal != 0) {
                     sumProbs += e.hasGoal;
@@ -97,10 +99,10 @@ public:
             ballEnv.opp.clear();
             for (int i = 0; i < 200; i++) {
                 if (i == 199) {
-                    //Visualizer::addSphere(ballEnv.ball, 0.3, 0, 0.5, 0.5);
+                    Visualizer::addSphere(ballEnv.ball, 0.3, 0, 0.5, 0.5);
                 }
                 if (i % 10 == 9) {
-                    //Visualizer::addSphere(ballEnv.ball, 1, 0, 0, 0.2);
+                    Visualizer::addSphere(ballEnv.ball, 1, 0, 0, 0.2);
                 }
                 ballEnv.doTick();
             }
@@ -111,7 +113,7 @@ public:
             for (int i = 0; i < 200; i++) {
                 ballEnv2.doTick(1);
                 if (i == 199) {
-                    //Visualizer::addSphere(ballEnv2.ball, 0, 0, 1, 0.5);
+                    Visualizer::addSphere(ballEnv2.ball, 0, 0, 1, 0.5);
                 }
             }
 
@@ -120,7 +122,7 @@ public:
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
 
         if (tryShot(action)) {
-            Visualizer::addText("SHOT");
+            Visualizer::addText("SHOT", 20);
             LOG("SHOT");
         } else {
             bool is_attacker = env.teammate1()->z < me.z;

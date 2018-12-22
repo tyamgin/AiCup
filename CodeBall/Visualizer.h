@@ -4,19 +4,25 @@
 #include "nlohmann.h"
 #include "Unit.h"
 
+#ifdef DEBUG
+#define M_VISUALIZER 1
+#endif
+
 struct RFigureBase {
     double r, g, b, a;
+    int ttl;
 
-    RFigureBase(double r, double g, double b, double a) : r(r), g(g), b(b), a(a) {
+    RFigureBase(double r, double g, double b, double a, int ttl) : r(r), g(g), b(b), a(a), ttl(ttl) {
     }
 
     virtual nlohmann::json toJson() = 0;
+    virtual ~RFigureBase() = default;
 };
 
 struct RSphere : public RFigureBase {
     double radius, x, y, z;
 
-    RSphere(const Unit& unit, double r, double g, double b, double a = 1.0) : RFigureBase(r, g, b, a) {
+    RSphere(const Unit& unit, double r, double g, double b, double a = 1.0, int ttl = 1) : RFigureBase(r, g, b, a, ttl) {
         radius = unit.radius;
         x = unit.x;
         y = unit.y;
@@ -43,8 +49,8 @@ struct RLine : public RFigureBase {
     Point p1, p2;
     double width;
 
-    RLine(const Point& p1, const Point& p2, double width, double r, double g, double b, double a = 1.0)
-        : RFigureBase(r, g, b, a), p1(p1), p2(p2), width(width) {
+    RLine(const Point& p1, const Point& p2, double width, double r, double g, double b, double a = 1.0, int ttl = 1)
+        : RFigureBase(r, g, b, a, ttl), p1(p1), p2(p2), width(width) {
 
     }
 
@@ -70,8 +76,8 @@ struct RLine : public RFigureBase {
 struct RText : public RFigureBase {
     std::string text;
 
-    explicit RText(const std::string& text)
-            : RFigureBase(0, 0, 0, 1), text(text) {
+    explicit RText(const std::string& text, int ttl = 1)
+            : RFigureBase(0, 0, 0, 1, ttl), text(text) {
 
     }
 
@@ -83,36 +89,42 @@ struct RText : public RFigureBase {
 };
 
 struct Visualizer {
-    static std::vector<RSphere> spheres;
-    static std::vector<RLine> lines;
-    static std::vector<RText> texts;
+    static std::vector<RFigureBase*> figures;
 
     template <typename ...Args>
     static void addSphere(Args && ...args) {
-        spheres.emplace_back(std::forward<Args>(args)...);
+#if M_VISUALIZER
+        figures.push_back(new RSphere(std::forward<Args>(args)...));
+#endif
     }
 
     template <typename ...Args>
     static void addLine(Args && ...args) {
-        lines.emplace_back(std::forward<Args>(args)...);
+#if M_VISUALIZER
+        figures.push_back(new RLine(std::forward<Args>(args)...));
+#endif
     }
 
     template <typename ...Args>
     static void addText(Args && ...args) {
-        texts.emplace_back(std::forward<Args>(args)...);
+#if M_VISUALIZER
+        figures.push_back(new RText(std::forward<Args>(args)...));
+#endif
     }
 
     static std::string dumpAndClean() {
         nlohmann::json ret = nlohmann::json::array();
-        for (auto& x : spheres)
-            ret.push_back(x.toJson());
-        for (auto& x : lines)
-            ret.push_back(x.toJson());
-        for (auto& x : texts)
-            ret.push_back(x.toJson());
-        spheres.clear();
-        lines.clear();
-        texts.clear();
+        std::vector<RFigureBase*> newFigures;
+
+        for (auto& x : figures) {
+            ret.push_back(x->toJson());
+            x->ttl--;
+            if (x->ttl > 0)
+                newFigures.push_back(x);
+            else
+                delete x;
+        }
+        newFigures.swap(figures);
         return ret.dump();
     }
 };
