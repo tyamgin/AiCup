@@ -5,6 +5,7 @@
 #include <tuple>
 #include <algorithm>
 #include <iostream>
+#include <optional>
 #include "model/Game.h"
 #include "model/Arena.h"
 #include "model/Rules.h"
@@ -459,7 +460,7 @@ struct Sandbox {
         for (auto& robot : robots) {
             collide_entities(*robot, ball);
             auto collision_normal = collide_with_arena(*robot);
-            if (collision_normal.length2() < EPS) {
+            if (collision_normal.length2() < EPS2) {
                 robot->touch = false;
             } else {
                 robot->touch = true;
@@ -490,11 +491,11 @@ struct Sandbox {
         }
     }
 
-    void doTick() {
+    void doTick(int microticksPerTick = MICROTICKS_PER_TICK) {
         hasRandomCollision = false;
         auto delta_time = 1.0 / TICKS_PER_SECOND;
-        for (int i = 0; i < MICROTICKS_PER_TICK; i++)
-            update(delta_time / MICROTICKS_PER_TICK);
+        for (int i = 0; i < microticksPerTick; i++)
+            update(delta_time / microticksPerTick);
 //        for pack in nitro_packs:
 //            if pack.alive:
 //                continue

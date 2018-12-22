@@ -6,7 +6,8 @@ using namespace std;
 
 MyStrategy::MyStrategy() { }
 
-std::vector<RSphere> renderBalls;
+std::vector<RSphere> renderSperes;
+std::vector<RLine> renderLines;
 
 class Strat {
 public:
@@ -55,17 +56,17 @@ public:
             return false;
 
         Sandbox startEnv = env;
-        startEnv.rnd = RandomGenerator(RandomGenerator::Simple);
         AAction action;
         action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
         startEnv.me()->action = action;
 
         double sumProbs = 0;
-        int countProbs = 10;
+        int countProbs = 7;
         for (int p = 0; p < countProbs; p++) {
             auto e = startEnv;
-            for (int i = 0; i < 2 * TICKS_PER_SECOND; i++) {
-                e.doTick();
+            e.rnd = RandomGenerator(RandomGenerator::Simple, 1232u + p);
+            for (int i = 0; i < 1 * TICKS_PER_SECOND; i++) {
+                e.doTick(i < 5 ? MICROTICKS_PER_TICK : 1);
                 if (e.hasGoal != 0) {
                     sumProbs += e.hasGoal;
                     break;
@@ -99,10 +100,22 @@ public:
             ballEnv.my.clear();
             ballEnv.opp.clear();
             for (int i = 0; i < 200; i++) {
-                if (i % 10 == 0)
-                    renderBalls.emplace_back(ballEnv.ball, 1, 0, 0, 0.2);
+                if (i == 199)
+                    renderSperes.emplace_back(ballEnv.ball, 0.3, 0, 0.5, 0.5);
+                if (i % 10 == 9)
+                    renderSperes.emplace_back(ballEnv.ball, 1, 0, 0, 0.2);
                 ballEnv.doTick();
             }
+
+            Sandbox ballEnv2 = env;
+            ballEnv2.my.clear();
+            ballEnv2.opp.clear();
+            for (int i = 0; i < 200; i++) {
+                ballEnv2.doTick(1);
+                if (i == 199)
+                    renderSperes.emplace_back(ballEnv2.ball, 0, 0, 1, 0.5);
+            }
+
         }
 
 //        Sandbox tst = env;
@@ -138,78 +151,77 @@ public:
 //        }
 
 
+        Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
+
         if (tryShot(action)) {
             cout << "SHOT" << endl;
         } else {
-
-
-            auto jump = false;//me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_MAX_RADIUS && me.z < ball.z;
-
             bool is_attacker = env.teammate1()->z < me.z;
 
             if (is_attacker) {
-                Point selTargetVel;
-                double minSpeedDelta = 1e100;
+                if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
+                    action.targetVelocity = (oppGoal - me).take(ROBOT_MAX_GROUND_SPEED);
+                    renderLines.emplace_back(me, oppGoal, 0.2, 0, 0, 1);
+                } else {
+                    Sandbox snd = env;
+                    snd.my.clear();
+                    snd.opp.clear();
+                    optional<AAction> firstAction, secondAction;
 
-                // Стратегия нападающего:
-                // Просимулирем примерное положение мяча в следующие 10 секунд, с точностью 0.1 секунда
-                for (auto i = 1; i <= 100; i++) {
-                    auto t = i * 0.1;
-                    auto ball_pos = ball + ball.velocity * t;
-                    // Если мяч не вылетит за пределы арены
-                    // (произойдет столкновение со стеной, которое мы не рассматриваем),
-                    // и при этом мяч будет находится ближе к вражеским воротам, чем робот,
-                    if (ball_pos.z > me.z
-                        //&& abs(ball_pos.x) < (rules.arena.width / 2.0)
-                        //&& abs(ball_pos.z) < (rules.arena.depth / 2.0)
+                    for (auto i = 1; i <= 12 * TICKS_PER_SECOND; i++) {
+                        snd.doTick(1);
+                        if (snd.ball.y > BALL_RADIUS * 1.1) //TODO
+                            continue;
+                        auto t = 1.0 * i / TICKS_PER_SECOND;
 
-                            ) {
-                        // Посчитаем, с какой скоростью робот должен бежать,
-                        // Чтобы прийти туда же, где будет мяч, в то же самое время
-                        auto delta_pos = ball_pos - me;
+                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 0.7);
+                        Point delta_pos = tar - me;
                         delta_pos.y = 0;
                         auto need_speed = delta_pos.length() / t;
-                        // Если эта скорость лежит в допустимом отрезке
-                        if (need_speed < ROBOT_MAX_GROUND_SPEED || i == 100) {
-                            // То это и будет наше текущее дейтвие
-                            auto target_velocity = delta_pos.normalized() * min(ROBOT_MAX_GROUND_SPEED, need_speed);
+                        auto target_velocity = delta_pos.take(min(ROBOT_MAX_GROUND_SPEED, need_speed));
+                        AAction act;
+                        act.targetVelocity = target_velocity;
 
-                            action.targetVelocity = target_velocity;
-                            action.jumpSpeed = jump ? ROBOT_MAX_JUMP_SPEED : 0.0;
-                            action.useNitro = false;
-                            return;
+                        if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
+                            firstAction = act;
+                            renderLines.emplace_back(me, me + delta_pos, 0.3, 0, 0, 1);
+                            break;
                         }
-
+                        secondAction = act;
+                    }
+                    if (firstAction) {
+                        action = firstAction.value();
+                    } else if (secondAction) {
+                        action = secondAction.value();
+                    } else {
+                        is_attacker = false;
                     }
                 }
             }
 
-            RSphere sp(me, 1, 0.7, 0);
-            sp.radius *= 1.1;
-            renderBalls.emplace_back(sp);
+            if (!is_attacker) {
+                RSphere sp(me, 1, 0.7, 0);
+                sp.radius *= 1.1;
+                renderSperes.emplace_back(sp);
 
-            // Стратегия защитника (или атакующего, не нашедшего хорошего момента для удара):
-            // Будем стоять посередине наших ворот
-            auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0) + ARENA_BOTTOM_RADIUS);
-            // Причем, если мяч движется в сторону наших ворот
-            if (ball.velocity.z < -EPS) {
-                // Найдем время и место, в котором мяч пересечет линию ворот
-                auto t = (target_pos.z - ball.z) / ball.velocity.z;
-                auto x = ball.x + ball.velocity.x * t;
+                auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0) + ARENA_BOTTOM_RADIUS);
+                // Причем, если мяч движется в сторону наших ворот
+                if (ball.velocity.z < -EPS) {
+                    // Найдем время и место, в котором мяч пересечет линию ворот
+                    auto t = (target_pos.z - ball.z) / ball.velocity.z;
+                    auto x = ball.x + ball.velocity.x * t;
 
-                target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
+                    target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
+                }
+
+                // Установка нужных полей для желаемого действия
+                auto target_velocity = Point(target_pos.x - me.x, 0.0, target_pos.z - me.z) * ROBOT_MAX_GROUND_SPEED;
+                action.targetVelocity = target_velocity;
+
+                if (me.getDistanceTo(env.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS) {
+                    action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+                }
             }
-
-            // Установка нужных полей для желаемого действия
-            auto target_velocity = Point(
-                    target_pos.x - me.x,
-                    0.0,
-                    target_pos.z - me.z
-            ) * ROBOT_MAX_GROUND_SPEED;
-
-            action.targetVelocity = target_velocity;
-            action.jumpSpeed = jump ? ROBOT_MAX_JUMP_SPEED : 0.0;
-            action.useNitro = false;
         }
     }
 };
@@ -248,9 +260,13 @@ void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const mo
 
 std::string MyStrategy::custom_rendering() {
     nlohmann::json ret = nlohmann::json::array();
-    for (auto& x : renderBalls) {
+    for (auto& x : renderSperes) {
         ret.push_back(x.toJson());
     }
-    renderBalls.clear();
+    for (auto& x : renderLines) {
+        ret.push_back(x.toJson());
+    }
+    renderSperes.clear();
+    renderLines.clear();
     return ret.dump();
 }

@@ -36,4 +36,33 @@ struct RSphere : public RFigureBase {
     }
 };
 
+struct RLine : public RFigureBase {
+    Point p1, p2;
+    double width;
+
+    RLine(const Point& p1, const Point& p2, double width, double r, double g, double b, double a = 1.0)
+        : RFigureBase(r, g, b, a), p1(p1), p2(p2), width(width) {
+
+    }
+
+    nlohmann::json toJson() {
+        nlohmann::json json;
+        json["r"] = r;
+        json["g"] = g;
+        json["b"] = b;
+        json["a"] = a;
+        json["x1"] = p1.x;
+        json["y1"] = p1.y;
+        json["z1"] = p1.z;
+        json["x2"] = p2.x;
+        json["y2"] = p2.y;
+        json["z2"] = p2.z;
+        json["width"] = width;
+        nlohmann::json ret;
+        ret["Line"] = json;
+        return ret;
+    }
+};
+
+
 #endif //CODEBALL_RENDERFIGURES_H
