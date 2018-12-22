@@ -11,8 +11,9 @@
 #include "model/Rules.h"
 #include "Ball.h"
 #include "Robot.h"
-#include "RenderFigures.h"
+#include "Visualizer.h"
 #include "RandomGenerators.h"
+#include "Logger.h"
 
 struct Sandbox {
     ABall ball;
@@ -63,7 +64,7 @@ struct Sandbox {
                 return &opp[i];
             }
         }
-        std::cerr << "Can't find robot by id " << id;
+        LOG_ERROR("Can't find robot by id " + to_string(id));
         return nullptr;
     }
 

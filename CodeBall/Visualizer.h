@@ -2,6 +2,7 @@
 #define CODEBALL_RENDERFIGURES_H
 
 #include "nlohmann.h"
+#include "Unit.h"
 
 struct RFigureBase {
     double r, g, b, a;
@@ -66,5 +67,54 @@ struct RLine : public RFigureBase {
     }
 };
 
+struct RText : public RFigureBase {
+    std::string text;
+
+    explicit RText(const std::string& text)
+            : RFigureBase(0, 0, 0, 1), text(text) {
+
+    }
+
+    nlohmann::json toJson() override {
+        nlohmann::json ret;
+        ret["Text"] = text;
+        return ret;
+    }
+};
+
+struct Visualizer {
+    static std::vector<RSphere> spheres;
+    static std::vector<RLine> lines;
+    static std::vector<RText> texts;
+
+    template <typename ...Args>
+    static void addSphere(Args && ...args) {
+        spheres.emplace_back(std::forward<Args>(args)...);
+    }
+
+    template <typename ...Args>
+    static void addLine(Args && ...args) {
+        lines.emplace_back(std::forward<Args>(args)...);
+    }
+
+    template <typename ...Args>
+    static void addText(Args && ...args) {
+        texts.emplace_back(std::forward<Args>(args)...);
+    }
+
+    static std::string dumpAndClean() {
+        nlohmann::json ret = nlohmann::json::array();
+        for (auto& x : spheres)
+            ret.push_back(x.toJson());
+        for (auto& x : lines)
+            ret.push_back(x.toJson());
+        for (auto& x : texts)
+            ret.push_back(x.toJson());
+        spheres.clear();
+        lines.clear();
+        texts.clear();
+        return ret.dump();
+    }
+};
 
 #endif //CODEBALL_RENDERFIGURES_H

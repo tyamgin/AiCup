@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG
     cerr << "Starting local runner" << endl;
     //thread localRunner([&]() {
-        system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --seed 123 &");
+        system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --seed 1234 &");
     //});
     usleep(5000 * 1000);
     cerr << "local runner started" << endl;

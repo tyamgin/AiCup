@@ -3,24 +3,18 @@ project(CodeBall)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCE_FILES
-        Runner.cpp
-        Strategy.cpp
-        MyStrategy.cpp
-        csimplesocket/ActiveSocket.cpp
-        csimplesocket/HTTPActiveSocket.cpp
-        csimplesocket/PassiveSocket.cpp
-        csimplesocket/SimpleSocket.cpp
-        RemoteProcessClient.cpp
-        )
+file(GLOB strategy_SRC "*.cpp" "model/*.cpp" "csimplesocket/*.cpp")
 
-add_executable(CodeBall ${SOURCE_FILES})
-
+add_executable(CodeBall ${strategy_SRC})
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
 endif()
 
-add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+if (CMAKE_BUILD_TYPE MATCHES Release)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
+        -fno-optimize-sibling-calls -fno-strict-aliasing \
+        -lm -O2 -Wall -Wtype-limits -Wno-unknown-pragmas")
+endif()
 
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
+#add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)

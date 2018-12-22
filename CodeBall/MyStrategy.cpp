@@ -6,9 +6,6 @@ using namespace std;
 
 MyStrategy::MyStrategy() { }
 
-std::vector<RSphere> renderSperes;
-std::vector<RLine> renderLines;
-
 class Strat {
 public:
     int lastTick = -1;
@@ -17,36 +14,36 @@ public:
 
     void checkEvalState() {
         if (prevEnv.hasRandomCollision) {
-            cerr << "Random collision. Skip check." << endl;
+            LOG("Random collision. Skip check.");
             return;
         }
 
         if (env.ball.notEquals(prevEnv.ball, 1e-6)) {
-            cerr << "ball position calculated wrong" << endl;
+            LOG("ball position calculated wrong");
         }
         if (env.ball.velocity.notEquals(prevEnv.ball.velocity, 1e-6)) {
-            cerr << "ball velocity calculated wrong" << endl;
+            LOG("ball velocity calculated wrong");
         }
 
         for (auto& me : env.teammates()) {
             auto prev = prevEnv.robot(me->id);
             if (prev->notEquals(*me, 1e-6)) {
-                cerr << "position calculated wrong" << endl;
+                LOG("position calculated wrong");
             }
             if (prev->velocity.notEquals(me->velocity, 1e-6)) {
-                cerr << "velocity calculated wrong" << endl;
+                LOG("velocity calculated wrong");
             }
             if (prev->touch != me->touch) {
-                cerr << "touch calculated wrong" << endl;
+                LOG("touch calculated wrong");
             }
             if (me->touch && prev->touch_normal.notEquals(me->touch_normal, 1e-6)) {
-                cerr << "touch_normal calculated wrong" << endl;
+                LOG("touch_normal calculated wrong");
             }
             if (prev->radius != me->radius) {
-                cerr << "radius calculated wrong" << endl;
+                LOG("radius calculated wrong");
             }
             if (prev->nitro_amount != me->nitro_amount) {
-                cerr << "nitro_amount calculated wrong" << endl;
+                LOG("nitro_amount calculated wrong");
             }
         }
     }
@@ -101,9 +98,9 @@ public:
             ballEnv.opp.clear();
             for (int i = 0; i < 200; i++) {
                 if (i == 199)
-                    renderSperes.emplace_back(ballEnv.ball, 0.3, 0, 0.5, 0.5);
+                    Visualizer::addSphere(ballEnv.ball, 0.3, 0, 0.5, 0.5);
                 if (i % 10 == 9)
-                    renderSperes.emplace_back(ballEnv.ball, 1, 0, 0, 0.2);
+                    Visualizer::addSphere(ballEnv.ball, 1, 0, 0, 0.2);
                 ballEnv.doTick();
             }
 
@@ -113,48 +110,15 @@ public:
             for (int i = 0; i < 200; i++) {
                 ballEnv2.doTick(1);
                 if (i == 199)
-                    renderSperes.emplace_back(ballEnv2.ball, 0, 0, 1, 0.5);
+                    Visualizer::addSphere(ballEnv2.ball, 0, 0, 1, 0.5);
             }
 
         }
 
-//        Sandbox tst = env;
-//        tst.my.clear();
-//        tst.opp.clear();
-//        tst.ball = env.ball;
-//        tst.ball.x = -22.926647;
-//        tst.ball.y = 17.9941;
-//        tst.ball.z = 28.956842;
-//        tst.ball.velocity = Point(3.139231, 0.547068, -26.599181);
-//        renderBalls.push_back(RSphere(tst.ball, 0.5, 0.5, 0.5, 0.5));
-//        //tst.doTick();
-//
-//
-//        tst.ball.x = -27.995519339371629286;
-//        tst.ball.y = 2.9054418436248079516;
-//        tst.ball.z = 6.1702947673222912073;
-//        tst.ball.velocity = Point(0.57403220611490801684, 6.0725454135943017775, -12.125100730674212457);
-//        renderBalls.push_back(RSphere(tst.ball, 0.5, 0.5, 0.5, 0.5));
-//        //tst.doTick();
-
-
-//return;
-
-        // Наша стратегия умеет играть только на земле
-        // Поэтому, если мы не касаемся земли, будет использовать нитро
-        // чтобы как можно быстрее попасть обратно на землю
-//        if (!me.touch) {
-//            action.targetVelocity = Point(0.0, -MAX_ENTITY_SPEED, 0.0);
-//            action.jumpSpeed = 0.0;
-//            action.useNitro = true;
-//            return;
-//        }
-
-
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
 
         if (tryShot(action)) {
-            cout << "SHOT" << endl;
+            LOG("SHOT");
         } else {
             bool is_attacker = env.teammate1()->z < me.z;
 
@@ -177,8 +141,8 @@ public:
                     }
 
                     action.targetVelocity = bestV;//(oppGoal - me).take(ROBOT_MAX_GROUND_SPEED);
-                    renderLines.emplace_back(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, 1, 1, 0);
-                    renderLines.emplace_back(me, oppGoal, 0.2, 0, 0, 1);
+                    Visualizer::addLine(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, 1, 1, 0);
+                    Visualizer::addLine(me, oppGoal, 0.2, 0, 0, 1);
                 } else {
                     Sandbox snd = env;
                     snd.my.clear();
@@ -201,7 +165,7 @@ public:
 
                         if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
                             firstAction = act;
-                            renderLines.emplace_back(me, me + delta_pos, 0.3, 0, 0, 1);
+                            Visualizer::addLine(me, me + delta_pos, 0.3, 0, 0, 1);
                             break;
                         }
                         secondAction = act;
@@ -219,7 +183,7 @@ public:
             if (!is_attacker) {
                 RSphere sp(me, 1, 0.7, 0);
                 sp.radius *= 1.1;
-                renderSperes.emplace_back(sp);
+                Visualizer::addSphere(sp);
 
                 auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0) + ARENA_BOTTOM_RADIUS);
                 double t = 1;
@@ -248,21 +212,21 @@ Strat strat;
 int waitForTick = -1;
 
 void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
-    cerr << "(" << me.id << ") Tick " << game.current_tick << endl;
+    LOG((string)"(" + to_string(me.id) + ") Tick " + to_string(game.current_tick));
 
     AAction a;
     strat.env = Sandbox(game, rules, me.id);
     auto& env = strat.env;
     if (env.tick < waitForTick) {
-        cout << "Wait for start" << endl;
         return;
     }
     if (env.hasGoal) {
         waitForTick = env.tick + RESET_TICKS - 1;
-        cout << "Wait for start" << endl;
         return;
     }
     waitForTick = -1;
+
+    Logger::instance()->cumulativeTimerStart(Logger::ALL);
 
     strat.act(a);
     action.use_nitro = a.useNitro;
@@ -274,17 +238,10 @@ void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const mo
     strat.env.robot(me.id)->action = a;
     strat.prevEnv = strat.env;
     strat.lastTick = game.current_tick;
+
+    Logger::instance()->cumulativeTimerEnd(Logger::ALL);
 }
 
 std::string MyStrategy::custom_rendering() {
-    nlohmann::json ret = nlohmann::json::array();
-    for (auto& x : renderSperes) {
-        ret.push_back(x.toJson());
-    }
-    for (auto& x : renderLines) {
-        ret.push_back(x.toJson());
-    }
-    renderSperes.clear();
-    renderLines.clear();
-    return ret.dump();
+    return Visualizer::dumpAndClean();
 }
