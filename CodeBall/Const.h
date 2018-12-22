@@ -31,4 +31,16 @@ const double NITRO_PACK_AMOUNT = 100;
 const int NITRO_PACK_RESPAWN_TICKS = 10 * TICKS_PER_SECOND;
 const double GRAVITY = 30;
 
+const double ARENA_WIDTH = 60;
+const double ARENA_HEIGHT = 20;
+const double ARENA_DEPTH = 80;
+const double ARENA_BOTTOM_RADIUS = 3;
+const double ARENA_TOP_RADIUS = 7;
+const double ARENA_CORNER_RADIUS = 13;
+const double ARENA_GOAL_TOP_RADIUS = 3;
+const double ARENA_GOAL_WIDTH = 30;
+const double ARENA_GOAL_HEIGHT = 10;
+const double ARENA_GOAL_DEPTH = 10;
+const double ARENA_GOAL_SIDE_RADIUS = 1;
+
 #endif //CODEBALL_CONST_H

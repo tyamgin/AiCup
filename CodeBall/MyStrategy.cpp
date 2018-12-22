@@ -190,14 +190,14 @@ public:
 
             // Стратегия защитника (или атакующего, не нашедшего хорошего момента для удара):
             // Будем стоять посередине наших ворот
-            auto target_pos = Point(0.0, 0.0, -(env.arena.depth / 2.0) + env.arena.bottom_radius);
+            auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0) + ARENA_BOTTOM_RADIUS);
             // Причем, если мяч движется в сторону наших ворот
             if (ball.velocity.z < -EPS) {
                 // Найдем время и место, в котором мяч пересечет линию ворот
                 auto t = (target_pos.z - ball.z) / ball.velocity.z;
                 auto x = ball.x + ball.velocity.x * t;
 
-                target_pos.x = clamp(x, -env.arena.goal_width / 2.0, env.arena.goal_width / 2.0);
+                target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
             }
 
             // Установка нужных полей для желаемого действия
