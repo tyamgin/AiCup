@@ -190,23 +190,50 @@ public:
                 sp.radius *= 1.1;
                 Visualizer::addSphere(sp);
 
-                auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0));
-                double t = 1;
-                // Причем, если мяч движется в сторону наших ворот
-                if (ball.velocity.z < -EPS) {
-                    // Найдем время и место, в котором мяч пересечет линию ворот
-                    t = (target_pos.z - ball.z) / ball.velocity.z;
-                    auto x = ball.x + ball.velocity.x * t;
-
-                    target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
+                optional<AAction> defend;
+                Sandbox e1 = env;
+                for (int i = 0; i < 30; i++) {
+                    e1.doTick(5);
+                    if (e1.hasGoal < 0)
+                        break;
+                }
+                if (e1.hasGoal < 0) {
+                    Visualizer::addText("ALARM!!!", 15);
+                    Sandbox e2 = env;
+                    AAction act;
+                    act.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+                    e2.me()->action = act;
+                    for (int i = 0; i < 30; i++) {
+                        e2.doTick();
+                        if (e2.hasGoal < 0)
+                            break;
+                    }
+                    if (e2.hasGoal >= 0) {
+                        defend = act;
+                    }
                 }
 
-                // Установка нужных полей для желаемого действия
-                auto target_velocity = Point(target_pos.x - me.x, 0.0, target_pos.z - me.z) / t;
-                action.targetVelocity = target_velocity;
+                if (defend) {
+                    action = defend.value();
+                } else {
+                    auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0));
+                    double t = 1;
+                    // Причем, если мяч движется в сторону наших ворот
+                    if (ball.velocity.z < -EPS) {
+                        // Найдем время и место, в котором мяч пересечет линию ворот
+                        t = (target_pos.z - ball.z) / ball.velocity.z;
+                        auto x = ball.x + ball.velocity.x * t;
 
-                if (me.getDistanceTo(env.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS) {
-                    action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+                        target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
+                    }
+
+                    // Установка нужных полей для желаемого действия
+                    auto target_velocity = Point(target_pos.x - me.x, 0.0, target_pos.z - me.z) / t;
+                    action.targetVelocity = target_velocity;
+
+                    if (me.getDistanceTo(env.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS) {
+                        action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+                    }
                 }
             }
         }
