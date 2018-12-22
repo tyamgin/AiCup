@@ -8,6 +8,10 @@
 #include <chrono>
 #include <sstream>
 
+#ifdef DEBUG
+#define M_LOGS 1
+#endif
+
 struct Logger {
     enum Action {
         ALL,

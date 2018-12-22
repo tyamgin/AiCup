@@ -64,7 +64,7 @@ struct Sandbox {
                 return &opp[i];
             }
         }
-        LOG_ERROR("Can't find robot by id " + to_string(id));
+        LOG_ERROR("Can't find robot by id " + std::to_string(id));
         return nullptr;
     }
 

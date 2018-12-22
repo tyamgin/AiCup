@@ -1,8 +1,6 @@
 #include <memory>
 #include <iostream>
 #include <cstdlib>
-#include <thread>
-
 #include "Runner.h"
 #include "MyStrategy.h"
 
@@ -12,11 +10,12 @@ using namespace std;
 int main(int argc, char* argv[]) {
 #ifdef DEBUG
     cerr << "Starting local runner" << endl;
-    //thread localRunner([&]() {
-        system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --seed 1234 &");
-    //});
-    usleep(5000 * 1000);
+
+    system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --seed 1234 --p2-name m4 --p2 tcp-31002 &");
     cerr << "local runner started" << endl;
+
+    usleep(3000 * 1000);
+    system("/Users/tyamgin/Projects/AiCup/CodeBall/release/m4 127.0.0.1 31002 0000000000000000 &");
 #endif
 
     if (argc == 4) {
@@ -27,9 +26,6 @@ int main(int argc, char* argv[]) {
         runner.run();
     }
 
-#ifdef DEBUG
-    //localRunner.join();
-#endif
     return 0;
 }
 

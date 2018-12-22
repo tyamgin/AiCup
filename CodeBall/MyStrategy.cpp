@@ -49,7 +49,7 @@ public:
     }
 
     bool tryShot(AAction &resAction) {
-        if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS)
+        if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 2)
             return false;
 
         Sandbox startEnv = env;
@@ -62,8 +62,8 @@ public:
         for (int p = 0; p < countProbs; p++) {
             auto e = startEnv;
             e.rnd = RandomGenerator(RandomGenerator::Simple, 1232u + p);
-            for (int i = 0; i < 1 * TICKS_PER_SECOND; i++) {
-                e.doTick(i < 5 ? MICROTICKS_PER_TICK : 1);
+            for (int i = 0; i < 3 * TICKS_PER_SECOND; i++) {
+                e.doTick(i <= 6 ? MICROTICKS_PER_TICK : 1);
                 if (e.hasGoal != 0) {
                     sumProbs += e.hasGoal;
                     break;
@@ -71,7 +71,7 @@ public:
             }
         }
         auto prob = sumProbs / countProbs;
-        if (prob > 0.49) {
+        if (prob > 0.59) {
             resAction = action;
             return true;
         }
@@ -91,16 +91,17 @@ public:
             checkEvalState();
         }
 
-
         if (me.id == 2) {
             Sandbox ballEnv = env;
             ballEnv.my.clear();
             ballEnv.opp.clear();
             for (int i = 0; i < 200; i++) {
-                if (i == 199)
-                    Visualizer::addSphere(ballEnv.ball, 0.3, 0, 0.5, 0.5);
-                if (i % 10 == 9)
-                    Visualizer::addSphere(ballEnv.ball, 1, 0, 0, 0.2);
+                if (i == 199) {
+                    //Visualizer::addSphere(ballEnv.ball, 0.3, 0, 0.5, 0.5);
+                }
+                if (i % 10 == 9) {
+                    //Visualizer::addSphere(ballEnv.ball, 1, 0, 0, 0.2);
+                }
                 ballEnv.doTick();
             }
 
@@ -109,8 +110,9 @@ public:
             ballEnv2.opp.clear();
             for (int i = 0; i < 200; i++) {
                 ballEnv2.doTick(1);
-                if (i == 199)
-                    Visualizer::addSphere(ballEnv2.ball, 0, 0, 1, 0.5);
+                if (i == 199) {
+                    //Visualizer::addSphere(ballEnv2.ball, 0, 0, 1, 0.5);
+                }
             }
 
         }
@@ -118,6 +120,7 @@ public:
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
 
         if (tryShot(action)) {
+            Visualizer::addText("SHOT");
             LOG("SHOT");
         } else {
             bool is_attacker = env.teammate1()->z < me.z;
@@ -132,7 +135,7 @@ public:
                         Sandbox s = env;
                         auto v = Point(cos(ang), 0, sin(ang)) * ROBOT_MAX_GROUND_SPEED;
 
-                        for (int tk = 0; tk < 10; tk++) {
+                        for (int tk = 0; tk < 15; tk++) {
                             s.me()->action.targetVelocity = v;
                             s.doTick(10);
                         }
@@ -185,7 +188,7 @@ public:
                 sp.radius *= 1.1;
                 Visualizer::addSphere(sp);
 
-                auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0) + ARENA_BOTTOM_RADIUS);
+                auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0));
                 double t = 1;
                 // Причем, если мяч движется в сторону наших ворот
                 if (ball.velocity.z < -EPS) {
