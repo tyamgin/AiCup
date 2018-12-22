@@ -174,7 +174,7 @@ public:
                             continue;
                         auto t = 1.0 * i / TICKS_PER_SECOND;
 
-                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 0.7);
+                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 0.9);
                         Point delta_pos = tar - me;
                         delta_pos.y = 0;
                         auto need_speed = delta_pos.length() / t;
@@ -205,17 +205,18 @@ public:
                 renderSperes.emplace_back(sp);
 
                 auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0) + ARENA_BOTTOM_RADIUS);
+                double t = 1;
                 // Причем, если мяч движется в сторону наших ворот
                 if (ball.velocity.z < -EPS) {
                     // Найдем время и место, в котором мяч пересечет линию ворот
-                    auto t = (target_pos.z - ball.z) / ball.velocity.z;
+                    t = (target_pos.z - ball.z) / ball.velocity.z;
                     auto x = ball.x + ball.velocity.x * t;
 
                     target_pos.x = clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
                 }
 
                 // Установка нужных полей для желаемого действия
-                auto target_velocity = Point(target_pos.x - me.x, 0.0, target_pos.z - me.z) * ROBOT_MAX_GROUND_SPEED;
+                auto target_velocity = Point(target_pos.x - me.x, 0.0, target_pos.z - me.z) / t;
                 action.targetVelocity = target_velocity;
 
                 if (me.getDistanceTo(env.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS) {

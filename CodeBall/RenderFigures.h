@@ -8,6 +8,8 @@ struct RFigureBase {
 
     RFigureBase(double r, double g, double b, double a) : r(r), g(g), b(b), a(a) {
     }
+
+    virtual nlohmann::json toJson() = 0;
 };
 
 struct RSphere : public RFigureBase {
@@ -20,7 +22,7 @@ struct RSphere : public RFigureBase {
         z = unit.z;
     }
 
-    nlohmann::json toJson() {
+    nlohmann::json toJson() override {
         nlohmann::json json;
         json["r"] = r;
         json["g"] = g;
@@ -45,7 +47,7 @@ struct RLine : public RFigureBase {
 
     }
 
-    nlohmann::json toJson() {
+    nlohmann::json toJson() override {
         nlohmann::json json;
         json["r"] = r;
         json["g"] = g;
