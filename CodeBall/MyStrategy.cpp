@@ -9,15 +9,10 @@ using namespace std;
  * - чтобы выбивал в сторону, а не прямо
  */
 
-MyStrategy::MyStrategy() { }
-
 Strat strat;
 int waitForTick = -1;
 
-void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
-    Logger::instance()->tick = game.current_tick;
-    LOG((string)"(" + to_string(me.id) + ") Tick " + to_string(game.current_tick));
-
+void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
     AAction a;
     strat.env = Sandbox(game, rules, me.id);
     auto& env = strat.env;
@@ -30,7 +25,6 @@ void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const mo
     }
     waitForTick = -1;
 
-    Logger::instance()->cumulativeTimerStart(Logger::ALL);
     TIMER_START();
 
     strat.act(a);
@@ -45,10 +39,23 @@ void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const mo
     strat.lastTick = game.current_tick;
 
     TIMER_ENG_LOG("Tick");
+}
+
+MyStrategy::MyStrategy() = default;
+
+void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
+    Logger::instance()->tick = game.current_tick;
+    LOG((string)"(" + to_string(me.id) + ") Tick " + to_string(game.current_tick));
+
+    Logger::instance()->cumulativeTimerStart(Logger::ALL);
+
+    doAction(me, rules, game, action);
+
     Logger::instance()->cumulativeTimerEnd(Logger::ALL);
 
-    if (game.current_tick % 500 == 0)
-        LOG(Logger::instance()->getSummary());
+    if (game.current_tick % 500 == 0 && game.current_tick > 0) {
+        cout << Logger::instance()->getSummary() << endl;
+    }
 }
 
 std::string MyStrategy::custom_rendering() {
