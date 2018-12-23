@@ -416,13 +416,18 @@ struct Sandbox {
         }
     }
 
+    std::vector<ARobot*> robots() {
+        std::vector<ARobot*> res;
+        for (auto &x : my)
+            res.push_back(&x);
+        for (auto &x : opp)
+            res.push_back(&x);
+        return res;
+    }
+
     void update(double delta_time) {
         //shuffle(robots)
-        std::vector<ARobot*> robots;
-        for (auto &x : my)
-            robots.push_back(&x);
-        for (auto &x : opp)
-            robots.push_back(&x);
+        std::vector<ARobot*> robots = this->robots();
 
         for (auto robotPtr : robots) {
             auto& robot = *robotPtr;
