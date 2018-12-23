@@ -21,9 +21,12 @@ struct Logger {
 
     std::vector<std::chrono::system_clock::time_point> _timers;
     long long _cumulativeDuration[ACTIONS_COUNT];
-
-
     int tick;
+
+    Logger() {
+        memset(_cumulativeDuration, 0, sizeof(_cumulativeDuration));
+        tick = 0;
+    }
 
     static Logger* instance() {
         static Logger *_instance = nullptr;
@@ -50,7 +53,7 @@ struct Logger {
     void timerEndLog(const std::string& caption, int limit) {
         auto time = timerEnd() / 1000;
         if (time > limit)
-            log(std::to_string(tick) + ">" + std::string(_timers.size() * 2, '-') + " " + caption + ":" + std::to_string(time));
+            log(std::to_string(tick) + "> " + std::string(_timers.size() * 2, '-') + " " + caption + ": " + std::to_string(time) + "ms");
     }
 
     void cumulativeTimerStart(Action action) {
