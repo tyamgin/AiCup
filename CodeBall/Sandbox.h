@@ -135,10 +135,27 @@ struct Sandbox {
     }
 
     DistanceNormalPair dan_to_arena_quarter(const Unit& point) {
+        DistanceNormalPair dan = {1e10};
+
         // Ground
-        auto dan = dan_to_plane(point, Point(0, 0, 0), Point(0, 1, 0));
+        dan = std::min(dan, dan_to_plane(point, Point(0, 0, 0), Point(0, 1, 0)));
         // Ceiling
         dan = std::min(dan, dan_to_plane(point, Point(0, ARENA_HEIGHT, 0), Point(0, -1, 0)));
+
+        const double arenaRadius =  point.y < ARENA_HEIGHT - ARENA_TOP_RADIUS ? ARENA_BOTTOM_RADIUS : ARENA_TOP_RADIUS;
+        {
+            double spaceX = ARENA_WIDTH / 2 - arenaRadius;
+            double spaceZ = ARENA_DEPTH / 2 - ARENA_CORNER_RADIUS;
+            if (point.x <= spaceX && point.z <= spaceZ)
+                return dan;
+        }
+        {
+            double spaceX = ARENA_WIDTH / 2 - ARENA_CORNER_RADIUS;
+            double spaceZ = ARENA_DEPTH / 2 - arenaRadius;
+            if (point.x <= spaceX && point.z <= spaceZ)
+                return dan;
+        }
+
         // Side x
         dan = std::min(dan, dan_to_plane(point, Point(ARENA_WIDTH / 2, 0, 0), Point(-1, 0, 0)));
         // Side z (goal)
