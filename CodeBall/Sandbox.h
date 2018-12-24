@@ -409,7 +409,13 @@ struct Sandbox {
                 + b.radius_change_speed - a.radius_change_speed;
             if (delta_velocity < 0) {
                 hasRandomCollision = true;
-                auto impulse = normal * (1 + rnd.randDouble(MIN_HIT_E, MAX_HIT_E)) * delta_velocity;
+
+#if M_NO_RANDOM
+                auto rndValue = MAX_HIT_E;
+#else
+                auto rndValue = rnd.randDouble(MIN_HIT_E, MAX_HIT_E);
+#endif
+                auto impulse = normal * (1 + rndValue) * delta_velocity;
                 a.velocity += impulse * k_a;
                 b.velocity -= impulse * k_b;
             }
@@ -426,8 +432,12 @@ struct Sandbox {
     }
 
     void update(double delta_time) {
-        //shuffle(robots)
         std::vector<ARobot*> robots = this->robots();
+#if M_NO_RANDOM
+        std::sort(robots.begin(), robots.end(), [](ARobot* a, ARobot* b) {
+            return a->id < b->id;
+        });
+#endif
 
         for (auto robotPtr : robots) {
             auto& robot = *robotPtr;

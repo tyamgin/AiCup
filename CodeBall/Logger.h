@@ -8,6 +8,14 @@
 #include <chrono>
 #include <sstream>
 
+#define M_NO_RANDOM 0
+
+#if M_NO_RANDOM
+#ifndef LOCAL
+#error "M_NO_RANDOM is only for local"
+#endif
+#endif
+
 #ifdef LOCAL
 #define M_TIME_LOGS 1
 #endif

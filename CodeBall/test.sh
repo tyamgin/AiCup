@@ -9,7 +9,7 @@ rm local_runner/$1
     --p2-name 31003 \
     --results-file $1 \
     --seed 3443 \
-    --duration 10000 \
+    --duration 30000 \
     --noshow \
     &
 echo "LR started"
