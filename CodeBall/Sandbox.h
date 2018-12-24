@@ -271,27 +271,27 @@ struct Sandbox {
                             ARENA_GOAL_SIDE_RADIUS);
                 }
             }
-        }
 
-        // Goal inside top corners
-        if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS
-           and point.y > ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS) {
-            // Side x
-            if (point.x > (ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS) {
-                DAN_TO_SPHERE_INNER(
-                        (ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS,
-                        ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
-                        point.z,
-                        ARENA_GOAL_TOP_RADIUS);
+            // Goal inside top corners
+            if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS && point.y > ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS) {
+                // Side x
+                if (point.x > (ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS) {
+                    DAN_TO_SPHERE_INNER(
+                            (ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS,
+                            ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
+                            point.z,
+                            ARENA_GOAL_TOP_RADIUS);
+                }
+                // Side z
+                if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_GOAL_TOP_RADIUS) {
+                    DAN_TO_SPHERE_INNER(
+                            point.x,
+                            ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
+                            (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_GOAL_TOP_RADIUS,
+                            ARENA_GOAL_TOP_RADIUS);
+                }
             }
-            // Side z
-            if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_GOAL_TOP_RADIUS) {
-                DAN_TO_SPHERE_INNER(
-                        point.x,
-                        ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
-                        (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_GOAL_TOP_RADIUS,
-                        ARENA_GOAL_TOP_RADIUS);
-            }
+
         }
 
         // Bottom corners
