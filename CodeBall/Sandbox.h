@@ -122,24 +122,25 @@ struct Sandbox {
     }
 
     void dan_to_sphere_inner(DistanceNormalPair& dan, const Point& point, const Point& sphere_center, double sphere_radius) {
-        auto dist = sphere_radius - (sphere_center - point).length();
-        if (dist < dan.distance) {
-            dan.distance = dist;
-            dan.normal = sphere_center - point;
-            // TODO: normalize
+        auto diff = sphere_center - point;
+        auto dist2 = diff.length2();
+        if (SQR(sphere_radius - dan.distance) < dist2) {
+            dan.distance = sphere_radius - sqrt(dist2);
+            dan.normal = diff;
         }
     }
 
     void dan_to_sphere_outer(DistanceNormalPair& dan, const Point& point, const Point& sphere_center, double sphere_radius) {
-        auto dist = (point - sphere_center).length() - sphere_radius;
-        if (dist < dan.distance) {
-            dan.distance = dist;
-            dan.normal = point - sphere_center;
+        auto diff = point - sphere_center;
+        auto dist2 = diff.length2();
+        if (dist2 < SQR(dan.distance + sphere_radius)) {
+            dan.distance = sqrt(dist2) - sphere_radius;
+            dan.normal = diff;
         }
     }
 
     DistanceNormalPair dan_to_arena_quarter(const Unit& point) {
-        DistanceNormalPair dan = {1e10};
+        DistanceNormalPair dan = {point.radius + EPS};
 
         bool aBottom = point.y < ARENA_BOTTOM_RADIUS;
         bool aTop = point.y > ARENA_TOP_RADIUS;
