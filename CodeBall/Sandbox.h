@@ -178,9 +178,10 @@ struct Sandbox {
         DAN_TO_PLANE(x, ARENA_WIDTH / 2, -1);
 
         // Side z
-        auto v = Point(point.x, point.y, 0) - Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
-        if (point.x >= (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS or point.y >= ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
-           or (v.x > 0 and v.y > 0 and v.length() >= ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS)) {
+        auto vx = point.x - (ARENA_GOAL_WIDTH / 2 - ARENA_GOAL_TOP_RADIUS);
+        auto vy = point.y - (ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS);
+        if (point.x >= ARENA_GOAL_WIDTH / 2 + ARENA_GOAL_SIDE_RADIUS || point.y >= ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
+           || (vx > 0 and vy > 0 and SQR(vx) + SQR(vy) >= SQR(ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS))) {
             DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
         }
 
@@ -235,9 +236,8 @@ struct Sandbox {
                         ARENA_GOAL_SIDE_RADIUS);
 
                 // Top corner
-                auto o = Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS,
-                               ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
-                auto v = Point(point.x, point.y, 0) - o;
+                Point2D o((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS);
+                auto v = Point2D(point.x, point.y) - o;
                 if (v.x > 0 and v.y > 0) {
                     o = o + v.normalized() * (ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS);
                     DAN_TO_SPHERE_OUTER(
@@ -296,14 +296,9 @@ struct Sandbox {
                         ARENA_BOTTOM_RADIUS);
             }
             // Goal outer corner
-            auto o = Point(
-                    (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS,
-                            (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS,
-                            0
-            );
-            auto v = Point(point.x, point.z, 0) - o;
-            if (v.x < 0 and v.y < 0
-               and v.length() < ARENA_GOAL_SIDE_RADIUS + ARENA_BOTTOM_RADIUS) {
+            Point2D o((ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS, (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS);
+            auto v = Point2D(point.x, point.z) - o;
+            if (v.x < 0 && v.y < 0 && v.length2() < SQR(ARENA_GOAL_SIDE_RADIUS + ARENA_BOTTOM_RADIUS)) {
                 o = o + v.normalized() * (ARENA_GOAL_SIDE_RADIUS + ARENA_BOTTOM_RADIUS);
                 DAN_TO_SPHERE_INNER(
                         o.x, ARENA_BOTTOM_RADIUS, o.y,
@@ -358,7 +353,7 @@ struct Sandbox {
                 auto dv = Point2D(point.x, point.z) - corner_o;
                 auto dv_len2 = dv.length2();
                 if (dv_len2 > SQR(ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS)) {
-                    dv /= sqrt(dv_len2);//TODO:baybe dev to zero?
+                    dv /= sqrt(dv_len2);//TODO:baybe div to zero?
                     auto o2 = corner_o + dv * (ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS);
                     DAN_TO_SPHERE_INNER(
                             o2.x, ARENA_HEIGHT - ARENA_TOP_RADIUS, o2.y,
@@ -537,7 +532,7 @@ struct Sandbox {
 
         hasRandomCollision = false;
         auto delta_time = 1.0 / TICKS_PER_SECOND;
-        for (int i = 0; i < microticksPerTick; i++)
+        for (int i = 0; i < microticksPerTick/* && hasGoal == 0*/; i++)
             update(delta_time / microticksPerTick);
 //        for pack in nitro_packs:
 //            if pack.alive:
