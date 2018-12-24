@@ -113,52 +113,50 @@ struct Sandbox {
         return Point();
     }
 
-#define DAN_TO_PLANE(side, point_on_plane, plane_normal) {\
-    auto dist = (point. # side - point_on_plane) * plane_normal;\
-    if (dist < dan.distance) {\
-        dan.distance = dist;\
-        dan.normal.set(plane_normal, 0, 0);\
-    }\
-}
-
-    void dan_to_plane_x(DistanceNormalPair& dan, const Point& point, double point_on_plane, double plane_normal) {
-        auto dist = (point.x - point_on_plane) * plane_normal;
-        if (dist < dan.distance) {
-            dan.distance = dist;
-            dan.normal.set(plane_normal, 0, 0);
-        }
-    }
-
-    void dan_to_plane_y(DistanceNormalPair& dan, const Point& point, double point_on_plane, double plane_normal) {
-        auto dist = (point.y - point_on_plane) * plane_normal;
-        if (dist < dan.distance) {
-            dan.distance = dist;
-            dan.normal.set(0, plane_normal, 0);
-        }
-    }
-
-    void dan_to_plane_z(DistanceNormalPair& dan, const Point& point, double point_on_plane, double plane_normal) {
-        auto dist = (point.z - point_on_plane) * plane_normal;
-        if (dist < dan.distance) {
-            dan.distance = dist;
-            dan.normal.set(0, 0, plane_normal);
-        }
-    }
 
     DistanceNormalPair dan_to_arena_quarter(const Unit& point) {
         DistanceNormalPair dan = {point.radius + EPS};
 
-        bool aBottom = point.y < ARENA_BOTTOM_RADIUS;
-        bool aTop = point.y > ARENA_TOP_RADIUS;
+
+#define DAN_TO_PLANE(side, point_on_plane, plane_normal) {\
+    auto dist = (point. side - (point_on_plane)) * (plane_normal);\
+    if (dist < dan.distance) {\
+        dan.distance = dist;\
+        dan.normal.set(0, 0, 0);\
+        dan.normal. side = (plane_normal);\
+    }\
+}
+
+#define DAN_TO_SPHERE_INNER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
+    auto diff_x = (sphere_center_x) - point.x;\
+    auto diff_y = (sphere_center_y) - point.y;\
+    auto diff_z = (sphere_center_z) - point.z;\
+    auto dist2 = SQR(diff_x) + SQR(diff_y) + SQR(diff_z);\
+    if (SQR((sphere_radius) - dan.distance) < dist2) {\
+        dan.distance = (sphere_radius) - sqrt(dist2);\
+        dan.normal.set(diff_x, diff_y, diff_z);\
+    }\
+}
+
+#define DAN_TO_SPHERE_OUTER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
+    auto diff_x = point.x - (sphere_center_x);\
+    auto diff_y = point.y - (sphere_center_y);\
+    auto diff_z = point.z - (sphere_center_z);\
+    auto dist2 = SQR(diff_x) + SQR(diff_y) + SQR(diff_z);\
+    if (dist2 < SQR(dan.distance + (sphere_radius))) {\
+        dan.distance = sqrt(dist2) - (sphere_radius);\
+        dan.normal.set(diff_x, diff_y, diff_z);\
+    }\
+}
 
         // Ground
         if (point.y <= point.radius) {
-            dan_to_plane_y(dan, point, 0, 1);
+            DAN_TO_PLANE(y, 0, 1);
         }
 
         // Ceiling
         if (point.y >= ARENA_HEIGHT - point.radius) {
-            dan_to_plane_y(dan, point, ARENA_HEIGHT, -1);
+            DAN_TO_PLANE(y, ARENA_HEIGHT, -1);
         }
 
         const double arenaRadius =  point.y < ARENA_HEIGHT - ARENA_TOP_RADIUS ? ARENA_BOTTOM_RADIUS : ARENA_TOP_RADIUS;
@@ -176,46 +174,22 @@ struct Sandbox {
         }
 
 
-
-#define DAN_TO_SPHERE_OUTER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
-    auto diff_x = point.x - (sphere_center_x);\
-    auto diff_y = point.y - (sphere_center_y);\
-    auto diff_z = point.z - (sphere_center_z);\
-    auto dist2 = SQR(diff_x) + SQR(diff_y) + SQR(diff_z);\
-    if (dist2 < SQR(dan.distance + (sphere_radius))) {\
-        dan.distance = sqrt(dist2) - (sphere_radius);\
-        dan.normal.set(diff_x, diff_y, diff_z);\
-    }\
-}
-
-#define DAN_TO_SPHERE_INNER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
-    auto diff_x = (sphere_center_x) - point.x;\
-    auto diff_y = (sphere_center_y) - point.y;\
-    auto diff_z = (sphere_center_z) - point.z;\
-    auto dist2 = SQR(diff_x) + SQR(diff_y) + SQR(diff_z);\
-    if (SQR((sphere_radius) - dan.distance) < dist2) {\
-        dan.distance = (sphere_radius) - sqrt(dist2);\
-        dan.normal.set(diff_x, diff_y, diff_z);\
-    }\
-}
-
-
         // Side x
-        dan_to_plane_x(dan, point, ARENA_WIDTH / 2, -1);
+        DAN_TO_PLANE(x, ARENA_WIDTH / 2, -1);
 
         // Side z
         auto v = Point(point.x, point.y, 0) - Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
         if (point.x >= (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS or point.y >= ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
            or (v.x > 0 and v.y > 0 and v.length() >= ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS)) {
-            dan_to_plane_z(dan, point, ARENA_DEPTH / 2, -1);
+            DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
         }
 
         // Side x & ceiling (goal)
         if (point.z >= (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
             // x
-            dan_to_plane_x(dan, point, ARENA_GOAL_WIDTH / 2, -1);
+            DAN_TO_PLANE(x, ARENA_GOAL_WIDTH / 2, -1);
             // y
-            dan_to_plane_y(dan, point, ARENA_GOAL_HEIGHT, -1);
+            DAN_TO_PLANE(y, ARENA_GOAL_HEIGHT, -1);
         }
 
         // Goal back corners
@@ -242,7 +216,7 @@ struct Sandbox {
             && point.z >= ARENA_DEPTH / 2 - point.radius) {
 
             // Side z (goal)
-            dan_to_plane_z(dan, point, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH, -1);
+            DAN_TO_PLANE(z, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH, -1);
 
             // Goal outer corner
             if (point.z < (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
