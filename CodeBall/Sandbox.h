@@ -321,15 +321,11 @@ struct Sandbox {
             // Corner
             if (point.x > (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS
                and point.z > (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS) {
-                auto corner_o = Point(
-                        (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS,
-                        (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS,
-                        0
-                );
-                auto n = Point(point.x, point.z, 0) - corner_o;
-                auto dist = n.length();
-                if (dist > ARENA_CORNER_RADIUS - ARENA_BOTTOM_RADIUS) {
-                    n = n / dist;
+                Point2D corner_o((ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS, (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS);
+                auto n = Point2D(point.x, point.z) - corner_o;
+                auto dist2 = n.length2();
+                if (dist2 > SQR(ARENA_CORNER_RADIUS - ARENA_BOTTOM_RADIUS)) {
+                    n = n / sqrt(dist2);
                     auto o2 = corner_o + n * (ARENA_CORNER_RADIUS - ARENA_BOTTOM_RADIUS);
                     DAN_TO_SPHERE_INNER(
                             o2.x, ARENA_BOTTOM_RADIUS, o2.y,
@@ -358,15 +354,12 @@ struct Sandbox {
             // Corner
             if (point.x > (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS
                 and point.z > (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS) {
-                auto corner_o = Point(
-                        (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS,
-                        (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS,
-                        0
-                );
-                auto dv = Point(point.x, point.z, 0) - corner_o;
-                if (dv.length() > ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS) {
-                    auto n = dv.normalized();
-                    auto o2 = corner_o + n * (ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS);
+                Point2D corner_o((ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS, (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS);
+                auto dv = Point2D(point.x, point.z) - corner_o;
+                auto dv_len2 = dv.length2();
+                if (dv_len2 > SQR(ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS)) {
+                    dv /= sqrt(dv_len2);//TODO:baybe dev to zero?
+                    auto o2 = corner_o + dv * (ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS);
                     DAN_TO_SPHERE_INNER(
                             o2.x, ARENA_HEIGHT - ARENA_TOP_RADIUS, o2.y,
                             ARENA_TOP_RADIUS);

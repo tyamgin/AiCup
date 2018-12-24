@@ -174,4 +174,91 @@ struct Point {
     }
 };
 
+
+struct Point2D {
+    double x;
+    double y;
+
+    Point2D() {
+        x = y = 0;
+    }
+
+    explicit Point2D(double x, double y) : x(x), y(y) {
+    }
+
+    void set(double x, double y) {
+        this->x = x;
+        this->y = y;
+    }
+
+    double length() const {
+        return sqrt(x * x + y * y);
+    }
+
+    double length2() const {
+        return x * x + y * y;
+    }
+
+    // Вектор длины 1 того-же направления, или (0, 0), если вектор нулевой
+    [[nodiscard]] Point2D normalized() const {
+        auto len = length();
+        if (len < EPS)
+            len = 1;
+        return Point2D(x / len, y / len);
+    }
+
+    void normalize() {
+        auto len = length();
+        if (len > EPS) {
+            x /= len;
+            y /= len;
+        }
+    }
+
+    // Скалярное произведение
+    double operator *(const Point2D &b) const {
+        return x * b.x + y * b.y;
+    }
+
+    Point2D operator *(double b) const {
+        return Point2D(x * b, y * b);
+    }
+
+    Point2D operator /(double b) const {
+        return Point2D(x / b, y / b);
+    }
+
+    Point2D operator +(const Point2D &b) const {
+        return Point2D(x + b.x, y + b.y);
+    }
+
+    Point2D operator -(const Point2D &b) const {
+        return Point2D(x - b.x, y - b.y);
+    }
+
+    Point2D &operator +=(const Point2D &b) {
+        x += b.x;
+        y += b.y;
+        return *this;
+    }
+
+    Point2D &operator -=(const Point2D &b) {
+        x -= b.x;
+        y -= b.y;
+        return *this;
+    }
+
+    Point2D &operator *=(double b) {
+        x *= b;
+        y *= b;
+        return *this;
+    }
+
+    Point2D &operator /=(double b) {
+        x /= b;
+        y /= b;
+        return *this;
+    }
+};
+
 #endif //CODEBALL_POINT_H
