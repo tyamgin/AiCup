@@ -8,19 +8,24 @@
 #include <chrono>
 #include <sstream>
 
+#ifdef LOCAL
+#define M_TIME_LOGS 1
+#endif
+
 #ifdef DEBUG
 #define M_LOGS 1
 #endif
 
+enum LoggerAction {
+    LA_ALL,
+    LA_DO_TICK,
+
+    LA_ACTIONS_COUNT
+};
+
 struct Logger {
-    enum Action {
-        ALL,
-
-        ACTIONS_COUNT
-    };
-
     std::vector<std::chrono::system_clock::time_point> _timers;
-    long long _cumulativeDuration[ACTIONS_COUNT];
+    long long _cumulativeDuration[LA_ACTIONS_COUNT];
     int tick;
 
     Logger() {
@@ -56,18 +61,19 @@ struct Logger {
             log(std::to_string(tick) + "> " + std::string(_timers.size() * 2, '-') + " " + caption + ": " + std::to_string(time) + "ms");
     }
 
-    void cumulativeTimerStart(Action action) {
+    void cumulativeTimerStart(LoggerAction action) {
         timerStart();
     }
 
-    void cumulativeTimerEnd(Action action) {
+    void cumulativeTimerEnd(LoggerAction action) {
         _cumulativeDuration[action] += timerEnd();
     }
 
     std::string getSummary() {
         std::stringstream out;
         out << "[Summary]" << std::endl;
-        out << "] ALL                         " << _cumulativeDuration[ALL]                         / 1000 << "ms" << std::endl;
+        out << "] ALL                         " << _cumulativeDuration[LA_ALL]                         / 1000 << "ms" << std::endl;
+        out << "] DO_TICK                     " << _cumulativeDuration[LA_DO_TICK]                     / 1000 << "ms" << std::endl;
         return out.str();
     }
 
@@ -83,17 +89,21 @@ struct Logger {
 };
 
 #if M_LOGS
-#define TIMER_START() Logger::instance()->timerStart()
-#define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 30)
 #define LOG(msg) Logger::instance()->log(msg)
 #define LOG_ERROR(msg) Logger::instance()->error(msg)
-#define OP_START(action) Logger::instance()->cumulativeTimerStart(Logger:: ## action)
-#define OP_END(action) Logger::instance()->cumulativeTimerEnd(Logger:: ## action)
+#else
+#define LOG(msg)
+#define LOG_ERROR(msg)
+#endif
+
+#if M_TIME_LOGS
+#define TIMER_START() Logger::instance()->timerStart()
+#define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 30)
+#define OP_START(action) Logger::instance()->cumulativeTimerStart(LA_ ## action)
+#define OP_END(action) Logger::instance()->cumulativeTimerEnd(LA_ ## action)
 #else
 #define TIMER_START()
 #define TIMER_ENG_LOG(caption)
-#define LOG(msg)
-#define LOG_ERROR(msg)
 #define OP_START(action)
 #define OP_END(action)
 #endif

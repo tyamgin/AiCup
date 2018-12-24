@@ -15,7 +15,10 @@ struct Point {
         x = y = z = 0;
     }
 
-    explicit Point(double x, double y, double z) {
+    explicit Point(double x, double y, double z) : x(x), y(y), z(z) {
+    }
+
+    void set(double x, double y, double z) {
         this->x = x;
         this->y = y;
         this->z = z;

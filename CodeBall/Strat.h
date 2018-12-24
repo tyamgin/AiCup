@@ -98,7 +98,6 @@ public:
                 Point delta_pos = tar - *r;
                 delta_pos.y = 0;
                 auto need_speed = delta_pos.length() / t;
-                auto target_velocity = delta_pos.take(std::min(ROBOT_MAX_GROUND_SPEED, need_speed));
 
                 if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
                     return *r;

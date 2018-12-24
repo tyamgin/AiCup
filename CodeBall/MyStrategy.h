@@ -13,6 +13,9 @@ public:
 
     void act(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) override;
     std::string custom_rendering() override;
+#ifdef LOCAL
+    virtual ~MyStrategy() override;
+#endif
 };
 
 #endif

@@ -6,16 +6,18 @@
 
 struct ABall : public Unit {
     ABall() : Unit() {
+        radius = BALL_RADIUS;
+        mass = BALL_MASS;
     }
 
-    explicit ABall(model::Ball robot) {
-        x = robot.x;
-        y = robot.y;
-        z = robot.z;
-        velocity.x = robot.velocity_x;
-        velocity.y = robot.velocity_y;
-        velocity.z = robot.velocity_z;
-        radius = robot.radius;
+    explicit ABall(model::Ball ball) {
+        x = ball.x;
+        y = ball.y;
+        z = ball.z;
+        velocity.x = ball.velocity_x;
+        velocity.y = ball.velocity_y;
+        velocity.z = ball.velocity_z;
+        radius = BALL_RADIUS;
         mass = BALL_MASS;
     }
 };

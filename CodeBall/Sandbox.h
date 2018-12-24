@@ -498,6 +498,8 @@ struct Sandbox {
     }
 
     void doTick(int microticksPerTick = MICROTICKS_PER_TICK) {
+        OP_START(DO_TICK);
+
         hasRandomCollision = false;
         auto delta_time = 1.0 / TICKS_PER_SECOND;
         for (int i = 0; i < microticksPerTick; i++)
@@ -511,6 +513,8 @@ struct Sandbox {
 
         tick++;
         // TODO: clear actions
+
+        OP_END(DO_TICK);
     }
 
     bool hasRandomCollision = false;
