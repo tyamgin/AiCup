@@ -113,25 +113,29 @@ struct Sandbox {
         return Point();
     }
 
-    DistanceNormalPair dan_to_plane(const Point& point, const Point& point_on_plane, const Point& plane_normal) {
-        return {
-            (point - point_on_plane) * plane_normal,
-            plane_normal
-        };
+     void dan_to_plane(DistanceNormalPair& dan, const Point& point, const Point& point_on_plane, const Point& plane_normal) {
+        auto dist = (point - point_on_plane) * plane_normal;
+        if (dist < dan.distance) {
+            dan.distance = dist;
+            dan.normal = plane_normal;
+        }
     }
 
-    DistanceNormalPair dan_to_sphere_inner(const Point& point, const Point& sphere_center, double sphere_radius) {
-        return {
-            sphere_radius - (point - sphere_center).length(),
-            (sphere_center - point).normalized()
-        };
+    void dan_to_sphere_inner(DistanceNormalPair& dan, const Point& point, const Point& sphere_center, double sphere_radius) {
+        auto dist = sphere_radius - (sphere_center - point).length();
+        if (dist < dan.distance) {
+            dan.distance = dist;
+            dan.normal = sphere_center - point;
+            // TODO: normalize
+        }
     }
 
-    DistanceNormalPair dan_to_sphere_outer(const Point& point, const Point& sphere_center, double sphere_radius) {
-        return {
-            (point - sphere_center).length() - sphere_radius,
-            (point - sphere_center).normalized()
-        };
+    void dan_to_sphere_outer(DistanceNormalPair& dan, const Point& point, const Point& sphere_center, double sphere_radius) {
+        auto dist = (point - sphere_center).length() - sphere_radius;
+        if (dist < dan.distance) {
+            dan.distance = dist;
+            dan.normal = point - sphere_center;
+        }
     }
 
     DistanceNormalPair dan_to_arena_quarter(const Unit& point) {
@@ -142,12 +146,12 @@ struct Sandbox {
 
         // Ground
         if (point.y <= point.radius) {
-            dan = std::min(dan, dan_to_plane(point, Point(0, 0, 0), Point(0, 1, 0)));
+            dan_to_plane(dan, point, Point(0, 0, 0), Point(0, 1, 0));
         }
 
         // Ceiling
         if (point.y >= ARENA_HEIGHT - point.radius) {
-            dan = std::min(dan, dan_to_plane(point, Point(0, ARENA_HEIGHT, 0), Point(0, -1, 0)));
+            dan_to_plane(dan, point, Point(0, ARENA_HEIGHT, 0), Point(0, -1, 0));
         }
 
         const double arenaRadius =  point.y < ARENA_HEIGHT - ARENA_TOP_RADIUS ? ARENA_BOTTOM_RADIUS : ARENA_TOP_RADIUS;
@@ -165,28 +169,28 @@ struct Sandbox {
         }
 
         // Side x
-        dan = std::min(dan, dan_to_plane(point, Point(ARENA_WIDTH / 2, 0, 0), Point(-1, 0, 0)));
+        dan_to_plane(dan, point, Point(ARENA_WIDTH / 2, 0, 0), Point(-1, 0, 0));
         // Side z (goal)
-        dan = std::min(dan, dan_to_plane(point, Point(0, 0, (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH), Point(0, 0, -1)));
+        dan_to_plane(dan, point, Point(0, 0, (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH), Point(0, 0, -1));
 
         // Side z
         auto v = Point(point.x, point.y, 0) - Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
         if (point.x >= (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS or point.y >= ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
            or (v.x > 0 and v.y > 0 and v.length() >= ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS)) {
-            dan = std::min(dan, dan_to_plane(point, Point(0, 0, ARENA_DEPTH / 2), Point(0, 0, -1)));
+            dan_to_plane(dan, point, Point(0, 0, ARENA_DEPTH / 2), Point(0, 0, -1));
         }
 
         // Side x & ceiling (goal)
         if (point.z >= (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
             // x
-            dan = std::min(dan, dan_to_plane(point, Point(ARENA_GOAL_WIDTH / 2, 0, 0), Point(-1, 0, 0)));
+            dan_to_plane(dan, point, Point(ARENA_GOAL_WIDTH / 2, 0, 0), Point(-1, 0, 0));
             // y
-            dan = std::min(dan, dan_to_plane(point, Point(0, ARENA_GOAL_HEIGHT, 0), Point(0, -1, 0)));
+            dan_to_plane(dan, point, Point(0, ARENA_GOAL_HEIGHT, 0), Point(0, -1, 0));
         }
 
         // Goal back corners
         if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
-            dan = std::min(dan, dan_to_sphere_inner(
+            dan_to_sphere_inner(dan, 
                 point,
                 Point(
                         std::clamp(
@@ -201,55 +205,55 @@ struct Sandbox {
                         ),
                         (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS
                 ),
-                ARENA_BOTTOM_RADIUS));
+                ARENA_BOTTOM_RADIUS);
         }
 
 
         // Corner
         if (point.x > (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS and point.z > (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS) {
-            dan = std::min(dan, dan_to_sphere_inner(
+            dan_to_sphere_inner(dan, 
                     point,
                     Point(
                             (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS,
                             point.y,
                             (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS
                     ),
-                    ARENA_CORNER_RADIUS));
+                    ARENA_CORNER_RADIUS);
         }
 
         // Goal outer corner
         if (point.z < (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
             // Side x
             if (point.x < (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_outer(
+                dan_to_sphere_outer(dan, 
                         point,
                         Point(
                                 (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS,
                                 point.y,
                                 (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS
                         ),
-                        ARENA_GOAL_SIDE_RADIUS));
+                        ARENA_GOAL_SIDE_RADIUS);
             }
             // Ceiling
             if (point.y < ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_outer(
+                dan_to_sphere_outer(dan, 
                         point,
                         Point(
                                 point.x,
                                 ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS,
                                 (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS
                         ),
-                        ARENA_GOAL_SIDE_RADIUS));
+                        ARENA_GOAL_SIDE_RADIUS);
             }
             // Top corner
             auto o = Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
             auto v = Point(point.x, point.y, 0) - o;
             if (v.x > 0 and v.y > 0) {
                 o = o + v.normalized() * (ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS);
-                dan = std::min(dan, dan_to_sphere_outer(
+                dan_to_sphere_outer(dan, 
                         point,
                         Point(o.x, o.y, (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS),
-                        ARENA_GOAL_SIDE_RADIUS));
+                        ARENA_GOAL_SIDE_RADIUS);
             }
         }
 
@@ -258,24 +262,24 @@ struct Sandbox {
            and point.y > ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS) {
             // Side x
             if (point.x > (ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point, Point(
                                 (ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS,
                                 ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
                                 point.z
                         ),
-                        ARENA_GOAL_TOP_RADIUS));
+                        ARENA_GOAL_TOP_RADIUS);
             }
             // Side z
             if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_GOAL_TOP_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point,
                         Point(
                                 point.x,
                                         ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
                                         (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_GOAL_TOP_RADIUS
                         ),
-                        ARENA_GOAL_TOP_RADIUS));
+                        ARENA_GOAL_TOP_RADIUS);
             }
         }
 
@@ -283,35 +287,35 @@ struct Sandbox {
         if (point.y < ARENA_BOTTOM_RADIUS) {
             // Side x
             if (point.x > (ARENA_WIDTH / 2) - ARENA_BOTTOM_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point,
                         Point(
                                 (ARENA_WIDTH / 2) - ARENA_BOTTOM_RADIUS,
                                 ARENA_BOTTOM_RADIUS,
                                 point.z
                         ),
-                        ARENA_BOTTOM_RADIUS));
+                        ARENA_BOTTOM_RADIUS);
             }
             // Side z
             if (point.z > (ARENA_DEPTH / 2) - ARENA_BOTTOM_RADIUS
                 and point.x >= (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point, Point(
                                 point.x,
                                 ARENA_BOTTOM_RADIUS,
                                 (ARENA_DEPTH / 2) - ARENA_BOTTOM_RADIUS
                         ),
-                        ARENA_BOTTOM_RADIUS));
+                        ARENA_BOTTOM_RADIUS);
             }
             // Side z (goal)
             if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point, Point(
                                 point.x,
                                 ARENA_BOTTOM_RADIUS,
                                 (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS
                         ),
-                        ARENA_BOTTOM_RADIUS));
+                        ARENA_BOTTOM_RADIUS);
             }
             // Goal outer corner
             auto o = Point(
@@ -323,21 +327,21 @@ struct Sandbox {
             if (v.x < 0 and v.y < 0
                and v.length() < ARENA_GOAL_SIDE_RADIUS + ARENA_BOTTOM_RADIUS) {
                 o = o + v.normalized() * (ARENA_GOAL_SIDE_RADIUS + ARENA_BOTTOM_RADIUS);
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point,
                         Point(o.x, ARENA_BOTTOM_RADIUS, o.y),
-                        ARENA_BOTTOM_RADIUS));
+                        ARENA_BOTTOM_RADIUS);
             }
             // Side x (goal)
             if (point.z >= (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS
                and point.x > (ARENA_GOAL_WIDTH / 2) - ARENA_BOTTOM_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point, Point(
                                 (ARENA_GOAL_WIDTH / 2) - ARENA_BOTTOM_RADIUS,
                                 ARENA_BOTTOM_RADIUS,
                                 point.z
                         ),
-                        ARENA_BOTTOM_RADIUS));
+                        ARENA_BOTTOM_RADIUS);
             }
             // Corner
             if (point.x > (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS
@@ -352,10 +356,10 @@ struct Sandbox {
                 if (dist > ARENA_CORNER_RADIUS - ARENA_BOTTOM_RADIUS) {
                     n = n / dist;
                     auto o2 = corner_o + n * (ARENA_CORNER_RADIUS - ARENA_BOTTOM_RADIUS);
-                    dan = std::min(dan, dan_to_sphere_inner(
+                    dan_to_sphere_inner(dan, 
                             point,
                             Point(o2.x, ARENA_BOTTOM_RADIUS, o2.y),
-                            ARENA_BOTTOM_RADIUS));
+                            ARENA_BOTTOM_RADIUS);
                 }
             }
         }
@@ -363,25 +367,25 @@ struct Sandbox {
         if (point.y > ARENA_HEIGHT - ARENA_TOP_RADIUS) {
             // Side x
             if (point.x > (ARENA_WIDTH / 2) - ARENA_TOP_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point,
                         Point(
                                 (ARENA_WIDTH / 2) - ARENA_TOP_RADIUS,
                                 ARENA_HEIGHT - ARENA_TOP_RADIUS,
                                 point.z
                         ),
-                        ARENA_TOP_RADIUS));
+                        ARENA_TOP_RADIUS);
             }
             // Side z
             if (point.z > (ARENA_DEPTH / 2) - ARENA_TOP_RADIUS) {
-                dan = std::min(dan, dan_to_sphere_inner(
+                dan_to_sphere_inner(dan, 
                         point,
                         Point(
                                 point.x,
                                 ARENA_HEIGHT - ARENA_TOP_RADIUS,
                                 (ARENA_DEPTH / 2) - ARENA_TOP_RADIUS
                         ),
-                        ARENA_TOP_RADIUS));
+                        ARENA_TOP_RADIUS);
             }
             // Corner
             if (point.x > (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS
@@ -395,10 +399,10 @@ struct Sandbox {
                 if (dv.length() > ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS) {
                     auto n = dv.normalized();
                     auto o2 = corner_o + n * (ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS);
-                    dan = std::min(dan, dan_to_sphere_inner(
+                    dan_to_sphere_inner(dan, 
                             point,
                             Point(o2.x, ARENA_HEIGHT - ARENA_TOP_RADIUS, o2.y),
-                            ARENA_TOP_RADIUS));
+                            ARENA_TOP_RADIUS);
                 }
             }
         }
@@ -417,6 +421,8 @@ struct Sandbox {
             result.normal.x = -result.normal.x;
         if (negate_z)
             result.normal.z = -result.normal.z;
+        if (result.distance <= point.radius)
+            result.normal.normalize();
         return result;
     }
 
