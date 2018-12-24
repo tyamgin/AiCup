@@ -6,6 +6,8 @@
 #define EPS 1e-9
 #define EPS2 (EPS*EPS)
 
+#define SQR(x) ((x)*(x))
+
 struct Point {
     double x;
     double y;
@@ -33,11 +35,20 @@ struct Point {
     }
 
     // Вектор длины 1 того-же направления, или (0, 0), если вектор нулевой
-    Point normalized() const {
+    [[nodiscard]] Point normalized() const {
         auto len = length();
         if (len < EPS)
             len = 1;
         return Point(x / len, y / len, z / len);
+    }
+
+    void normalize() {
+        auto len = length();
+        if (len > EPS) {
+            x /= len;
+            y /= len;
+            z /= len;
+        }
     }
 
     // Вектор длины newLength того-же направления, или (0, 0), если вектор нулевой

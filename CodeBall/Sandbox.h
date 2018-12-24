@@ -395,30 +395,63 @@ struct Sandbox {
         return result;
     }
 
-    void collide_entities(Unit& a, Unit& b) {
-        auto delta_position = b - a;
-        auto distance = delta_position.length();
-        auto penetration = a.radius + b.radius - distance;
-        if (penetration > 0) {
-            auto k_a = (1 / a.mass) / ((1 / a.mass) + (1 / b.mass));
-            auto k_b = (1 / b.mass) / ((1 / a.mass) + (1 / b.mass));
-            auto normal = delta_position.normalized();
-            a -= normal * penetration * k_a;
-            b += normal * penetration * k_b;
-            auto delta_velocity = (b.velocity - a.velocity) * normal
-                + b.radius_change_speed - a.radius_change_speed;
-            if (delta_velocity < 0) {
-                hasRandomCollision = true;
+    template<typename T>
+    void collide_entities(ARobot& a, T& b) {
+        const double secondMass = std::is_same<T, ARobot>::value ? ROBOT_MASS : BALL_MASS;
+        double secondRadius, secondRadiusChangeSpeed;
+        if constexpr (std::is_same<T, ARobot>::value) {
+            secondRadius = b.radius;
+            secondRadiusChangeSpeed = b.radius_change_speed;
+        } else {
+            secondRadius = BALL_RADIUS;
+            secondRadiusChangeSpeed = 0;
+        }
+
+        auto dist2 = a.getDistanceTo2(b);
+        if (dist2 >= SQR(a.radius + secondRadius))
+            return;
+
+        auto distance = sqrt(dist2);
+        auto penetration = a.radius + secondRadius - distance;
+
+        const auto k_a = (1 / ROBOT_MASS) / ((1 / ROBOT_MASS) + (1 / secondMass));
+        const auto k_b = (1 / secondMass) / ((1 / ROBOT_MASS) + (1 / secondMass));
+
+        double normalX = (b.x - a.x) / distance;
+        double normalY = (b.y - a.y) / distance;
+        double normalZ = (b.z - a.z) / distance;
+
+        a.x -= penetration * k_a * normalX;
+        a.y -= penetration * k_a * normalY;
+        a.z -= penetration * k_a * normalZ;
+
+        b.x += penetration * k_b * normalX;
+        b.y += penetration * k_b * normalY;
+        b.z += penetration * k_b * normalZ;
+
+        auto delta_velocity =
+                (b.velocity.x - a.velocity.x) * normalX +
+                (b.velocity.y - a.velocity.y) * normalY +
+                (b.velocity.z - a.velocity.z) * normalZ + secondRadiusChangeSpeed - a.radius_change_speed;
+        if (delta_velocity < 0) {
+            hasRandomCollision = true;
 
 #if M_NO_RANDOM
-                auto rndValue = MAX_HIT_E;
+            auto rndValue = MAX_HIT_E;
 #else
-                auto rndValue = rnd.randDouble(MIN_HIT_E, MAX_HIT_E);
+            auto rndValue = rnd.randDouble(MIN_HIT_E, MAX_HIT_E);
 #endif
-                auto impulse = normal * (1 + rndValue) * delta_velocity;
-                a.velocity += impulse * k_a;
-                b.velocity -= impulse * k_b;
-            }
+            auto impulseX = (1 + rndValue) * delta_velocity * normalX;
+            auto impulseY = (1 + rndValue) * delta_velocity * normalY;
+            auto impulseZ = (1 + rndValue) * delta_velocity * normalZ;
+
+            a.velocity.x += impulseX * k_a;
+            a.velocity.y += impulseY * k_a;
+            a.velocity.z += impulseZ * k_a;
+
+            b.velocity.x -= impulseX * k_b;
+            b.velocity.y -= impulseY * k_b;
+            b.velocity.z -= impulseZ * k_b;
         }
     }
 
@@ -438,7 +471,6 @@ struct Sandbox {
             return a->id < b->id;
         });
 #endif
-
         for (auto robotPtr : robots) {
             auto& robot = *robotPtr;
             if (robot.touch) {
@@ -469,12 +501,14 @@ struct Sandbox {
             robot.radius_change_speed = robot.action.jumpSpeed;
         }
         ball.move(delta_time);
-        for (size_t i = 0; i < robots.size(); i++)
-            for (size_t j = 0; j < i; j++)
-                collide_entities(*robots[i], *robots[j]);
+        for (size_t i = 0; i < robots.size(); i++) {
+            for (size_t j = 0; j < i; j++) {
+                collide_entities<ARobot>(*robots[i], *robots[j]);
+            }
+        }
 
         for (auto& robot : robots) {
-            collide_entities(*robot, ball);
+            collide_entities<ABall>(*robot, ball);
             auto collision_normal = collide_with_arena(*robot);
             if (collision_normal.length2() < EPS2) {
                 robot->touch = false;
