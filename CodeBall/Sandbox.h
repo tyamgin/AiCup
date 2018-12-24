@@ -202,8 +202,6 @@ struct Sandbox {
 
         // Side x
         dan_to_plane_x(dan, point, ARENA_WIDTH / 2, -1);
-        // Side z (goal)
-        dan_to_plane_z(dan, point, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH, -1);
 
         // Side z
         auto v = Point(point.x, point.y, 0) - Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
@@ -239,32 +237,39 @@ struct Sandbox {
                     ARENA_CORNER_RADIUS);
         }
 
-        // Goal outer corner
-        if (point.z < (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
-            // Side x
-            if (point.x < (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
+        if (point.y < ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
+            && point.x < (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS
+            && point.z >= ARENA_DEPTH / 2 - point.radius) {
+
+            // Side z (goal)
+            dan_to_plane_z(dan, point, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH, -1);
+
+            // Goal outer corner
+            if (point.z < (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
+                // Side x
                 DAN_TO_SPHERE_OUTER(
                         (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS,
                         point.y,
                         (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS,
                         ARENA_GOAL_SIDE_RADIUS);
-            }
-            // Ceiling
-            if (point.y < ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS) {
+
+                // Ceiling
                 DAN_TO_SPHERE_OUTER(
                         point.x,
                         ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS,
                         (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS,
                         ARENA_GOAL_SIDE_RADIUS);
-            }
-            // Top corner
-            auto o = Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
-            auto v = Point(point.x, point.y, 0) - o;
-            if (v.x > 0 and v.y > 0) {
-                o = o + v.normalized() * (ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS);
-                DAN_TO_SPHERE_OUTER(
-                        o.x, o.y, (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS,
-                        ARENA_GOAL_SIDE_RADIUS);
+
+                // Top corner
+                auto o = Point((ARENA_GOAL_WIDTH / 2) - ARENA_GOAL_TOP_RADIUS,
+                               ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS, 0);
+                auto v = Point(point.x, point.y, 0) - o;
+                if (v.x > 0 and v.y > 0) {
+                    o = o + v.normalized() * (ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS);
+                    DAN_TO_SPHERE_OUTER(
+                            o.x, o.y, (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS,
+                            ARENA_GOAL_SIDE_RADIUS);
+                }
             }
         }
 
