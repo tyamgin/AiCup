@@ -162,7 +162,7 @@ public:
 
             for (auto i = 1; i <= 1 * TICKS_PER_SECOND; i++) {
                 snd.doTick(5);
-                if (snd.ball.y > BALL_RADIUS * 1.1) //TODO
+                if (snd.ball.y > BALL_RADIUS + 0.6) //TODO
                     continue;
                 if (snd.hasGoal < 0)
                     return false;
@@ -184,7 +184,7 @@ public:
                 AAction act;
                 act.targetVelocity = target_velocity;
 
-                if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
+                if (need_speed <= ROBOT_MAX_GROUND_SPEED && need_speed >= ROBOT_MAX_GROUND_SPEED * 0.7) {
                     resTicks = i;
                     resAction = act;
                     return true;
