@@ -381,6 +381,8 @@ struct Sandbox {
         return result;
     }
 
+    std::vector<int> robotBallCollisions;
+
     template<typename T>
     void collide_entities(ARobot& a, T& b) {
         const double secondMass = std::is_same<T, ARobot>::value ? ROBOT_MASS : BALL_MASS;
@@ -414,6 +416,11 @@ struct Sandbox {
         b.x += penetration * k_b * normalX;
         b.y += penetration * k_b * normalY;
         b.z += penetration * k_b * normalZ;
+
+        if constexpr (std::is_same<T, ABall>::value) {
+            if (a.velocity.y >= -EPS)
+                robotBallCollisions.push_back(a.id);
+        }
 
         auto delta_velocity =
                 (b.velocity.x - a.velocity.x) * normalX +
@@ -531,6 +538,7 @@ struct Sandbox {
         OP_START(DO_TICK);
 
         hasRandomCollision = false;
+        robotBallCollisions.clear();
         auto delta_time = 1.0 / TICKS_PER_SECOND;
         for (int i = 0; i < microticksPerTick/* && hasGoal == 0*/; i++)
             update(delta_time / microticksPerTick);

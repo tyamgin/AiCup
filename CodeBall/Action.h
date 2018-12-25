@@ -21,6 +21,16 @@ struct AAction {
         jumpSpeed = action.jump_speed;
         useNitro = action.use_nitro;
     }
+
+    AAction& jump(double jumpSpeed = ROBOT_MAX_JUMP_SPEED) {
+        this->jumpSpeed = jumpSpeed;
+        return *this;
+    }
+
+    AAction& vel(const Point& vel) {
+        this->targetVelocity = vel;
+        return *this;
+    }
 };
 
 #endif //CODEBALL_ACTION_H

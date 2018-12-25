@@ -8,8 +8,8 @@ rm local_runner/$1
     --p1-name 31002 \
     --p2-name 31003 \
     --results-file $1 \
-    --seed 344777 \
-    --duration 50000 \
+    --seed 3447655 \
+    --duration 200000 \
     --noshow \
     &
 echo "LR started"

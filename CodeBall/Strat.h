@@ -47,7 +47,7 @@ public:
         }
     }
 
-    bool tryShot(AAction &resAction) {
+    bool tryShotGoal(AAction &resAction) {
         if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 2)
             return false;
         if (env.me()->radius >= ROBOT_MAX_RADIUS)
@@ -74,6 +74,60 @@ public:
         auto prob = sumProbs / countProbs;
         if (prob > 0.59) {
             resAction = action;
+            return true;
+        }
+        return false;
+    }
+
+    Point maxVelocityTo(const Unit& a, const Point& b) {
+        auto diff = b - a;
+        diff.y = 0;
+        return diff.take(ROBOT_MAX_GROUND_SPEED);
+    }
+
+    bool tryShotOff(AAction &resAction) {
+        if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 3) // not reachable, TODO: magic const
+            return false;
+        if (env.me()->radius >= ROBOT_MAX_RADIUS) // already jumped
+            return false;
+
+        int oppMinCollideTicks = 1000;
+        double maxZSpeed = 0;
+        for (auto& opp : env.opp) {
+            if (opp.getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 3)
+                continue;
+
+            Sandbox startEnv = env;
+            startEnv.robot(opp.id)->action = AAction().jump(); // TODO: maxVelocityTo(*startEnv.me(), startEnv.ball)
+            for (int i = 1; i <= 70 && i < oppMinCollideTicks; i++) {
+                startEnv.doTick(5);
+                if (std::find(startEnv.robotBallCollisions.begin(), startEnv.robotBallCollisions.end(), opp.id) != startEnv.robotBallCollisions.end()) {
+                    oppMinCollideTicks = i;
+                    maxZSpeed = startEnv.ball.velocity.z;
+                    break;
+                }
+            }
+        }
+
+        int myMinCollideTicks = 1000;
+        double maxMeZSpeed = 0;
+        if (oppMinCollideTicks < 1000) {
+            Sandbox startEnv = env;
+            startEnv.me()->action = AAction().jump(); // TODO: maxVelocityTo(*startEnv.me(), startEnv.ball)
+            for (int i = 1; i <= 70 && i < myMinCollideTicks; i++) {
+                startEnv.doTick(5);
+                if (std::find(startEnv.robotBallCollisions.begin(), startEnv.robotBallCollisions.end(),
+                              startEnv.me()->id) != startEnv.robotBallCollisions.end()) {
+                    myMinCollideTicks = i;
+                    maxMeZSpeed = startEnv.ball.velocity.z;
+                    break;
+                }
+            }
+        }
+
+
+        if (oppMinCollideTicks - 8 <= myMinCollideTicks && myMinCollideTicks < 1000 && maxMeZSpeed > maxZSpeed) {
+            resAction = AAction().jump();
             return true;
         }
         return false;
@@ -149,6 +203,43 @@ public:
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         auto firstToBall = evalToBall();
 
+//        auto catchGkStrat2 = [&](AAction& resAction, int& resTicks) {
+//            Sandbox snd = env;
+//            snd.my.clear();
+//            snd.opp.clear();
+//            snd.my.push_back(me);
+//
+//            auto firstAction = AAction().jump();
+//
+//            for (auto i = 0; i <= 1 * TICKS_PER_SECOND; i++) {
+//                if (snd.hasGoal < 0)
+//                    return false;
+//
+//                if (snd.me()->getDistanceTo(snd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS
+//                    && snd.me()->z < snd.ball.z - BALL_RADIUS * 0.9) {
+//
+//                    resAction = firstAction;
+//                    resTicks = i;
+//                    return true;
+//                }
+//
+//
+//                ARobot* nearest = nullptr;
+//                for(auto r : env.opp)
+//                    if (nearest == nullptr || r.getDistanceTo(me) < nearest->getDistanceTo(me))
+//                        nearest = &r;
+//
+//                auto tar = snd.ball + (snd.ball - (oppGoal + Point(ARENA_GOAL_WIDTH/4*(nearest->x < me.x ? 1 : -1), 0, 0))).take(BALL_RADIUS * 0.9);
+//                auto vel = maxVelocityTo(*snd.me(), snd.ball);
+//                snd.me()->action = AAction().vel(vel);
+//                if (i == 0)
+//                    firstAction = AAction().vel(vel);
+//
+//                snd.doTick(5);
+//            }
+//            return false;
+//        };
+
         auto catchGkStrat = [&](AAction& resAction, int& resTicks) {
             Sandbox snd = env;
             snd.my.clear();
@@ -194,14 +285,14 @@ public:
             return false;
         };
 
-        if (tryShot(action)) {
+        if (tryShotGoal(action)) {
             Visualizer::addText("SHOT", 20);
             LOG("SHOT");
         } else {
             bool is_attacker = env.teammate1()->z < me.z;
 
             if (is_attacker) {
-                if (0) {
+                if (tryShotOff(action)) {
 
                 } else if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
                     int angles = 8;
@@ -257,6 +348,9 @@ public:
                     } else {
                         is_attacker = false;
                     }
+                } else {
+                    auto opp = env.opp[0].z < env.opp[1].z ? env.opp[0] : env.opp[1];
+                    action.targetVelocity = maxVelocityTo(me, opp - Point(0, 0, 4*ROBOT_RADIUS));
                 }
             }
 
