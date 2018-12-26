@@ -159,6 +159,8 @@ struct Sandbox {
             DAN_TO_PLANE(y, ARENA_HEIGHT, -1);
         }
 
+
+
         const double arenaRadius =  point.y < ARENA_HEIGHT - ARENA_TOP_RADIUS ? ARENA_BOTTOM_RADIUS : ARENA_TOP_RADIUS;
         {
             double spaceX = ARENA_WIDTH / 2 - arenaRadius;
@@ -172,6 +174,10 @@ struct Sandbox {
             if (point.x <= spaceX && point.z <= spaceZ)
                 return dan;
         }
+
+//        if (point.x <= ARENA_GOAL_WIDTH - ARENA_BOTTOM_RADIUS && point.y < ARENA_GOAL_HEIGHT - point.radius && point.z <= ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
+//            return dan;
+//        }
 
 
         // Side x
@@ -188,15 +194,6 @@ struct Sandbox {
 
                 DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
             }
-        }
-
-        // Goal back corners
-        if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
-            DAN_TO_SPHERE_INNER(
-                    std::clamp(point.x, ARENA_BOTTOM_RADIUS - (ARENA_GOAL_WIDTH / 2), (ARENA_GOAL_WIDTH / 2) - ARENA_BOTTOM_RADIUS),
-                    std::clamp(point.y, ARENA_BOTTOM_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS),
-                    (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
-                    ARENA_BOTTOM_RADIUS);
         }
 
 
@@ -271,6 +268,14 @@ struct Sandbox {
                 }
             }
 
+            // Goal back corners
+            if (point.z > (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
+                DAN_TO_SPHERE_INNER(
+                        std::clamp(point.x, ARENA_BOTTOM_RADIUS - (ARENA_GOAL_WIDTH / 2), (ARENA_GOAL_WIDTH / 2) - ARENA_BOTTOM_RADIUS),
+                        std::clamp(point.y, ARENA_BOTTOM_RADIUS, ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS),
+                        (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
+                        ARENA_BOTTOM_RADIUS);
+            }
         }
 
         // Bottom corners
