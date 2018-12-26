@@ -178,19 +178,16 @@ struct Sandbox {
         DAN_TO_PLANE(x, ARENA_WIDTH / 2, -1);
 
         // Side z
-        auto vx = point.x - (ARENA_GOAL_WIDTH / 2 - ARENA_GOAL_TOP_RADIUS);
-        auto vy = point.y - (ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS);
-        if (point.x >= ARENA_GOAL_WIDTH / 2 + ARENA_GOAL_SIDE_RADIUS || point.y >= ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
-           || (vx > 0 and vy > 0 and SQR(vx) + SQR(vy) >= SQR(ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS))) {
-            DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
-        }
+        //if (point.x <= ARENA_WIDTH - ARENA_CORNER_RADIUS && point.y <= ARENA_HEIGHT - ARENA_TOP_RADIUS)
+        {
+            auto vx = point.x - (ARENA_GOAL_WIDTH / 2 - ARENA_GOAL_TOP_RADIUS);
+            auto vy = point.y - (ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS);
+            if (point.x >= ARENA_GOAL_WIDTH / 2 + ARENA_GOAL_SIDE_RADIUS
+                || point.y >= ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
+                || (vx > 0 && vy > 0 && SQR(vx) + SQR(vy) >= SQR(ARENA_GOAL_TOP_RADIUS + ARENA_GOAL_SIDE_RADIUS))) {
 
-        // Side x & ceiling (goal)
-        if (point.z >= (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
-            // x
-            DAN_TO_PLANE(x, ARENA_GOAL_WIDTH / 2, -1);
-            // y
-            DAN_TO_PLANE(y, ARENA_GOAL_HEIGHT, -1);
+                DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
+            }
         }
 
         // Goal back corners
@@ -215,6 +212,14 @@ struct Sandbox {
         if (point.y < ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS
             && point.x < (ARENA_GOAL_WIDTH / 2) + ARENA_GOAL_SIDE_RADIUS
             && point.z >= ARENA_DEPTH / 2 - point.radius) {
+
+            // Side x & ceiling (goal)
+            if (point.z >= (ARENA_DEPTH / 2) + ARENA_GOAL_SIDE_RADIUS) {
+                // x
+                DAN_TO_PLANE(x, ARENA_GOAL_WIDTH / 2, -1);
+                // y
+                DAN_TO_PLANE(y, ARENA_GOAL_HEIGHT, -1);
+            }
 
             // Side z (goal)
             DAN_TO_PLANE(z, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH, -1);
