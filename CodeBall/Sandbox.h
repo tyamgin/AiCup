@@ -436,11 +436,10 @@ struct Sandbox {
                 (b.velocity.y - a.velocity.y) * normalY +
                 (b.velocity.z - a.velocity.z) * normalZ + secondRadiusChangeSpeed - a.radius_change_speed;
         if (delta_velocity < 0) {
-            hasRandomCollision = true;
-
 #if M_NO_RANDOM
             auto rndValue = MAX_HIT_E;
 #else
+            hasRandomCollision = true;
             auto rndValue = rnd.randDouble(MIN_HIT_E, MAX_HIT_E);
 #endif
             auto impulseX = (1 + rndValue) * delta_velocity * normalX;

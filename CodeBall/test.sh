@@ -10,6 +10,7 @@ rm local_runner/$1
     --results-file $1 \
     --seed 3534165 \
     --duration 50000 \
+    --disable-random \
     --noshow \
     &
 echo "LR started"
