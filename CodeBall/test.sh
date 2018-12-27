@@ -15,6 +15,6 @@ rm local_runner/$1
 echo "LR started"
 sleep 3
 ./cmake-build-release/CodeBall 127.0.0.1 31002 0000000000000000 &
-./release/m9 127.0.0.1 31003 0000000000000000 > /dev/null
+./release/m12 127.0.0.1 31003 0000000000000000 > /dev/null
 
 cat local_runner/$1
