@@ -352,36 +352,6 @@ public:
                 sp.radius *= 1.1;
                 Visualizer::addSphere(sp);
 
-
-
-
-
-
-                auto goToGoalCenterStrat_old = [](Sandbox &e) {
-                    AAction sAct;
-                    auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0));
-                    double t = 1;
-                    // Причем, если мяч движется в сторону наших ворот
-                    if (e.ball.velocity.z < -EPS) {
-                        // Найдем время и место, в котором мяч пересечет линию ворот
-                        t = (target_pos.z - e.ball.z) / e.ball.velocity.z;
-                        auto x = e.ball.x + e.ball.velocity.x * t;
-
-                        target_pos.x = std::clamp(x, -ARENA_GOAL_WIDTH / 2.0, ARENA_GOAL_WIDTH / 2.0);
-                    }
-
-                    // Установка нужных полей для желаемого действия
-                    auto target_velocity = Point(target_pos.x - e.me()->x, 0.0, target_pos.z - e.me()->z) / t;
-                    sAct.targetVelocity = target_velocity;
-
-                    if (e.me()->getDistanceTo(e.ball) < ROBBOT_SHOT_DIST) {
-                        sAct.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
-                    }
-
-                    return sAct;
-                };
-
-
                 auto goToGoalCenterStrat = [](Sandbox &e) {
                     AAction sAct;
                     double ch = 0.8;
