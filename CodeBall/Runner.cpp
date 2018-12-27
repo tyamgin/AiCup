@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG
     cerr << "Starting local runner" << endl;
 
-    system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --seed 3547 --p2-name m9 --p2 tcp-31002 &");
+    system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --duration 18000 --seed 3547 --p2-name m9 --p2 tcp-31002 &");
     cerr << "local runner started" << endl;
 
     usleep(3000 * 1000);

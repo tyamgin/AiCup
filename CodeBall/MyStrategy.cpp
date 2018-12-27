@@ -13,9 +13,11 @@ void run_tests();
 
 Strat strat;
 int waitForTick = -1;
-Sandbox::GameScore score;
 
 void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
+    GameInfo::maxTickCount = rules.max_tick_count;
+    GameInfo::isFinal = rules.team_size > 2;
+
     AAction a;
     strat.env = Sandbox(game, rules, me.id);
     auto& env = strat.env;
@@ -32,15 +34,13 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
         }
     }
 
-    env.score = score;
-
     if (env.tick < waitForTick) {
         return;
     }
     if (env.hasGoal) {
         if (first) {
-            score.my += env.hasGoal > 0;
-            score.opp += env.hasGoal < 0;
+            GameInfo::score.my += env.hasGoal > 0;
+            GameInfo::score.opp += env.hasGoal < 0;
         }
         waitForTick = env.tick + RESET_TICKS - 1;
         return;
@@ -60,7 +60,7 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     strat.prevEnv = strat.env;
     strat.lastTick = game.current_tick;
 
-    if (env.score.my + env.score.opp == 0) {
+    if (GameInfo::score.my + GameInfo::score.opp == 0) {
         assert(env.tick == env.roundTick);
     } else {
         assert(env.tick != env.roundTick);

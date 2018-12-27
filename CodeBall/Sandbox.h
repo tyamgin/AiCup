@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <optional>
+#include "GameInfo.h"
 #include "model/Game.h"
 #include "model/Arena.h"
 #include "model/Rules.h"
@@ -18,22 +19,16 @@
 struct Sandbox {
     ABall ball;
     std::vector<ARobot> my, opp;
-    bool isFinal = false;
     int tick = 0, roundTick = 0;
     int meId = 0;
 
     RandomGenerator rnd;
-
-    struct GameScore {
-        int my = 0, opp = 0;
-    } score;
 
     Sandbox() {
     }
 
     Sandbox(const model::Game& game, const model::Rules& rules, int meId) : meId(meId) {
         tick = game.current_tick;
-        isFinal = game.robots.size() > 4;
         for (auto& r : game.robots) {
             if (r.is_teammate) {
                 my.emplace_back(r);
@@ -563,14 +558,16 @@ struct Sandbox {
         hasRandomCollision = false;
         robotBallCollisions.clear();
         auto delta_time = 1.0 / TICKS_PER_SECOND;
-        for (int i = 0; i < microticksPerTick/* && hasGoal == 0*/; i++)
-            update(delta_time / microticksPerTick);
+        if (tick < GameInfo::maxTickCount) {
+            for (int i = 0; i < microticksPerTick && hasGoal == 0; i++)
+                update(delta_time / microticksPerTick);
 //        for pack in nitro_packs:
 //            if pack.alive:
 //                continue
 //            pack.respawn_ticks -= 1
 //            if pack.respawn_ticks == 0:
 //                pack.alive = true
+        }
 
         tick++;
         roundTick++;
