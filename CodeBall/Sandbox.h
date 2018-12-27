@@ -481,24 +481,31 @@ struct Sandbox {
         for (auto robotPtr : robots) {
             auto& robot = *robotPtr;
             if (robot.touch) {
-                auto target_velocity = robot.action.targetVelocity.clamp(ROBOT_MAX_GROUND_SPEED);
+                auto targetVelocity = robot.action.targetVelocity;
+                targetVelocity.clamp(ROBOT_MAX_GROUND_SPEED);
 
-                target_velocity -= robot.touch_normal * (robot.touch_normal * target_velocity);
-                auto target_velocity_change = target_velocity - robot.velocity;
-                if (target_velocity_change.length2() > 0) {
-                    auto acceleration = ROBOT_ACCELERATION * std::max(0.0, robot.touch_normal.y);
-                    robot.velocity += (
-                        target_velocity_change.normalized() * acceleration * delta_time
-                        ).clamp(target_velocity_change.length());
+                auto dot = robot.touch_normal * targetVelocity;
+                targetVelocity.x -= robot.touch_normal.x * dot + robot.velocity.x;
+                targetVelocity.y -= robot.touch_normal.y * dot + robot.velocity.y;
+                targetVelocity.z -= robot.touch_normal.z * dot + robot.velocity.z;
+
+                auto len2 = targetVelocity.length2();
+                if (len2 > 0) {
+                    auto acceleration = robot.touch_normal.y <= 0 ? 0 : ROBOT_ACCELERATION * delta_time * robot.touch_normal.y;
+
+                    if (SQR(acceleration) < len2) {
+                        targetVelocity *= acceleration / sqrt(len2);
+                    }
+                    robot.velocity += targetVelocity;
                 }
             }
 //            if (robot.action.use_nitro) {
 //                auto target_velocity_change = (
 //                    robot.action.target_velocity - robot.velocity,
-//                    ).clamp(robot.nitro * NITRO_POINT_VELOCITY_CHANGE);
+//                    ).clamped(robot.nitro * NITRO_POINT_VELOCITY_CHANGE);
 //                if (length(target_velocity_change) > 0) {
 //                    auto acceleration = target_velocity_change.normalized() * ROBOT_NITRO_ACCELERATION;
-//                    auto velocity_change = (acceleration * delta_time).clamp(target_velocity_change.length());
+//                    auto velocity_change = (acceleration * delta_time).clamped(target_velocity_change.length());
 //                    robot.velocity += velocity_change;
 //                    robot.nitro -= length(velocity_change) / NITRO_POINT_VELOCITY_CHANGE;
 //                }

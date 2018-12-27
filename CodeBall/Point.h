@@ -60,7 +60,7 @@ struct Point {
         return Point(x * factor, y * factor, z * factor);
     }
 
-    Point clamp(double maxLength) const {
+    [[nodiscard]] Point clamped(double maxLength) const {
         auto len2 = length2();
         if (len2 < EPS2) {
             return Point();
@@ -68,12 +68,27 @@ struct Point {
 
         auto maxLen2 = maxLength * maxLength;
 
-
         if (len2 > maxLen2) {
             auto factor = maxLength / sqrt(len2);
             return *this * factor;
         }
         return *this;
+    }
+
+    void clamp(double maxLength) {
+        auto len2 = length2();
+        if (len2 < EPS2) {
+            return;
+        }
+
+        auto maxLen2 = maxLength * maxLength;
+
+        if (len2 > maxLen2) {
+            auto factor = maxLength / sqrt(len2);
+            x *= factor;
+            y *= factor;
+            z *= factor;
+        }
     }
 
     // Скалярное произведение
