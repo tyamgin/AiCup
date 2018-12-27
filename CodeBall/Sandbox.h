@@ -396,10 +396,10 @@ struct Sandbox {
     };
 
     std::vector<CollisionInfo> robotBallCollisions;
-
+    
     template<typename T>
     void collide_entities(ARobot& a, T& b) {
-        const double secondMass = std::is_same<T, ARobot>::value ? ROBOT_MASS : BALL_MASS;
+        constexpr const double secondMass = std::is_same<T, ARobot>::value ? ROBOT_MASS : BALL_MASS;
         double secondRadius, secondRadiusChangeSpeed;
         if constexpr (std::is_same<T, ARobot>::value) {
             secondRadius = b.radius;
@@ -416,8 +416,8 @@ struct Sandbox {
         auto distance = sqrt(dist2);
         auto penetration = a.radius + secondRadius - distance;
 
-        const auto k_a = (1 / ROBOT_MASS) / ((1 / ROBOT_MASS) + (1 / secondMass));
-        const auto k_b = (1 / secondMass) / ((1 / ROBOT_MASS) + (1 / secondMass));
+        constexpr const auto k_a = (1.0 / ROBOT_MASS) / ((1.0 / ROBOT_MASS) + (1.0 / secondMass));
+        constexpr const auto k_b = (1.0 / secondMass) / ((1.0 / ROBOT_MASS) + (1.0 / secondMass));
 
         double normalX = (b.x - a.x) / distance;
         double normalY = (b.y - a.y) / distance;
@@ -460,6 +460,7 @@ struct Sandbox {
             robotBallCollisions.push_back({a.id, b.velocity});
         }
     }
+
 
     std::vector<ARobot*> robots() {
         std::vector<ARobot*> res;
