@@ -19,10 +19,14 @@ struct Sandbox {
     ABall ball;
     std::vector<ARobot> my, opp;
     bool isFinal = false;
-    int tick = 0;
+    int tick = 0, roundTick = 0;
     int meId = 0;
 
     RandomGenerator rnd;
+
+    struct GameScore {
+        int my = 0, opp = 0;
+    } score;
 
     Sandbox() {
     }
@@ -363,7 +367,7 @@ struct Sandbox {
                 auto dv = Point2D(point.x, point.z) - corner_o;
                 auto dv_len2 = dv.length2();
                 if (dv_len2 > SQR(ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS)) {
-                    dv /= sqrt(dv_len2);//TODO:baybe div to zero?
+                    dv /= sqrt(dv_len2);//TODO:baybe div by zero?
                     auto o2 = corner_o + dv * (ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS);
                     DAN_TO_SPHERE_INNER(
                             o2.x, ARENA_HEIGHT - ARENA_TOP_RADIUS, o2.y,
@@ -391,7 +395,12 @@ struct Sandbox {
         return result;
     }
 
-    std::vector<int> robotBallCollisions;
+    struct CollisionInfo {
+        int id;
+        Point velocity;
+    };
+
+    std::vector<CollisionInfo> robotBallCollisions;
 
     template<typename T>
     void collide_entities(ARobot& a, T& b) {
@@ -427,11 +436,6 @@ struct Sandbox {
         b.y += penetration * k_b * normalY;
         b.z += penetration * k_b * normalZ;
 
-        if constexpr (std::is_same<T, ABall>::value) {
-            if (a.velocity.y >= -EPS)
-                robotBallCollisions.push_back(a.id);
-        }
-
         auto delta_velocity =
                 (b.velocity.x - a.velocity.x) * normalX +
                 (b.velocity.y - a.velocity.y) * normalY +
@@ -455,6 +459,10 @@ struct Sandbox {
             b.velocity.x -= impulseX * k_b;
             b.velocity.y -= impulseY * k_b;
             b.velocity.z -= impulseZ * k_b;
+        }
+
+        if constexpr (std::is_same<T, ABall>::value) {
+            robotBallCollisions.push_back({a.id, b.velocity});
         }
     }
 
@@ -544,6 +552,11 @@ struct Sandbox {
         }
     }
 
+    void clearRobots() {
+        my.clear();
+        opp.clear();
+    }
+
     void doTick(int microticksPerTick = MICROTICKS_PER_TICK) {
         OP_START(DO_TICK);
 
@@ -560,6 +573,7 @@ struct Sandbox {
 //                pack.alive = true
 
         tick++;
+        roundTick++;
         // TODO: clear actions
 
         OP_END(DO_TICK);

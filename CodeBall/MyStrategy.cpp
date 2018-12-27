@@ -13,15 +13,35 @@ void run_tests();
 
 Strat strat;
 int waitForTick = -1;
+Sandbox::GameScore score;
 
 void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
     AAction a;
     strat.env = Sandbox(game, rules, me.id);
     auto& env = strat.env;
+    auto first = env.tick != strat.prevEnv.tick;
+
+    if (!first) { // inherit from previous robot
+        env.roundTick = strat.prevEnv.roundTick;
+    } else {
+        if (env.tick > strat.prevEnv.tick + 1) {
+            // new round started
+            env.roundTick = 0;
+        } else {
+            env.roundTick = strat.prevEnv.roundTick + 1;
+        }
+    }
+
+    env.score = score;
+
     if (env.tick < waitForTick) {
         return;
     }
     if (env.hasGoal) {
+        if (first) {
+            score.my += env.hasGoal > 0;
+            score.opp += env.hasGoal < 0;
+        }
         waitForTick = env.tick + RESET_TICKS - 1;
         return;
     }
@@ -39,6 +59,12 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     strat.env.robot(me.id)->action = a;
     strat.prevEnv = strat.env;
     strat.lastTick = game.current_tick;
+
+    if (env.score.my + env.score.opp == 0) {
+        assert(env.tick == env.roundTick);
+    } else {
+        assert(env.tick != env.roundTick);
+    }
 
     TIMER_ENG_LOG("Tick");
 }

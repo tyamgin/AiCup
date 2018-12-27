@@ -101,7 +101,12 @@ public:
             startEnv.robot(opp.id)->action = AAction().jump(); // TODO: maxVelocityTo(*startEnv.me(), startEnv.ball)
             for (int i = 1; i <= 70 && i < oppMinCollideTicks; i++) {
                 startEnv.doTick(5);
-                if (std::find(startEnv.robotBallCollisions.begin(), startEnv.robotBallCollisions.end(), opp.id) != startEnv.robotBallCollisions.end()) {
+
+                bool hasId = false;
+                for (auto &x : startEnv.robotBallCollisions)
+                    hasId |= x.id == opp.id;
+
+                if (hasId) {
                     oppMinCollideTicks = i;
                     maxZSpeed = startEnv.ball.velocity.z;
                     break;
@@ -116,8 +121,12 @@ public:
             startEnv.me()->action = AAction().jump(); // TODO: maxVelocityTo(*startEnv.me(), startEnv.ball)
             for (int i = 1; i <= 70 && i < myMinCollideTicks; i++) {
                 startEnv.doTick(5);
-                if (std::find(startEnv.robotBallCollisions.begin(), startEnv.robotBallCollisions.end(),
-                              startEnv.me()->id) != startEnv.robotBallCollisions.end()) {
+
+                bool hasId = false;
+                for (auto &x : startEnv.robotBallCollisions)
+                    hasId |= x.id == startEnv.me()->id;
+
+                if (hasId) {
                     myMinCollideTicks = i;
                     maxMeZSpeed = startEnv.ball.velocity.z;
                     break;
@@ -139,7 +148,7 @@ public:
         Sandbox e = env;
         for (int i = 1; i <= 100; i++) {
             e.doTick(5);
-            if (e.ball.y > BALL_RADIUS + ROBOT_MAX_RADIUS)
+            if (e.ball.y - BALL_RADIUS > ROBOT_MAX_RADIUS*3)
                 continue;
 
             for (auto r : e.robots()) {
@@ -203,87 +212,71 @@ public:
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         auto firstToBall = evalToBall();
 
-//        auto catchGkStrat2 = [&](AAction& resAction, int& resTicks) {
-//            Sandbox snd = env;
-//            snd.my.clear();
-//            snd.opp.clear();
-//            snd.my.push_back(me);
-//
-//            auto firstAction = AAction().jump();
-//
-//            for (auto i = 0; i <= 1 * TICKS_PER_SECOND; i++) {
-//                if (snd.hasGoal < 0)
-//                    return false;
-//
-//                if (snd.me()->getDistanceTo(snd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS
-//                    && snd.me()->z < snd.ball.z - BALL_RADIUS * 0.9) {
-//
-//                    resAction = firstAction;
-//                    resTicks = i;
-//                    return true;
-//                }
-//
-//
-//                ARobot* nearest = nullptr;
-//                for(auto r : env.opp)
-//                    if (nearest == nullptr || r.getDistanceTo(me) < nearest->getDistanceTo(me))
-//                        nearest = &r;
-//
-//                auto tar = snd.ball + (snd.ball - (oppGoal + Point(ARENA_GOAL_WIDTH/4*(nearest->x < me.x ? 1 : -1), 0, 0))).take(BALL_RADIUS * 0.9);
-//                auto vel = maxVelocityTo(*snd.me(), snd.ball);
-//                snd.me()->action = AAction().vel(vel);
-//                if (i == 0)
-//                    firstAction = AAction().vel(vel);
-//
-//                snd.doTick(5);
-//            }
-//            return false;
-//        };
 
-        auto catchGkStrat = [&](AAction& resAction, int& resTicks) {
-            Sandbox snd = env;
-            snd.my.clear();
-            snd.opp.clear();
+        auto catchGkStrat3 = [&](AAction& resAction, int& resTicks) {
+            if (env.roundTick < 50)
+                return false;
 
-            if (me.getDistanceTo(snd.ball) < ROBBOT_SHOT_DIST) {
-                resAction.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
-                resTicks = 0;
-                return true;
-            }
+            Sandbox ballSnd = env;
+            ballSnd.clearRobots();
+            double maxBallVel = -1;
+            int runTicks = -1;
+            AAction firstAction;
 
-            for (auto i = 1; i <= 1 * TICKS_PER_SECOND; i++) {
-                snd.doTick(5);
-                if (snd.ball.y > BALL_RADIUS + 0.6) //TODO
-                    continue;
-                if (snd.hasGoal < 0)
-                    return false;
+            for (auto i = 0; i <= 65; i++) {
+                if (i % 5 == 0 || i <= 6) {
+                    Sandbox meSnd = env;
+                    meSnd.clearRobots();
+                    meSnd.my.push_back(me);
 
-                auto t = 1.0 * i / TICKS_PER_SECOND;
-
-                ARobot* nearest = nullptr;
-                for(auto r : env.opp)
-                    if (nearest == nullptr || r.getDistanceTo(me) < nearest->getDistanceTo(me))
-                        nearest = &r;
+                    for (auto j = 0; j <= 65; j++) {
+                        Sandbox meJumpSnd = meSnd;
+                        meJumpSnd.me()->action = AAction().jump();
 
 
-                auto tar = snd.ball + (snd.ball - (oppGoal + Point(ARENA_GOAL_WIDTH/4*(nearest->x < me.x ? 1 : -1), 0, 0))).take(BALL_RADIUS * 0.9);
-                        //Point(BALL_RADIUS*0.7*(nearest->x > me.x ? 1 : -1), 0, -BALL_RADIUS*0.7);// : )
-                Point delta_pos = tar - me;
-                delta_pos.y = 0;
-                auto need_speed = delta_pos.length() / t;
-                auto target_velocity = delta_pos.take(std::min(ROBOT_MAX_GROUND_SPEED, need_speed));
-                AAction act;
-                act.targetVelocity = target_velocity;
+                        if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
+                            for (auto k = 0; k <= 9; k++) {
+                                meJumpSnd.doTick(1);
+                                if (meJumpSnd.hasGoal < 0) {
+                                    break;
+                                }
 
-                if (need_speed <= ROBOT_MAX_GROUND_SPEED && need_speed >= ROBOT_MAX_GROUND_SPEED * 0.7) {
-                    resTicks = i;
-                    resAction = act;
-                    return true;
+                                if (meJumpSnd.robotBallCollisions.size()) {
+                                    auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
+                                    auto len = vel.z;
+                                    if (len > maxBallVel) {
+                                        maxBallVel = len;
+                                        firstAction = j == 0 ? AAction().jump() : AAction().vel(
+                                                maxVelocityTo(*meSnd.me(), meSnd.ball));
+                                        runTicks = j;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+
+                        auto meAct = AAction().vel(maxVelocityTo(*meSnd.me(), meSnd.ball));
+                        meSnd.me()->action = meAct;
+                        meSnd.doTick(1);
+                        if (meSnd.hasGoal < 0) {
+                            break;
+                        }
+                    }
                 }
 
+                ballSnd.doTick(5);
+                if (ballSnd.hasGoal < 0) {
+                    break;
+                }
+            }
+
+            if (maxBallVel >= 0) {
+                resAction = firstAction;
+                return true;
             }
             return false;
         };
+
 
         if (tryShotGoal(action)) {
             Visualizer::addText("SHOT", 20);
@@ -360,7 +353,11 @@ public:
                 Visualizer::addSphere(sp);
 
 
-                auto goToGoalCenterStrat = [](Sandbox &e) {
+
+
+
+
+                auto goToGoalCenterStrat_old = [](Sandbox &e) {
                     AAction sAct;
                     auto target_pos = Point(0.0, 0.0, -(ARENA_DEPTH / 2.0));
                     double t = 1;
@@ -384,9 +381,47 @@ public:
                     return sAct;
                 };
 
+
+                auto goToGoalCenterStrat = [](Sandbox &e) {
+                    AAction sAct;
+                    double ch = 0.8;
+                    double maxDeep = 2.0 + ch;
+                    auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
+
+                    Point target_pos;
+                    double tt = -1;
+
+                    // Причем, если мяч движется в сторону наших ворот
+                    if (e.ball.velocity.z < -EPS && e.ball.z < -1) {
+                        // Найдем время и место, в котором мяч пересечет линию ворот
+                        tt = (-ARENA_DEPTH / 2.0 - e.ball.z) / e.ball.velocity.z;
+                        auto x = e.ball.x + e.ball.velocity.x * tt;
+                        target_pos.x = std::clamp(x, -w, w);
+                    }
+                    auto deepCoeff = (1 - std::min(std::abs(target_pos.x), w) / w) * maxDeep - ch;
+                    target_pos.z = -(ARENA_DEPTH / 2.0 + deepCoeff);
+
+                    // Установка нужных полей для желаемого действия
+                    auto delta = Point(target_pos.x - e.me()->x, 0.0, target_pos.z - e.me()->z);
+                    auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
+                    if (e.me()->z < -ARENA_DEPTH / 2 + 2 && std::abs(e.me()->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сльно быстро шататься
+                        speed = delta.length() / tt;
+                    auto target_velocity = delta.take(speed);
+                    sAct.targetVelocity = target_velocity;
+
+                    if (e.me()->getDistanceTo(e.ball) < ROBBOT_SHOT_DIST) {
+                        sAct.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+                    }
+
+                    return sAct;
+                };
+
+
                 AAction catchAction;
                 int catchTime;
-                if (firstToBall && firstToBall.value().id == me.id && catchGkStrat(catchAction, catchTime)) {
+                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 4 && std::abs(ball.x) < ARENA_GOAL_WIDTH * 1.2)
+                    && catchGkStrat3(catchAction, catchTime)) {
+
                     action = catchAction;
                 } else {
                     std::optional<AAction> defend;
