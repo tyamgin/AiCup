@@ -235,7 +235,7 @@ public:
 
 
                         if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
-                            for (auto k = 0; k <= 9; k++) {
+                            for (auto k = 0; k <= 15; k++) {
                                 meJumpSnd.doTick(1);
                                 if (meJumpSnd.hasGoal < 0) {
                                     break;

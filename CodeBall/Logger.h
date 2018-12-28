@@ -8,7 +8,7 @@
 #include <chrono>
 #include <sstream>
 
-#define M_NO_RANDOM 1
+#define M_NO_RANDOM 0
 
 #if M_NO_RANDOM
 #ifndef LOCAL
