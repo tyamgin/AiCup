@@ -250,7 +250,7 @@ public:
 
                                 meJumpSnd.me()->action = jmpAction;
 
-                                if (drawI == i && j <= drawJ) {
+                                if (j <= drawJ) {
                                     Visualizer::addSphere(meJumpSnd.my[0], 0, 0.8, 0, 0.7);
                                     Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
                                 }
@@ -260,7 +260,7 @@ public:
                                     for (auto k = 0; k <= 15; k++) {
                                         meJumpSnd.doTick(1);
 
-                                        if (drawI == i && j <= drawJ && k <= drawK) {
+                                        if (j == drawJ && k <= drawK) {
                                             Visualizer::addSphere(meJumpSnd.my[0], 0.7, 0.8, 0, 0.7);
                                             Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
                                         }
@@ -308,7 +308,7 @@ public:
             }
 
 
-            if (maxBallVel >= 0 && maxBallVel > 15) {
+            if (maxBallVel >= 0) {
                 resAction = firstAction;
                 if (drawI < 0) {
                     AAction t1;
