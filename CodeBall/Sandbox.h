@@ -373,7 +373,14 @@ struct Sandbox {
 
     bool dan_to_arena_quarter2(const Unit& point, double& distance, Point& normal) {
 
+#if M_LOG_DANS
+#define LOG_DAN(id) Logger::instance()->dans[id]++;
+#else
+#define LOG_DAN(id)
+#endif
+
 #define DAN_TO_PLANE(side, point_on_plane, plane_normal) {\
+    LOG_DAN(__LINE__);\
     distance = (point. side - (point_on_plane)) * (plane_normal);\
     if (distance > point.radius) return false;\
     normal. side = (plane_normal);\
@@ -381,6 +388,7 @@ struct Sandbox {
 }
 
 #define DAN_TO_SPHERE_INNER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     const auto diff_x = (sphere_center_x) - point.x;\
     const auto diff_y = (sphere_center_y) - point.y;\
     const auto diff_z = (sphere_center_z) - point.z;\
@@ -392,6 +400,7 @@ struct Sandbox {
 }
 
 #define DAN_TO_CYLINDER_Z_INNER(sphere_center_x, sphere_center_y, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     const auto diff_x = (sphere_center_x) - point.x;\
     const auto diff_y = (sphere_center_y) - point.y;\
     auto dist2 = SQR(diff_x) + SQR(diff_y);\
@@ -402,6 +411,7 @@ struct Sandbox {
 }
 
 #define DAN_TO_CYLINDER_X_INNER(sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     const auto diff_y = (sphere_center_y) - point.y;\
     const auto diff_z = (sphere_center_z) - point.z;\
     auto dist2 = SQR(diff_y) + SQR(diff_z);\
@@ -412,6 +422,7 @@ struct Sandbox {
 }
 
 #define DAN_TO_CYLINDER_Y_INNER(sphere_center_x, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     const auto diff_x = (sphere_center_x) - point.x;\
     const auto diff_z = (sphere_center_z) - point.z;\
     auto dist2 = SQR(diff_x) + SQR(diff_z);\
@@ -422,6 +433,7 @@ struct Sandbox {
 }
 
 #define DAN_TO_SPHERE_OUTER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     auto diff_x = point.x - (sphere_center_x);\
     auto diff_y = point.y - (sphere_center_y);\
     auto diff_z = point.z - (sphere_center_z);\
@@ -433,6 +445,7 @@ struct Sandbox {
 }
 
 #define DAN_TO_CYLINDER_X_OUTER(sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     auto diff_y = point.y - (sphere_center_y);\
     auto diff_z = point.z - (sphere_center_z);\
     auto dist2 = SQR(diff_y) + SQR(diff_z);\
@@ -443,6 +456,7 @@ struct Sandbox {
 }
 
 #define DAN_TO_CYLINDER_Y_OUTER(sphere_center_x, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     auto diff_x = point.x - (sphere_center_x);\
     auto diff_z = point.z - (sphere_center_z);\
     auto dist2 = SQR(diff_x) + SQR(diff_z);\
