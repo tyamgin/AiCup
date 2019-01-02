@@ -171,6 +171,7 @@ public:
     }
 
     int prevI = -1;
+    int prevWt = -1;
 
     void act(AAction &action) {
         auto& ball = env.ball;
@@ -234,8 +235,8 @@ public:
                     meWaitSnd.clearRobots();
                     meWaitSnd.my.push_back(me);
 
-                    for (auto wt = 0; wt <= 20; wt++) {
-                        if ((wt <= 1 || wt % 10 == 0 || wt == drawWt) && (drawWt < 0 || wt == drawWt)) {
+                    for (auto wt = 0; wt <= 40; wt++) {
+                        if ((wt <= 1 || wt % 10 == 0 || wt == drawWt || std::abs(prevWt - wt) <= 2) && (drawWt < 0 || wt == drawWt)) {
 
                             Sandbox meSnd = meWaitSnd;
                             meSnd.clearRobots();
@@ -316,6 +317,7 @@ public:
                     catchGkStrat3(t1, t2, selWt, selI, selJ, selK);
                 }
                 prevI = selI;
+                prevWt = selWt;
                 return true;
             }
             return false;
