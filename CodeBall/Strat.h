@@ -184,6 +184,7 @@ public:
         if (env.roundTick < 50)
             return false;
 
+        const auto myId = env.me()->id;
         Sandbox ballSnd = env;
         ballSnd.clearRobots();
         double maxBallVel = -1;
@@ -206,8 +207,8 @@ public:
                     if ((wt <= 1 || wt % 10 == 0 || wt == drawWt || std::abs(prevWt - wt) <= 2) && (drawWt < 0 || wt == drawWt)) {
 
                         Sandbox meSnd = meWaitSnd;
-                        meSnd.clearRobots();
-                        meSnd.my.push_back(*meWaitSnd.me());
+                        //meSnd.clearRobots();
+                        //meSnd.my.push_back(*meWaitSnd.me());
                         AAction fa;
                         auto mvel = maxVelocityTo(*meSnd.me(), ballSnd.ball);
 
@@ -237,11 +238,14 @@ public:
                                         break;
                                     }
 
-                                    if (meJumpSnd.robotBallCollisions.size()) {
-                                        auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
-                                        auto len = vel.z;
-                                        if (len > maxBallVel) {
-                                            maxBallVel = len;
+                                    double myCollisionVel = INT_MAX;
+                                    for (auto& item : meJumpSnd.robotBallCollisions)
+                                        if (item.id == myId)
+                                            myCollisionVel = item.velocity.z;
+
+                                    if (myCollisionVel < INT_MAX) {
+                                        if (myCollisionVel > maxBallVel) {
+                                            maxBallVel = myCollisionVel;
                                             firstAction = wt == 0 ? (j == 0 ? jmpAction : fa) : AAction();
                                             selJ = j;
                                             selI = i;
