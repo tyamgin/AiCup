@@ -795,7 +795,7 @@ struct Sandbox {
         auto delta_velocity =
                 (b.velocity.x - a.velocity.x) * normalX +
                 (b.velocity.y - a.velocity.y) * normalY +
-                (b.velocity.z - a.velocity.z) * normalZ + secondRadiusChangeSpeed - a.radius_change_speed;
+                (b.velocity.z - a.velocity.z) * normalZ - secondRadiusChangeSpeed - a.radius_change_speed;
         if (delta_velocity < 0) {
 #if M_NO_RANDOM
             auto rndValue = MAX_HIT_E;
