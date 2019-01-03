@@ -47,7 +47,7 @@ public:
         }
     }
 
-    bool tryShotGoal(AAction &resAction) {
+    bool tryShotGoalNow(AAction &resAction) {
         if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 2)
             return false;
         if (env.me()->radius >= ROBOT_MAX_RADIUS)
@@ -79,13 +79,115 @@ public:
         return false;
     }
 
-    Point maxVelocityTo(const Unit& a, const Point& b) {
-        auto diff = b - a;
-        diff.y = 0;
+    bool tryShotGoalRun(AAction &resAction, bool needGoal, int drawI = -1, int drawJ = -1, int drawK = -1) {
+        if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 11)
+            return false;
+        // TODO: check untouched and far to all
+
+        Sandbox ballSnd = env;
+        ballSnd.clearRobots();
+        double maxBallVel = -1;
+        int selI = -1, selJ = -1, selK = -1;
+        AAction firstAction;
+
+        static int prevI = -1;
+
+        for (auto i = 0; i <= 50; i++) {
+            if ((i % 5 == 0 || i <= 6 || std::abs(prevI - i) <= 2 || i == drawI) && (drawI < 0 || i == drawI)) {
+                Sandbox meSnd = env;
+                meSnd.clearRobots();
+                meSnd.my.push_back(*env.me());
+
+                AAction firstJAct;
+                auto mvel = maxVelocityTo(*meSnd.me(), ballSnd.ball);
+
+                for (auto j = 0; j <= 65; j++) {
+                    Sandbox meJumpSnd = meSnd;
+                    auto mvAction = AAction().vel(mvel);
+                    auto jmpAction = mvAction;
+                    jmpAction.jump();
+
+                    meJumpSnd.me()->action = jmpAction;
+
+                    if (j <= drawJ) {
+                        Visualizer::addSphere(meJumpSnd.my[0], 0, 0.8, 0, 0.7);
+                        Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
+                    }
+
+                    if (j == 0)
+                        firstJAct = mvAction;
+
+                    if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
+                        const int jumpMaxTicks = 17;
+                        const int ballSimMaxTicks = 50;
+                        for (auto k = 0; k <= jumpMaxTicks; k++) {
+                            meJumpSnd.doTick(1);
+
+                            if (j == drawJ && k <= drawK) {
+                                Visualizer::addSphere(meJumpSnd.my[0], 0.7, 0.8, 0, 0.7);
+                                Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
+                            }
+
+                            if (meJumpSnd.robotBallCollisions.size()) {
+                                auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
+                                auto len = vel.z;
+                                if (len > maxBallVel) {
+
+                                    if (needGoal) {
+                                        for (int w = 0; w <= ballSimMaxTicks; w++) {
+                                            meJumpSnd.doTick(1);
+                                        }
+                                    }
+                                    if (meJumpSnd.hasGoal || !needGoal) {
+                                        selI = i;
+                                        selJ = j;
+                                        selK = k;
+                                        maxBallVel = len;
+                                        firstAction = j == 0 ? jmpAction : firstJAct;
+                                    }
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    meSnd.me()->action = mvAction;
+                    meSnd.doTick(1);
+                }
+            }
+
+            ballSnd.doTick(5);
+            if (ballSnd.hasGoal < 0) {
+                break;
+            }
+        }
+
+        if (maxBallVel >= 0) {// TODO shot out
+            resAction = firstAction;
+#ifdef DEBUG
+            if (drawI < 0) {
+                AAction t1;
+                tryShotGoalRun(t1, needGoal, selI, selJ, selK);
+            }
+#endif
+            prevI = selI;
+            return true;
+        }
+        return false;
+    }
+
+    Point maxVelocityTo(const ARobot& a, const Point& b) {
+        if (!a.touch || a.touch_normal.y < EPS)
+            return Point();
+
+        auto diff = (b - a).normalized();
+        diff.y = -(diff.z * a.touch_normal.z + diff.x * a.touch_normal.x) / a.touch_normal.y;
         return diff.take(ROBOT_MAX_GROUND_SPEED);
     }
 
     bool tryShotOff(AAction &resAction) {
+        return false;
+
         if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 3) // not reachable, TODO: magic const
             return false;
         if (env.me()->radius >= ROBOT_MAX_RADIUS) // already jumped
@@ -377,13 +479,18 @@ public:
             return false;
         };
 
+        bool is_attacker = env.teammate1()->z < me.z;
 
-
-        if (tryShotGoal(action)) {
-            Visualizer::addText("SHOT", 20);
+        if (tryShotGoalNow(action)) {
+            Visualizer::addText("SHOT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             LOG("SHOT");
+        } else if (is_attacker && tryShotGoalRun(action, true)) {
+            Visualizer::addText("MOVE TO SHOT!!!!!!");
+            LOG("MOVE TO SHOT!!!!!!");
+        } else if (is_attacker && tryShotGoalRun(action, false)) {
+            Visualizer::addText("SHOT OUT");
+            LOG("SHOT OUT");
         } else {
-            bool is_attacker = env.teammate1()->z < me.z;
 
             if (is_attacker) {
                 if (tryShotOff(action)) {
