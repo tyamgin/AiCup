@@ -916,8 +916,14 @@ struct Sandbox {
         }
     }
 
-    void clearRobots() {
-        my.clear();
+    void clearRobots(bool keepMe = false) {
+        if (keepMe) {
+            for (int i = (int) my.size() - 1; i >= 0; i--)
+                if (my[i].id != meId)
+                    my.erase(my.begin() + i);
+        } else {
+            my.clear();
+        }
         opp.clear();
     }
 

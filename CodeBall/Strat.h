@@ -79,11 +79,12 @@ public:
         return false;
     }
 
-    bool tryShotGoalRun(AAction &resAction, bool needGoal, int drawI = -1, int drawJ = -1, int drawK = -1) {
+    bool tryShotGoalRun(AAction &resAction, bool needGoal, bool oppSim, int drawI = -1, int drawJ = -1, int drawK = -1) {
         if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 11)
             return false;
-        // TODO: check untouched and far to all
+        // TODO: check untouched and far to ball
 
+        const auto myId = env.me()->id;
         Sandbox ballSnd = env;
         ballSnd.clearRobots();
         double maxBallVel = -1;
@@ -95,8 +96,9 @@ public:
         for (auto i = 0; i <= 50; i++) {
             if ((i % 5 == 0 || i <= 6 || std::abs(prevI - i) <= 2 || i == drawI) && (drawI < 0 || i == drawI)) {
                 Sandbox meSnd = env;
-                meSnd.clearRobots();
-                meSnd.my.push_back(*env.me());
+                if (!oppSim) {
+                    meSnd.clearRobots(true);
+                }
 
                 AAction firstJAct;
                 auto mvel = maxVelocityTo(*meSnd.me(), ballSnd.ball);
@@ -119,7 +121,7 @@ public:
 
                     if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
                         const int jumpMaxTicks = 17;
-                        const int ballSimMaxTicks = 50;
+                        const int ballSimMaxTicks = needGoal ? 70 : 50;
                         for (auto k = 0; k <= jumpMaxTicks; k++) {
                             meJumpSnd.doTick(1);
 
@@ -128,21 +130,23 @@ public:
                                 Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
                             }
 
-                            if (meJumpSnd.robotBallCollisions.size()) {
-                                auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
-                                auto len = vel.z;
-                                if (len > maxBallVel) {
+                            double myCollisionVel = INT_MAX;
+                            for (auto& item : meJumpSnd.robotBallCollisions)
+                                if (item.id == myId)
+                                    myCollisionVel = item.velocity.z;
 
+                            if (myCollisionVel < INT_MAX) {
+                                if (myCollisionVel > maxBallVel) {
                                     if (needGoal) {
                                         for (int w = 0; w <= ballSimMaxTicks; w++) {
                                             meJumpSnd.doTick(1);
                                         }
                                     }
-                                    if (meJumpSnd.hasGoal || !needGoal) {
+                                    if (meJumpSnd.hasGoal > 0 || !needGoal) {
                                         selI = i;
                                         selJ = j;
                                         selK = k;
-                                        maxBallVel = len;
+                                        maxBallVel = myCollisionVel;
                                         firstAction = j == 0 ? jmpAction : firstJAct;
                                     }
                                 }
@@ -162,12 +166,12 @@ public:
             }
         }
 
-        if (maxBallVel >= 0) {// TODO shot out
+        if (maxBallVel >= 0) {
             resAction = firstAction;
 #ifdef DEBUG
             if (drawI < 0) {
                 AAction t1;
-                tryShotGoalRun(t1, needGoal, selI, selJ, selK);
+                tryShotGoalRun(t1, needGoal, oppSim, selI, selJ, selK);
             }
 #endif
             prevI = selI;
@@ -370,10 +374,13 @@ public:
         } else if (tryShotGoalNow(action)) {
             Visualizer::addText("SHOT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             LOG("SHOT");
-        } else if (is_attacker && tryShotGoalRun(action, true)) {
+        } else if (is_attacker && tryShotGoalRun(action, true, true)) {
             Visualizer::addText("MOVE TO SHOT!!!!!!");
             LOG("MOVE TO SHOT!!!!!!");
-        } else if (is_attacker && tryShotGoalRun(action, false)) {
+        } else if (is_attacker && tryShotGoalRun(action, true, false)) {
+            Visualizer::addText("MOVE TO SHOT??????");
+            LOG("MOVE TO SHOT??????");
+        } else if (is_attacker && tryShotGoalRun(action, false, true)) {
             Visualizer::addText("SHOT OUT");
             LOG("SHOT OUT");
         } else {
