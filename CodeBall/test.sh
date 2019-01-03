@@ -9,12 +9,12 @@ rm local_runner/$1
     --p2-name 31003 \
     --results-file $1 \
     --seed 51265 \
-    --duration 60000 \
+    --duration 40000 \
     --noshow \
     &
 echo "LR started"
 sleep 2
 ./cmake-build-release/CodeBall 127.0.0.1 31002 0000000000000000 &
-./release/m12.1 127.0.0.1 31003 0000000000000000 > /dev/null
+./release/m14 127.0.0.1 31003 0000000000000000 > /dev/null
 
 cat local_runner/$1

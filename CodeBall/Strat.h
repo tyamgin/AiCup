@@ -363,63 +363,7 @@ public:
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         auto firstToBall = evalToBall();
 
-
-
-        auto catchGkStrat3 = [&](AAction& resAction, int& resTicks) {
-            if (env.roundTick < 50)
-                return false;
-
-
-            double maxBallVel = -1;
-            int runTicks = -1;
-            AAction firstAction;
-
-            Sandbox meSnd = env;
-            meSnd.clearRobots();
-            meSnd.my.push_back(me);
-
-            for (auto j = 0; j <= 65; j++) {
-                Sandbox meJumpSnd = meSnd;
-                meJumpSnd.me()->action = AAction().jump();
-
-
-                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
-                    for (auto k = 0; k <= 15; k++) {
-                        meJumpSnd.doTick(1);
-                        if (meJumpSnd.hasGoal < 0) {
-                            break;
-                        }
-
-                        if (meJumpSnd.robotBallCollisions.size()) {
-                            auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
-                            auto len = vel.z;
-                            if (len > maxBallVel) {
-                                maxBallVel = len;
-                                firstAction = j == 0 ? AAction().jump() : AAction().vel(
-                                        maxVelocityTo(*meSnd.me(), meSnd.ball));
-                                runTicks = j;
-                            }
-                            break;
-                        }
-                    }
-                }
-
-                auto meAct = AAction().vel(maxVelocityTo(*meSnd.me(), meSnd.ball));
-                meSnd.me()->action = meAct;
-                meSnd.doTick(1);
-                if (meSnd.hasGoal < 0) {
-                    break;
-                }
-            }
-
-            if (maxBallVel >= 0) {
-                resAction = firstAction;
-                return true;
-            }
-            return false;
-        };
-
-        bool is_attacker = env.teammate1()->z < me.z;
+        bool is_attacker = env.teammate1()->z < me.z || (env.teammate1()->z == me.z && env.teammate1()->id == me.id);
 
         if (is_attacker && env.roundTick <= 35) {
             action = AAction().vel(maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
