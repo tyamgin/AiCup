@@ -216,7 +216,7 @@ public:
         auto firstToBall = evalToBall();
 
 
-        std::function<bool(AAction&, int&, int, int, int, int)> catchGkStrat3 = [&](AAction& resAction, int& resTicks, int drawWt, int drawI, int drawJ, int drawK) {
+        std::function<bool(AAction&, int&, int, int, int, int)> catchGkStrat4 = [&](AAction& resAction, int& resTicks, int drawWt, int drawI, int drawJ, int drawK) {
             if (env.roundTick < 50)
                 return false;
 
@@ -314,7 +314,7 @@ public:
                 if (drawI < 0) {
                     AAction t1;
                     int t2;
-                    catchGkStrat3(t1, t2, selWt, selI, selJ, selK);
+                    catchGkStrat4(t1, t2, selWt, selI, selJ, selK);
                 }
                 prevI = selI;
                 prevWt = selWt;
@@ -322,6 +322,61 @@ public:
             }
             return false;
         };
+
+        auto catchGkStrat3 = [&](AAction& resAction, int& resTicks) {
+            if (env.roundTick < 50)
+                return false;
+
+
+            double maxBallVel = -1;
+            int runTicks = -1;
+            AAction firstAction;
+
+            Sandbox meSnd = env;
+            meSnd.clearRobots();
+            meSnd.my.push_back(me);
+
+            for (auto j = 0; j <= 65; j++) {
+                Sandbox meJumpSnd = meSnd;
+                meJumpSnd.me()->action = AAction().jump();
+
+
+                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
+                    for (auto k = 0; k <= 15; k++) {
+                        meJumpSnd.doTick(1);
+                        if (meJumpSnd.hasGoal < 0) {
+                            break;
+                        }
+
+                        if (meJumpSnd.robotBallCollisions.size()) {
+                            auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
+                            auto len = vel.z;
+                            if (len > maxBallVel) {
+                                maxBallVel = len;
+                                firstAction = j == 0 ? AAction().jump() : AAction().vel(
+                                        maxVelocityTo(*meSnd.me(), meSnd.ball));
+                                runTicks = j;
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                auto meAct = AAction().vel(maxVelocityTo(*meSnd.me(), meSnd.ball));
+                meSnd.me()->action = meAct;
+                meSnd.doTick(1);
+                if (meSnd.hasGoal < 0) {
+                    break;
+                }
+            }
+
+            if (maxBallVel >= 0) {
+                resAction = firstAction;
+                return true;
+            }
+            return false;
+        };
+
 
 
         if (tryShotGoal(action)) {
@@ -436,7 +491,7 @@ public:
                 AAction catchAction;
                 int catchTime;
                 if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 4 /*&& std::abs(ball.x) < ARENA_GOAL_WIDTH * 1.2*/)
-                    && catchGkStrat3(catchAction, catchTime, -1, -1, -1, -1)) {
+                    && catchGkStrat3(catchAction, catchTime)) {
 
                     action = catchAction;
                 } else {
