@@ -176,6 +176,116 @@ public:
         return false;
     }
 
+    bool catchGkStrat4(AAction& resAction, int drawWt = -1, int drawI = -1, int drawJ = -1, int drawK = -1) {
+        if (env.roundTick < 50)
+            return false;
+
+        Sandbox ballSnd = env;
+        ballSnd.clearRobots();
+        double maxBallVel = -1;
+        int selWt = -1;
+        int selJ = -1;
+        int selI = -1;
+        int selK = -1;
+        AAction firstAction;
+
+        static int prevI = -1;
+        static int prevWt = -1;
+
+        for (auto i = 0; i <= 65; i++) {
+            if ((i % 5 == 0 || i <= 6 || std::abs(prevI - i) <= 2 || i == drawI) && (drawI < 0 || i == drawI)) {
+                Sandbox meWaitSnd = env;
+                meWaitSnd.clearRobots();
+                meWaitSnd.my.push_back(*env.me());
+
+                for (auto wt = 0; wt <= 0; wt++) {
+                    if ((wt <= 1 || wt % 10 == 0 || wt == drawWt || std::abs(prevWt - wt) <= 2) && (drawWt < 0 || wt == drawWt)) {
+
+                        Sandbox meSnd = meWaitSnd;
+                        meSnd.clearRobots();
+                        meSnd.my.push_back(*meWaitSnd.me());
+                        AAction fa;
+                        auto mvel = maxVelocityTo(*meSnd.me(), ballSnd.ball);
+
+                        for (auto j = 0; j <= 65; j++) {
+                            Sandbox meJumpSnd = meSnd;
+                            auto mvAction = AAction().vel(mvel);
+                            auto jmpAction = mvAction;
+                            jmpAction.jump();
+
+                            meJumpSnd.me()->action = jmpAction;
+
+                            if (j <= drawJ) {
+                                Visualizer::addSphere(meJumpSnd.my[0], 0, 0.8, 0, 0.7);
+                                Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
+                            }
+
+                            if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
+                                for (auto k = 0; k <= 15; k++) {
+                                    meJumpSnd.doTick(1);
+
+                                    if (j == drawJ && k <= drawK) {
+                                        Visualizer::addSphere(meJumpSnd.my[0], 0.7, 0.8, 0, 0.7);
+                                        Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
+                                    }
+
+                                    if (meJumpSnd.hasGoal < 0) {
+                                        break;
+                                    }
+
+                                    if (meJumpSnd.robotBallCollisions.size()) {
+                                        auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
+                                        auto len = vel.z;
+                                        if (len > maxBallVel) {
+                                            maxBallVel = len;
+                                            firstAction = wt == 0 ? (j == 0 ? jmpAction : fa) : AAction();
+                                            selJ = j;
+                                            selI = i;
+                                            selK = k;
+                                            selWt = wt;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+
+                            meSnd.me()->action = mvAction;
+                            if (j == 0)
+                                fa = mvAction;
+                            meSnd.doTick(1);
+                            if (meSnd.hasGoal < 0) {
+                                break;
+                            }
+                        }
+                    }
+                    meWaitSnd.doTick(1);
+                    if (meWaitSnd.hasGoal < 0) {
+                        break;
+                    }
+                }
+            }
+
+            ballSnd.doTick(5);
+            if (ballSnd.hasGoal < 0) {
+                break;
+            }
+        }
+
+
+        if (maxBallVel >= 0) {
+            resAction = firstAction;
+            if (drawI < 0) {
+                AAction t1;
+                catchGkStrat4(t1, selWt, selI, selJ, selK);
+            }
+            prevI = selI;
+            prevWt = selWt;
+            return true;
+        }
+        return false;
+    };
+
+
     Point maxVelocityTo(const ARobot& a, const Point& b) {
         if (!a.touch || a.touch_normal.y < EPS)
             return Point();
@@ -210,9 +320,6 @@ public:
         }
         return {};
     }
-
-    int prevI = -1;
-    int prevWt = -1;
 
     void act(AAction &action) {
         auto& ball = env.ball;
@@ -257,112 +364,6 @@ public:
         auto firstToBall = evalToBall();
 
 
-        std::function<bool(AAction&, int&, int, int, int, int)> catchGkStrat4 = [&](AAction& resAction, int& resTicks, int drawWt, int drawI, int drawJ, int drawK) {
-            if (env.roundTick < 50)
-                return false;
-
-            Sandbox ballSnd = env;
-            ballSnd.clearRobots();
-            double maxBallVel = -1;
-            int selWt = -1;
-            int selJ = -1;
-            int selI = -1;
-            int selK = -1;
-            AAction firstAction;
-
-            for (auto i = 0; i <= 65; i++) {
-                if ((i % 5 == 0 || i <= 6 || std::abs(prevI - i) <= 2 || i == drawI) && (drawI < 0 || i == drawI)) {
-                    Sandbox meWaitSnd = env;
-                    meWaitSnd.clearRobots();
-                    meWaitSnd.my.push_back(me);
-
-                    for (auto wt = 0; wt <= 40; wt++) {
-                        if ((wt <= 1 || wt % 10 == 0 || wt == drawWt || std::abs(prevWt - wt) <= 2) && (drawWt < 0 || wt == drawWt)) {
-
-                            Sandbox meSnd = meWaitSnd;
-                            meSnd.clearRobots();
-                            meSnd.my.push_back(me);
-                            AAction fa;
-
-                            for (auto j = 0; j <= 65; j++) {
-                                Sandbox meJumpSnd = meSnd;
-                                auto mvAction = AAction().vel(maxVelocityTo(*meSnd.me(), ballSnd.ball));
-                                auto jmpAction = mvAction;
-                                jmpAction.jump();
-
-                                meJumpSnd.me()->action = jmpAction;
-
-                                if (j <= drawJ) {
-                                    Visualizer::addSphere(meJumpSnd.my[0], 0, 0.8, 0, 0.7);
-                                    Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
-                                }
-
-
-                                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
-                                    for (auto k = 0; k <= 15; k++) {
-                                        meJumpSnd.doTick(1);
-
-                                        if (j == drawJ && k <= drawK) {
-                                            Visualizer::addSphere(meJumpSnd.my[0], 0.7, 0.8, 0, 0.7);
-                                            Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
-                                        }
-
-                                        if (meJumpSnd.hasGoal < 0) {
-                                            break;
-                                        }
-
-                                        if (meJumpSnd.robotBallCollisions.size()) {
-                                            auto &vel = meJumpSnd.robotBallCollisions[0].velocity;
-                                            auto len = vel.z;
-                                            if (len > maxBallVel) {
-                                                maxBallVel = len;
-                                                firstAction = wt == 0 ? (j == 0 ? jmpAction : fa) : AAction();
-                                                selJ = j;
-                                                selI = i;
-                                                selK = k;
-                                                selWt = wt;
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                meSnd.me()->action = mvAction;
-                                if (j == 0)
-                                    fa = mvAction;
-                                meSnd.doTick(1);
-                                if (meSnd.hasGoal < 0) {
-                                    break;
-                                }
-                            }
-                        }
-                        meWaitSnd.doTick(1);
-                        if (meWaitSnd.hasGoal < 0) {
-                            break;
-                        }
-                    }
-                }
-
-                ballSnd.doTick(5);
-                if (ballSnd.hasGoal < 0) {
-                    break;
-                }
-            }
-
-
-            if (maxBallVel >= 0) {
-                resAction = firstAction;
-                if (drawI < 0) {
-                    AAction t1;
-                    int t2;
-                    catchGkStrat4(t1, t2, selWt, selI, selJ, selK);
-                }
-                prevI = selI;
-                prevWt = selWt;
-                return true;
-            }
-            return false;
-        };
 
         auto catchGkStrat3 = [&](AAction& resAction, int& resTicks) {
             if (env.roundTick < 50)
@@ -535,9 +536,8 @@ public:
 
 
                 AAction catchAction;
-                int catchTime;
                 if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 4 /*&& std::abs(ball.x) < ARENA_GOAL_WIDTH * 1.2*/)
-                    && catchGkStrat3(catchAction, catchTime)) {
+                    && catchGkStrat4(catchAction)) {
 
                     action = catchAction;
                 } else {
