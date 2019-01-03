@@ -79,7 +79,7 @@ public:
         return false;
     }
 
-    bool tryShotGoalRun(AAction &resAction, bool needGoal, bool oppSim, int drawI = -1, int drawJ = -1, int drawK = -1) {
+    bool tryShotOutOrGoal(AAction &resAction, bool& hasGoal, int drawI = -1, int drawJ = -1, int drawK = -1) {
         if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 11)
             return false;
         // TODO: check untouched and far to ball
@@ -89,6 +89,7 @@ public:
         ballSnd.clearRobots();
         double maxBallVel = -1;
         int selI = -1, selJ = -1, selK = -1;
+        hasGoal = false;
         AAction firstAction;
 
         static int prevI = -1;
@@ -96,9 +97,6 @@ public:
         for (auto i = 0; i <= 50; i++) {
             if ((i % 5 == 0 || i <= 6 || std::abs(prevI - i) <= 2 || i == drawI) && (drawI < 0 || i == drawI)) {
                 Sandbox meSnd = env;
-                if (!oppSim) {
-                    meSnd.clearRobots(true);
-                }
 
                 AAction firstJAct;
                 auto mvel = maxVelocityTo(*meSnd.me(), ballSnd.ball);
@@ -121,7 +119,7 @@ public:
 
                     if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
                         const int jumpMaxTicks = 17;
-                        const int ballSimMaxTicks = needGoal ? 70 : 50;
+                        const int ballSimMaxTicks = 70;
                         for (auto k = 0; k <= jumpMaxTicks; k++) {
                             meJumpSnd.doTick(1);
 
@@ -136,17 +134,18 @@ public:
                                     myCollisionVel = item.velocity.z;
 
                             if (myCollisionVel < INT_MAX) {
-                                if (myCollisionVel > maxBallVel) {
-                                    if (needGoal) {
-                                        for (int w = 0; w <= ballSimMaxTicks; w++) {
-                                            meJumpSnd.doTick(1);
-                                        }
+                                if (myCollisionVel > maxBallVel || !hasGoal) {
+
+                                    for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
+                                        meJumpSnd.doTick(1);
                                     }
-                                    if (meJumpSnd.hasGoal > 0 || !needGoal) {
+
+                                    if (std::make_tuple(meJumpSnd.hasGoal > 0, myCollisionVel) > std::make_tuple(hasGoal, maxBallVel)) {
                                         selI = i;
                                         selJ = j;
                                         selK = k;
                                         maxBallVel = myCollisionVel;
+                                        hasGoal = meJumpSnd.hasGoal > 0;
                                         firstAction = j == 0 ? jmpAction : firstJAct;
                                     }
                                 }
@@ -171,7 +170,8 @@ public:
 #ifdef DEBUG
             if (drawI < 0) {
                 AAction t1;
-                tryShotGoalRun(t1, needGoal, oppSim, selI, selJ, selK);
+                bool t2;
+                tryShotOutOrGoal(t1, t2, selI, selJ, selK);
             }
 #endif
             prevI = selI;
@@ -368,23 +368,18 @@ public:
         auto firstToBall = evalToBall();
 
         bool is_attacker = env.teammate1()->z < me.z || (env.teammate1()->z == me.z && env.teammate1()->id == me.id);
+        bool hasGoal = false;
 
         if (is_attacker && env.roundTick <= 35) {
             action = AAction().vel(maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
         } else if (tryShotGoalNow(action)) {
             Visualizer::addText("SHOT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             LOG("SHOT");
-        } else if (is_attacker && tryShotGoalRun(action, true, true)) {
-            Visualizer::addText("MOVE TO SHOT!!!!!!");
-            LOG("MOVE TO SHOT!!!!!!");
-        } else if (is_attacker && tryShotGoalRun(action, true, false)) {
-            Visualizer::addText("MOVE TO SHOT??????");
-            LOG("MOVE TO SHOT??????");
-        } else if (is_attacker && tryShotGoalRun(action, false, true)) {
-            Visualizer::addText("SHOT OUT");
-            LOG("SHOT OUT");
+        } else if (is_attacker && tryShotOutOrGoal(action, hasGoal)) {
+            std::string msg = hasGoal ? "MOVE TO SHOT!!!!!!" : "SHOT OUT";
+            Visualizer::addText(msg);
+            LOG(msg);
         } else {
-
             if (is_attacker) {
                 if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
                     int angles = 8;
