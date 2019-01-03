@@ -185,67 +185,6 @@ public:
         return diff.take(ROBOT_MAX_GROUND_SPEED);
     }
 
-    bool tryShotOff(AAction &resAction) {
-        return false;
-
-        if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 3) // not reachable, TODO: magic const
-            return false;
-        if (env.me()->radius >= ROBOT_MAX_RADIUS) // already jumped
-            return false;
-
-        int oppMinCollideTicks = 1000;
-        double maxZSpeed = 0;
-        for (auto& opp : env.opp) {
-            if (opp.getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 3)
-                continue;
-
-            Sandbox startEnv = env;
-            startEnv.robot(opp.id)->action = AAction().jump(); // TODO: maxVelocityTo(*startEnv.me(), startEnv.ball)
-            for (int i = 1; i <= 70 && i < oppMinCollideTicks; i++) {
-                startEnv.doTick(5);
-
-                bool hasId = false;
-                for (auto &x : startEnv.robotBallCollisions)
-                    hasId |= x.id == opp.id;
-
-                if (hasId) {
-                    oppMinCollideTicks = i;
-                    maxZSpeed = startEnv.ball.velocity.z;
-                    break;
-                }
-            }
-        }
-
-        int myMinCollideTicks = 1000;
-        double maxMeZSpeed = 0;
-        if (oppMinCollideTicks < 1000) {
-            Sandbox startEnv = env;
-            startEnv.me()->action = AAction().jump(); // TODO: maxVelocityTo(*startEnv.me(), startEnv.ball)
-            for (int i = 1; i <= 70 && i < myMinCollideTicks; i++) {
-                startEnv.doTick(5);
-
-                bool hasId = false;
-                for (auto &x : startEnv.robotBallCollisions)
-                    hasId |= x.id == startEnv.me()->id;
-
-                if (hasId) {
-                    myMinCollideTicks = i;
-                    maxMeZSpeed = startEnv.ball.velocity.z;
-                    break;
-                }
-            }
-        }
-
-
-        if (oppMinCollideTicks - 8 <= myMinCollideTicks && myMinCollideTicks < 1000 && maxMeZSpeed > maxZSpeed) {
-            resAction = AAction().jump();
-            return true;
-        }
-        return false;
-    }
-
-
-
     std::optional<ARobot> evalToBall() {
         Sandbox e = env;
         for (int i = 1; i <= 100; i++) {
@@ -481,7 +420,9 @@ public:
 
         bool is_attacker = env.teammate1()->z < me.z;
 
-        if (tryShotGoalNow(action)) {
+        if (is_attacker && env.roundTick <= 35) {
+            action = AAction().vel(maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
+        } else if (tryShotGoalNow(action)) {
             Visualizer::addText("SHOT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             LOG("SHOT");
         } else if (is_attacker && tryShotGoalRun(action, true)) {
@@ -493,9 +434,7 @@ public:
         } else {
 
             if (is_attacker) {
-                if (tryShotOff(action)) {
-
-                } else if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
+                if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
                     int angles = 8;
                     Point bestV;
                     double minDist = 1e10;
@@ -527,7 +466,7 @@ public:
                             continue;
                         auto t = 1.0 * i / TICKS_PER_SECOND;
 
-                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 0.9);
+                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 1.3);
                         Point delta_pos = tar - me;
                         delta_pos.y = 0;
                         auto need_speed = delta_pos.length() / t;
