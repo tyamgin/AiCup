@@ -875,6 +875,7 @@ struct Sandbox {
             robot.radius_change_speed = robot.action.jumpSpeed;
         }
         ball.move(delta_time);
+
         for (size_t i = 0; i < robots.size(); i++) {
             for (size_t j = 0; j < i; j++) {
                 collide_entities<ARobot>(*robots[i], *robots[j]);

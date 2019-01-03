@@ -11,11 +11,10 @@ struct Unit : public Point {
     double radius_change_speed = 0; // tmp field for simulator
 
     void move(double delta_time) {
-        if (velocity.length2() > MAX_ENTITY_SPEED*MAX_ENTITY_SPEED)
-            velocity = velocity.take(MAX_ENTITY_SPEED);
-
-        *this += velocity * delta_time;
-        y -= GRAVITY * delta_time * delta_time / 2;
+        velocity.clamp(MAX_ENTITY_SPEED);
+        x += velocity.x * delta_time;
+        z += velocity.z * delta_time;
+        y += (velocity.y - GRAVITY / 2 * delta_time) * delta_time;
         velocity.y -= GRAVITY * delta_time;
     }
 };
