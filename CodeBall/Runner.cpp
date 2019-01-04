@@ -11,11 +11,11 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG
     cerr << "Starting local runner" << endl;
 
-    system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --duration 40000 --seed 19487893 --p2-name m14 --p2 tcp-31002 &");
+    system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --duration 40000 --seed 19487893 --p2-name m15 --p2 tcp-31002 &");
     cerr << "local runner started" << endl;
 
     usleep(2000 * 1000);
-    system("/Users/tyamgin/Projects/AiCup/CodeBall/release/m14 127.0.0.1 31002 0000000000000000 &");
+    system("/Users/tyamgin/Projects/AiCup/CodeBall/release/m15 127.0.0.1 31002 0000000000000000 &");
 #endif
 
     if (argc == 4) {

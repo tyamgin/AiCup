@@ -79,15 +79,17 @@ public:
         return false;
     }
 
-    bool tryShotOutOrGoal(AAction &resAction, bool& hasGoal, int drawI = -1, int drawJ = -1, int drawK = -1) {
-        if (env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 11)
+    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, bool& hasGoal, int drawI = -1, int drawJ = -1, int drawK = -1) {
+        if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 11)
+            return false;
+        if (!isAttacker && env.roundTick < 50)
             return false;
         // TODO: check untouched and far to ball
 
         const auto myId = env.me()->id;
         Sandbox ballSnd = env;
         ballSnd.clearRobots();
-        double maxBallVel = -1;
+        double maxBallVel = -INT_MAX;
         int selI = -1, selJ = -1, selK = -1;
         hasGoal = false;
         AAction firstAction;
@@ -119,7 +121,7 @@ public:
 
                     if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
                         const int jumpMaxTicks = 17;
-                        const int ballSimMaxTicks = 70;
+                        const int ballSimMaxTicks = 90;
                         for (auto k = 0; k <= jumpMaxTicks; k++) {
                             meJumpSnd.doTick(1);
 
@@ -133,11 +135,14 @@ public:
                                 if (item.id == myId)
                                     myCollisionVel = item.velocity.z;
 
-                            if (myCollisionVel < INT_MAX) {
-                                if (myCollisionVel > maxBallVel || !hasGoal) {
+                            double maxZ = -100;
 
+                            if (myCollisionVel < INT_MAX && myCollisionVel >= 0) {
+                                //if (myCollisionVel > maxBallVel || !hasGoal)
+                                {
                                     for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
                                         meJumpSnd.doTick(1);
+                                        maxZ = std::max(maxZ, meJumpSnd.ball.z);
                                     }
 
                                     if (std::make_tuple(meJumpSnd.hasGoal > 0, myCollisionVel) > std::make_tuple(hasGoal, maxBallVel)) {
@@ -165,13 +170,13 @@ public:
             }
         }
 
-        if (maxBallVel >= 0) {
+        if (maxBallVel > -INT_MAX) {
             resAction = firstAction;
 #ifdef DEBUG
             if (drawI < 0) {
                 AAction t1;
                 bool t2;
-                tryShotOutOrGoal(t1, t2, selI, selJ, selK);
+                tryShotOutOrGoal(isAttacker, t1, t2, selI, selJ, selK);
             }
 #endif
             prevI = selI;
@@ -180,118 +185,39 @@ public:
         return false;
     }
 
-    bool catchGkStrat4(AAction& resAction, int drawWt = -1, int drawI = -1, int drawJ = -1, int drawK = -1) {
-        if (env.roundTick < 50)
-            return false;
+    AAction goToGoalCenterStrat(Sandbox &e) {
+        AAction sAct;
+        double ch = 0.8;
+        double maxDeep = 2.0 + ch;
+        auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
 
-        const auto myId = env.me()->id;
-        Sandbox ballSnd = env;
-        ballSnd.clearRobots();
-        double maxBallVel = -1;
-        int selWt = -1;
-        int selJ = -1;
-        int selI = -1;
-        int selK = -1;
-        AAction firstAction;
+        Point target_pos;
+        double tt = -1;
 
-        static int prevI = -1;
-        static int prevWt = -1;
+        // Причем, если мяч движется в сторону наших ворот
+        if (e.ball.velocity.z < -EPS && e.ball.z < -1) {
+            // Найдем время и место, в котором мяч пересечет линию ворот
+            tt = (-ARENA_DEPTH / 2.0 - e.ball.z) / e.ball.velocity.z;
+            auto x = e.ball.x + e.ball.velocity.x * tt;
+            target_pos.x = std::clamp(x, -w, w);
+        }
+        auto deepCoeff = (1 - std::min(std::abs(target_pos.x), w) / w) * maxDeep - ch;
+        target_pos.z = -(ARENA_DEPTH / 2.0 + deepCoeff);
 
-        for (auto i = 0; i <= 65; i++) {
-            if ((i % 5 == 0 || i <= 6 || std::abs(prevI - i) <= 2 || i == drawI) && (drawI < 0 || i == drawI)) {
-                Sandbox meWaitSnd = env;
-                meWaitSnd.clearRobots();
-                meWaitSnd.my.push_back(*env.me());
+        // Установка нужных полей для желаемого действия
+        auto delta = Point(target_pos.x - e.me()->x, 0.0, target_pos.z - e.me()->z);
+        auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
+        if (e.me()->z < -ARENA_DEPTH / 2 + 2 && std::abs(e.me()->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сльно быстро шататься
+            speed = delta.length() / tt;
+        auto target_velocity = delta.take(speed);
+        sAct.targetVelocity = target_velocity;
 
-                for (auto wt = 0; wt <= 0; wt++) {
-                    if ((wt <= 1 || wt % 10 == 0 || wt == drawWt || std::abs(prevWt - wt) <= 2) && (drawWt < 0 || wt == drawWt)) {
-
-                        Sandbox meSnd = meWaitSnd;
-                        //meSnd.clearRobots();
-                        //meSnd.my.push_back(*meWaitSnd.me());
-                        AAction fa;
-                        auto mvel = maxVelocityTo(*meSnd.me(), ballSnd.ball);
-
-                        for (auto j = 0; j <= 65; j++) {
-                            Sandbox meJumpSnd = meSnd;
-                            auto mvAction = AAction().vel(mvel);
-                            auto jmpAction = mvAction;
-                            jmpAction.jump();
-
-                            meJumpSnd.me()->action = jmpAction;
-
-                            if (j <= drawJ) {
-                                Visualizer::addSphere(meJumpSnd.my[0], 0, 0.8, 0, 0.7);
-                                Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
-                            }
-
-                            if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
-                                for (auto k = 0; k <= 15; k++) {
-                                    meJumpSnd.doTick(1);
-
-                                    if (j == drawJ && k <= drawK) {
-                                        Visualizer::addSphere(meJumpSnd.my[0], 0.7, 0.8, 0, 0.7);
-                                        Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
-                                    }
-
-                                    if (meJumpSnd.hasGoal < 0) {
-                                        break;
-                                    }
-
-                                    double myCollisionVel = INT_MAX;
-                                    for (auto& item : meJumpSnd.robotBallCollisions)
-                                        if (item.id == myId)
-                                            myCollisionVel = item.velocity.z;
-
-                                    if (myCollisionVel < INT_MAX) {
-                                        if (myCollisionVel > maxBallVel) {
-                                            maxBallVel = myCollisionVel;
-                                            firstAction = wt == 0 ? (j == 0 ? jmpAction : fa) : AAction();
-                                            selJ = j;
-                                            selI = i;
-                                            selK = k;
-                                            selWt = wt;
-                                        }
-                                        break;
-                                    }
-                                }
-                            }
-
-                            meSnd.me()->action = mvAction;
-                            if (j == 0)
-                                fa = mvAction;
-                            meSnd.doTick(1);
-                            if (meSnd.hasGoal < 0) {
-                                break;
-                            }
-                        }
-                    }
-                    meWaitSnd.doTick(1);
-                    if (meWaitSnd.hasGoal < 0) {
-                        break;
-                    }
-                }
-            }
-
-            ballSnd.doTick(5);
-            if (ballSnd.hasGoal < 0) {
-                break;
-            }
+        if (e.me()->getDistanceTo(e.ball) < ROBBOT_SHOT_DIST) {
+            sAct.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
         }
 
-
-        if (maxBallVel >= 0) {
-            resAction = firstAction;
-            if (drawI < 0) {
-                AAction t1;
-                catchGkStrat4(t1, selWt, selI, selJ, selK);
-            }
-            prevI = selI;
-            prevWt = selWt;
-            return true;
-        }
-        return false;
-    };
+        return sAct;
+    }
 
 
     Point maxVelocityTo(const ARobot& a, const Point& b) {
@@ -379,7 +305,7 @@ public:
         } else if (tryShotGoalNow(action)) {
             Visualizer::addText("SHOT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
             LOG("SHOT");
-        } else if (is_attacker && tryShotOutOrGoal(action, hasGoal)) {
+        } else if (is_attacker && tryShotOutOrGoal(is_attacker, action, hasGoal)) {
             std::string msg = hasGoal ? "MOVE TO SHOT!!!!!!" : "SHOT OUT";
             Visualizer::addText(msg);
             LOG(msg);
@@ -450,46 +376,12 @@ public:
                 sp.radius *= 1.1;
                 Visualizer::addSphere(sp);
 
-                auto goToGoalCenterStrat = [](Sandbox &e) {
-                    AAction sAct;
-                    double ch = 0.8;
-                    double maxDeep = 2.0 + ch;
-                    auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
+                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 5)
+                    && tryShotOutOrGoal(is_attacker, action, hasGoal)) {
 
-                    Point target_pos;
-                    double tt = -1;
-
-                    // Причем, если мяч движется в сторону наших ворот
-                    if (e.ball.velocity.z < -EPS && e.ball.z < -1) {
-                        // Найдем время и место, в котором мяч пересечет линию ворот
-                        tt = (-ARENA_DEPTH / 2.0 - e.ball.z) / e.ball.velocity.z;
-                        auto x = e.ball.x + e.ball.velocity.x * tt;
-                        target_pos.x = std::clamp(x, -w, w);
-                    }
-                    auto deepCoeff = (1 - std::min(std::abs(target_pos.x), w) / w) * maxDeep - ch;
-                    target_pos.z = -(ARENA_DEPTH / 2.0 + deepCoeff);
-
-                    // Установка нужных полей для желаемого действия
-                    auto delta = Point(target_pos.x - e.me()->x, 0.0, target_pos.z - e.me()->z);
-                    auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
-                    if (e.me()->z < -ARENA_DEPTH / 2 + 2 && std::abs(e.me()->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сльно быстро шататься
-                        speed = delta.length() / tt;
-                    auto target_velocity = delta.take(speed);
-                    sAct.targetVelocity = target_velocity;
-
-                    if (e.me()->getDistanceTo(e.ball) < ROBBOT_SHOT_DIST) {
-                        sAct.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
-                    }
-
-                    return sAct;
-                };
-
-
-                AAction catchAction;
-                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 4 /*&& std::abs(ball.x) < ARENA_GOAL_WIDTH * 1.2*/)
-                    && catchGkStrat4(catchAction)) {
-
-                    action = catchAction;
+                    std::string msg = hasGoal ? "(gk) MOVE TO SHOT!!!!!!" : "(gk) SHOT OUT";
+                    Visualizer::addText(msg);
+                    LOG(msg);
                 } else {
                     std::optional<AAction> defend;
                     Sandbox e1 = env;
