@@ -1,3 +1,12 @@
+#define M_NO_RANDOM 0
+
+#if M_NO_RANDOM
+#ifndef LOCAL
+#error "M_NO_RANDOM is only for local"
+#endif
+#endif
+
+
 #include <memory>
 #include <iostream>
 #include <cstdlib>
@@ -11,7 +20,11 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG
     cerr << "Starting local runner" << endl;
 
-    system("/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018 --duration 40000 --seed 19487893 --p2-name m15 --p2 tcp-31002 &");
+    std::string runStr = "/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018";
+#if M_NO_RANDOM
+    runStr += " --disable-random";
+#endif
+    system((runStr + " --duration 40000 --seed 19484493 --p2-name m15 --p2 tcp-31002 &").c_str());
     cerr << "local runner started" << endl;
 
     usleep(2000 * 1000);
