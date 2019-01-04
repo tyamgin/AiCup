@@ -103,6 +103,7 @@ public:
                     const int ballSimMaxTicks = 90;
                     for (auto k = 0; k <= jumpMaxTicks; k++) {
                         meJumpSnd.doTick(1);
+                        auto tmp = meJumpSnd.me();
 
                         if (j == drawJ && k <= drawK) {
                             Visualizer::addSphere(*meJumpSnd.me(), 0.7, 0.8, 0, 0.7);
@@ -110,9 +111,11 @@ public:
                         }
 
                         double myCollisionVel = INT_MAX;
-                        for (auto& item : meJumpSnd.robotBallCollisions)
-                            if (item.id == myId)
+                        for (auto& item : meJumpSnd.robotBallCollisions) {
+                            if (item.id == myId) {
                                 myCollisionVel = item.velocity.z;
+                            }
+                        }
 
                         double maxZ = -100;
 

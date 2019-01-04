@@ -871,7 +871,7 @@ struct Sandbox {
 //                }
 //            }
             robot.move(delta_time);
-            robot.radius = ROBOT_MIN_RADIUS + (ROBOT_MAX_RADIUS - ROBOT_MIN_RADIUS) * robot.action.jumpSpeed / ROBOT_MAX_JUMP_SPEED;
+            robot.radius = radiusByJumpSpeed(robot.action.jumpSpeed);
             robot.radius_change_speed = robot.action.jumpSpeed;
         }
         ball.move(delta_time);
@@ -910,6 +910,10 @@ struct Sandbox {
         }
     }
 
+    static double radiusByJumpSpeed(double jumpSpeed) {
+        return ROBOT_MIN_RADIUS + (ROBOT_MAX_RADIUS - ROBOT_MIN_RADIUS) * jumpSpeed / ROBOT_MAX_JUMP_SPEED;
+    }
+
     void checkGoal() {
         if (abs(ball.z) > ARENA_DEPTH / 2 + ball.radius) {
             hasGoal = ball.z < 0 ? -1 : 1;
@@ -930,12 +934,29 @@ struct Sandbox {
     void doTick(int microticksPerTick = MICROTICKS_PER_TICK) {
         OP_START(DO_TICK);
 
+        for (auto& x : opp)
+            x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
+
+        bool firstMicrotickSeparate = false;
+        for (auto x : robots())
+            firstMicrotickSeparate |= std::abs(x->radius - radiusByJumpSpeed(x->action.jumpSpeed)) > EPS;
+        firstMicrotickSeparate &= microticksPerTick < MICROTICKS_PER_TICK;
+
         hasRandomCollision = false;
         robotBallCollisions.clear();
-        auto delta_time = 1.0 / TICKS_PER_SECOND;
-        if (tick < GameInfo::maxTickCount) {
-            for (int i = 0; i < microticksPerTick && hasGoal == 0; i++)
-                update(delta_time / microticksPerTick);
+        constexpr const auto deltaTimeTick = 1.0 / TICKS_PER_SECOND;
+        if (tick < GameInfo::maxTickCount && hasGoal == 0) {
+            double deltaTime = deltaTimeTick / microticksPerTick;
+            if (firstMicrotickSeparate) {
+                const int tt = 2;
+                for (int i = 0; i < tt && hasGoal == 0; i++) {
+                    update(deltaTimeTick / MICROTICKS_PER_TICK);
+                }
+                deltaTime = (deltaTimeTick - tt * deltaTimeTick / MICROTICKS_PER_TICK) / microticksPerTick;
+            }
+            for (int i = 0; i < microticksPerTick && hasGoal == 0; i++) {
+                update(deltaTime);
+            }
 //        for pack in nitro_packs:
 //            if pack.alive:
 //                continue
