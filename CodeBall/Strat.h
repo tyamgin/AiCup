@@ -77,6 +77,8 @@ public:
         if (drawJ >= 0) {
             vels = {drawVel};
         }
+        std::sort(vels.begin(), vels.end());
+        vels.erase(std::unique(vels.begin(), vels.end()), vels.end());
 
         for (auto& mvel : vels) {
             Sandbox meSnd = env;
@@ -241,12 +243,13 @@ public:
         if (env.tick == lastTick) {
             for (auto tm : env.teammates(me.id))
                 tm->action = prevEnv.robot(tm->id)->action;
-        } else if (env.tick > 0) {
+        } else if (env.roundTick > 0) {
             prevEnv2 = prevEnv;
             prevEnv.doTick();
             checkEvalState();
         }
 
+#ifdef DEBUG
         if (me.id == 2) {
             Sandbox ballEnv = env;
             ballEnv.my.clear();
@@ -260,18 +263,8 @@ public:
                 }
                 ballEnv.doTick();
             }
-
-            Sandbox ballEnv2 = env;
-            ballEnv2.my.clear();
-            ballEnv2.opp.clear();
-            for (int i = 0; i < 200; i++) {
-                ballEnv2.doTick(1);
-                if (i == 199) {
-                    Visualizer::addSphere(ballEnv2.ball, 0, 0, 1, 0.5);
-                }
-            }
-
         }
+#endif
 
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         auto firstToBall = evalToBall();
