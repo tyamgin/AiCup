@@ -319,7 +319,7 @@ public:
                             continue;
                         auto t = 1.0 * i / TICKS_PER_SECOND;
 
-                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 1.3);
+                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 2.0);
                         Point delta_pos = tar - me;
                         delta_pos.y = 0;
                         auto need_speed = delta_pos.length() / t;
@@ -343,7 +343,7 @@ public:
                     }
                 } else {
                     auto opp = env.opp[0].z < env.opp[1].z ? env.opp[0] : env.opp[1];
-                    action.targetVelocity = maxVelocityTo(me, opp - Point(0, 0, 4*ROBOT_RADIUS));
+                    action.targetVelocity = maxVelocityTo(me, opp - Point(0, 0, 7*ROBOT_RADIUS));
                 }
             }
 
