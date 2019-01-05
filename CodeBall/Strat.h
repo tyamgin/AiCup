@@ -55,10 +55,9 @@ public:
         // TODO: check untouched and far to ball
 
         const auto myId = env.me()->id;
-        double maxBallVel = -INT_MAX;
+        auto sel = std::make_tuple(false, -1e10, -1e10);
         Point selVel;
         int selJ = -1, selK = -1;
-        hasGoal = false;
         AAction firstAction;
 
         static std::unordered_map<int, Point> prevVel;
@@ -120,24 +119,46 @@ public:
                         }
 
                         double maxZ = -100;
+                        double minDist = 100;
 
                         if (myCollisionVel < INT_MAX && myCollisionVel >= 0) {
                             //if (myCollisionVel > maxBallVel || !hasGoal)
                             {
+                                double thr = ARENA_DEPTH / 2 - 0.5;
+                                int minThr = INT_MAX;
                                 for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
                                     meJumpSnd.doTick(1);
                                     maxZ = std::max(maxZ, meJumpSnd.ball.z);
+                                    if (maxZ >= thr && minThr == INT_MAX)
+                                        minThr = w;
+//                                    Point pt2(ARENA_GOAL_WIDTH - 2, ARENA_GOAL_HEIGHT - 2, ARENA_DEPTH / 2);
+//                                    Point pt1 = pt2;
+//                                    pt1.x *= -1;
+//
+//                                    Point pt = meJumpSnd.ball;
+//                                    double mdst;
+//                                    if (pt.x < pt1.x)
+//                                        mdst = pt1.getDistanceTo(pt);
+//                                    else if (pt.x > pt2.x)
+//                                        mdst = pt2.getDistanceTo(pt);
+//                                    else {
+//                                        pt1.x = pt.x;
+//                                        mdst = pt1.getDistanceTo(pt);
+//                                    }
+//
+//                                    minDist = std::min(minDist, mdst);
                                     if (j == drawJ && k <= drawK) {
                                         Visualizer::addSphere(meJumpSnd.ball, 1, 1, 1, 0.5);
                                     }
                                 }
+                                maxZ = std::min(maxZ, thr);
+                                auto cand = std::make_tuple(meJumpSnd.hasGoal > 0, myCollisionVel, maxZ);
 
-                                if (std::make_tuple(meJumpSnd.hasGoal > 0, myCollisionVel) > std::make_tuple(hasGoal, maxBallVel)) {
+                                if (cand > sel) {
                                     selVel = mvel;
                                     selJ = j;
                                     selK = k;
-                                    maxBallVel = myCollisionVel;
-                                    hasGoal = meJumpSnd.hasGoal > 0;
+                                    sel = cand;
                                     firstAction = j == 0 ? jmpAction : firstJAct;
                                 }
                             }
@@ -151,7 +172,8 @@ public:
             }
         }
 
-        if (maxBallVel > -INT_MAX) {
+        hasGoal = std::get<0>(sel);
+        if (selJ >= 0) {
             resAction = firstAction;
 #ifdef DEBUG
             if (drawJ < 0) {
@@ -208,6 +230,21 @@ public:
         auto diff = (b - a).normalized();
         diff.y = -(diff.z * a.touch_normal.z + diff.x * a.touch_normal.x) / a.touch_normal.y;
         return diff.take(ROBOT_MAX_GROUND_SPEED);
+    }
+
+    int selectGk() {
+        std::vector<std::pair<double, int>> distToGoal;
+        for (auto& r : env.my) {
+            Point pt = r;
+            pt.y = 0;
+            if (pt.x > ARENA_GOAL_WIDTH / 2)
+                distToGoal.emplace_back(pt.getDistanceTo(ARENA_GOAL_WIDTH / 2, 0, -(ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2)), r.id);
+            else if (pt.x < -ARENA_GOAL_WIDTH / 2)
+                distToGoal.emplace_back(pt.getDistanceTo(-ARENA_GOAL_WIDTH / 2, 0, -(ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2)), r.id);
+            else
+                distToGoal.emplace_back(pt.getDistanceTo(pt.x, 0, -(ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2)), r.id);
+        }
+        return std::min_element(distToGoal.begin(), distToGoal.end())->second;
     }
 
     std::optional<ARobot> evalToBall() {
@@ -269,7 +306,7 @@ public:
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         auto firstToBall = evalToBall();
 
-        bool is_attacker = env.teammate1()->z < me.z || (env.teammate1()->z == me.z && env.teammate1()->id < me.id);
+        bool is_attacker = selectGk() != me.id;
         bool hasGoal = false;
 
         if (is_attacker && env.roundTick <= 35) {
@@ -332,7 +369,10 @@ public:
                     } else if (secondAction) {
                         action = secondAction.value();
                     } else {
-                        is_attacker = false;
+                        if (ball.z > -6)
+                            action.vel(maxVelocityTo(me, Point(0, 0, ARENA_DEPTH / 4)));
+                        else
+                            is_attacker = false;
                     }
                 } else {
                     auto opp = env.opp[0].z < env.opp[1].z ? env.opp[0] : env.opp[1];
