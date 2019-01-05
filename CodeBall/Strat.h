@@ -126,6 +126,7 @@ public:
                             {
                                 double thr = ARENA_DEPTH / 2 - 0.5;
                                 int minThr = INT_MAX;
+                                meJumpSnd.oppGkStrat = true;
                                 for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
                                     meJumpSnd.doTick(1);
                                     maxZ = std::max(maxZ, meJumpSnd.ball.z);

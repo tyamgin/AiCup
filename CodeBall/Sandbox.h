@@ -23,6 +23,7 @@ struct Sandbox {
     int meId = 0;
 
     RandomGenerator rnd;
+    bool oppGkStrat = false;
 
     Sandbox() {
     }
@@ -931,11 +932,48 @@ struct Sandbox {
         opp.clear();
     }
 
+    void oppStrat() {
+        for (auto& x : opp)
+            x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
+
+        if (!oppGkStrat)
+            return;
+
+        auto gk = opp[0].z > opp[1].z ? &opp[0] : &opp[1];
+
+        AAction sAct;
+
+        constexpr const auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
+
+        Point target_pos;
+        double tt = -1;
+
+        if (ball.velocity.z > EPS && ball.z > 1) {
+            // Найдем время и место, в котором мяч пересечет линию ворот
+            tt = (ARENA_DEPTH / 2.0 - ball.z) / ball.velocity.z;
+            auto x = ball.x + ball.velocity.x * tt;
+            target_pos.x = std::clamp(x, -w, w);
+        }
+        target_pos.z = ARENA_DEPTH / 2.0 - 1;
+
+        // Установка нужных полей для желаемого действия
+        auto delta = Point(target_pos.x - gk->x, 0.0, target_pos.z - gk->z);
+        auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
+        if (gk->z > ARENA_DEPTH / 2 - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сльно быстро шататься
+            speed = delta.length() / tt;
+        sAct.targetVelocity = delta.take(speed);
+
+        if (gk->getDistanceTo(ball) < ROBOT_RADIUS + BALL_RADIUS + 3) {
+            sAct.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+        }
+
+        gk->action = sAct;
+    }
+
     void doTick(int microticksPerTick = MICROTICKS_PER_TICK) {
         OP_START(DO_TICK);
 
-        for (auto& x : opp)
-            x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
+        oppStrat();
 
         bool firstMicrotickSeparate = false;
         for (auto x : robots())
