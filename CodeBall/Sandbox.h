@@ -23,6 +23,7 @@ struct Sandbox {
     int meId = 0;
 
     RandomGenerator rnd;
+    bool deduceOppSimple = true;
     bool oppGkStrat = false;
 
     Sandbox() {
@@ -933,11 +934,16 @@ struct Sandbox {
     }
 
     void oppStrat() {
-        for (auto& x : opp)
-            x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
+        if (deduceOppSimple) {
+            for (auto &x : opp) {
+                x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
+                x.action.targetVelocity = x.velocity;
+            }
+        }
 
-        if (!oppGkStrat)
+        if (!oppGkStrat) {
             return;
+        }
 
         auto gk = opp[0].z > opp[1].z ? &opp[0] : &opp[1];
 
