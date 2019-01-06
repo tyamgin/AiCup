@@ -951,8 +951,6 @@ struct Sandbox {
 
         auto gk = opp[0].z > opp[1].z ? &opp[0] : &opp[1];
 
-        AAction sAct;
-
         constexpr const auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
 
         Point target_pos;
@@ -971,13 +969,11 @@ struct Sandbox {
         auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
         if (gk->z > ARENA_DEPTH / 2 - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сльно быстро шататься
             speed = delta.length() / tt;
-        sAct.targetVelocity = delta.take(speed);
+        gk->action.targetVelocity = delta.take(speed);
 
-        if (gk->getDistanceTo(ball) < ROBOT_RADIUS + BALL_RADIUS + 3) {
-            sAct.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+        if (gk->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 3)) {
+            gk->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
         }
-
-        gk->action = sAct;
     }
 
     void doTick(int microticksPerTick = MICROTICKS_PER_TICK) {
