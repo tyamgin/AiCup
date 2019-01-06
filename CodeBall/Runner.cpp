@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 #if M_NO_RANDOM
     runStr += " --disable-random";
 #endif
-    system((runStr + " --duration 40000 --seed 4347095 --p2-name m19 --p2 tcp-31002 &").c_str());
+    system((runStr + " --duration 40000 --seed 23407095 --p2-name m19 --p2 tcp-31002 &").c_str());
     cerr << "local runner started" << endl;
 
     usleep(2000 * 1000);

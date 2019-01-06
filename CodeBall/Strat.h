@@ -48,7 +48,9 @@ public:
     }
 
     bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, bool& hasGoal, Point drawVel = {}, int drawJ = -1, int drawK = -1) {
-        if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
+        if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
+            return false;
+        if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
         if (!isAttacker && env.roundTick < 50)
             return false;
