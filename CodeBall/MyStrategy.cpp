@@ -17,6 +17,17 @@ int waitForTick = -1;
 void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
     GameInfo::maxTickCount = rules.max_tick_count;
     GameInfo::isFinal = rules.team_size > 2;
+    GameInfo::GameScore newScore = {0, 0};
+    for (auto&player : game.players) {
+        if (player.me) {
+            newScore.my = player.score;
+        } else {
+            newScore.opp = player.score;
+            GameInfo::isOpponentCrashed = player.strategy_crashed;
+        }
+    }
+    bool scoreChanged = GameInfo::score.my + GameInfo::score.opp != newScore.my + newScore.opp;
+    GameInfo::score = newScore;
 
     AAction a;
     strat.env = Sandbox(game, rules, me.id);
@@ -37,11 +48,7 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     if (env.tick < waitForTick) {
         return;
     }
-    if (env.hasGoal) {
-        if (first) {
-            GameInfo::score.my += env.hasGoal > 0;
-            GameInfo::score.opp += env.hasGoal < 0;
-        }
+    if (scoreChanged) {
         waitForTick = env.tick + RESET_TICKS - 1;
         return;
     }

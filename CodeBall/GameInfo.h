@@ -4,6 +4,7 @@
 struct GameInfo {
     static int maxTickCount;
     static bool isFinal;
+    static bool isOpponentCrashed;
 
     struct GameScore {
         int my = 0, opp = 0;

@@ -934,6 +934,10 @@ struct Sandbox {
     }
 
     void oppStrat() {
+        if (GameInfo::isOpponentCrashed) {
+            return;
+        }
+
         if (deduceOppSimple) {
             for (auto &x : opp) {
                 x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
