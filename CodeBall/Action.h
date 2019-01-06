@@ -14,14 +14,6 @@ struct AAction {
         useNitro = false;
     }
 
-    explicit AAction(const model::Action& action) {
-        targetVelocity.x = action.target_velocity_x;
-        targetVelocity.y = action.target_velocity_y;
-        targetVelocity.z = action.target_velocity_z;
-        jumpSpeed = action.jump_speed;
-        useNitro = action.use_nitro;
-    }
-
     AAction& jump(double jumpSpeed = ROBOT_MAX_JUMP_SPEED) {
         this->jumpSpeed = jumpSpeed;
         return *this;

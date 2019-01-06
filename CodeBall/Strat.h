@@ -9,7 +9,7 @@ class Strat {
 public:
     int lastTick = -1;
     Sandbox env;
-    Sandbox prevEnv, prevEnv2;
+    Sandbox prevEnv;
 
     void checkEvalState() {
         if (prevEnv.hasRandomCollision) {
@@ -48,7 +48,7 @@ public:
     }
 
     bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, bool& hasGoal, Point drawVel = {}, int drawJ = -1, int drawK = -1) {
-        if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 11)
+        if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
         if (!isAttacker && env.roundTick < 50)
             return false;
@@ -63,7 +63,8 @@ public:
         static std::unordered_map<int, Point> prevVel;
         std::vector<Point> vels;
         Sandbox ballSnd = env;
-        ballSnd.clearRobots();
+        ballSnd.my.clear();
+
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6)
                 vels.push_back(maxVelocityTo(*env.me(), ballSnd.ball));
@@ -99,8 +100,8 @@ public:
                 if (j == 0)
                     firstJAct = mvAction;
 
-                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 5) {
-                    const int jumpMaxTicks = 17;
+                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 7) {
+                    const int jumpMaxTicks = 20;
                     const int ballSimMaxTicks = 90;
                     for (auto k = 0; k <= jumpMaxTicks; k++) {
                         meJumpSnd.doTick(1);
@@ -282,7 +283,6 @@ public:
             for (auto tm : env.teammates(me.id))
                 tm->action = prevEnv.robot(tm->id)->action;
         } else if (env.roundTick > 0) {
-            prevEnv2 = prevEnv;
             prevEnv.doTick();
             checkEvalState();
         }
@@ -290,13 +290,11 @@ public:
 #ifdef DEBUG
         if (me.id == 2) {
             Sandbox ballEnv = env;
-            ballEnv.my.clear();
-            ballEnv.opp.clear();
             for (int i = 0; i < 200; i++) {
                 if (i == 199) {
                     Visualizer::addSphere(ballEnv.ball, 0.3, 0, 0.5, 0.5);
                 }
-                if (i % 10 == 9) {
+                if (i % 6 == 5) {
                     Visualizer::addSphere(ballEnv.ball, 1, 0, 0, 0.2);
                 }
                 ballEnv.doTick();
