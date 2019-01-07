@@ -48,19 +48,22 @@ public:
     }
 
     struct Metric {
-        bool hasGoal;
-        double m1, m2;
+        bool hasGoal = false;
+        double m1 = 0, m2 = 0;
+        int timeToShot = INT_MAX;
 
         bool operator <(const Metric &m) const {
             return std::make_tuple(hasGoal, m1, m2) < std::make_tuple(m.hasGoal, m.m1, m.m2);
         }
 
         std::string toString() {
-            return (hasGoal ? "GOAL" : "SHOT") + std::string(" ") + std::to_string(m1);
+            return (hasGoal ? "GOAL" : "SHOT") + std::string(" t=") + std::to_string(timeToShot) + " " + std::to_string(m1);
         }
     };
 
-    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& metric, Point drawVel = {}, int drawJ = -1, int drawK = -1) {
+    std::unordered_map<int, int> lastShotTime;
+
+    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Point drawVel = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
@@ -70,7 +73,7 @@ public:
         // TODO: check untouched and far to ball
 
         const auto myId = env.me()->id;
-        Metric sel = {false, -1e10, -1e10};
+        Metric sel;
         Point selVel;
         int selJ = -1, selK = -1;
         AAction firstAction;
@@ -116,6 +119,8 @@ public:
             return false;
         };
 
+        const double al = 0.7 * drawAlpha;
+
         for (auto& mvel : vels) {
             Sandbox meSnd = env;
             AAction firstJAct;
@@ -129,8 +134,8 @@ public:
                 meJumpSnd.me()->action = jmpAction;
 
                 if (j <= drawJ) {
-                    Visualizer::addSphere(*meJumpSnd.me(), 0, 0.8, 0, 0.7);
-                    Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
+                    Visualizer::addSphere(*meJumpSnd.me(), 0, 0.8, 0, al);
+                    Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, al);
                 }
 
                 if (j == 0)
@@ -147,8 +152,8 @@ public:
                         }
 
                         if (j == drawJ && k <= drawK) {
-                            Visualizer::addSphere(*meJumpSnd.me(), 0.7, 0.8, 0, 0.7);
-                            Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, 0.7);
+                            Visualizer::addSphere(*meJumpSnd.me(), 0.7, 0.8, 0, al);
+                            Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, al);
                         }
 
                         double myCollisionVel = INT_MAX;
@@ -164,6 +169,7 @@ public:
                         if (myCollisionVel < INT_MAX && myCollisionVel >= 0) {
                             //if (myCollisionVel > maxBallVel || !hasGoal)
                             {
+                                int timeToShot = meJumpSnd.tick - env.tick;
                                 double thr = ARENA_DEPTH / 2 - 0.5;
                                 int minThr = INT_MAX;
                                 meJumpSnd.oppGkStrat = true;
@@ -189,13 +195,13 @@ public:
 //
 //                                    minDist = std::min(minDist, mdst);
                                     if (j == drawJ && k <= drawK) {
-                                        Visualizer::addSphere(meJumpSnd.ball, 1, 1, 1, 0.5);
+                                        Visualizer::addSphere(meJumpSnd.ball, 1, 1, 1, al);
                                     }
                                 }
                                 maxZ = std::min(maxZ, thr);
-                                Metric cand = {meJumpSnd.hasGoal > 0, myCollisionVel, maxZ};
+                                Metric cand = {meJumpSnd.hasGoal > 0, myCollisionVel, maxZ, timeToShot};
 
-                                if (sel < cand) {
+                                if (selJ == -1 || sel < cand) {
                                     selVel = mvel;
                                     selJ = j;
                                     selK = k;
@@ -217,17 +223,20 @@ public:
         }
 
         if (selJ >= 0) {
+            resMetric = sel;
             resAction = firstAction;
+            auto teammateLastShotTime = lastShotTime[env.teammate1()->id];
+            auto ret = sel.timeToShot < teammateLastShotTime;
 #ifdef DEBUG
             if (drawJ < 0) {
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(isAttacker, t1, t2, selVel, selJ, selK);
+                tryShotOutOrGoal(isAttacker, t1, t2, selVel, selJ, selK, ret ? 1 : 0.3);
             }
 #endif
             prevVel[myId] = selVel;
-            metric = sel;
-            return true;
+            lastShotTime[myId] = sel.timeToShot;
+            return ret;
         }
         return false;
     }
@@ -343,6 +352,7 @@ public:
             }
         }
 #endif
+        lastShotTime[me.id] = INT_MAX;
 
         Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         auto firstToBall = evalToBall();

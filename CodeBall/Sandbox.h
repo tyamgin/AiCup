@@ -25,6 +25,7 @@ struct Sandbox {
     RandomGenerator rnd;
     bool deduceOppSimple = true;
     bool oppGkStrat = false;
+    bool oppCounterStrat = false;
 
     Sandbox() {
     }
@@ -935,6 +936,14 @@ struct Sandbox {
             my.clear();
         }
         opp.clear();
+    }
+
+    void _oppGkStrat() {
+
+    }
+
+    void _oppCounterStrat() {
+
     }
 
     void oppStrat() {
