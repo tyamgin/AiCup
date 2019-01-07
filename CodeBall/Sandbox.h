@@ -754,12 +754,13 @@ struct Sandbox {
     }
 
     struct CollisionInfo {
-        int id;
+        int id1;
+        int id2;
         Point velocity;
     };
 
-    std::vector<CollisionInfo> robotBallCollisions;
-    
+    std::vector<CollisionInfo> robotBallCollisions, robotsCollisions;
+
     template<typename T>
     void collide_entities(ARobot& a, T& b) {
         constexpr const double secondMass = std::is_same<T, ARobot>::value ? ROBOT_MASS : BALL_MASS;
@@ -819,7 +820,10 @@ struct Sandbox {
         }
 
         if constexpr (std::is_same<T, ABall>::value) {
-            robotBallCollisions.push_back({a.id, b.velocity});
+            robotBallCollisions.push_back({a.id, -1, b.velocity});
+        }
+        if constexpr (std::is_same<T, ARobot>::value) {
+            robotsCollisions.push_back({a.id, b.id, b.velocity});
         }
     }
 
@@ -988,6 +992,7 @@ struct Sandbox {
 
         hasRandomCollision = false;
         robotBallCollisions.clear();
+        robotsCollisions.clear();
         constexpr const auto deltaTimeTick = 1.0 / TICKS_PER_SECOND;
         if (tick < GameInfo::maxTickCount && hasGoal == 0) {
             double deltaTime = deltaTimeTick / microticksPerTick;

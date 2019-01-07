@@ -47,7 +47,20 @@ public:
         }
     }
 
-    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, bool& hasGoal, Point drawVel = {}, int drawJ = -1, int drawK = -1) {
+    struct Metric {
+        bool hasGoal;
+        double m1, m2;
+
+        bool operator <(const Metric &m) const {
+            return std::make_tuple(hasGoal, m1, m2) < std::make_tuple(m.hasGoal, m.m1, m.m2);
+        }
+
+        std::string toString() {
+            return (hasGoal ? "GOAL" : "SHOT") + std::string(" ") + std::to_string(m1);
+        }
+    };
+
+    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& metric, Point drawVel = {}, int drawJ = -1, int drawK = -1) {
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
@@ -57,7 +70,7 @@ public:
         // TODO: check untouched and far to ball
 
         const auto myId = env.me()->id;
-        auto sel = std::make_tuple(false, -1e10, -1e10);
+        Metric sel = {false, -1e10, -1e10};
         Point selVel;
         int selJ = -1, selK = -1;
         AAction firstAction;
@@ -67,6 +80,14 @@ public:
         Sandbox ballSnd = env;
         ballSnd.my.clear();
 
+        if (isAttacker) {
+            for (int i = 0; i < 48; i++) {
+                if (i % 6 == env.tick % 6) {
+                    auto ang = 2 * M_PI / 48 * i;
+                    vels.push_back(maxVelocityTo(*env.me(), *env.me() + Point(cos(ang), 0, sin(ang))));
+                }
+            }
+        }
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6)
                 vels.push_back(maxVelocityTo(*env.me(), ballSnd.ball));
@@ -81,6 +102,19 @@ public:
         }
         std::sort(vels.begin(), vels.end());
         vels.erase(std::unique(vels.begin(), vels.end()), vels.end());
+
+        auto skipRobbotsCollisions = [myId](Sandbox &e) {
+            if (e.ball.z > -10) {
+                return false;
+            }
+
+            for (auto& item : e.robotsCollisions) {
+                if (item.id1 == myId || item.id2 == myId) {
+                    return true;
+                }
+            }
+            return false;
+        };
 
         for (auto& mvel : vels) {
             Sandbox meSnd = env;
@@ -102,12 +136,15 @@ public:
                 if (j == 0)
                     firstJAct = mvAction;
 
-                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 7) {
+                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 12) {
                     const int jumpMaxTicks = 20;
-                    const int ballSimMaxTicks = 90;
+                    const int ballSimMaxTicks = 100;
                     for (auto k = 0; k <= jumpMaxTicks; k++) {
                         meJumpSnd.doTick(1);
                         auto tmp = meJumpSnd.me();
+                        if (skipRobbotsCollisions(meJumpSnd)) {
+                            break;
+                        }
 
                         if (j == drawJ && k <= drawK) {
                             Visualizer::addSphere(*meJumpSnd.me(), 0.7, 0.8, 0, 0.7);
@@ -116,7 +153,7 @@ public:
 
                         double myCollisionVel = INT_MAX;
                         for (auto& item : meJumpSnd.robotBallCollisions) {
-                            if (item.id == myId) {
+                            if (item.id1 == myId) {
                                 myCollisionVel = item.velocity.z;
                             }
                         }
@@ -156,9 +193,9 @@ public:
                                     }
                                 }
                                 maxZ = std::min(maxZ, thr);
-                                auto cand = std::make_tuple(meJumpSnd.hasGoal > 0, myCollisionVel, maxZ);
+                                Metric cand = {meJumpSnd.hasGoal > 0, myCollisionVel, maxZ};
 
-                                if (cand > sel) {
+                                if (sel < cand) {
                                     selVel = mvel;
                                     selJ = j;
                                     selK = k;
@@ -173,20 +210,23 @@ public:
 
                 meSnd.me()->action = mvAction;
                 meSnd.doTick(1);
+                if (skipRobbotsCollisions(meSnd)) {
+                    break;
+                }
             }
         }
 
-        hasGoal = std::get<0>(sel);
         if (selJ >= 0) {
             resAction = firstAction;
 #ifdef DEBUG
             if (drawJ < 0) {
                 AAction t1;
-                bool t2;
+                Metric t2;
                 tryShotOutOrGoal(isAttacker, t1, t2, selVel, selJ, selK);
             }
 #endif
             prevVel[myId] = selVel;
+            metric = sel;
             return true;
         }
         return false;
@@ -308,12 +348,12 @@ public:
         auto firstToBall = evalToBall();
 
         bool is_attacker = selectGk() != me.id;
-        bool hasGoal = false;
+        Metric metric;
 
         if (is_attacker && env.roundTick <= 35) {
             action = AAction().vel(maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
-        } else if (is_attacker && tryShotOutOrGoal(is_attacker, action, hasGoal)) {
-            std::string msg = hasGoal ? "MOVE TO SHOT!!!!!!" : "SHOT OUT";
+        } else if (is_attacker && tryShotOutOrGoal(is_attacker, action, metric)) {
+            std::string msg = metric.toString();
             Visualizer::addText(msg);
             LOG(msg);
         } else {
@@ -387,9 +427,9 @@ public:
                 Visualizer::addSphere(sp);
 
                 if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 5)
-                    && tryShotOutOrGoal(is_attacker, action, hasGoal)) {
+                    && tryShotOutOrGoal(is_attacker, action, metric)) {
 
-                    std::string msg = hasGoal ? "(gk) MOVE TO SHOT!!!!!!" : "(gk) SHOT OUT";
+                    std::string msg = "(gk) " + metric.toString();
                     Visualizer::addText(msg);
                     LOG(msg);
                 } else {
