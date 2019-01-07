@@ -49,15 +49,20 @@ public:
 
     struct Metric {
         bool hasGoal = false;
-        double m1 = 0, m2 = 0;
+        double m1 = 0, penalty = 0;
         int timeToShot = INT_MAX;
 
         bool operator <(const Metric &m) const {
-            return std::make_tuple(hasGoal, m1, m2) < std::make_tuple(m.hasGoal, m.m1, m.m2);
+            auto getComparable = [](const Metric &m) {
+                double pen = (4 - std::min(4.0, m.penalty)) * 10;
+                return std::make_tuple(m.hasGoal, m.m1 - pen);
+            };
+
+            return getComparable(*this) < getComparable(m);
         }
 
         std::string toString() {
-            return (hasGoal ? "GOAL" : "SHOT") + std::string(" t=") + std::to_string(timeToShot) + " " + std::to_string(m1);
+            return (hasGoal ? "GOAL" : "SHOT") + std::string(" t=") + std::to_string(timeToShot) + " p=" + std::to_string(penalty) + " " + std::to_string(m1);
         }
     };
 
@@ -87,13 +92,13 @@ public:
             for (int i = 0; i < 48; i++) {
                 if (i % 6 == env.tick % 6) {
                     auto ang = 2 * M_PI / 48 * i;
-                    vels.push_back(maxVelocityTo(*env.me(), *env.me() + Point(cos(ang), 0, sin(ang))));
+                    vels.push_back(Helper::maxVelocityTo(*env.me(), *env.me() + Point(cos(ang), 0, sin(ang))));
                 }
             }
         }
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6)
-                vels.push_back(maxVelocityTo(*env.me(), ballSnd.ball));
+                vels.push_back(Helper::maxVelocityTo(*env.me(), ballSnd.ball));
 
             ballSnd.doTick(5);
         }
@@ -119,6 +124,13 @@ public:
             return false;
         };
 
+        auto counterPenalty = [isAttacker](Sandbox &e) {
+            if (!isAttacker) {
+                return true;
+            }
+            return e.ball.z < -(ARENA_DEPTH / 2) * 0.66;
+        };
+
         const double al = 0.7 * drawAlpha;
 
         for (auto& mvel : vels) {
@@ -134,8 +146,10 @@ public:
                 meJumpSnd.me()->action = jmpAction;
 
                 if (j <= drawJ) {
-                    Visualizer::addSphere(*meJumpSnd.me(), 0, 0.8, 0, al);
-                    Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, al);
+                    Visualizer::addSphere(*meJumpSnd.me(), rgba(0, 0.8, 0, al));
+                    Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
+                    Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
+                    Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                 }
 
                 if (j == 0)
@@ -152,8 +166,10 @@ public:
                         }
 
                         if (j == drawJ && k <= drawK) {
-                            Visualizer::addSphere(*meJumpSnd.me(), 0.7, 0.8, 0, al);
-                            Visualizer::addSphere(meJumpSnd.ball, 0.4, 0.1, 0.4, al);
+                            Visualizer::addSphere(*meJumpSnd.me(), rgba(0.7, 0.8, 0, al));
+                            Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
+                            //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
+                            //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                         }
 
                         double myCollisionVel = INT_MAX;
@@ -163,52 +179,62 @@ public:
                             }
                         }
 
-                        double maxZ = -100;
-                        double minDist = 100;
+                        double minCounterDist2 = 10000;
+                        Point md1, md2;
 
                         if (myCollisionVel < INT_MAX && myCollisionVel >= 0) {
-                            //if (myCollisionVel > maxBallVel || !hasGoal)
-                            {
-                                int timeToShot = meJumpSnd.tick - env.tick;
-                                double thr = ARENA_DEPTH / 2 - 0.5;
-                                int minThr = INT_MAX;
-                                meJumpSnd.oppGkStrat = true;
-                                for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
-                                    meJumpSnd.doTick(1);
-                                    maxZ = std::max(maxZ, meJumpSnd.ball.z);
-                                    if (maxZ >= thr && minThr == INT_MAX)
-                                        minThr = w;
-//                                    Point pt2(ARENA_GOAL_WIDTH - 2, ARENA_GOAL_HEIGHT - 2, ARENA_DEPTH / 2);
-//                                    Point pt1 = pt2;
-//                                    pt1.x *= -1;
-//
-//                                    Point pt = meJumpSnd.ball;
-//                                    double mdst;
-//                                    if (pt.x < pt1.x)
-//                                        mdst = pt1.getDistanceTo(pt);
-//                                    else if (pt.x > pt2.x)
-//                                        mdst = pt2.getDistanceTo(pt);
-//                                    else {
-//                                        pt1.x = pt.x;
-//                                        mdst = pt1.getDistanceTo(pt);
-//                                    }
-//
-//                                    minDist = std::min(minDist, mdst);
-                                    if (j == drawJ && k <= drawK) {
-                                        Visualizer::addSphere(meJumpSnd.ball, 1, 1, 1, al);
+
+                            int timeToShot = meJumpSnd.tick - env.tick;
+
+                            meJumpSnd.oppGkStrat = true;
+                            double penalty = 0;
+                            auto calcPenalty = counterPenalty(meJumpSnd);
+                            if (calcPenalty)
+                                meJumpSnd.oppCounterStrat = true;
+
+                            for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
+                                meJumpSnd.doTick(1);
+                                if (meJumpSnd.ball.z < 0) {
+                                    for (auto &o : meJumpSnd.opp) {
+                                        if (o.z > meJumpSnd.ball.z) {
+                                            auto dst2 = o.getDistanceTo2(meJumpSnd.ball);
+                                            if (dst2 < minCounterDist2) {
+                                                minCounterDist2 = dst2;
+                                                md1 = o;
+                                                md2 = meJumpSnd.ball;
+                                            }
+                                        }
                                     }
                                 }
-                                maxZ = std::min(maxZ, thr);
-                                Metric cand = {meJumpSnd.hasGoal > 0, myCollisionVel, maxZ, timeToShot};
 
-                                if (selJ == -1 || sel < cand) {
-                                    selVel = mvel;
-                                    selJ = j;
-                                    selK = k;
-                                    sel = cand;
-                                    firstAction = j == 0 ? jmpAction : firstJAct;
+
+                                if (j == drawJ && k <= drawK) {
+                                    Visualizer::addSphere(meJumpSnd.ball, rgba(1, 1, 1, al));
+                                    //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.25));
+                                    //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.25));
                                 }
                             }
+                            if (calcPenalty) {
+                                auto dst = sqrt(minCounterDist2) - ROBOT_RADIUS - BALL_RADIUS;
+                                if (j == drawJ && k <= drawK) {
+                                    Visualizer::addLine(md1, md2, 20, rgba(0, 0, 0));
+                                    for (int i = 0; i <= 24; i++) {
+                                        Visualizer::addSphere(md1 + (md2 - md1) / 24 * i, 0.2, rgba(0, 0, 0));
+                                    }
+                                }
+                                penalty = dst;
+                            }
+
+                            Metric cand = {meJumpSnd.hasGoal > 0, myCollisionVel, penalty, timeToShot};
+
+                            if (selJ == -1 || sel < cand) {
+                                selVel = mvel;
+                                selJ = j;
+                                selK = k;
+                                sel = cand;
+                                firstAction = j == 0 ? jmpAction : firstJAct;
+                            }
+
                             break;
                         }
                     }
@@ -275,16 +301,6 @@ public:
         return sAct;
     }
 
-
-    Point maxVelocityTo(const ARobot& a, const Point& b) {
-        if (!a.touch || a.touch_normal.y < EPS)
-            return Point();
-
-        auto diff = (b - a).normalized();
-        diff.y = -(diff.z * a.touch_normal.z + diff.x * a.touch_normal.x) / a.touch_normal.y;
-        return diff.take(ROBOT_MAX_GROUND_SPEED);
-    }
-
     int selectGk() {
         std::vector<std::pair<double, int>> distToGoal;
         for (auto& r : env.my) {
@@ -343,10 +359,10 @@ public:
             Sandbox ballEnv = env;
             for (int i = 0; i < 200; i++) {
                 if (i == 199) {
-                    Visualizer::addSphere(ballEnv.ball, 0.3, 0, 0.5, 0.5);
+                    Visualizer::addSphere(ballEnv.ball, rgba(0.3, 0, 0.5, 0.5));
                 }
                 if (i % 6 == 5) {
-                    Visualizer::addSphere(ballEnv.ball, 1, 0, 0, 0.2);
+                    Visualizer::addSphere(ballEnv.ball, rgba(1, 0, 0, 0.2));
                 }
                 ballEnv.doTick();
             }
@@ -361,7 +377,7 @@ public:
         Metric metric;
 
         if (is_attacker && env.roundTick <= 35) {
-            action = AAction().vel(maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
+            action = AAction().vel(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
         } else if (is_attacker && tryShotOutOrGoal(is_attacker, action, metric)) {
             std::string msg = metric.toString();
             Visualizer::addText(msg);
@@ -386,8 +402,8 @@ public:
                     }
 
                     action.targetVelocity = bestV;//(oppGoal - me).take(ROBOT_MAX_GROUND_SPEED);
-                    Visualizer::addLine(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, 1, 1, 0);
-                    Visualizer::addLine(me, oppGoal, 0.2, 0, 0, 1);
+                    Visualizer::addLine(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, rgba(1, 1, 0));
+                    Visualizer::addLine(me, oppGoal, 0.2, rgba(0, 0, 1));
                 } else if (!firstToBall || !firstToBall.value().is_teammate || firstToBall.value().id == me.id) {
                     Sandbox snd = env;
                     snd.my.clear();
@@ -410,7 +426,7 @@ public:
 
                         if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
                             firstAction = act;
-                            Visualizer::addLine(me, me + delta_pos, 0.3, 0, 0, 1);
+                            Visualizer::addLine(me, me + delta_pos, 1, rgba(0, 0, 1));
                             break;
                         }
                         secondAction = act;
@@ -421,20 +437,18 @@ public:
                         action = secondAction.value();
                     } else {
                         if (ball.z > -6)
-                            action.vel(maxVelocityTo(me, Point(0, 0, ARENA_DEPTH / 4)));
+                            action.vel(Helper::maxVelocityTo(me, Point(0, 0, ARENA_DEPTH / 4)));
                         else
                             is_attacker = false;
                     }
                 } else {
                     auto opp = env.opp[0].z < env.opp[1].z ? env.opp[0] : env.opp[1];
-                    action.targetVelocity = maxVelocityTo(me, opp - Point(0, 0, 7*ROBOT_RADIUS));
+                    action.targetVelocity = Helper::maxVelocityTo(me, opp - Point(0, 0, 7*ROBOT_RADIUS));
                 }
             }
 
             if (!is_attacker) {
-                RSphere sp(me, 1, 0.7, 0);
-                sp.radius *= 1.1;
-                Visualizer::addSphere(sp);
+                Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
                 if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 5)
                     && tryShotOutOrGoal(is_attacker, action, metric)) {

@@ -8,11 +8,20 @@
 #define M_VISUALIZER 1
 #endif
 
-struct RFigureBase {
+struct RColor {
     double r, g, b, a;
+
+    RColor(double r, double g, double b, double a = 1.0) : r(r), g(g), b(b), a(a) {
+    }
+};
+
+#define rgba RColor
+
+struct RFigureBase {
+    RColor color;
     int ttl;
 
-    RFigureBase(double r, double g, double b, double a, int ttl) : r(r), g(g), b(b), a(a), ttl(ttl) {
+    RFigureBase(RColor color, int ttl) : color(color) , ttl(ttl) {
     }
 
     virtual nlohmann::json toJson() = 0;
@@ -22,8 +31,14 @@ struct RFigureBase {
 struct RSphere : public RFigureBase {
     double radius, x, y, z;
 
-    RSphere(const Unit& unit, double r, double g, double b, double a = 1.0, int ttl = 1) : RFigureBase(r, g, b, a, ttl) {
+    RSphere(const Unit& unit, RColor color) : RFigureBase(color, 1) {
         radius = unit.radius;
+        x = unit.x;
+        y = unit.y;
+        z = unit.z;
+    }
+
+    RSphere(const Point& unit, double radius, RColor color) : RFigureBase(color, 1), radius(radius) {
         x = unit.x;
         y = unit.y;
         z = unit.z;
@@ -31,10 +46,10 @@ struct RSphere : public RFigureBase {
 
     nlohmann::json toJson() override {
         nlohmann::json json;
-        json["r"] = r;
-        json["g"] = g;
-        json["b"] = b;
-        json["a"] = a;
+        json["r"] = color.r;
+        json["g"] = color.g;
+        json["b"] = color.b;
+        json["a"] = color.a;
         json["x"] = x;
         json["y"] = y;
         json["z"] = z;
@@ -49,17 +64,17 @@ struct RLine : public RFigureBase {
     Point p1, p2;
     double width;
 
-    RLine(const Point& p1, const Point& p2, double width, double r, double g, double b, double a = 1.0, int ttl = 1)
-        : RFigureBase(r, g, b, a, ttl), p1(p1), p2(p2), width(width) {
+    RLine(const Point& p1, const Point& p2, double width, RColor color, int ttl = 1)
+        : RFigureBase(color, ttl), p1(p1), p2(p2), width(width) {
 
     }
 
     nlohmann::json toJson() override {
         nlohmann::json json;
-        json["r"] = r;
-        json["g"] = g;
-        json["b"] = b;
-        json["a"] = a;
+        json["r"] = color.r;
+        json["g"] = color.g;
+        json["b"] = color.b;
+        json["a"] = color.a;
         json["x1"] = p1.x;
         json["y1"] = p1.y;
         json["z1"] = p1.z;
@@ -77,7 +92,7 @@ struct RText : public RFigureBase {
     std::string text;
 
     explicit RText(const std::string& text, int ttl = 1)
-            : RFigureBase(0, 0, 0, 1, ttl), text(text) {
+            : RFigureBase(RColor(0, 0, 0, 0), ttl), text(text) {
 
     }
 

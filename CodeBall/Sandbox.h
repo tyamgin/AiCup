@@ -15,6 +15,7 @@
 #include "Visualizer.h"
 #include "RandomGenerators.h"
 #include "Logger.h"
+#include "Helper.h"
 
 struct Sandbox {
     ABall ball;
@@ -939,29 +940,6 @@ struct Sandbox {
     }
 
     void _oppGkStrat() {
-
-    }
-
-    void _oppCounterStrat() {
-
-    }
-
-    void oppStrat() {
-        if (GameInfo::isOpponentCrashed) {
-            return;
-        }
-
-        if (deduceOppSimple) {
-            for (auto &x : opp) {
-                x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
-                x.action.targetVelocity = x.velocity;
-            }
-        }
-
-        if (!oppGkStrat) {
-            return;
-        }
-
         auto gk = opp[0].z > opp[1].z ? &opp[0] : &opp[1];
 
         constexpr const auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
@@ -986,6 +964,36 @@ struct Sandbox {
 
         if (gk->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 3)) {
             gk->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+        }
+    }
+
+    void _oppCounterStrat() {
+        auto ct = opp[0].z < opp[1].z ? &opp[0] : &opp[1];
+        ct->action.targetVelocity = Helper::maxVelocityTo(*ct, ball);
+
+        if (ct->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
+            ct->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+        }
+    }
+
+    void oppStrat() {
+        if (GameInfo::isOpponentCrashed) {
+            return;
+        }
+
+        if (deduceOppSimple) {
+            for (auto &x : opp) {
+                x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
+                x.action.targetVelocity = x.velocity;
+            }
+        }
+
+        if (oppGkStrat) {
+            _oppGkStrat();
+        }
+
+        if (oppCounterStrat) {
+            _oppCounterStrat();
         }
     }
 

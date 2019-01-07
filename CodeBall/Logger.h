@@ -80,7 +80,7 @@ struct Logger {
         out << "[Summary]" << std::endl;
         out << "] ALL                         " << _cumulativeDuration[LA_ALL]                         / 1000 << "ms" << std::endl;
         out << "] DO_TICK                     " << _cumulativeDuration[LA_DO_TICK]                     / 1000 << "ms" << std::endl;
-        for (int i = 0; i < sizeof(dans) / sizeof(dans[0]); i++) {
+        for (int i = 0; i < int(sizeof(dans) / sizeof(dans[0])); i++) {
             if (dans[i] > 0) {
                 out << "Dan " << i << ": " << dans[i] << std::endl;
             }
