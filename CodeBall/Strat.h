@@ -427,7 +427,7 @@ public:
                             continue;
                         auto t = 1.0 * i / TICKS_PER_SECOND;
 
-                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 2.0);
+                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 3.0);
                         Point delta_pos = tar - me;
                         delta_pos.y = 0;
                         auto need_speed = delta_pos.length() / t;
@@ -448,7 +448,7 @@ public:
                         action = secondAction.value();
                     } else {
                         if (ball.z > -6)
-                            action.vel(Helper::maxVelocityTo(me, Point(0, 0, ARENA_DEPTH / 4)));
+                            action.vel(Helper::maxVelocityTo(me, Point(0, 0, 17)));
                         else
                             is_attacker = false;
                     }
