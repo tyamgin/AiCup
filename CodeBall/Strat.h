@@ -88,7 +88,7 @@ public:
         Sandbox ballSnd = env;
         ballSnd.my.clear();
 
-        if (isAttacker) {
+        if (true) {
             for (int i = 0; i < 48; i++) {
                 if (i % 6 == env.tick % 6) {
                     auto ang = 2 * M_PI / 48 * i;
@@ -182,7 +182,7 @@ public:
                         double minCounterDist2 = 10000;
                         Point md1, md2;
 
-                        if (myCollisionVel < INT_MAX && (myCollisionVel >= 0 || meJumpSnd.ball.z > -6)) {
+                        if (myCollisionVel < INT_MAX && (myCollisionVel >= 0 || isAttacker && meJumpSnd.ball.z > 0 || !isAttacker && meJumpSnd.ball.z < -30)) {
 
                             int timeToShot = meJumpSnd.tick - env.tick;
 
@@ -232,7 +232,7 @@ public:
                                 penalty = dst;
                             }
 
-                            if (positiveTicks > 5) {
+                            if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
 
                                 Metric cand = {meJumpSnd.hasGoal > 0, positiveChange / positiveTicks, penalty,
                                                timeToShot};

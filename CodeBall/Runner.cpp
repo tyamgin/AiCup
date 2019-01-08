@@ -20,15 +20,16 @@ int main(int argc, char* argv[]) {
 #ifdef DEBUG
     cerr << "Starting local runner" << endl;
 
-    std::string runStr = "/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018";
+    string runStr = "/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018";
+    string prevBin = "m23";
 #if M_NO_RANDOM
     runStr += " --disable-random";
 #endif
-    system((runStr + " --duration 40000 --seed 23417095 --p2-name m22 --p2 tcp-31002 &").c_str());
+    system((runStr + " --duration 40000 --seed 23417096 --p2-name " + prevBin + " --p2 tcp-31002 &").c_str());
     cerr << "local runner started" << endl;
 
     usleep(2000 * 1000);
-    system("/Users/tyamgin/Projects/AiCup/CodeBall/release/m22 127.0.0.1 31002 0000000000000000 &");
+    system(("/Users/tyamgin/Projects/AiCup/CodeBall/release/" + prevBin + " 127.0.0.1 31002 0000000000000000 &").c_str());
 #endif
 
     if (argc == 4) {
