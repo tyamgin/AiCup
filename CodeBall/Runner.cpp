@@ -24,11 +24,11 @@ int main(int argc, char* argv[]) {
 #if M_NO_RANDOM
     runStr += " --disable-random";
 #endif
-    system((runStr + " --duration 40000 --seed 23417095 --p2-name m21 --p2 tcp-31002 &").c_str());
+    system((runStr + " --duration 40000 --seed 23417095 --p2-name m22 --p2 tcp-31002 &").c_str());
     cerr << "local runner started" << endl;
 
     usleep(2000 * 1000);
-    system("/Users/tyamgin/Projects/AiCup/CodeBall/release/m21 127.0.0.1 31002 0000000000000000 &");
+    system("/Users/tyamgin/Projects/AiCup/CodeBall/release/m22 127.0.0.1 31002 0000000000000000 &");
 #endif
 
     if (argc == 4) {

@@ -182,7 +182,7 @@ public:
                         double minCounterDist2 = 10000;
                         Point md1, md2;
 
-                        if (myCollisionVel < INT_MAX && myCollisionVel >= 0) {
+                        if (myCollisionVel < INT_MAX && (myCollisionVel >= 0 || meJumpSnd.ball.z > -6)) {
 
                             int timeToShot = meJumpSnd.tick - env.tick;
 
@@ -191,9 +191,16 @@ public:
                             auto calcPenalty = counterPenalty(meJumpSnd);
                             if (calcPenalty)
                                 meJumpSnd.oppCounterStrat = true;
+                            int positiveTicks = 0;
+                            double positiveChange = 0;
 
                             for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
+                                auto prevBall = meJumpSnd.ball;
                                 meJumpSnd.doTick(1);
+                                if (meJumpSnd.ball.z > prevBall.z) {
+                                    positiveChange += meJumpSnd.ball.z - prevBall.z;
+                                    positiveTicks++;
+                                }
                                 if (meJumpSnd.ball.z < 0) {
                                     for (auto &o : meJumpSnd.opp) {
                                         if (o.z > meJumpSnd.ball.z) {
@@ -225,14 +232,18 @@ public:
                                 penalty = dst;
                             }
 
-                            Metric cand = {meJumpSnd.hasGoal > 0, myCollisionVel, penalty, timeToShot};
+                            if (positiveTicks > 5) {
 
-                            if (selJ == -1 || sel < cand) {
-                                selVel = mvel;
-                                selJ = j;
-                                selK = k;
-                                sel = cand;
-                                firstAction = j == 0 ? jmpAction : firstJAct;
+                                Metric cand = {meJumpSnd.hasGoal > 0, positiveChange / positiveTicks, penalty,
+                                               timeToShot};
+
+                                if (selJ == -1 || sel < cand) {
+                                    selVel = mvel;
+                                    selJ = j;
+                                    selK = k;
+                                    sel = cand;
+                                    firstAction = j == 0 ? jmpAction : firstJAct;
+                                }
                             }
 
                             break;
