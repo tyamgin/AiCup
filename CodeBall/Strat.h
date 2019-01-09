@@ -55,6 +55,7 @@ public:
         bool operator <(const Metric &m) const {
             auto getComparable = [](const Metric &m) {
                 double pen = (4 - std::min(4.0, m.penalty)) * 10;
+
                 return std::make_tuple(m.hasGoal, m.m1 - pen);
             };
 
@@ -73,9 +74,6 @@ public:
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
-        if (!isAttacker && env.roundTick < 50)
-            return false;
-        // TODO: check untouched and far to ball
 
         const auto myId = env.me()->id;
         Metric sel;
@@ -280,7 +278,7 @@ public:
     AAction goToGoalCenterStrat(Sandbox &e) {
         AAction sAct;
         double ch = 0.8;
-        double maxDeep = 3.0 + ch;
+        double maxDeep = 2.0 + ch;
         auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
 
         Point target_pos;
@@ -328,6 +326,7 @@ public:
 
     std::optional<ARobot> evalToBall() {
         Sandbox e = env;
+        e.stopOnGoal = false;
         for (int i = 1; i <= 100; i++) {
             e.doTick(5);
             if (e.ball.y - BALL_RADIUS > ROBOT_MAX_RADIUS*3)
@@ -350,6 +349,39 @@ public:
             }
         }
         return {};
+    }
+
+    Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
+
+    std::pair<std::optional<AAction>, std::optional<AAction>> moveToBallUsual(double ballHeight = BALL_RADIUS * 1.1) {
+        Sandbox snd = env;
+        snd.stopOnGoal = false;
+        auto me = *snd.me();
+        snd.clearRobots();
+        std::optional<AAction> firstAction, secondAction;
+
+        for (auto i = 1; i <= 12 * TICKS_PER_SECOND; i++) {
+            snd.doTick(1);
+            if (snd.ball.y > ballHeight)
+                continue;
+            auto t = 1.0 * i / TICKS_PER_SECOND;
+
+            auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 3.0);
+            Point delta_pos = tar - me;
+            delta_pos.y = 0;
+            auto need_speed = delta_pos.length() / t;
+            auto target_velocity = delta_pos.take(std::min(ROBOT_MAX_GROUND_SPEED, need_speed));
+            AAction act;
+            act.targetVelocity = target_velocity;
+
+            if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
+                firstAction = act;
+                Visualizer::addLine(me, me + delta_pos, 1, rgba(0, 0, 1));
+                break;
+            }
+            secondAction = act;
+        }
+        return {firstAction, secondAction};
     }
 
     void act(AAction &action) {
@@ -380,14 +412,18 @@ public:
 #endif
         lastShotTime[me.id] = INT_MAX;
 
-        Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         auto firstToBall = evalToBall();
 
         bool is_attacker = selectGk() != me.id;
         Metric metric;
+        std::optional<AAction> firstAction, secondAction;
+
+        //if (is_attacker) return;
 
         if (is_attacker && env.roundTick <= 35) {
             action = AAction().vel(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
+        } else if (!is_attacker && env.roundTick <= 30) {
+            action = AAction().vel(Helper::maxVelocityTo(me, Point(0, 0, -ARENA_Z)));
         } else if (is_attacker && tryShotOutOrGoal(is_attacker, action, metric)) {
             std::string msg = metric.toString();
             Visualizer::addText(msg);
@@ -415,32 +451,8 @@ public:
                     Visualizer::addLine(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, rgba(1, 1, 0));
                     Visualizer::addLine(me, oppGoal, 0.2, rgba(0, 0, 1));
                 } else if (!firstToBall || !firstToBall.value().isTeammate || firstToBall.value().id == me.id) {
-                    Sandbox snd = env;
-                    snd.my.clear();
-                    snd.opp.clear();
-                    std::optional<AAction> firstAction, secondAction;
+                    std::tie(firstAction, secondAction) = moveToBallUsual();
 
-                    for (auto i = 1; i <= 12 * TICKS_PER_SECOND; i++) {
-                        snd.doTick(1);
-                        if (snd.ball.y > BALL_RADIUS * 1.1) //TODO
-                            continue;
-                        auto t = 1.0 * i / TICKS_PER_SECOND;
-
-                        auto tar = snd.ball + (snd.ball - oppGoal).take(BALL_RADIUS * 3.0);
-                        Point delta_pos = tar - me;
-                        delta_pos.y = 0;
-                        auto need_speed = delta_pos.length() / t;
-                        auto target_velocity = delta_pos.take(std::min(ROBOT_MAX_GROUND_SPEED, need_speed));
-                        AAction act;
-                        act.targetVelocity = target_velocity;
-
-                        if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
-                            firstAction = act;
-                            Visualizer::addLine(me, me + delta_pos, 1, rgba(0, 0, 1));
-                            break;
-                        }
-                        secondAction = act;
-                    }
                     if (firstAction) {
                         action = firstAction.value();
                     } else if (secondAction) {
@@ -516,7 +528,19 @@ public:
                     if (defend) {
                         action = defend.value();
                     } else {
-                        action = goToGoalCenterStrat(env);
+                        if (firstToBall && firstToBall.value().id == me.id) {
+                            std::tie(firstAction, secondAction) = moveToBallUsual();
+                            if (env.tick == 51) {
+                                std::tie(firstAction, secondAction) = moveToBallUsual();
+                                std::tie(firstAction, secondAction) = moveToBallUsual();
+                                std::tie(firstAction, secondAction) = moveToBallUsual();
+                            }
+                        }
+                        if (firstAction) {
+                            action = firstAction.value();
+                        } else {
+                            action = goToGoalCenterStrat(env);
+                        }
                     }
                 }
             }

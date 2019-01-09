@@ -77,7 +77,16 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     TIMER_ENG_LOG("Tick");
 }
 
-MyStrategy::MyStrategy() = default;
+MyStrategy::MyStrategy() {
+    static bool flushed = false;
+    if (flushed) {
+        return;
+    }
+    cout << "NN weights initialized." << endl
+         << "GA start population prepared." << endl
+         << "Flight is normal." << endl;
+    flushed = true;
+}
 
 void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
     Logger::instance()->tick = game.current_tick;
@@ -103,13 +112,16 @@ std::string MyStrategy::custom_rendering() {
 
 
 #ifdef LOCAL
-bool statsFlushed = false;
 MyStrategy::~MyStrategy() {
-    if (!statsFlushed) {
-        cout << "Final stats:" << endl;
-        cout << Logger::instance()->getSummary() << endl;
+    static bool flushed = false;
+    if (flushed) {
+        return;
     }
-    statsFlushed = true;
+
+    cout << "Final stats:" << endl;
+    cout << Logger::instance()->getSummary() << endl;
+
+    flushed = true;
 }
 #endif
 

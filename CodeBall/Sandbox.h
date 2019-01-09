@@ -26,6 +26,7 @@ struct Sandbox {
     int meId = 0;
 
     RandomGenerator rnd;
+    bool stopOnGoal = true;
     bool deduceOppSimple = true;
     bool oppGkStrat = false;
     bool oppCounterStrat = false;
@@ -981,7 +982,12 @@ struct Sandbox {
     }
 
     void checkGoal() {
-        if (abs(ball.z) > ARENA_DEPTH / 2 + ball.radius) {
+        if (hasGoal != 0) {
+            // already have a goal
+            return;
+        }
+
+        if (abs(ball.z) > ARENA_Z + BALL_RADIUS) {
             hasGoal = ball.z < 0 ? -1 : 1;
         }
     }
@@ -1069,16 +1075,16 @@ struct Sandbox {
         robotBallCollisions.clear();
         robotsCollisions.clear();
         constexpr const auto deltaTimeTick = 1.0 / TICKS_PER_SECOND;
-        if (tick < GameInfo::maxTickCount && hasGoal == 0) {
+        if (tick < GameInfo::maxTickCount && needDoTick()) {
             double deltaTime = deltaTimeTick / microticksPerTick;
             if (firstMicrotickSeparate) {
                 const int tt = 2;
-                for (int i = 0; i < tt && hasGoal == 0; i++) {
+                for (int i = 0; i < tt && needDoTick(); i++) {
                     update(deltaTimeTick / MICROTICKS_PER_TICK);
                 }
                 deltaTime = (deltaTimeTick - tt * deltaTimeTick / MICROTICKS_PER_TICK) / microticksPerTick;
             }
-            for (int i = 0; i < microticksPerTick && hasGoal == 0; i++) {
+            for (int i = 0; i < microticksPerTick && needDoTick(); i++) {
                 update(deltaTime);
             }
             for (auto& pack : nitroPacks) {
@@ -1093,6 +1099,10 @@ struct Sandbox {
         // TODO: clear actions
 
         OP_END(DO_TICK);
+    }
+
+    bool needDoTick() const {
+        return hasGoal == 0 || !stopOnGoal;
     }
 
     bool hasRandomCollision = false;

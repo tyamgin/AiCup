@@ -11,7 +11,7 @@ rm local_runner/$ts.txt
     --p2-name 31003 \
     --results-file $ts.txt \
     --seed $ts \
-    --duration 40000 \
+    --duration 25000 \
     --noshow \
     &
 echo "LR started"
