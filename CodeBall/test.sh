@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-ts=1547033017
-#$(date +%s)
+ts=$(date +%s)
 
 rm local_runner/$ts.txt
 
@@ -12,7 +11,7 @@ rm local_runner/$ts.txt
     --p2-name 31003 \
     --results-file $ts.txt \
     --seed $ts \
-    --duration 10000 \
+    --duration 40000 \
     --noshow \
     &
 echo "LR started"

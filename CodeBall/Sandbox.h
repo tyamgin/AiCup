@@ -12,6 +12,7 @@
 #include "model/Rules.h"
 #include "Ball.h"
 #include "Robot.h"
+#include "NitroPack.h"
 #include "Visualizer.h"
 #include "RandomGenerators.h"
 #include "Logger.h"
@@ -20,6 +21,7 @@
 struct Sandbox {
     ABall ball;
     std::vector<ARobot> my, opp;
+    std::vector<ANitroPack> nitroPacks;
     int tick = 0, roundTick = 0;
     int meId = 0;
 
@@ -39,6 +41,9 @@ struct Sandbox {
             } else {
                 opp.emplace_back(r);
             }
+        }
+        for (auto& p : game.nitro_packs) {
+            nitroPacks.emplace_back(p);
         }
         ball = ABall(game.ball);
         checkGoal();
@@ -183,7 +188,7 @@ struct Sandbox {
     auto diff_y = point.y - (sphere_center_y);\
     auto diff_z = point.z - (sphere_center_z);\
     auto dist2 = SQR(diff_x) + SQR(diff_y) + SQR(diff_z);\
-    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    if (dist2 > SQR(point.radius + (sphere_radius))) return false;\
     distance = sqrt(dist2) - (sphere_radius);\
     normal.set(diff_x, diff_y, diff_z);\
     return true;\
@@ -194,7 +199,7 @@ struct Sandbox {
     auto diff_y = point.y - (sphere_center_y);\
     auto diff_z = point.z - (sphere_center_z);\
     auto dist2 = SQR(diff_y) + SQR(diff_z);\
-    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    if (dist2 > SQR(point.radius + (sphere_radius))) return false;\
     distance = sqrt(dist2) - (sphere_radius);\
     normal.set(0, diff_y, diff_z);\
     return true;\
@@ -205,7 +210,7 @@ struct Sandbox {
     auto diff_x = point.x - (sphere_center_x);\
     auto diff_z = point.z - (sphere_center_z);\
     auto dist2 = SQR(diff_x) + SQR(diff_z);\
-    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    if (dist2 > SQR(point.radius + (sphere_radius))) return false;\
     distance = sqrt(dist2) - (sphere_radius);\
     normal.set(diff_x, 0, diff_z);\
     return true;\
@@ -742,7 +747,7 @@ struct Sandbox {
         if (negate_z)
             point.z = -point.z;
         double distance;
-        if (!dan_to_arena_quarter2(point, distance, normal)) {
+        if (!dan_to_arena_quarter(point, distance, normal)) {
             return false;
         }
 
@@ -782,7 +787,7 @@ struct Sandbox {
         Point no, nn;
         double po, pn;
         auto r_old = dan_to_arena_old(point, po, no);
-        auto r_new = dan_to_arena_new(point, pn, nn);
+        auto r_new = dan_to_arena_old(point, pn, nn);
 
         if (r_old != r_new) {
             std::cerr << "err\n";
@@ -903,14 +908,14 @@ struct Sandbox {
                 auto targetVelocity = robot.action.targetVelocity;
                 targetVelocity.clamp(ROBOT_MAX_GROUND_SPEED);
 
-                auto dot = robot.touch_normal * targetVelocity;
-                targetVelocity.x -= robot.touch_normal.x * dot + robot.velocity.x;
-                targetVelocity.y -= robot.touch_normal.y * dot + robot.velocity.y;
-                targetVelocity.z -= robot.touch_normal.z * dot + robot.velocity.z;
+                auto dot = robot.touchNormal * targetVelocity;
+                targetVelocity.x -= robot.touchNormal.x * dot + robot.velocity.x;
+                targetVelocity.y -= robot.touchNormal.y * dot + robot.velocity.y;
+                targetVelocity.z -= robot.touchNormal.z * dot + robot.velocity.z;
 
                 auto len2 = targetVelocity.length2();
                 if (len2 > 0) {
-                    auto acceleration = robot.touch_normal.y <= 0 ? 0 : ROBOT_ACCELERATION * delta_time * robot.touch_normal.y;
+                    auto acceleration = robot.touchNormal.y <= 0 ? 0 : ROBOT_ACCELERATION * delta_time * robot.touchNormal.y;
 
                     if (SQR(acceleration) < len2) {
                         targetVelocity *= acceleration / sqrt(len2);
@@ -918,17 +923,17 @@ struct Sandbox {
                     robot.velocity += targetVelocity;
                 }
             }
-//            if (robot.action.use_nitro) {
-//                auto target_velocity_change = (
-//                    robot.action.target_velocity - robot.velocity,
-//                    ).clamped(robot.nitro * NITRO_POINT_VELOCITY_CHANGE);
-//                if (length(target_velocity_change) > 0) {
-//                    auto acceleration = target_velocity_change.normalized() * ROBOT_NITRO_ACCELERATION;
-//                    auto velocity_change = (acceleration * delta_time).clamped(target_velocity_change.length());
-//                    robot.velocity += velocity_change;
-//                    robot.nitro -= length(velocity_change) / NITRO_POINT_VELOCITY_CHANGE;
-//                }
-//            }
+            if (robot.action.useNitro) {
+                auto target_velocity_change = (
+                    robot.action.targetVelocity - robot.velocity
+                    ).clamped(robot.nitroAmount * NITRO_POINT_VELOCITY_CHANGE);
+                if (target_velocity_change.length2() > 0) {
+                    auto acceleration = target_velocity_change.normalized() * ROBOT_NITRO_ACCELERATION;
+                    auto velocity_change = (acceleration * delta_time).clamped(target_velocity_change.length());
+                    robot.velocity += velocity_change;
+                    robot.nitroAmount -= velocity_change.length() / NITRO_POINT_VELOCITY_CHANGE;
+                }
+            }
             robot.move(delta_time);
             robot.radius = radiusByJumpSpeed(robot.action.jumpSpeed);
             robot.radius_change_speed = robot.action.jumpSpeed;
@@ -948,7 +953,7 @@ struct Sandbox {
                 robot->touch = false;
             } else {
                 robot->touch = true;
-                robot->touch_normal = collision_normal;
+                robot->touchNormal = collision_normal;
             }
         }
 
@@ -956,16 +961,18 @@ struct Sandbox {
         checkGoal();
 
         for (auto& robot : robots) {
-            if (robot->nitro_amount == MAX_NITRO_AMOUNT)
+            if (robot->nitroAmount == MAX_NITRO_AMOUNT)
                 continue;
 
-//            for pack in nitro_packs:
-//                if not pack.alive:
-//                    continue
-//                if length(robot.position - pack.position) <= robot.radius + pack.radius:
-//                    robot.nitro = MAX_NITRO_AMOUNT
-//                    pack.alive = false
-//                    pack.respawn_ticks = NITRO_PACK_RESPAWN_TICKS
+            for (auto& pack : nitroPacks) {
+                if (pack.respawnTicks > 0)
+                    continue;
+
+                if (robot->getDistanceTo2(pack) <= SQR(robot->radius + NITRO_PACK_RADIUS)) {
+                    robot->nitroAmount = MAX_NITRO_AMOUNT;
+                    pack.respawnTicks = NITRO_PACK_RESPAWN_TICKS;
+                }
+            }
         }
     }
 
@@ -1074,12 +1081,11 @@ struct Sandbox {
             for (int i = 0; i < microticksPerTick && hasGoal == 0; i++) {
                 update(deltaTime);
             }
-//        for pack in nitro_packs:
-//            if pack.alive:
-//                continue
-//            pack.respawn_ticks -= 1
-//            if pack.respawn_ticks == 0:
-//                pack.alive = true
+            for (auto& pack : nitroPacks) {
+                if (pack.respawnTicks > 0) {
+                    pack.respawnTicks--;
+                }
+            }
         }
 
         tick++;

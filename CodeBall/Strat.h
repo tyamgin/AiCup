@@ -35,13 +35,13 @@ public:
             if (prev->touch != me->touch) {
                 LOG("touch calculated wrong");
             }
-            if (me->touch && prev->touch_normal.notEquals(me->touch_normal, 1e-6)) {
+            if (me->touch && prev->touchNormal.notEquals(me->touchNormal, 1e-6)) {
                 LOG("touch_normal calculated wrong");
             }
             if (prev->radius != me->radius) {
                 LOG("radius calculated wrong");
             }
-            if (prev->nitro_amount != me->nitro_amount) {
+            if (prev->nitroAmount != me->nitroAmount) {
                 LOG("nitro_amount calculated wrong");
             }
         }
@@ -88,14 +88,13 @@ public:
         Sandbox ballSnd = env;
         ballSnd.my.clear();
 
-        if (true) {
-            for (int i = 0; i < 48; i++) {
-                if (i % 6 == env.tick % 6) {
-                    auto ang = 2 * M_PI / 48 * i;
-                    vels.push_back(Helper::maxVelocityTo(*env.me(), *env.me() + Point(cos(ang), 0, sin(ang))));
-                }
+        for (int i = 0; i < 48; i++) {
+            if (i % 6 == env.tick % 6) {
+                auto ang = 2 * M_PI / 48 * i;
+                vels.push_back(Helper::maxVelocityTo(*env.me(), *env.me() + Point(cos(ang), 0, sin(ang))));
             }
         }
+
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6)
                 vels.push_back(Helper::maxVelocityTo(*env.me(), ballSnd.ball));
@@ -128,7 +127,7 @@ public:
             if (!isAttacker) {
                 return true;
             }
-            return e.ball.z < -(ARENA_DEPTH / 2) * 0.66;
+            return e.ball.z < -ARENA_Z * 0.66;
         };
 
         const double al = 0.7 * drawAlpha;
@@ -281,7 +280,7 @@ public:
     AAction goToGoalCenterStrat(Sandbox &e) {
         AAction sAct;
         double ch = 0.8;
-        double maxDeep = 2.0 + ch;
+        double maxDeep = 3.0 + ch;
         auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
 
         Point target_pos;
@@ -337,7 +336,7 @@ public:
             for (auto r : e.robots()) {
                 auto t = 1.0 * i / TICKS_PER_SECOND;
                 Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
-                if (!r->is_teammate)
+                if (!r->isTeammate)
                     oppGoal.z *= -1;
 
                 auto tar = e.ball + (e.ball - oppGoal).take(BALL_RADIUS * 0.9);
@@ -415,7 +414,7 @@ public:
                     action.targetVelocity = bestV;//(oppGoal - me).take(ROBOT_MAX_GROUND_SPEED);
                     Visualizer::addLine(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, rgba(1, 1, 0));
                     Visualizer::addLine(me, oppGoal, 0.2, rgba(0, 0, 1));
-                } else if (!firstToBall || !firstToBall.value().is_teammate || firstToBall.value().id == me.id) {
+                } else if (!firstToBall || !firstToBall.value().isTeammate || firstToBall.value().id == me.id) {
                     Sandbox snd = env;
                     snd.my.clear();
                     snd.opp.clear();
