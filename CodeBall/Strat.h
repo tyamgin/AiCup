@@ -49,21 +49,40 @@ public:
 
     struct Metric {
         bool hasGoal = false;
-        double m1 = 0, penalty = 0;
+        double positiveChange = 0;
+        int positiveTicks = 0;
+        double penalty = 0;
         int timeToShot = INT_MAX;
 
         bool operator <(const Metric &m) const {
             auto getComparable = [](const Metric &m) {
                 double pen = (4 - std::min(4.0, m.penalty)) / 4;
 
-                return std::make_tuple(m.hasGoal, m.m1 - pen);
+                return std::make_tuple(m.hasGoal, (m.positiveChange / (m.positiveTicks + m.timeToShot)) - pen);
             };
 
             return getComparable(*this) < getComparable(m);
         }
 
         std::string toString() {
-            return (hasGoal ? "GOAL" : "SHOT") + std::string(" t=") + std::to_string(timeToShot) + " p=" + std::to_string(penalty) + " " + std::to_string(m1);
+            return (hasGoal ? "GOAL" : "SHOT") + std::string(" t=") + std::to_string(timeToShot) + " p=" + std::to_string(penalty) + " " + std::to_string((positiveChange / (positiveTicks + timeToShot)));
+        }
+    };
+
+    struct ActionSeqItem {
+        int count = 0;
+        AAction action;
+
+        enum Type {
+            Action
+        };
+    };
+
+    struct ActionSeq : public std::vector<ActionSeqItem> {
+        void add(const ActionSeqItem& item) {
+            if (item.count > 0) {
+                push_back(item);
+            }
         }
     };
 
@@ -132,13 +151,12 @@ public:
 
         for (auto& mvel : vels) {
             Sandbox meSnd = env;
-            AAction firstJAct;
+            auto mvAction = AAction().vel(mvel);
+            auto jmpAction = mvAction;
+            jmpAction.jump();
 
             for (auto j = 0; j <= 65; j++) {
                 Sandbox meJumpSnd = meSnd;
-                auto mvAction = AAction().vel(mvel);
-                auto jmpAction = mvAction;
-                jmpAction.jump();
 
                 meJumpSnd.me()->action = jmpAction;
 
@@ -148,9 +166,6 @@ public:
                     Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
                     Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                 }
-
-                if (j == 0)
-                    firstJAct = mvAction;
 
                 if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 12) {
                     const int jumpMaxTicks = 20;
@@ -181,7 +196,7 @@ public:
 
                         if (myCollisionVel < INT_MAX && (myCollisionVel >= 0 || isAttacker && meJumpSnd.ball.z > 0 || !isAttacker && meJumpSnd.ball.z < -30)) {
 
-                            int timeToShot = meJumpSnd.tick - env.tick;
+                            int shotTick = meJumpSnd.tick;
 
                             meJumpSnd.oppGkStrat = true;
                             double penalty = 0;
@@ -231,15 +246,21 @@ public:
 
                             if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
 
-                                Metric cand = {meJumpSnd.hasGoal > 0, positiveChange / positiveTicks, penalty,
-                                               timeToShot};
+                                Metric cand = {meJumpSnd.hasGoal > 0, positiveChange, positiveTicks, penalty,
+                                               shotTick - env.tick};
 
                                 if (selJ == -1 || sel < cand) {
+                                    ActionSeq seq;
+                                    seq.add({j, mvAction});
+                                    seq.add({k, jmpAction});
+
+                                    ActionSeqItem item = {};
+
                                     selVel = mvel;
                                     selJ = j;
                                     selK = k;
                                     sel = cand;
-                                    firstAction = j == 0 ? jmpAction : firstJAct;
+                                    firstAction = j == 0 ? jmpAction : mvAction;
                                 }
                             }
 
@@ -418,7 +439,7 @@ public:
         Metric metric;
         std::optional<AAction> firstAction, secondAction;
 
-        //if (is_attacker) return;
+//        if (is_attacker) return;
 
         if (is_attacker && env.roundTick <= 35) {
             action = AAction().vel(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
