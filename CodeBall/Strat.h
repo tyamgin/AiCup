@@ -353,7 +353,7 @@ public:
 
     Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
 
-    std::pair<std::optional<AAction>, std::optional<AAction>> moveToBallUsual(double ballHeight = BALL_RADIUS * 1.1) {
+    std::pair<std::optional<AAction>, std::optional<AAction>> moveToBallUsual(double ballHeight = BALL_RADIUS + 3) {
         Sandbox snd = env;
         snd.stopOnGoal = false;
         auto me = *snd.me();
