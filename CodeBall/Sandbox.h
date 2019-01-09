@@ -116,9 +116,16 @@ struct Sandbox {
         return Point();
     }
 
-    bool dan_to_arena_quarter(const Unit& point, double& distance, Point& normal) {
+    bool dan_to_arena_quarter2(const Unit& point, double& distance, Point& normal) {
+
+#if M_LOG_DANS
+#define LOG_DAN(id) Logger::instance()->dans[id]++;
+#else
+#define LOG_DAN(id)
+#endif
 
 #define DAN_TO_PLANE(side, point_on_plane, plane_normal) {\
+    LOG_DAN(__LINE__);\
     distance = (point. side - (point_on_plane)) * (plane_normal);\
     if (distance > point.radius) return false;\
     normal. side = (plane_normal);\
@@ -126,42 +133,98 @@ struct Sandbox {
 }
 
 #define DAN_TO_SPHERE_INNER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     const auto diff_x = (sphere_center_x) - point.x;\
     const auto diff_y = (sphere_center_y) - point.y;\
     const auto diff_z = (sphere_center_z) - point.z;\
     auto dist2 = SQR(diff_x) + SQR(diff_y) + SQR(diff_z);\
+    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
     distance = (sphere_radius) - sqrt(dist2);\
-    if (distance > point.radius) return false;\
     normal.set(diff_x, diff_y, diff_z);\
+    return true;\
+}
+
+#define DAN_TO_CYLINDER_Z_INNER(sphere_center_x, sphere_center_y, sphere_radius) {\
+    LOG_DAN(__LINE__);\
+    const auto diff_x = (sphere_center_x) - point.x;\
+    const auto diff_y = (sphere_center_y) - point.y;\
+    auto dist2 = SQR(diff_x) + SQR(diff_y);\
+    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    distance = (sphere_radius) - sqrt(dist2);\
+    normal.set(diff_x, diff_y, 0);\
+    return true;\
+}
+
+#define DAN_TO_CYLINDER_X_INNER(sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
+    const auto diff_y = (sphere_center_y) - point.y;\
+    const auto diff_z = (sphere_center_z) - point.z;\
+    auto dist2 = SQR(diff_y) + SQR(diff_z);\
+    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    distance = (sphere_radius) - sqrt(dist2);\
+    normal.set(0, diff_y, diff_z);\
+    return true;\
+}
+
+#define DAN_TO_CYLINDER_Y_INNER(sphere_center_x, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
+    const auto diff_x = (sphere_center_x) - point.x;\
+    const auto diff_z = (sphere_center_z) - point.z;\
+    auto dist2 = SQR(diff_x) + SQR(diff_z);\
+    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    distance = (sphere_radius) - sqrt(dist2);\
+    normal.set(diff_x, 0, diff_z);\
     return true;\
 }
 
 #define DAN_TO_SPHERE_OUTER(sphere_center_x, sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
     auto diff_x = point.x - (sphere_center_x);\
     auto diff_y = point.y - (sphere_center_y);\
     auto diff_z = point.z - (sphere_center_z);\
     auto dist2 = SQR(diff_x) + SQR(diff_y) + SQR(diff_z);\
+    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
     distance = sqrt(dist2) - (sphere_radius);\
-    if (distance > point.radius) return false;\
     normal.set(diff_x, diff_y, diff_z);\
     return true;\
 }
 
+#define DAN_TO_CYLINDER_X_OUTER(sphere_center_y, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
+    auto diff_y = point.y - (sphere_center_y);\
+    auto diff_z = point.z - (sphere_center_z);\
+    auto dist2 = SQR(diff_y) + SQR(diff_z);\
+    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    distance = sqrt(dist2) - (sphere_radius);\
+    normal.set(0, diff_y, diff_z);\
+    return true;\
+}
+
+#define DAN_TO_CYLINDER_Y_OUTER(sphere_center_x, sphere_center_z, sphere_radius) {\
+    LOG_DAN(__LINE__);\
+    auto diff_x = point.x - (sphere_center_x);\
+    auto diff_z = point.z - (sphere_center_z);\
+    auto dist2 = SQR(diff_x) + SQR(diff_z);\
+    if (SQR((sphere_radius) - point.radius) > dist2) return false;\
+    distance = sqrt(dist2) - (sphere_radius);\
+    normal.set(diff_x, 0, diff_z);\
+    return true;\
+}
+
         if (point.y <= ARENA_BOTTOM_RADIUS) { // Bottom
-            if (point.z <= ARENA_DEPTH/2 - ARENA_CORNER_RADIUS) {
-                if (point.x <= ARENA_WIDTH/2 - ARENA_BOTTOM_RADIUS) { // Ground
+            if (point.z <= ARENA_Z - ARENA_CORNER_RADIUS) {
+                if (point.x <= ARENA_X - ARENA_BOTTOM_RADIUS) { // Ground
                     DAN_TO_PLANE(y, 0, 1);
                 }
                 // Bottom right corner
-                DAN_TO_SPHERE_INNER(
-                        (ARENA_WIDTH / 2) - ARENA_BOTTOM_RADIUS,
+                DAN_TO_CYLINDER_Z_INNER(
+                        ARENA_X - ARENA_BOTTOM_RADIUS,
                         ARENA_BOTTOM_RADIUS,
-                        point.z,
                         ARENA_BOTTOM_RADIUS);
             }
-            if (point.x >= ARENA_WIDTH/2 - ARENA_CORNER_RADIUS) { // Corner
-                constexpr const auto corner_x = (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS;
-                constexpr const auto corner_y = (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS;
+            if (point.x >= ARENA_X - ARENA_CORNER_RADIUS) { // Corner
+                constexpr const auto corner_x = ARENA_X - ARENA_CORNER_RADIUS;
+                constexpr const auto corner_y = ARENA_Z - ARENA_CORNER_RADIUS;
                 constexpr const auto groundRad = ARENA_CORNER_RADIUS - ARENA_BOTTOM_RADIUS;
 
                 auto nx = point.x - corner_x;
@@ -169,85 +232,77 @@ struct Sandbox {
                 auto dist2 = SQR(nx) + SQR(ny);
                 if (dist2 > SQR(groundRad)) {
                     auto dist = sqrt(dist2);
-                    nx /= dist;
-                    ny /= dist;
                     DAN_TO_SPHERE_INNER(
-                            corner_x + nx * groundRad, ARENA_BOTTOM_RADIUS, corner_y + ny * groundRad,
+                            corner_x + nx / dist * groundRad, ARENA_BOTTOM_RADIUS, corner_y + ny / dist * groundRad,
                             ARENA_BOTTOM_RADIUS);
                 }
                 DAN_TO_PLANE(y, 0, 1);
             }
-            if (point.z <= ARENA_DEPTH/2 - ARENA_BOTTOM_RADIUS) {
+            if (point.z <= ARENA_Z - ARENA_BOTTOM_RADIUS) {
                 DAN_TO_PLANE(y, 0, 1);
             }
-            if (point.x <= ARENA_GOAL_WIDTH/2 - ARENA_BOTTOM_RADIUS) {
-                if (point.z <= ARENA_DEPTH/2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
+            if (point.x <= ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS) {
+                if (point.z <= ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
                     DAN_TO_PLANE(y, 0, 1);
                 }
                 // Side z (goal)
-                DAN_TO_SPHERE_INNER(
-                        point.x,
+                DAN_TO_CYLINDER_X_INNER(
                         ARENA_BOTTOM_RADIUS,
-                        (ARENA_DEPTH / 2) + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
+                        ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
                         ARENA_BOTTOM_RADIUS);
             }
 
-            if (point.z <= ARENA_DEPTH/2 + ARENA_GOAL_SIDE_RADIUS) {
-                if (point.x >= ARENA_GOAL_WIDTH/2 + ARENA_GOAL_SIDE_RADIUS) { // Side z
-                    DAN_TO_SPHERE_INNER(
-                            point.x,
+            if (point.z <= ARENA_Z + ARENA_GOAL_SIDE_RADIUS) {
+                if (point.x >= ARENA_GOAL_WIDTH / 2 + ARENA_GOAL_SIDE_RADIUS) { // Side z
+                    DAN_TO_CYLINDER_X_INNER(
                             ARENA_BOTTOM_RADIUS,
-                            (ARENA_DEPTH / 2) - ARENA_BOTTOM_RADIUS,
+                            ARENA_Z - ARENA_BOTTOM_RADIUS,
                             ARENA_BOTTOM_RADIUS);
                 }
                 // Goal outer corner
                 constexpr const auto ox = ARENA_GOAL_WIDTH / 2 + ARENA_GOAL_SIDE_RADIUS;
-                constexpr const auto oy = ARENA_DEPTH / 2 + ARENA_GOAL_SIDE_RADIUS;
+                constexpr const auto oy = ARENA_Z + ARENA_GOAL_SIDE_RADIUS;
                 constexpr const auto rad = ARENA_GOAL_SIDE_RADIUS + ARENA_BOTTOM_RADIUS;
                 auto vx = point.x - ox;
                 auto vy = point.z - oy;
                 const auto vlen2 = SQR(vx) + SQR(vy);
                 if (vlen2 < SQR(rad)) {
                     const auto vlen = sqrt(vlen2);
-                    vx /= vlen;
-                    vy /= vlen;
                     DAN_TO_SPHERE_INNER(
-                            ox + vx * rad, ARENA_BOTTOM_RADIUS, oy + vy * rad,
+                            ox + vx / vlen * rad, ARENA_BOTTOM_RADIUS, oy + vy / vlen * rad,
                             ARENA_BOTTOM_RADIUS);
                 }
                 DAN_TO_PLANE(y, 0, 1);
             }
 
-            if (point.z <= ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) { // Side x (goal)
-                DAN_TO_SPHERE_INNER(
+            if (point.z <= ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) { // Side x (goal)
+                DAN_TO_CYLINDER_Z_INNER(
                         ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS,
                         ARENA_BOTTOM_RADIUS,
-                        point.z,
                         ARENA_BOTTOM_RADIUS);
             }
             // Goal inner bottom corner
             DAN_TO_SPHERE_INNER(
                     ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS,
                     ARENA_BOTTOM_RADIUS,
-                    ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
+                    ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
                     ARENA_BOTTOM_RADIUS);
         }
         if (point.y >= ARENA_HEIGHT - ARENA_TOP_RADIUS) { // Top
-            if (point.z <= ARENA_DEPTH/2 - ARENA_CORNER_RADIUS) {
-                if (point.x <= ARENA_WIDTH/2 - ARENA_TOP_RADIUS) { // Ceiling
+            if (point.z <= ARENA_Z - ARENA_CORNER_RADIUS) {
+                if (point.x <= ARENA_X - ARENA_TOP_RADIUS) { // Ceiling
                     DAN_TO_PLANE(y, ARENA_HEIGHT, -1);
                 }
                 // Top right corner
-                DAN_TO_SPHERE_INNER(
-                        (ARENA_WIDTH / 2) - ARENA_TOP_RADIUS,
+                DAN_TO_CYLINDER_Z_INNER(
+                        ARENA_X - ARENA_TOP_RADIUS,
                         ARENA_HEIGHT - ARENA_TOP_RADIUS,
-                        point.z,
                         ARENA_TOP_RADIUS);
             }
 
-            if (point.x >= ARENA_WIDTH/2 - ARENA_CORNER_RADIUS) { // Corner
-                constexpr const auto corner_x = (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS;
-                constexpr const auto corner_y = (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS;
+            if (point.x >= ARENA_X - ARENA_CORNER_RADIUS) { // Corner
+                constexpr const auto corner_x = ARENA_X - ARENA_CORNER_RADIUS;
+                constexpr const auto corner_y = ARENA_Z - ARENA_CORNER_RADIUS;
                 constexpr const auto groundRad = ARENA_CORNER_RADIUS - ARENA_TOP_RADIUS;
 
                 auto nx = point.x - corner_x;
@@ -255,101 +310,93 @@ struct Sandbox {
                 auto dist2 = SQR(nx) + SQR(ny);
                 if (dist2 > SQR(groundRad)) {
                     auto dist = sqrt(dist2);
-                    nx /= dist;
-                    ny /= dist;
                     DAN_TO_SPHERE_INNER(
-                            corner_x + nx * groundRad, ARENA_HEIGHT - ARENA_TOP_RADIUS, corner_y + ny * groundRad,
+                            corner_x + nx / dist * groundRad, ARENA_HEIGHT - ARENA_TOP_RADIUS,
+                            corner_y + ny / dist * groundRad,
                             ARENA_TOP_RADIUS);
                 }
                 DAN_TO_PLANE(y, ARENA_HEIGHT, -1);
             }
-            if (point.z <= ARENA_DEPTH/2 - ARENA_TOP_RADIUS) {
+            if (point.z <= ARENA_Z - ARENA_TOP_RADIUS) {
                 DAN_TO_PLANE(y, ARENA_HEIGHT, -1);
             }
             // Top upper corner
-            DAN_TO_SPHERE_INNER(
-                    point.x,
+            DAN_TO_CYLINDER_X_INNER(
                     ARENA_HEIGHT - ARENA_TOP_RADIUS,
-                    (ARENA_DEPTH / 2) - ARENA_TOP_RADIUS,
+                    ARENA_Z - ARENA_TOP_RADIUS,
                     ARENA_TOP_RADIUS);
         }
         // Middle
 
-        if (point.z <= ARENA_DEPTH/2 - ARENA_CORNER_RADIUS) { // Side x
-            DAN_TO_PLANE(x, ARENA_WIDTH / 2, -1);
+        if (point.z <= ARENA_Z - ARENA_CORNER_RADIUS) { // Side x
+            DAN_TO_PLANE(x, ARENA_X, -1);
         }
-        if (point.x >= ARENA_WIDTH/2 - ARENA_CORNER_RADIUS) { // Corner
-            DAN_TO_SPHERE_INNER(
-                    (ARENA_WIDTH / 2) - ARENA_CORNER_RADIUS,
-                    point.y,
-                    (ARENA_DEPTH / 2) - ARENA_CORNER_RADIUS,
+        if (point.x >= ARENA_X - ARENA_CORNER_RADIUS) { // Corner
+            DAN_TO_CYLINDER_Y_INNER(
+                    ARENA_X - ARENA_CORNER_RADIUS,
+                    ARENA_Z - ARENA_CORNER_RADIUS,
                     ARENA_CORNER_RADIUS);
         }
-        if (point.z < ARENA_DEPTH/2 - point.radius) {
+        if (point.z < ARENA_Z - point.radius) {
             return false;
         }
 
-        if (point.z >= ARENA_DEPTH/2 + ARENA_GOAL_SIDE_RADIUS) { // Goal
+        if (point.z >= ARENA_Z + ARENA_GOAL_SIDE_RADIUS) { // Goal
             if (point.y > ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS) {
-                if (point.x > ARENA_GOAL_WIDTH/2 - ARENA_BOTTOM_RADIUS) {
-                    if (point.z <= ARENA_DEPTH/2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) { // Side x top (goal)
-                        DAN_TO_SPHERE_INNER(
+                if (point.x > ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS) {
+                    if (point.z <= ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) { // Side x top (goal)
+                        DAN_TO_CYLINDER_Z_INNER(
                                 ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS,
                                 ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
-                                point.z,
                                 ARENA_BOTTOM_RADIUS);
                     }
                     // Goal inner top corner
                     DAN_TO_SPHERE_INNER(
                             ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS,
                             ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
-                            ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
+                            ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
                             ARENA_BOTTOM_RADIUS);
                 }
-                if (point.z > ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) { // Side z top (goal)
-                    DAN_TO_SPHERE_INNER(
-                            point.x,
+                if (point.z > ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) { // Side z top (goal)
+                    DAN_TO_CYLINDER_X_INNER(
                             ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS,
-                            ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
+                            ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
                             ARENA_BOTTOM_RADIUS);
                 }
                 // Ceiling (goal)
                 DAN_TO_PLANE(y, ARENA_GOAL_HEIGHT, -1);
             }
             if (point.x > ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS) {
-                if (point.z > ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
-                    DAN_TO_SPHERE_INNER(
+                if (point.z > ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS) {
+                    DAN_TO_CYLINDER_Y_INNER(
                             ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS,
-                            point.y,
-                            ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
+                            ARENA_Z + ARENA_GOAL_DEPTH - ARENA_BOTTOM_RADIUS,
                             ARENA_BOTTOM_RADIUS);
                 }
                 // Size x (goal)
                 DAN_TO_PLANE(x, ARENA_GOAL_WIDTH / 2, -1);
             }
             // Side z (goal)
-            DAN_TO_PLANE(z, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH, -1);
+            DAN_TO_PLANE(z, ARENA_Z + ARENA_GOAL_DEPTH, -1);
         }
-        if (point.x <= ARENA_GOAL_WIDTH/2 - ARENA_BOTTOM_RADIUS) {
+        if (point.x <= ARENA_GOAL_WIDTH / 2 - ARENA_BOTTOM_RADIUS) {
             if (point.y >= ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS) {
-                DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
+                DAN_TO_PLANE(z, ARENA_Z, -1);
             }
             // Goal ceiling
-            DAN_TO_SPHERE_OUTER(
-                    point.x,
+            DAN_TO_CYLINDER_X_OUTER(
                     ARENA_GOAL_HEIGHT + ARENA_GOAL_SIDE_RADIUS,
-                    ARENA_DEPTH / 2 + ARENA_GOAL_SIDE_RADIUS,
+                    ARENA_Z + ARENA_GOAL_SIDE_RADIUS,
                     ARENA_GOAL_SIDE_RADIUS);
         }
         if (point.y <= ARENA_GOAL_HEIGHT - ARENA_GOAL_TOP_RADIUS) {
-            if (point.x >= ARENA_GOAL_WIDTH/2 + ARENA_GOAL_SIDE_RADIUS) {
-                DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
+            if (point.x >= ARENA_GOAL_WIDTH / 2 + ARENA_GOAL_SIDE_RADIUS) {
+                DAN_TO_PLANE(z, ARENA_Z, -1);
             }
             // Goal right
-            DAN_TO_SPHERE_OUTER(
+            DAN_TO_CYLINDER_Y_OUTER(
                     ARENA_GOAL_WIDTH / 2 + ARENA_GOAL_SIDE_RADIUS,
-                    point.y,
-                    ARENA_DEPTH / 2 + ARENA_GOAL_SIDE_RADIUS,
+                    ARENA_Z + ARENA_GOAL_SIDE_RADIUS,
                     ARENA_GOAL_SIDE_RADIUS);
         }
         // Top right corner
@@ -361,21 +408,24 @@ struct Sandbox {
         const auto len2 = SQR(vx) + SQR(vy);
 
         if (len2 >= SQR(rad)) {
-            DAN_TO_PLANE(z, ARENA_DEPTH / 2, -1);
+            DAN_TO_PLANE(z, ARENA_Z, -1);
         }
         const auto len = sqrt(len2);
-        vx /= len;
-        vy /= len;
         DAN_TO_SPHERE_OUTER(
-                ox + vx * rad, oy + vy * rad, ARENA_DEPTH / 2 + ARENA_GOAL_SIDE_RADIUS,
+                ox + vx / len * rad, oy + vy / len * rad, ARENA_Z + ARENA_GOAL_SIDE_RADIUS,
                 ARENA_GOAL_SIDE_RADIUS);
 
 #undef DAN_TO_PLANE
 #undef DAN_TO_SPHERE_INNER
 #undef DAN_TO_SPHERE_OUTER
+#undef DAN_TO_CYLINDER_X_INNER
+#undef DAN_TO_CYLINDER_Y_INNER
+#undef DAN_TO_CYLINDER_Z_INNER
+#undef DAN_TO_CYLINDER_X_OUTER
+#undef DAN_TO_CYLINDER_Y_OUTER
     }
 
-    bool dan_to_arena_quarter2(const Unit& point, double& distance, Point& normal) {
+    bool dan_to_arena_quarter(const Unit& point, double& distance, Point& normal) {
 
 #if M_LOG_DANS
 #define LOG_DAN(id) Logger::instance()->dans[id]++;
@@ -692,7 +742,7 @@ struct Sandbox {
         if (negate_z)
             point.z = -point.z;
         double distance;
-        if (!dan_to_arena_quarter(point, distance, normal)) {
+        if (!dan_to_arena_quarter2(point, distance, normal)) {
             return false;
         }
 
@@ -752,6 +802,7 @@ struct Sandbox {
         }
         penetration = pn;
         normal = nn;
+        return r_old;
         return r_new;
     }
 

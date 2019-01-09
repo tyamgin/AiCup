@@ -43,4 +43,7 @@ constexpr const double ARENA_GOAL_HEIGHT = 10;
 constexpr const double ARENA_GOAL_DEPTH = 10;
 constexpr const double ARENA_GOAL_SIDE_RADIUS = 1;
 
+constexpr const double ARENA_Z = ARENA_DEPTH / 2;
+constexpr const double ARENA_X = ARENA_WIDTH / 2;
+
 #endif //CODEBALL_CONST_H

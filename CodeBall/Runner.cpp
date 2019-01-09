@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     cerr << "Starting local runner" << endl;
 
     string runStr = "/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018";
-    string prevBin = "m26";
+    string prevBin = "m27";
 #if M_NO_RANDOM
     runStr += " --disable-random";
 #endif
