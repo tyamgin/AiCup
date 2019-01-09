@@ -54,7 +54,7 @@ public:
 
         bool operator <(const Metric &m) const {
             auto getComparable = [](const Metric &m) {
-                double pen = (4 - std::min(4.0, m.penalty)) * 10;
+                double pen = (4 - std::min(4.0, m.penalty)) / 4;
 
                 return std::make_tuple(m.hasGoal, m.m1 - pen);
             };
