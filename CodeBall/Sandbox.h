@@ -32,7 +32,12 @@ struct Sandbox {
     bool oppCounterStrat = false;
 
     static std::vector<ABall> _ballsCache;
+    int _ballsCacheIterator = 0;
     bool _ballsCacheValid = true;
+
+    static void loadBallsCache(const std::vector<ABall>& cache) {
+        _ballsCache = cache;
+    }
 
     Sandbox() {
     }
@@ -882,7 +887,7 @@ struct Sandbox {
     }
 
 
-    std::vector<ARobot*> robots() {
+    std::vector<ARobot*> robots() { // TODO: переписать на iterator
         std::vector<ARobot*> res;
         for (auto &x : my)
             res.push_back(&x);
@@ -1088,10 +1093,24 @@ struct Sandbox {
                 }
             }
         }
+        if (!robotBallCollisions.empty()) {
+            _ballsCacheValid = false;
+        }
+        if (microticksPerTick < MICROTICKS_PER_TICK && _ballsCacheValid && _ballsCacheIterator < (int) _ballsCache.size()) {
+            auto& cached = _ballsCache[_ballsCacheIterator];
+//            if (!cached.equals(ball) || !cached.velocity.equals(ball.velocity)) {
+//                std::cout << "";
+//            }
+            ball.velocity = cached.velocity;
+            ball.x = cached.x;
+            ball.y = cached.y;
+            ball.z = cached.z;
+        }
+        _ballsCacheIterator++;
 
         tick++;
         roundTick++;
-        // TODO: clear actions
+        // TODO: need clear actions?
 
         OP_END(DO_TICK);
     }

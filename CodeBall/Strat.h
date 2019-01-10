@@ -205,6 +205,12 @@ public:
                                 meJumpSnd.oppCounterStrat = true;
                             int positiveTicks = 0;
                             double positiveChange = 0;
+                            bool hasGk = false;
+                            for (auto& x : meJumpSnd.opp) {
+                                hasGk |= x.z > ARENA_Z - 5;
+                            }
+                            bool isFar = meJumpSnd.me()->z < 6;
+                            bool noFarGoal = false;
 
                             for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
                                 auto prevBall = meJumpSnd.ball;
@@ -225,6 +231,9 @@ public:
                                         }
                                     }
                                 }
+                                if (w > 10 && meJumpSnd.ball.z < BALL_RADIUS * 1.1 && hasGk) {
+                                    noFarGoal = true;
+                                }
 
 
                                 if (j == drawJ && k <= drawK) {
@@ -244,9 +253,13 @@ public:
                                 penalty = dst;
                             }
 
+                            bool hasGoal = meJumpSnd.hasGoal > 0;
+                            if (hasGoal && noFarGoal && isFar) {
+                                hasGoal = false;
+                            }
                             if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
 
-                                Metric cand = {meJumpSnd.hasGoal > 0, positiveChange, positiveTicks, penalty,
+                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty,
                                                shotTick - env.tick};
 
                                 if (selJ == -1 || sel < cand) {
@@ -419,13 +432,17 @@ public:
 
 
         if (isFirst) {
+            std::vector<ABall> cache;
             Sandbox ballEnv = env;
+            ballEnv.clearRobots(); // важно
             for (int i = 0; i < 200; i++) {
                 if (i % 6 == 5) {
                     Visualizer::addSphere(ballEnv.ball, rgba(1, 0, 0, 0.2));
                 }
                 ballEnv.doTick();
+                cache.push_back(ballEnv.ball);
             }
+            Sandbox::loadBallsCache(cache);
         }
 
         lastShotTime[me.id] = INT_MAX;
@@ -490,7 +507,7 @@ public:
             if (!is_attacker) {
                 Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
-                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 5)
+                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 5 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 4)
                     && tryShotOutOrGoal(is_attacker, action, metric)) {
 
                     std::string msg = "(gk) " + metric.toString();
