@@ -53,15 +53,21 @@ public:
         int positiveTicks = 0;
         double penalty = 0;
         int timeToShot = INT_MAX;
+        double minBallZ = 0;
+
+        auto getComparable() const {
+            double pen = (4 - std::min(4.0, penalty)) / 4;
+            const auto goalZ = -(ARENA_Z + BALL_RADIUS);
+            const auto goalSafeZ = goalZ + 0.5;
+            double injPen = 0;
+            if (minBallZ < goalSafeZ) {
+                injPen = (minBallZ - goalSafeZ) / (goalZ - goalSafeZ) * 0.4;
+            }
+            return std::make_tuple(hasGoal, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen);
+        }
 
         bool operator <(const Metric &m) const {
-            auto getComparable = [](const Metric &m) {
-                double pen = (4 - std::min(4.0, m.penalty)) / 4;
-
-                return std::make_tuple(m.hasGoal, (m.positiveChange / (m.positiveTicks + m.timeToShot)) - pen);
-            };
-
-            return getComparable(*this) < getComparable(m);
+            return getComparable() < m.getComparable();
         }
 
         std::string toString() {
@@ -171,8 +177,10 @@ public:
                 if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 12) {
                     const int jumpMaxTicks = 20;
                     const int ballSimMaxTicks = 100;
+                    double minZ = meJumpSnd.ball.z;
                     for (auto k = 0; k <= jumpMaxTicks; k++) {
                         meJumpSnd.doTick(1);
+                        minZ = std::min(minZ, meJumpSnd.ball.z);
                         auto tmp = meJumpSnd.me();
                         if (skipRobotsCollisions(meJumpSnd)) {
                             break;
@@ -216,6 +224,7 @@ public:
                             for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
                                 auto prevBall = meJumpSnd.ball;
                                 meJumpSnd.doTick(1);
+                                minZ = std::min(minZ, meJumpSnd.ball.z);
                                 if (meJumpSnd.ball.z > prevBall.z) {
                                     positiveChange += meJumpSnd.ball.z - prevBall.z;
                                     positiveTicks++;
@@ -260,7 +269,7 @@ public:
                             }
                             if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
 
-                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick};
+                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ};
 
                                 if (selJ == -1 || sel < cand) {
                                     ActionSeq seq;
