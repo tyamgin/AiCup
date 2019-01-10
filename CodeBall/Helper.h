@@ -4,12 +4,16 @@
 class Helper {
 public:
     static Point maxVelocityTo(const ARobot& a, const Point& b) {
+        return maxVelocityToDir(a, b - a);
+    }
+
+    static Point maxVelocityToDir(const ARobot& a, Point dir) {
         if (!a.touch || a.touchNormal.y < EPS)
             return Point();
 
-        auto diff = (b - a).normalized();
-        diff.y = -(diff.z * a.touchNormal.z + diff.x * a.touchNormal.x) / a.touchNormal.y;
-        return diff.take(ROBOT_MAX_GROUND_SPEED);
+        dir.normalize();
+        dir.y = -(dir.z * a.touchNormal.z + dir.x * a.touchNormal.x) / a.touchNormal.y;
+        return dir.take(ROBOT_MAX_GROUND_SPEED);
     }
 };
 

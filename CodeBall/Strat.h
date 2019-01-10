@@ -88,7 +88,7 @@ public:
 
     std::unordered_map<int, int> lastShotTime;
 
-    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Point drawVel = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
+    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Point drawDir = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
@@ -96,38 +96,38 @@ public:
 
         const auto myId = env.me()->id;
         Metric sel;
-        Point selVel;
+        Point selDir;
         int selJ = -1, selK = -1;
         AAction firstAction;
 
-        static std::unordered_map<int, Point> prevVel;
-        std::vector<Point> vels;
+        static std::unordered_map<int, Point> prevDir;
+        std::vector<Point> dirs;
         Sandbox ballSnd = env;
         ballSnd.my.clear();
 
         for (int i = 0; i < 48; i++) {
             if (i % 6 == env.tick % 6) {
                 auto ang = 2 * M_PI / 48 * i;
-                vels.push_back(Helper::maxVelocityTo(*env.me(), *env.me() + Point(cos(ang), 0, sin(ang))));
+                dirs.push_back(Point(cos(ang), 0, sin(ang)));
             }
         }
 
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6)
-                vels.push_back(Helper::maxVelocityTo(*env.me(), ballSnd.ball));
+                dirs.push_back(ballSnd.ball - *env.me());
 
             ballSnd.doTick(5);
         }
-        if (prevVel.count(myId)) {
-            vels.push_back(prevVel[myId]);
+        if (prevDir.count(myId)) {
+            dirs.push_back(prevDir[myId]);
         }
         if (drawJ >= 0) {
-            vels = {drawVel};
+            dirs = {drawDir};
         }
-        std::sort(vels.begin(), vels.end());
-        vels.erase(std::unique(vels.begin(), vels.end()), vels.end());
+        std::sort(dirs.begin(), dirs.end());
+        dirs.erase(std::unique(dirs.begin(), dirs.end()), dirs.end());
 
-        auto skipRobbotsCollisions = [myId](Sandbox &e) {
+        auto skipRobotsCollisions = [myId](Sandbox &e) {
             if (e.ball.z > -10) {
                 return false;
             }
@@ -149,14 +149,15 @@ public:
 
         const double al = 0.7 * drawAlpha;
 
-        for (auto& mvel : vels) {
+        for (auto& dir : dirs) {
             Sandbox meSnd = env;
-            auto mvAction = AAction().vel(mvel);
-            auto jmpAction = mvAction;
-            jmpAction.jump();
+            AAction firstJAction;
 
             for (auto j = 0; j <= 65; j++) {
                 Sandbox meJumpSnd = meSnd;
+                auto mvAction = AAction().vel(Helper::maxVelocityToDir(*meSnd.me(), dir));
+                auto jmpAction = mvAction;
+                jmpAction.jump();
 
                 meJumpSnd.me()->action = jmpAction;
 
@@ -173,7 +174,7 @@ public:
                     for (auto k = 0; k <= jumpMaxTicks; k++) {
                         meJumpSnd.doTick(1);
                         auto tmp = meJumpSnd.me();
-                        if (skipRobbotsCollisions(meJumpSnd)) {
+                        if (skipRobotsCollisions(meJumpSnd)) {
                             break;
                         }
 
@@ -259,21 +260,18 @@ public:
                             }
                             if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
 
-                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty,
-                                               shotTick - env.tick};
+                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick};
 
                                 if (selJ == -1 || sel < cand) {
                                     ActionSeq seq;
                                     seq.add({j, mvAction});
                                     seq.add({k, jmpAction});
 
-                                    ActionSeqItem item = {};
-
-                                    selVel = mvel;
+                                    selDir = dir;
                                     selJ = j;
                                     selK = k;
                                     sel = cand;
-                                    firstAction = j == 0 ? jmpAction : mvAction;
+                                    firstAction = j == 0 ? jmpAction : firstJAction;
                                 }
                             }
 
@@ -283,10 +281,17 @@ public:
                 }
 
                 meSnd.me()->action = mvAction;
+                if (j == 0) {
+                    firstJAction = mvAction;
+                }
                 meSnd.doTick(1);
-                if (skipRobbotsCollisions(meSnd)) {
+                if (skipRobotsCollisions(meSnd)) {
                     break;
                 }
+            }
+
+            if (!env.me()->touch || env.me()->touchNormal.y < EPS) {
+                break;
             }
         }
 
@@ -299,10 +304,10 @@ public:
             if (drawJ < 0) {
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(isAttacker, t1, t2, selVel, selJ, selK, ret ? 1 : 0.3);
+                tryShotOutOrGoal(isAttacker, t1, t2, selDir, selJ, selK, ret ? 1 : 0.3);
             }
 #endif
-            prevVel[myId] = selVel;
+            prevDir[myId] = selDir;
             lastShotTime[myId] = sel.timeToShot;
             return ret;
         }
@@ -434,6 +439,7 @@ public:
         if (isFirst) {
             std::vector<ABall> cache;
             Sandbox ballEnv = env;
+            ballEnv.stopOnGoal = false;
             ballEnv.clearRobots(); // важно
             for (int i = 0; i < 200; i++) {
                 if (i % 6 == 5) {
