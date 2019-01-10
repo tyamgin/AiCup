@@ -56,7 +56,7 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
 
     TIMER_START();
 
-    strat.act(a);
+    strat.act(a, first);
     action.use_nitro = a.useNitro;
     action.jump_speed = a.jumpSpeed;
     action.target_velocity_x = a.targetVelocity.x;

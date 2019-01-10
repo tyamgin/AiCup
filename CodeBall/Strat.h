@@ -405,7 +405,7 @@ public:
         return {firstAction, secondAction};
     }
 
-    void act(AAction &action) {
+    void act(AAction &action, bool isFirst) {
         auto& ball = env.ball;
         auto& me = *env.me();
 
@@ -417,20 +417,17 @@ public:
             checkEvalState();
         }
 
-#ifdef DEBUG
-        if (me.id == 2) {
+
+        if (isFirst) {
             Sandbox ballEnv = env;
             for (int i = 0; i < 200; i++) {
-                if (i == 199) {
-                    Visualizer::addSphere(ballEnv.ball, rgba(0.3, 0, 0.5, 0.5));
-                }
                 if (i % 6 == 5) {
                     Visualizer::addSphere(ballEnv.ball, rgba(1, 0, 0, 0.2));
                 }
                 ballEnv.doTick();
             }
         }
-#endif
+
         lastShotTime[me.id] = INT_MAX;
 
         auto firstToBall = evalToBall();
@@ -551,11 +548,6 @@ public:
                     } else {
                         if (firstToBall && firstToBall.value().id == me.id) {
                             std::tie(firstAction, secondAction) = moveToBallUsual();
-                            if (env.tick == 51) {
-                                std::tie(firstAction, secondAction) = moveToBallUsual();
-                                std::tie(firstAction, secondAction) = moveToBallUsual();
-                                std::tie(firstAction, secondAction) = moveToBallUsual();
-                            }
                         }
                         if (firstAction) {
                             action = firstAction.value();

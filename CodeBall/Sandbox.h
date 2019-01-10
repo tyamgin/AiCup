@@ -31,6 +31,9 @@ struct Sandbox {
     bool oppGkStrat = false;
     bool oppCounterStrat = false;
 
+    static std::vector<ABall> _ballsCache;
+    bool _ballsCacheValid = true;
+
     Sandbox() {
     }
 
@@ -85,14 +88,6 @@ struct Sandbox {
         return ret;
     }
 
-    struct DistanceNormalPair {
-        double distance;
-        Point normal;
-
-        bool operator <(const DistanceNormalPair &other) const {
-            return distance < other.distance;
-        }
-    };
 
     Point collide_with_arena(ABall &e) {
         Point normal;
