@@ -833,8 +833,9 @@ struct Sandbox {
         }
 
         auto dist2 = a.getDistanceTo2(b);
-        if (dist2 >= SQR(a.radius + secondRadius))
+        if (dist2 >= SQR(a.radius + secondRadius)) {
             return;
+        }
 
         auto distance = sqrt(dist2);
         auto penetration = a.radius + secondRadius - distance;
@@ -842,9 +843,9 @@ struct Sandbox {
         constexpr const auto k_a = (1.0 / ROBOT_MASS) / ((1.0 / ROBOT_MASS) + (1.0 / secondMass));
         constexpr const auto k_b = (1.0 / secondMass) / ((1.0 / ROBOT_MASS) + (1.0 / secondMass));
 
-        double normalX = (b.x - a.x) / distance;
-        double normalY = (b.y - a.y) / distance;
-        double normalZ = (b.z - a.z) / distance;
+        const double normalX = (b.x - a.x) / distance;
+        const double normalY = (b.y - a.y) / distance;
+        const double normalZ = (b.z - a.z) / distance;
 
         a.x -= penetration * k_a * normalX;
         a.y -= penetration * k_a * normalY;

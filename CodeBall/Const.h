@@ -1,6 +1,14 @@
 #ifndef CODEBALL_CONST_H
 #define CODEBALL_CONST_H
 
+#define M_NO_RANDOM 0
+
+#if M_NO_RANDOM
+#ifndef LOCAL
+#error "M_NO_RANDOM is only for local"
+#endif
+#endif
+
 // Константы, взятые из документации
 constexpr const double ROBOT_MIN_RADIUS = 1;
 constexpr const double ROBOT_MAX_RADIUS = 1.05;

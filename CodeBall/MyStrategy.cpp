@@ -5,7 +5,7 @@ using namespace std;
 
 /*
  * TODO:
- * штрафовать за близость мяча к голу
+ *
  */
 
 void run_tests();

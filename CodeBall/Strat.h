@@ -54,6 +54,7 @@ public:
         double penalty = 0;
         int timeToShot = INT_MAX;
         double minBallZ = 0;
+        bool hasOppTouch = false;
 
         auto getComparable() const {
             double pen = (4 - std::min(4.0, penalty)) / 4;
@@ -63,7 +64,11 @@ public:
             if (minBallZ < goalSafeZ) {
                 injPen = (minBallZ - goalSafeZ) / (goalZ - goalSafeZ) * 0.4;
             }
-            return std::make_tuple(hasGoal, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen);
+            double touchPen = 0;
+            if (hasGoal && hasOppTouch) {
+                touchPen = 0.3;
+            }
+            return std::make_tuple(hasGoal, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen - touchPen);
         }
 
         bool operator <(const Metric &m) const {
@@ -71,7 +76,11 @@ public:
         }
 
         std::string toString() {
-            return (hasGoal ? "GOAL" : "SHOT") + std::string(" t=") + std::to_string(timeToShot) + " p=" + std::to_string(penalty) + " " + std::to_string((positiveChange / (positiveTicks + timeToShot)));
+            return std::string(hasGoal ? "GOAL" : "SHOT") +
+                " t=" + std::to_string(timeToShot) +
+                " p=" + std::to_string(penalty) +
+                " " + std::to_string((positiveChange / (positiveTicks + timeToShot))) +
+                (hasOppTouch ? " (!)" : "");
         }
     };
 
@@ -99,6 +108,11 @@ public:
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
+
+        bool isTeammateById[7];
+        for (auto x : env.robots()) {
+            isTeammateById[x->id] = x->isTeammate;
+        }
 
         const auto myId = env.me()->id;
         Metric sel;
@@ -175,13 +189,14 @@ public:
                 }
 
                 if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 12) {
+                    OP_START(K);
+
                     const int jumpMaxTicks = 20;
                     const int ballSimMaxTicks = 100;
-                    double minZ = meJumpSnd.ball.z;
+
                     for (auto k = 0; k <= jumpMaxTicks; k++) {
                         meJumpSnd.doTick(1);
-                        minZ = std::min(minZ, meJumpSnd.ball.z);
-                        auto tmp = meJumpSnd.me();
+
                         if (skipRobotsCollisions(meJumpSnd)) {
                             break;
                         }
@@ -204,6 +219,16 @@ public:
                         Point md1, md2;
 
                         if (myCollisionVel < INT_MAX && (myCollisionVel >= 0 || isAttacker && meJumpSnd.ball.z > 0 || !isAttacker && meJumpSnd.ball.z < -30)) {
+                            OP_START(KW);
+
+                            meJumpSnd = meSnd;
+                            meJumpSnd.me()->action = jmpAction;
+                            double minZ = meJumpSnd.ball.z;
+                            for (int q = 0; q <= k; q++) {
+                                meJumpSnd.doTick(q == k ? MICROTICKS_PER_TICK : 1);
+                                minZ = std::min(minZ, meJumpSnd.ball.z);
+                            }
+                            // TODO: что если коллизии после пересчёта не будет?
 
                             int shotTick = meJumpSnd.tick;
 
@@ -220,17 +245,23 @@ public:
                             }
                             bool isFar = meJumpSnd.me()->z < 6;
                             bool noFarGoal = false;
+                            bool hasOppTouch = false;
 
                             for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
-                                auto prevBall = meJumpSnd.ball;
+                                auto prevBallZ = meJumpSnd.ball.z;
                                 meJumpSnd.doTick(1);
+                                for (auto& item : meJumpSnd.robotBallCollisions) {
+                                    if (!isTeammateById[item.id1]) {
+                                        hasOppTouch = true;
+                                    }
+                                }
                                 minZ = std::min(minZ, meJumpSnd.ball.z);
-                                if (meJumpSnd.ball.z > prevBall.z) {
-                                    positiveChange += meJumpSnd.ball.z - prevBall.z;
+                                if (meJumpSnd.ball.z > prevBallZ) {
+                                    positiveChange += meJumpSnd.ball.z - prevBallZ;
                                     positiveTicks++;
                                 }
                                 if (meJumpSnd.ball.z < 0) {
-                                    for (auto &o : meJumpSnd.opp) {
+                                    for (auto& o : meJumpSnd.opp) {
                                         if (o.z > meJumpSnd.ball.z) {
                                             auto dst2 = o.getDistanceTo2(meJumpSnd.ball);
                                             if (dst2 < minCounterDist2) {
@@ -269,7 +300,7 @@ public:
                             }
                             if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
 
-                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ};
+                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch};
 
                                 if (selJ == -1 || sel < cand) {
                                     ActionSeq seq;
@@ -284,9 +315,13 @@ public:
                                 }
                             }
 
+                            OP_END(KW);
+
                             break;
                         }
                     }
+
+                    OP_END(K);
                 }
 
                 meSnd.me()->action = mvAction;
@@ -446,6 +481,9 @@ public:
 
 
         if (isFirst) {
+            Visualizer::addSphere(Point(0, 7, 0), 1, rgba(1, 0, 0, 0.5));
+            Visualizer::addSphere(Point(0, 7.5, 0), 1, rgba(0, 1, 0, 0.5));
+
             std::vector<ABall> cache;
             Sandbox ballEnv = env;
             ballEnv.stopOnGoal = false;

@@ -1,17 +1,9 @@
-#define M_NO_RANDOM 0
-
-#if M_NO_RANDOM
-#ifndef LOCAL
-#error "M_NO_RANDOM is only for local"
-#endif
-#endif
-
-
 #include <memory>
 #include <iostream>
 #include <cstdlib>
 #include "Runner.h"
 #include "MyStrategy.h"
+#include "Const.h"
 
 using namespace model;
 using namespace std;

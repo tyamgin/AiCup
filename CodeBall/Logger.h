@@ -23,6 +23,8 @@
 enum LoggerAction {
     LA_ALL,
     LA_DO_TICK,
+    LA_K,
+    LA_KW,
 
     LA_ACTIONS_COUNT
 };
@@ -80,6 +82,8 @@ struct Logger {
         out << "[Summary]" << std::endl;
         out << "] ALL                         " << _cumulativeDuration[LA_ALL]                         / 1000 << "ms" << std::endl;
         out << "] DO_TICK                     " << _cumulativeDuration[LA_DO_TICK]                     / 1000 << "ms" << std::endl;
+        out << "] K                           " << _cumulativeDuration[LA_K]                           / 1000 << "ms" << std::endl;
+        out << "] KW                          " << _cumulativeDuration[LA_KW]                          / 1000 << "ms" << std::endl;
         for (int i = 0; i < int(sizeof(dans) / sizeof(dans[0])); i++) {
             if (dans[i] > 0) {
                 out << "Dan " << i << ": " << dans[i] << std::endl;
