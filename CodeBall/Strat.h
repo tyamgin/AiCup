@@ -164,7 +164,7 @@ public:
             if (!isAttacker) {
                 return true;
             }
-            return e.ball.z < -ARENA_Z * 0.66;
+            return e.ball.z < -ARENA_Z * 0.4;
         };
 
         const double al = 0.7 * drawAlpha;
