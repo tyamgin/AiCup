@@ -19,6 +19,11 @@ struct AAction {
         return *this;
     }
 
+    AAction& nitro() {
+        this->useNitro = true;
+        return *this;
+    }
+
     AAction& vel(const Point& vel) {
         this->targetVelocity = vel;
         return *this;

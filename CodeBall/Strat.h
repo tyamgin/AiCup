@@ -427,9 +427,10 @@ public:
                     selTm = gotchaTm;
                 }
 
-                me->action = AAction().vel(Helper::maxVelocityTo(*me, pack));
+                auto act = AAction().vel(Helper::maxVelocityTo(*me, pack)).nitro();
+                me->action = act;
                 if (i == 0)
-                    firstIAction = AAction().vel(Helper::maxVelocityTo(*me, pack));
+                    firstIAction = act;
                 meSnd.doTick(1);
 
                 if (meSnd.nitroPacksCollected.size()) {
