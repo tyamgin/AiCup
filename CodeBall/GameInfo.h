@@ -3,6 +3,7 @@
 
 struct GameInfo {
     static int maxTickCount;
+    static bool isNitro;
     static bool isFinal;
     static bool isOpponentCrashed;
 

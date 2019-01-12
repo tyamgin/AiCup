@@ -358,6 +358,98 @@ public:
         return false;
     }
 
+    bool tryTakeNitro(bool isAttacker, AAction& resAction) {
+        if (!GameInfo::isNitro) {
+            return false;
+        }
+
+        if (isAttacker) {
+            return false;
+        }
+        if (env.me()->nitroAmount >= MAX_NITRO_AMOUNT) {
+            return false;
+        }
+
+        Point center(0, 0, -ARENA_Z);
+        AAction selAction;
+        int selI = -1, selJ = -1;
+        int minTm = INT_MAX;
+
+        for (auto& pack : env.nitroPacks) {
+            if (pack.z > 0) {
+                continue;
+            }
+
+            double minDistToCenter = 10000;
+            bool minDistGotcha = false;
+            int selTm = INT_MAX;
+
+            auto meSnd = env;
+            meSnd.clearRobots(true);
+            auto me = meSnd.me();
+            AAction firstIAction;
+            for (int i = 0; i < 60; i++) {
+                auto backSnd = meSnd;
+
+                bool intersected = false;
+                bool gotcha = false;
+                int gotchaTm = INT_MAX;
+                int gotchaJ = -1;
+                AAction firstJAction;
+
+                for (int j = 0; j < 20; j++) {
+                    if (!intersected) {
+                        auto g = backSnd.getIntersectedNitroPack(*backSnd.me());
+                        if (g) {
+                            for (auto &item : backSnd.nitroPacksCollected) {
+                                if (item.id1 == me->id && item.id2 == g->id) {
+                                    gotcha = true;
+                                    gotchaJ = j;
+                                    gotchaTm = backSnd.tick - env.tick;
+                                    break;
+                                }
+                            }
+                            intersected = true;
+                        }
+                    }
+
+                    backSnd.me()->action = AAction().vel(Helper::maxVelocityTo(*backSnd.me(), center));
+                    if (j == 0)
+                        firstJAction = AAction().vel(Helper::maxVelocityTo(*backSnd.me(), center));
+                    backSnd.doTick(1);
+                }
+                if (intersected && backSnd.me()->getDistanceTo(center) < minDistToCenter) {
+                    minDistToCenter = backSnd.me()->getDistanceTo(center);
+                    minDistGotcha = gotcha;
+                    selAction = i > 0 ? firstIAction : firstJAction;
+                    selI = i;
+                    selJ = gotchaJ;
+                    selTm = gotchaTm;
+                }
+
+                me->action = AAction().vel(Helper::maxVelocityTo(*me, pack));
+                if (i == 0)
+                    firstIAction = AAction().vel(Helper::maxVelocityTo(*me, pack));
+                meSnd.doTick(1);
+
+                if (meSnd.nitroPacksCollected.size()) {
+                    break;//TODO
+                }
+            }
+
+            if (minDistGotcha) {
+                if (selTm < minTm) {
+                    resAction = selAction;
+                    minTm = selTm;
+                }
+            }
+        }
+        if (selI == -1) {
+            return false;
+        }
+        return true;
+    }
+
     AAction goToGoalCenterStrat(Sandbox &e) {
         AAction sAct;
         double ch = 0.8;
@@ -516,6 +608,8 @@ public:
             std::string msg = metric.toString();
             Visualizer::addText(msg);
             LOG(msg);
+        } else if (tryTakeNitro(is_attacker, action)) {
+            Visualizer::addText("Go to nitro");
         } else {
             if (is_attacker) {
                 if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {

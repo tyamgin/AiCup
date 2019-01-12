@@ -54,6 +54,7 @@ struct Sandbox {
         for (auto& p : game.nitro_packs) {
             nitroPacks.emplace_back(p);
         }
+        std::sort(nitroPacks.begin(), nitroPacks.end());
         ball = ABall(game.ball);
         checkGoal();
     }
@@ -818,7 +819,7 @@ struct Sandbox {
         Point velocity;
     };
 
-    std::vector<CollisionInfo> robotBallCollisions, robotsCollisions;
+    std::vector<CollisionInfo> robotBallCollisions, robotsCollisions, nitroPacksCollected;
 
     template<typename T>
     void collide_entities(ARobot& a, T& b) {
@@ -963,19 +964,28 @@ struct Sandbox {
         checkGoal();
 
         for (auto& robot : robots) {
-            if (robot->nitroAmount == MAX_NITRO_AMOUNT)
+            if (robot->nitroAmount >= MAX_NITRO_AMOUNT)
                 continue;
 
-            for (auto& pack : nitroPacks) {
-                if (pack.respawnTicks > 0)
-                    continue;
-
-                if (robot->getDistanceTo2(pack) <= SQR(robot->radius + NITRO_PACK_RADIUS)) {
-                    robot->nitroAmount = MAX_NITRO_AMOUNT;
-                    pack.respawnTicks = NITRO_PACK_RESPAWN_TICKS;
-                }
+            auto pack = getIntersectedNitroPack(*robot);
+            if (pack && pack->respawnTicks == 0) {
+                robot->nitroAmount = MAX_NITRO_AMOUNT;
+                pack->respawnTicks = NITRO_PACK_RESPAWN_TICKS;
+                nitroPacksCollected.push_back({robot->id, pack->id});
             }
         }
+    }
+
+    ANitroPack* getIntersectedNitroPack(const ARobot& robot) {
+        if (!GameInfo::isNitro) {
+            return nullptr;
+        }
+
+        auto& pack = nitroPacks[robot.x < 0 ? (robot.z < 0 ? 0 : 1) : (robot.z < 0 ? 2 : 3)];
+        if (pack.getDistanceTo2(robot) <= SQR(robot.radius + NITRO_PACK_RADIUS)) {
+            return &pack;
+        }
+        return nullptr;
     }
 
     static double radiusByJumpSpeed(double jumpSpeed) {
@@ -1075,6 +1085,7 @@ struct Sandbox {
         hasRandomCollision = false;
         robotBallCollisions.clear();
         robotsCollisions.clear();
+        nitroPacksCollected.clear();
         constexpr const auto deltaTimeTick = 1.0 / TICKS_PER_SECOND;
         if (tick < GameInfo::maxTickCount && needDoTick()) {
             double deltaTime = deltaTimeTick / microticksPerTick;
