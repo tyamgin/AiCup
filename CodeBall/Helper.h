@@ -13,7 +13,8 @@ public:
 
         dir.normalize();
         dir.y = -(dir.z * a.touchNormal.z + dir.x * a.touchNormal.x) / a.touchNormal.y;
-        return dir.take(ROBOT_MAX_GROUND_SPEED);
+        //return dir.take(ROBOT_MAX_GROUND_SPEED);
+        return dir.take(100);
     }
 };
 
