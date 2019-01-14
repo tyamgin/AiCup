@@ -12,7 +12,7 @@ rm local_runner/$ts.txt
     --p2-name 31003 \
     --results-file $ts.txt \
     --seed $ts \
-    --duration 10000 \
+    --duration 15000 \
     --nitro true \
     --noshow \
     &

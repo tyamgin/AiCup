@@ -600,15 +600,32 @@ struct Sandbox {
                     robot.velocity += targetVelocity;
                 }
             }
-            if (robot.action.useNitro) {
-                auto target_velocity_change = (
-                    robot.action.targetVelocity - robot.velocity
-                    ).clamped(robot.nitroAmount * NITRO_POINT_VELOCITY_CHANGE);
-                if (target_velocity_change.length2() > 0) {
-                    auto acceleration = target_velocity_change.normalized() * ROBOT_NITRO_ACCELERATION;
-                    auto velocity_change = (acceleration * delta_time).clamped(target_velocity_change.length());
-                    robot.velocity += velocity_change;
-                    robot.nitroAmount -= velocity_change.length() / NITRO_POINT_VELOCITY_CHANGE;
+            if (robot.action.useNitro && robot.nitroAmount > EPS) {
+                auto targetVelocityChange = robot.action.targetVelocity - robot.velocity;
+                auto changeLen2 = targetVelocityChange.length2();
+                if (changeLen2 > EPS2) {
+                    const auto maxLen = robot.nitroAmount * NITRO_POINT_VELOCITY_CHANGE;
+                    double changeLen;
+                    if (changeLen2 > SQR(maxLen)) {
+                        targetVelocityChange *= maxLen / sqrt(changeLen2);
+                        changeLen = maxLen;
+                        changeLen2 = SQR(maxLen);
+                    } else {
+                        changeLen = sqrt(changeLen2);
+                    }
+
+                    auto velocityChange = targetVelocityChange * (ROBOT_NITRO_ACCELERATION / changeLen * delta_time);
+                    auto velocityChangeLength2 = velocityChange.length2();
+                    double velocityChangeLength;
+                    if (velocityChangeLength2 > changeLen2) {
+                        velocityChange *= changeLen / sqrt(velocityChangeLength2);
+                        velocityChangeLength = changeLen;
+                    } else {
+                        velocityChangeLength = sqrt(velocityChangeLength2);
+                    }
+
+                    robot.velocity += velocityChange;
+                    robot.nitroAmount -= velocityChangeLength / NITRO_POINT_VELOCITY_CHANGE;
                 }
             }
             robot.move(delta_time);

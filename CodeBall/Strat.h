@@ -41,7 +41,7 @@ public:
             if (prev->radius != me->radius) {
                 LOG("radius calculated wrong");
             }
-            if (prev->nitroAmount != me->nitroAmount) {
+            if (std::abs(prev->nitroAmount - me->nitroAmount) > EPS) {
                 LOG("nitro_amount calculated wrong");
             }
         }
