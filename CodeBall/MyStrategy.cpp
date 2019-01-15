@@ -15,7 +15,7 @@ int waitForTick = -1;
 
 void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
     GameInfo::maxTickCount = rules.max_tick_count;
-    GameInfo::isNitro = !game.nitro_packs.empty();
+    GameInfo::isNitro = false;// !game.nitro_packs.empty();
     GameInfo::isFinal = rules.team_size > 2;
     GameInfo::GameScore newScore = {0, 0};
     for (auto&player : game.players) {

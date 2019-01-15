@@ -47,7 +47,25 @@ public:
         }
     }
 
+    struct Direction {
+        Point dir;
+        double speedFactor;
+
+        bool operator <(const Direction& other) const {
+            if (speedFactor != other.speedFactor)
+                return speedFactor < other.speedFactor;
+            return dir < other.dir;
+        }
+
+        bool operator ==(const Direction& other) const {
+            if (speedFactor != other.speedFactor)
+                return false;
+            return dir == other.dir;
+        }
+    };
+
     struct Metric {
+        Direction dir;
         bool hasGoal = false;
         double positiveChange = 0;
         int positiveTicks = 0;
@@ -77,6 +95,7 @@ public:
 
         std::string toString() {
             return std::string(hasGoal ? "GOAL" : "SHOT") +
+                " pow=" + std::to_string(dir.speedFactor) +
                 " t=" + std::to_string(timeToShot) +
                 " p=" + std::to_string(penalty) +
                 " " + std::to_string((positiveChange / (positiveTicks + timeToShot))) +
@@ -103,7 +122,8 @@ public:
 
     std::unordered_map<int, int> lastShotTime;
 
-    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Point drawDir = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
+
+    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
@@ -116,25 +136,37 @@ public:
 
         const auto myId = env.me()->id;
         Metric sel;
-        Point selDir;
         int selJ = -1, selK = -1;
         AAction firstAction;
 
-        static std::unordered_map<int, Point> prevDir;
-        std::vector<Point> dirs;
+        static std::unordered_map<int, Direction> prevDir;
+        std::vector<Direction> dirs;
         Sandbox ballSnd = env;
         ballSnd.my.clear();
 
         for (int i = 0; i < 48; i++) {
             if (i % 6 == env.tick % 6) {
                 auto ang = 2 * M_PI / 48 * i;
-                dirs.push_back(Point(cos(ang), 0, sin(ang)));
+                dirs.push_back({Point(cos(ang), 0, sin(ang)), 1});
+                if (isAttacker && env.tick % 3 == 0) {
+                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.8});
+                }
+                if (isAttacker && env.tick % 5 == 4) {
+                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.65});
+                }
             }
         }
 
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
-            if (i % 5 == 0 || i <= 6)
-                dirs.push_back(ballSnd.ball - *env.me());
+            if (i % 5 == 0 || i <= 6) {
+                dirs.push_back({ballSnd.ball - *env.me(), 1});
+                if (isAttacker && env.tick % 3 == 0) {
+                    dirs.push_back({ballSnd.ball - *env.me(), 0.8});
+                }
+                if (isAttacker && env.tick % 5 == 4) {
+                    dirs.push_back({ballSnd.ball - *env.me(), 0.65});
+                }
+            }
 
             ballSnd.doTick(5);
         }
@@ -175,7 +207,7 @@ public:
 
             for (auto j = 0; j <= 65; j++) {
                 Sandbox meJumpSnd = meSnd;
-                auto mvAction = AAction().vel(Helper::maxVelocityToDir(*meSnd.me(), dir));
+                auto mvAction = AAction().vel(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
                 auto jmpAction = mvAction;
                 jmpAction.jump();
 
@@ -300,14 +332,9 @@ public:
                             }
                             if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
 
-                                Metric cand = {hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch};
+                                Metric cand = {dir, hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch};
 
                                 if (selJ == -1 || sel < cand) {
-                                    ActionSeq seq;
-                                    seq.add({j, mvAction});
-                                    seq.add({k, jmpAction});
-
-                                    selDir = dir;
                                     selJ = j;
                                     selK = k;
                                     sel = cand;
@@ -348,10 +375,10 @@ public:
             if (drawJ < 0) {
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(isAttacker, t1, t2, selDir, selJ, selK, ret ? 1 : 0.3);
+                tryShotOutOrGoal(isAttacker, t1, t2, sel.dir, selJ, selK, ret ? 1 : 0.3);
             }
 #endif
-            prevDir[myId] = selDir;
+            prevDir[myId] = sel.dir;
             lastShotTime[myId] = sel.timeToShot;
             return ret;
         }
@@ -574,9 +601,6 @@ public:
 
 
         if (isFirst) {
-            Visualizer::addSphere(Point(0, 7, 0), 1, rgba(1, 0, 0, 0.5));
-            Visualizer::addSphere(Point(0, 7.5, 0), 1, rgba(0, 1, 0, 0.5));
-
             std::vector<ABall> cache;
             Sandbox ballEnv = env;
             ballEnv.stopOnGoal = false;
