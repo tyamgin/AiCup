@@ -67,6 +67,7 @@ public:
     struct Metric {
         Direction dir;
         bool hasGoal = false;
+        bool hasShot = false;
         double positiveChange = 0;
         int positiveTicks = 0;
         double penalty = 0;
@@ -75,7 +76,8 @@ public:
         bool hasOppTouch = false;
 
         auto getComparable() const {
-            double pen = (4 - std::min(4.0, penalty)) / 4;
+            const double xx = 4;
+            double pen = (xx - std::min(xx, penalty)) / xx * 1.;
             const auto goalZ = -(ARENA_Z + BALL_RADIUS);
             const auto goalSafeZ = goalZ + 0.5;
             double injPen = 0;
@@ -86,7 +88,7 @@ public:
             if (hasGoal && hasOppTouch) {
                 touchPen = 0.3;
             }
-            return std::make_tuple(hasGoal, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen - touchPen);
+            return std::make_tuple(hasGoal, hasShot, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen - touchPen /*+ dir.speedFactor*/);
         }
 
         bool operator <(const Metric &m) const {
@@ -124,6 +126,14 @@ public:
 
 
     bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
+
+
+        ///
+        /// Улучшить firstOnBall: просимить все позиции мяча
+        ///
+        ///
+
+
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
@@ -148,24 +158,24 @@ public:
             if (i % 6 == env.tick % 6) {
                 auto ang = 2 * M_PI / 48 * i;
                 dirs.push_back({Point(cos(ang), 0, sin(ang)), 1});
-                if (isAttacker && env.tick % 3 == 0) {
-                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.8});
-                }
-                if (isAttacker && env.tick % 5 == 4) {
-                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.65});
-                }
+//                if (isAttacker && env.tick % 3 == 0) {
+//                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.8});
+//                }
+//                if (isAttacker && env.tick % 5 == 4) {
+//                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.65});
+//                }
             }
         }
 
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6) {
                 dirs.push_back({ballSnd.ball - *env.me(), 1});
-                if (isAttacker && env.tick % 3 == 0) {
-                    dirs.push_back({ballSnd.ball - *env.me(), 0.8});
-                }
-                if (isAttacker && env.tick % 5 == 4) {
-                    dirs.push_back({ballSnd.ball - *env.me(), 0.65});
-                }
+//                if (isAttacker && env.tick % 3 == 0) {
+//                    dirs.push_back({ballSnd.ball - *env.me(), 0.8});
+//                }
+//                if (isAttacker && env.tick % 5 == 4) {
+//                    dirs.push_back({ballSnd.ball - *env.me(), 0.65});
+//                }
             }
 
             ballSnd.doTick(5);
@@ -194,7 +204,7 @@ public:
 
         auto counterPenalty = [isAttacker](Sandbox &e) {
             if (!isAttacker) {
-                return true;
+                return e.ball.z < ARENA_Z * 0.75;
             }
             return e.ball.z < -ARENA_Z * 0.4;
         };
@@ -204,6 +214,8 @@ public:
         for (auto& dir : dirs) {
             Sandbox meSnd = env;
             AAction firstJAction;
+
+            bool hasAnyRobotCollision111 = false;
 
             for (auto j = 0; j <= 65; j++) {
                 Sandbox meJumpSnd = meSnd;
@@ -226,8 +238,15 @@ public:
                     const int jumpMaxTicks = 20;
                     const int ballSimMaxTicks = 100;
 
-                    for (auto k = 0; k <= jumpMaxTicks; k++) {
+                    int k;
+                    bool hasAnyRobotCollision = hasAnyRobotCollision111;
+                    for (k = 0; k <= jumpMaxTicks; k++) {
                         meJumpSnd.doTick(1);
+//                        for (auto& item : meJumpSnd.robotsCollisions) {
+//                            if (item.id1 == myId && !isTeammateById[item.id2] || item.id2 == myId && !isTeammateById[item.id1]) {
+//                                hasAnyRobotCollision = true;
+//                            }
+//                        }
 
                         if (skipRobotsCollisions(meJumpSnd)) {
                             break;
@@ -249,13 +268,16 @@ public:
 
                         double minCounterDist2 = 10000;
                         Point md1, md2;
+                        bool hasShot = myCollisionVel < INT_MAX;
 
-                        if (myCollisionVel < INT_MAX && (myCollisionVel >= 0 || isAttacker && meJumpSnd.ball.z > 0 || !isAttacker && meJumpSnd.ball.z < -30)) {
+                        if (hasShot && (myCollisionVel >= 0 || isAttacker && meJumpSnd.ball.z > 0 || !isAttacker && meJumpSnd.ball.z < -30)
+                            || !hasShot && k == jumpMaxTicks && isAttacker && hasAnyRobotCollision && meJumpSnd.me()->z > 10) {
                             OP_START(KW);
 
                             meJumpSnd = meSnd;
                             meJumpSnd.me()->action = jmpAction;
                             double minZ = meJumpSnd.ball.z;
+                            bool hasAnyRobotCollision = false;
                             for (int q = 0; q <= k; q++) {
                                 meJumpSnd.doTick(q == k ? MICROTICKS_PER_TICK : 1);
                                 minZ = std::min(minZ, meJumpSnd.ball.z);
@@ -266,9 +288,10 @@ public:
 
                             meJumpSnd.oppGkStrat = true;
                             double penalty = 0;
-                            auto calcPenalty = counterPenalty(meJumpSnd);
-                            if (calcPenalty)
-                                meJumpSnd.oppCounterStrat = true;
+
+
+                            meJumpSnd.oppCounterStrat = true;
+
                             int positiveTicks = 0;
                             double positiveChange = 0;
                             bool hasGk = false;
@@ -292,7 +315,9 @@ public:
                                     positiveChange += meJumpSnd.ball.z - prevBallZ;
                                     positiveTicks++;
                                 }
-                                if (meJumpSnd.ball.z < 0) {
+
+                                auto calcPenalty = counterPenalty(meJumpSnd);
+                                if (calcPenalty /*meJumpSnd.ball.z < 0*/) {
                                     for (auto& o : meJumpSnd.opp) {
                                         if (o.z > meJumpSnd.ball.z) {
                                             auto dst2 = o.getDistanceTo2(meJumpSnd.ball);
@@ -315,7 +340,8 @@ public:
                                     //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.25));
                                 }
                             }
-                            if (calcPenalty) {
+                            //if (calcPenalty)
+                            {
                                 auto dst = sqrt(minCounterDist2) - ROBOT_RADIUS - BALL_RADIUS;
                                 if (j == drawJ && k <= drawK) {
                                     Visualizer::addLine(md1, md2, 20, rgba(0, 0, 0));
@@ -330,9 +356,10 @@ public:
                             if (hasGoal && noFarGoal && isFar) {
                                 hasGoal = false;
                             }
-                            if (positiveTicks > 5 && meJumpSnd.hasGoal >= 0) {
+                            if (hasShot && positiveTicks > 5 && meJumpSnd.hasGoal >= 0
+                                || !hasShot && meJumpSnd.hasGoal > 0 && hasAnyRobotCollision) {
 
-                                Metric cand = {dir, hasGoal, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch};
+                                Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch};
 
                                 if (selJ == -1 || sel < cand) {
                                     selJ = j;
@@ -359,6 +386,12 @@ public:
                 if (skipRobotsCollisions(meSnd)) {
                     break;
                 }
+
+//                for (auto& item : meSnd.robotsCollisions) {
+//                    if (item.id1 == myId && !isTeammateById[item.id2] || item.id2 == myId && !isTeammateById[item.id1]) {
+//                        hasAnyRobotCollision111 = true;
+//                    }
+//                }
             }
 
             if (!env.me()->touch || env.me()->touchNormal.y < EPS) {
@@ -481,7 +514,7 @@ public:
     AAction goToGoalCenterStrat(Sandbox &e) {
         AAction sAct;
         double ch = 0.8;
-        double maxDeep = 2.0 + ch;
+        double maxDeep = (e.ball.z > 10 ? 2.0 : 2.0) + ch;
         auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
 
         Point target_pos;

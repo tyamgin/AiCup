@@ -113,7 +113,7 @@ struct Logger {
 
 #if M_TIME_LOGS
 #define TIMER_START() Logger::instance()->timerStart()
-#define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 30)
+#define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 200)
 #define OP_START(action) Logger::instance()->cumulativeTimerStart(LA_ ## action)
 #define OP_END(action) Logger::instance()->cumulativeTimerEnd(LA_ ## action)
 #else

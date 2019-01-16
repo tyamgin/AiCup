@@ -49,6 +49,9 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
         return;
     }
     if (scoreChanged) {
+#if M_TIME_LOGS
+        std::cout << newScore.my << ":" << newScore.opp << endl;
+#endif
         waitForTick = env.tick + RESET_TICKS - 1;
         return;
     }
@@ -81,9 +84,11 @@ MyStrategy::MyStrategy() {
     if (flushed) {
         return;
     }
-    cout << "NN weights initialized." << endl
-         << "GA start population prepared." << endl
-         << "Flight is normal." << endl;
+    cout << ">>> Ваша реклама в STDOUT <<<" << endl;
+    cerr << ">>> Ваша реклама в STDERR <<<" << endl
+         << "email: tyamgin@mail.ru" << endl
+         << "tg: @tyamgin" << endl;
+
     flushed = true;
 }
 
