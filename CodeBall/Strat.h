@@ -88,7 +88,7 @@ public:
             if (hasGoal && hasOppTouch) {
                 touchPen = 0.3;
             }
-            return std::make_tuple(hasGoal, hasShot, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen - touchPen /*+ dir.speedFactor*/);
+            return std::make_tuple(hasGoal, hasShot, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen - touchPen + dir.speedFactor);
         }
 
         bool operator <(const Metric &m) const {
@@ -204,7 +204,7 @@ public:
 
         auto counterPenalty = [isAttacker](Sandbox &e) {
             if (!isAttacker) {
-                return e.ball.z < ARENA_Z * 0.75;
+                return e.ball.z < ARENA_Z * 0.5;
             }
             return e.ball.z < -ARENA_Z * 0.4;
         };
@@ -699,13 +699,14 @@ public:
                         action = secondAction.value();
                     } else {
                         if (ball.z > -6)
-                            action.vel(Helper::maxVelocityTo(me, Point(0, 0, 17)));
+                            action.vel(Helper::maxVelocityTo(me, Point(0, 0, 14)));
                         else
                             is_attacker = false;
                     }
                 } else {
                     auto opp = env.opp[0].z < env.opp[1].z ? env.opp[0] : env.opp[1];
                     action.targetVelocity = Helper::maxVelocityTo(me, opp - Point(0, 0, 7*ROBOT_RADIUS));
+                    //action.targetVelocity = Helper::maxVelocityTo(me, Point(0, 0, 10));
                 }
             }
 
