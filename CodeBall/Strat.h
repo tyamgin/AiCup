@@ -270,7 +270,7 @@ public:
                         Point md1, md2;
                         bool hasShot = myCollisionVel < INT_MAX;
 
-                        if (hasShot && (myCollisionVel >= 0 || isAttacker && meJumpSnd.ball.z > 0 || !isAttacker && meJumpSnd.ball.z < -30)
+                        if (hasShot && (myCollisionVel >= 0 /*|| isAttacker && meJumpSnd.ball.z > 0*/ || !isAttacker && meJumpSnd.ball.z < -30)
                             || !hasShot && k == jumpMaxTicks && isAttacker && hasAnyRobotCollision && meJumpSnd.me()->z > 10) {
                             OP_START(KW);
 
@@ -353,7 +353,7 @@ public:
                             }
 
                             bool hasGoal = meJumpSnd.hasGoal > 0;
-                            if (hasGoal && noFarGoal && isFar) {
+                            if (hasGoal && noFarGoal && isFar && meJumpSnd.ball.z < ARENA_GOAL_HEIGHT * 0.7) {
                                 hasGoal = false;
                             }
                             if (hasShot && positiveTicks > 5 && meJumpSnd.hasGoal >= 0
