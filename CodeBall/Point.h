@@ -75,6 +75,12 @@ struct Point {
         return *this;
     }
 
+    Point y0() const {
+        auto res = *this;
+        res.y = 0;
+        return res;
+    }
+
     void clamp(double maxLength) {
         auto len2 = length2();
         if (len2 < EPS2) {

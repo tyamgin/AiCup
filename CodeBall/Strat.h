@@ -74,6 +74,7 @@ public:
         int timeToShot = INT_MAX;
         double minBallZ = 0;
         bool hasOppTouch = false;
+        double goalHeight;
 
         auto getComparable() const {
             const double xx = 4;
@@ -88,7 +89,11 @@ public:
             if (hasGoal && hasOppTouch) {
                 touchPen = 0.3;
             }
-            return std::make_tuple(hasGoal, hasShot, (positiveChange / (positiveTicks + timeToShot)) - pen - injPen - touchPen + dir.speedFactor);
+            double heightAdd = 0;
+            if (hasGoal) {
+                heightAdd += goalHeight / ARENA_GOAL_HEIGHT / 2;
+            }
+            return std::make_tuple(hasGoal, hasShot, (positiveChange / (positiveTicks + 2*timeToShot)) - pen - injPen - touchPen + dir.speedFactor + heightAdd);
         }
 
         bool operator <(const Metric &m) const {
@@ -359,7 +364,7 @@ public:
                             if (hasShot && positiveTicks > 5 && meJumpSnd.hasGoal >= 0
                                 || !hasShot && meJumpSnd.hasGoal > 0 && hasAnyRobotCollision) {
 
-                                Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch};
+                                Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball.z};
 
                                 if (selJ == -1 || sel < cand) {
                                     selJ = j;
@@ -560,6 +565,42 @@ public:
         return std::min_element(distToGoal.begin(), distToGoal.end())->second;
     }
 
+    std::optional<ARobot> evalToBall_new() {
+        Sandbox ballSnd = env;
+        ballSnd.stopOnGoal = false;
+        std::vector<int> minTime(7, INT_MAX);
+
+        for (int i = 0; i <= 100; i++) {
+            ballSnd.doTick(1);
+            if (ballSnd.ball.y - BALL_RADIUS > ROBOT_MAX_RADIUS*3)
+                continue;
+            if (i % 5 != 0)
+                continue;
+
+            auto e = env;
+            for (int j = 0; j < 100; j++) {
+                for (auto r : e.robots()) {
+                    Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
+                    if (!r->isTeammate)
+                        oppGoal.z *= -1;
+
+                    auto tar = ballSnd.ball + (ballSnd.ball - oppGoal).y0().take(BALL_RADIUS * 1);
+                    r->action.vel(Helper::maxVelocityTo(*r, ballSnd.ball));
+
+                    if (r->getDistanceTo(tar) < 3) {
+                        minTime[r->id] = std::min(minTime[r->id], j);
+                    }
+                }
+                e.doTick(1);
+            }
+        }
+        auto id = std::min_element(minTime.begin(), minTime.end()) - minTime.begin();
+        if (minTime[id] == INT_MAX) {
+            return {};
+        }
+        return *env.robot(id);
+    }
+
     std::optional<ARobot> evalToBall() {
         Sandbox e = env;
         e.stopOnGoal = false;
@@ -651,6 +692,9 @@ public:
         lastShotTime[me.id] = INT_MAX;
 
         auto firstToBall = evalToBall();
+        if (firstToBall) {
+            Visualizer::addLine(firstToBall.value(), firstToBall.value().y0() + Point(0, ARENA_HEIGHT, 0), 3, rgba(0, 0, 0));
+        }
 
         bool is_attacker = selectGk() != me.id;
         Metric metric;
