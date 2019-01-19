@@ -139,14 +139,6 @@ public:
 
 
     bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
-
-
-        ///
-        /// Улучшить firstOnBall: просимить все позиции мяча
-        ///
-        ///
-
-
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
@@ -615,33 +607,6 @@ public:
             return {};
         }
         return *env.robot(id);
-    }
-
-    std::optional<ARobot> evalToBall_old() {
-        Sandbox e = env;
-        e.stopOnGoal = false;
-        for (int i = 1; i <= 100; i++) {
-            e.doTick(5);
-            if (e.ball.y - BALL_RADIUS > ROBOT_MAX_RADIUS*3)
-                continue;
-
-            for (auto r : e.robots()) {
-                auto t = 1.0 * i / TICKS_PER_SECOND;
-                Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
-                if (!r->isTeammate)
-                    oppGoal.z *= -1;
-
-                auto tar = e.ball + (e.ball - oppGoal).take(BALL_RADIUS * 0.9);
-                Point delta_pos = tar - *r;
-                delta_pos.y = 0;
-                auto need_speed = delta_pos.length() / t;
-
-                if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
-                    return *r;
-                }
-            }
-        }
-        return {};
     }
 
     Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
