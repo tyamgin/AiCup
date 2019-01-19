@@ -219,13 +219,14 @@ public:
             if (!isAttacker) {
                 return e.ball.z < ARENA_Z * 0.5;
             }
-            return e.ball.z < -ARENA_Z * 0.4;
+            return e.ball.z < 5;// e.ball.z < -ARENA_Z * 0.4;
         };
 
         const double al = 0.7 * drawAlpha;
 
         for (auto& dir : dirs) {
             Sandbox meSnd = env;
+            meSnd.oppCounterStrat = 1;
             AAction firstJAction;
 
             bool hasAnyRobotCollision111 = false;
@@ -288,7 +289,7 @@ public:
                             OP_START(KW);
 
                             ARobot* fw = env.my[0].z > env.my[1].z ? &env.my[0] : &env.my[1];
-                            auto passTar = *fw + Point(0, 0, 14);
+                            auto passTar = *fw + Point(0, 0, fw->z < -13 ? 21 : fw->z < 5 ? 18 : 14);
                             passTar.y = 5;
                             double passMinDist2 = 10000;
 
@@ -308,7 +309,7 @@ public:
                             double penalty = 0;
 
 
-                            meJumpSnd.oppCounterStrat = true;
+                            meJumpSnd.oppCounterStrat = 2;
 
                             int positiveTicks = 0;
                             double positiveChange = 0;
@@ -339,7 +340,7 @@ public:
                                 auto calcPenalty = counterPenalty(meJumpSnd);
                                 if (calcPenalty /*meJumpSnd.ball.z < 0*/) {
                                     for (auto& o : meJumpSnd.opp) {
-                                        if (o.z + 3 > meJumpSnd.ball.z) {
+                                        if (o.z + 5 > meJumpSnd.ball.z) {
                                             auto dst2 = o.getDistanceTo2(meJumpSnd.ball);
                                             if (dst2 < minCounterDist2) {
                                                 minCounterDist2 = dst2;
@@ -587,7 +588,7 @@ public:
 
         for (int i = 0; i <= 100; i++) {
             ballSnd.doTick(1);
-            if (ballSnd.ball.y - BALL_RADIUS > ROBOT_MAX_RADIUS*3)
+            if (ballSnd.ball.y - BALL_RADIUS > ROBOT_MAX_RADIUS*5)
                 continue;
             if (i % 5 != 0)
                 continue;
@@ -602,7 +603,7 @@ public:
                     auto tar = ballSnd.ball + (ballSnd.ball - oppGoal).y0().take(BALL_RADIUS * 1);
                     r->action.vel(Helper::maxVelocityTo(*r, ballSnd.ball));
 
-                    if (r->getDistanceTo(tar) < 3) {
+                    if (r->getDistanceTo(tar) < (r->isTeammate ? 3 : 6)) {
                         minTime[r->id] = std::min(minTime[r->id], j);
                     }
                 }
@@ -772,7 +773,7 @@ public:
             if (!is_attacker) {
                 Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
-                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_DEPTH / 5 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 4)
+                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_Z / 2 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5)
                     && tryShotOutOrGoal(is_attacker, action, metric)) {
 
                     std::string msg = "(gk) " + metric.toString();

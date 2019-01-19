@@ -29,7 +29,7 @@ struct Sandbox {
     bool stopOnGoal = true;
     bool deduceOppSimple = true;
     bool oppGkStrat = false;
-    bool oppCounterStrat = false;
+    int oppCounterStrat = 0;
 
     static std::vector<ABall> _ballsCache;
     int _ballsCacheIterator = 0;
@@ -737,7 +737,7 @@ struct Sandbox {
         auto ct = opp[0].z < opp[1].z ? &opp[0] : &opp[1];
         ct->action.targetVelocity = Helper::maxVelocityTo(*ct, ball);
 
-        if (ct->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
+        if (oppCounterStrat > 1 && ct->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
             ct->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
         }
     }
