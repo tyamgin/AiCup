@@ -527,7 +527,7 @@ public:
     AAction goToGoalCenterStrat(Sandbox &e) {
         AAction sAct;
         double ch = 0.8;
-        double maxDeep = (e.ball.z > 10 ? 2.0 : 2.0) + ch;
+        double maxDeep = 2 + ch;
         auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
 
         Point target_pos;
@@ -642,6 +642,8 @@ public:
         return {firstAction, secondAction};
     }
 
+    bool alarm;
+
     void act(AAction &action, bool isFirst) {
         auto& ball = env.ball;
         auto& me = *env.me();
@@ -654,6 +656,7 @@ public:
             checkEvalState();
         }
 
+        const int alarmTicks = 45;
 
         if (isFirst) {
             std::vector<ABall> cache;
@@ -666,8 +669,15 @@ public:
                 }
                 ballEnv.doTick();
                 cache.push_back(ballEnv.ball);
+                if (i == alarmTicks - 1) {
+                    alarm = ballEnv.hasGoal < 0;
+                }
             }
             Sandbox::loadBallsCache(cache);
+        }
+
+        if (alarm) {
+            Visualizer::addText("ALARM!!!");
         }
 
         lastShotTime[me.id] = INT_MAX;
@@ -735,10 +745,11 @@ public:
                 }
             }
 
+
             if (!is_attacker) {
                 Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
-                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_Z / 2 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5)
+                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_Z / 2 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5 || alarm)
                     && tryShotOutOrGoal(is_attacker, action, metric)) {
 
                     std::string msg = "(gk) " + metric.toString();
@@ -747,18 +758,13 @@ public:
                 } else {
                     std::optional<AAction> defend;
                     Sandbox e1 = env;
-                    for (int i = 0; i < 30; i++) {
-                        e1.doTick(5);
-                        if (e1.hasGoal < 0)
-                            break;
-                    }
-                    if (e1.hasGoal < 0) {
-                        Visualizer::addText("ALARM!!!", 15);
+
+                    if (alarm) {
                         Sandbox e2 = env;
                         AAction act;
                         act.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
                         e2.me()->action = act;
-                        for (int i = 0; i < 30; i++) {
+                        for (int i = 0; i < alarmTicks; i++) {
                             e2.doTick();
                             if (e2.hasGoal < 0)
                                 break;
@@ -777,7 +783,7 @@ public:
                                 }
 
                                 e3.me()->action = act;
-                                for (int i = 0; i < 30 - wt; i++) {
+                                for (int i = 0; i < alarmTicks - wt; i++) {
                                     e3.doTick();
                                     if (e3.hasGoal < 0)
                                         break;
