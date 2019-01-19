@@ -159,28 +159,34 @@ public:
         Sandbox ballSnd = env;
         ballSnd.my.clear();
 
+        bool sm = false;
+
         for (int i = 0; i < 48; i++) {
             if (i % 6 == env.tick % 6) {
                 auto ang = 2 * M_PI / 48 * i;
                 dirs.push_back({Point(cos(ang), 0, sin(ang)), 1});
-//                if (isAttacker && env.tick % 3 == 0) {
-//                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.8});
-//                }
-//                if (isAttacker && env.tick % 5 == 4) {
-//                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.65});
-//                }
+                if (sm) {
+                    if (isAttacker && env.tick % 3 == 0) {
+                        dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.8});
+                    }
+                    if (isAttacker && env.tick % 5 == 4) {
+                        dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.65});
+                    }
+                }
             }
         }
 
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6) {
                 dirs.push_back({ballSnd.ball - *env.me(), 1});
-//                if (isAttacker && env.tick % 3 == 0) {
-//                    dirs.push_back({ballSnd.ball - *env.me(), 0.8});
-//                }
-//                if (isAttacker && env.tick % 5 == 4) {
-//                    dirs.push_back({ballSnd.ball - *env.me(), 0.65});
-//                }
+                if (sm) {
+                    if (isAttacker && env.tick % 3 == 0) {
+                        dirs.push_back({ballSnd.ball - *env.me(), 0.8});
+                    }
+                    if (isAttacker && env.tick % 5 == 4) {
+                        dirs.push_back({ballSnd.ball - *env.me(), 0.65});
+                    }
+                }
             }
 
             ballSnd.doTick(5);
