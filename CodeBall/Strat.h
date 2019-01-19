@@ -75,9 +75,11 @@ public:
         double minBallZ = 0;
         bool hasOppTouch = false;
         double goalHeight;
+        double passMinDist;
+
 
         auto getComparable() const {
-            const double xx = 4;
+            const double xx = 5;
             double pen = (xx - std::min(xx, penalty)) / xx * 1.;
             const auto goalZ = -(ARENA_Z + BALL_RADIUS);
             const auto goalSafeZ = goalZ + 0.5;
@@ -93,7 +95,13 @@ public:
             if (hasGoal) {
                 heightAdd += goalHeight / ARENA_GOAL_HEIGHT / 2;
             }
-            return std::make_tuple(hasGoal, hasShot, (positiveChange / (positiveTicks + 2*timeToShot)) - pen - injPen - touchPen + dir.speedFactor + heightAdd);
+            double base;
+            if (hasGoal) {
+                base = (positiveChange / (positiveTicks + 2*timeToShot)) - pen - injPen - touchPen + dir.speedFactor + heightAdd;
+            } else {
+                base = -passMinDist - pen * 30;
+            }
+            return std::make_tuple(hasGoal, hasShot, base);
         }
 
         bool operator <(const Metric &m) const {
@@ -279,6 +287,11 @@ public:
                             || !hasShot && k == jumpMaxTicks && isAttacker && hasAnyRobotCollision && meJumpSnd.me()->z > 10) {
                             OP_START(KW);
 
+                            ARobot* fw = env.my[0].z > env.my[1].z ? &env.my[0] : &env.my[1];
+                            auto passTar = *fw + Point(0, 0, 14);
+                            passTar.y = 5;
+                            double passMinDist2 = 10000;
+
                             meJumpSnd = meSnd;
                             meJumpSnd.me()->action = jmpAction;
                             double minZ = meJumpSnd.ball.z;
@@ -321,10 +334,12 @@ public:
                                     positiveTicks++;
                                 }
 
+                                passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar));
+
                                 auto calcPenalty = counterPenalty(meJumpSnd);
                                 if (calcPenalty /*meJumpSnd.ball.z < 0*/) {
                                     for (auto& o : meJumpSnd.opp) {
-                                        if (o.z > meJumpSnd.ball.z) {
+                                        if (o.z + 3 > meJumpSnd.ball.z) {
                                             auto dst2 = o.getDistanceTo2(meJumpSnd.ball);
                                             if (dst2 < minCounterDist2) {
                                                 minCounterDist2 = dst2;
@@ -364,7 +379,7 @@ public:
                             if (hasShot && positiveTicks > 5 && meJumpSnd.hasGoal >= 0
                                 || !hasShot && meJumpSnd.hasGoal > 0 && hasAnyRobotCollision) {
 
-                                Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball.z};
+                                Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty, shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball.z, sqrt(passMinDist2)};
 
                                 if (selJ == -1 || sel < cand) {
                                     selJ = j;
@@ -565,7 +580,7 @@ public:
         return std::min_element(distToGoal.begin(), distToGoal.end())->second;
     }
 
-    std::optional<ARobot> evalToBall_new() {
+    std::optional<ARobot> evalToBall() {
         Sandbox ballSnd = env;
         ballSnd.stopOnGoal = false;
         std::vector<int> minTime(7, INT_MAX);
@@ -601,7 +616,7 @@ public:
         return *env.robot(id);
     }
 
-    std::optional<ARobot> evalToBall() {
+    std::optional<ARobot> evalToBall_old() {
         Sandbox e = env;
         e.stopOnGoal = false;
         for (int i = 1; i <= 100; i++) {
@@ -749,8 +764,8 @@ public:
                     }
                 } else {
                     auto opp = env.opp[0].z < env.opp[1].z ? env.opp[0] : env.opp[1];
-                    action.targetVelocity = Helper::maxVelocityTo(me, opp - Point(0, 0, 7*ROBOT_RADIUS));
-                    //action.targetVelocity = Helper::maxVelocityTo(me, Point(0, 0, 10));
+                    //action.targetVelocity = Helper::maxVelocityTo(me, opp - Point(0, 0, 7*ROBOT_RADIUS));
+                    action.targetVelocity = Helper::maxVelocityTo(me, Point(0, 0, 10));
                 }
             }
 
