@@ -344,7 +344,7 @@ public:
 
                                 //passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 if (w > 30) {
-                                    auto passTar1 = fw->_y(0) + (fw->id == myId ? Helper::goalDir(*fw, 7) + Point(0, 4, 0) : Helper::goalDir(*fw, 7) + Point(0, 4, 0));
+                                    auto passTar1 = fw->_y(0) + (fw->id == myId ? Helper::goalDir(*fw, 7) + Point(0, 4, 0) : Helper::goalDir(*fw, 9) + Point(0, 7, 0));
                                     passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
@@ -592,15 +592,15 @@ public:
             std::get<1>(gotcha[x.id]) = x.z;
             std::get<2>(gotcha[x.id]) = x.id;
         }
-        for (int i = 0; i < 200; i++) {
-            for (auto& x : snd.my) {
-                x.action = AAction(Helper::maxVelocityTo(x, myGoal));
-                if (x._y(0).getDistanceTo2(myGoal) < SQR(1)) {
-                    std::get<0>(gotcha[x.id]) = std::min(std::get<0>(gotcha[x.id]), i);
-                }
-            }
-            snd.doTick(1);
-        }
+//        for (int i = 0; i < 200; i++) {
+//            for (auto& x : snd.my) {
+//                x.action = AAction(Helper::maxVelocityTo(x, myGoal));
+//                if (x._y(0).getDistanceTo2(myGoal) < SQR(1)) {
+//                    std::get<0>(gotcha[x.id]) = std::min(std::get<0>(gotcha[x.id]), i);
+//                }
+//            }
+//            snd.doTick(1);
+//        }
 
         return std::get<2>(*std::min_element(gotcha.begin(), gotcha.end()));
     }
@@ -761,9 +761,11 @@ public:
             return;
         }
         if (is_attacker && tryShotOutOrGoal(is_attacker, action, metric)) {
-            std::string msg = metric.toString();
-            Visualizer::addText(msg);
-            return;
+            //if (metric.hasGoal) {
+                std::string msg = metric.toString();
+                Visualizer::addText(msg);
+                return;
+            //}
         }
         if (tryTakeNitro(is_attacker, action)) {
             Visualizer::addText("Go to nitro");
