@@ -20,6 +20,11 @@ public:
         dir.y = -(dir.z * a.touchNormal.z + dir.x * a.touchNormal.x) / a.touchNormal.y;
         return dir.take(ROBOT_MAX_GROUND_SPEED * speedFactor);
     }
+
+    static Point goalDir(const Point& pt, double len) {
+        static const Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
+        return (oppGoal - pt).y0().take(len);
+    }
 };
 
 #endif //CODEBALL_HELPER_H
