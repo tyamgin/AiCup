@@ -592,10 +592,10 @@ public:
             std::get<1>(gotcha[x.id]) = x.z;
             std::get<2>(gotcha[x.id]) = x.id;
         }
-        for (int i = 0; i < 150; i++) {
+        for (int i = 0; i < 200; i++) {
             for (auto& x : snd.my) {
-                x.action = AAction(Helper::maxVelocityTo(x, oppGoal));
-                if (x.getDistanceTo2(snd.ball) < SQR(1)) {
+                x.action = AAction(Helper::maxVelocityTo(x, myGoal));
+                if (x._y(0).getDistanceTo2(myGoal) < SQR(1)) {
                     std::get<0>(gotcha[x.id]) = std::min(std::get<0>(gotcha[x.id]), i);
                 }
             }
@@ -661,7 +661,8 @@ public:
         return {resAll, resAll}; //TODO
     }
 
-    Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
+    Point oppGoal = Point(0, 0, ARENA_Z + ARENA_GOAL_DEPTH / 2);
+    Point myGoal = Point(0, 0, -(ARENA_Z + ARENA_GOAL_DEPTH / 2));
 
     std::pair<std::optional<AAction>, std::optional<AAction>> moveToBallUsual(double ballHeight = BALL_RADIUS + 3) {
         Sandbox snd = env;
@@ -746,6 +747,10 @@ public:
         std::optional<AAction> firstAction, secondAction;
 
 //        if (is_attacker) return;
+        if (!is_attacker) {
+            Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
+        }
+
 
         if (is_attacker && env.roundTick <= 35) {
             action = AAction().vel(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
