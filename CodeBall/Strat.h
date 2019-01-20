@@ -139,6 +139,14 @@ public:
 
 
     bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
+
+        //
+        //
+        // Столкновение не с мячем, а с роботом,
+        //
+        //
+
+
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
@@ -282,16 +290,15 @@ public:
                         Point md1, md2;
                         bool hasShot = myCollisionVel < INT_MAX;
 
-                        if (hasShot && (myCollisionVel >= 0 /*|| isAttacker && meJumpSnd.ball.z > 0*/ || !isAttacker && meJumpSnd.ball.z < -30)
+                        if (hasShot && (myCollisionVel >= 0 || /*isAttacker && meJumpSnd.ball.z > 0 ||*/ !isAttacker && meJumpSnd.ball.z < -30)
                             || !hasShot && k == jumpMaxTicks && isAttacker && hasAnyRobotCollision && meJumpSnd.me()->z > 10) {
                             OP_START(KW);
 
-                            ARobot* fw = env.my[0].z > env.my[1].z ? &env.my[0] : &env.my[1];
-                            auto passTar = *fw + Point(0, 0, fw->z < -13 ? 21 : fw->z < 5 ? 18 : 14);
-                            passTar.y = 5;
                             double passMinDist2 = 10000;
 
                             meJumpSnd = meSnd;
+                            ARobot* fw = meJumpSnd.my[0].z > env.my[1].z ? &meJumpSnd.my[0] : &meJumpSnd.my[1];
+                            fw->action = AAction().vel(Helper::maxVelocityTo(*fw, oppGoal));
                             meJumpSnd.me()->action = jmpAction;
                             double minZ = meJumpSnd.ball.z;
                             bool hasAnyRobotCollision = false;
@@ -300,6 +307,8 @@ public:
                                 minZ = std::min(minZ, meJumpSnd.ball.z);
                             }
                             // TODO: что если коллизии после пересчёта не будет?
+
+                            fw->action = AAction().vel(Helper::maxVelocityTo(*fw, oppGoal));
 
                             int shotTick = meJumpSnd.tick;
 
@@ -333,7 +342,12 @@ public:
                                     positiveTicks++;
                                 }
 
-                                passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar));
+                                //passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
+                                if (w > 30) {
+                                    auto passTar1 = fw->y0() + Point(0, 4, 5);
+                                    passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
+                                }
+
 
                                 auto calcPenalty = counterPenalty(meJumpSnd);
                                 if (calcPenalty /*meJumpSnd.ball.z < 0*/) {
@@ -579,7 +593,7 @@ public:
         return std::min_element(distToGoal.begin(), distToGoal.end())->second;
     }
 
-    std::optional<ARobot> evalToBall() {
+    std::tuple<std::optional<ARobot>, std::optional<ARobot>> evalToBall() {
         Sandbox ballSnd = env;
         ballSnd.stopOnGoal = false;
         std::vector<int> minTime(7, INT_MAX);
@@ -608,11 +622,16 @@ public:
                 e.doTick(1);
             }
         }
-        auto id = std::min_element(minTime.begin(), minTime.end()) - minTime.begin();
-        if (minTime[id] == INT_MAX) {
-            return {};
+        int minTimeMy = INT_MAX;
+        int minTimeAll = INT_MAX;
+        std::optional<ARobot> resMy, resAll;
+        for (auto x : env.robots()) {
+            if (x->isTeammate && minTime[x->id] < minTimeMy)
+                minTimeMy = minTime[x->id], resMy = *x;
+            if (minTime[x->id] < minTimeAll)
+                minTimeAll = minTime[x->id], resAll = *x;
         }
-        return *env.robot(id);
+        return {resAll, resAll}; //TODO
     }
 
     Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
@@ -688,7 +707,8 @@ public:
 
         lastShotTime[me.id] = INT_MAX;
 
-        auto firstToBall = evalToBall();
+        std::optional<ARobot> firstToBall, firstToBallMy;
+        std::tie(firstToBall, firstToBallMy) = evalToBall();
         if (firstToBall) {
             Visualizer::addLine(firstToBall.value(), firstToBall.value().y0() + Point(0, ARENA_HEIGHT, 0), 3, rgba(0, 0, 0));
         }
@@ -755,7 +775,7 @@ public:
             if (!is_attacker) {
                 Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
-                if ((firstToBall && firstToBall.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_Z / 2 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5 || alarm)
+                if ((firstToBallMy && firstToBallMy.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_Z / 2 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5 || alarm)
                     && tryShotOutOrGoal(is_attacker, action, metric)) {
 
                     std::string msg = "(gk) " + metric.toString();
@@ -806,7 +826,7 @@ public:
                     if (defend) {
                         action = defend.value();
                     } else {
-                        if (firstToBall && firstToBall.value().id == me.id) {
+                        if (firstToBallMy && firstToBallMy.value().id == me.id) {
                             std::tie(firstAction, secondAction) = moveToBallUsual();
                         }
                         if (firstAction) {
