@@ -23,7 +23,7 @@ public:
 
     static Point goalDir(const Point& pt, double len) {
         static const Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
-        return (oppGoal - pt).y0().take(len);
+        return (oppGoal - pt)._y(0).take(len);
     }
 };
 

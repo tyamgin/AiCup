@@ -344,7 +344,7 @@ public:
 
                                 //passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 if (w > 30) {
-                                    auto passTar1 = fw->y0() + Helper::goalDir(*fw, 7) + Point(0, 4, 0);
+                                    auto passTar1 = fw->_y(0) + Helper::goalDir(*fw, 7) + Point(0, 4, 0);
                                     passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
@@ -618,7 +618,7 @@ public:
                     if (!r->isTeammate)
                         oppGoal.z *= -1;
 
-                    auto tar = ballSnd.ball + (ballSnd.ball - oppGoal).y0().take(BALL_RADIUS * 1);
+                    auto tar = ballSnd.ball + (ballSnd.ball - oppGoal)._y(0).take(BALL_RADIUS * 1);
                     r->action.vel(Helper::maxVelocityTo(*r, ballSnd.ball));
 
                     if (r->getDistanceTo(tar) < (r->isTeammate ? 3 : 6)) {
@@ -716,7 +716,7 @@ public:
         std::optional<ARobot> firstToBall, firstToBallMy;
         std::tie(firstToBall, firstToBallMy) = evalToBall();
         if (firstToBall) {
-            Visualizer::addLine(firstToBall.value(), firstToBall.value().y0() + Point(0, ARENA_HEIGHT, 0), 3, rgba(0, 0, 0));
+            Visualizer::addLine(firstToBall.value(), firstToBall.value()._y(0) + Point(0, ARENA_HEIGHT, 0), 3, rgba(0, 0, 0));
         }
 
         bool is_attacker = selectGk() != me.id;
