@@ -138,7 +138,7 @@ public:
     std::unordered_map<int, int> lastShotTime;
 
 
-    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, double drawAlpha = 1.0) {
+    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
 
         //
         //
@@ -344,7 +344,7 @@ public:
 
                                 //passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 if (w > 30) {
-                                    auto passTar1 = fw->_y(0) + Helper::goalDir(*fw, 7) + Point(0, 4, 0);
+                                    auto passTar1 = fw->_y(0) + (fw->id == myId ? Helper::goalDir(*fw, 7) + Point(0, 4, 0) : Helper::goalDir(*fw, 7) + Point(0, 4, 0));
                                     passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
@@ -368,7 +368,7 @@ public:
 
 
                                 if (j == drawJ && k <= drawK) {
-                                    Visualizer::addSphere(meJumpSnd.ball, rgba(1, 1, 1, al));
+                                    Visualizer::addSphere(meJumpSnd.ball, rgba(1, 1, drawMetric->hasGoal ? 0 : 1, al));
                                     //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.25));
                                     //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.25));
                                 }
@@ -392,7 +392,7 @@ public:
                             if (hasShot && positiveTicks > 5 && meJumpSnd.hasGoal >= 0
                                 || !hasShot && meJumpSnd.hasGoal > 0 && hasAnyRobotCollision) {
 
-                                //if (meJumpSnd.hasGoal > 0 || meSnd.me()->z < ARENA_Z * 0.4 || std::abs(meSnd.me()->x) > ARENA_GOAL_WIDTH/2 * 1.3)
+                                //if (meJumpSnd.hasGoal > 0 || meSnd.me()->z < ARENA_Z * 0.3 || std::abs(meSnd.me()->x) > ARENA_GOAL_WIDTH/2 * 1.3)
                                 {
 
                                     Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
@@ -447,7 +447,7 @@ public:
             if (drawJ < 0) {
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(isAttacker, t1, t2, sel.dir, selJ, selK, ret ? 1 : 0.3);
+                tryShotOutOrGoal(isAttacker, t1, t2, sel.dir, selJ, selK, &sel, ret ? 1 : 0.3);
             }
 #endif
             prevDir[myId] = sel.dir;
@@ -585,6 +585,27 @@ public:
     }
 
     int selectGk() {
+        auto snd = env;
+        snd.opp.clear();
+        std::vector<std::tuple<int, double, int>> gotcha(7, {INT_MAX, 100.0, INT_MAX});
+        for (auto& x : snd.my) {
+            std::get<1>(gotcha[x.id]) = x.z;
+            std::get<2>(gotcha[x.id]) = x.id;
+        }
+        for (int i = 0; i < 150; i++) {
+            for (auto& x : snd.my) {
+                x.action = AAction(Helper::maxVelocityTo(x, oppGoal));
+                if (x.getDistanceTo2(snd.ball) < SQR(1)) {
+                    std::get<0>(gotcha[x.id]) = std::min(std::get<0>(gotcha[x.id]), i);
+                }
+            }
+            snd.doTick(1);
+        }
+
+        return std::get<2>(*std::min_element(gotcha.begin(), gotcha.end()));
+    }
+
+    int selectGk_old() {
         std::vector<std::pair<double, int>> distToGoal;
         for (auto& r : env.my) {
             Point pt = r;
@@ -711,6 +732,7 @@ public:
             Visualizer::addText("ALARM!!!");
         }
 
+        bool hasPrevShot = lastShotTime[me.id] < INT_MAX;
         lastShotTime[me.id] = INT_MAX;
 
         std::optional<ARobot> firstToBall, firstToBallMy;
@@ -788,7 +810,7 @@ public:
         if (!is_attacker) {
             Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
-            if ((firstToBallMy && firstToBallMy.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_Z / 2 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5 || alarm)
+            if ((firstToBallMy && firstToBallMy.value().id == me.id || ball.velocity.z < 0 && ball.z < -ARENA_Z / 2 || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5 || alarm || hasPrevShot)
                 && tryShotOutOrGoal(is_attacker, action, metric)) {
 
                 std::string msg = "(gk) " + metric.toString();

@@ -14,6 +14,9 @@ struct AAction {
         useNitro = false;
     }
 
+    AAction(const Point& vel, double jumpSpeed = 0.0, bool useNitro = false) : targetVelocity(vel), jumpSpeed(jumpSpeed), useNitro(useNitro) {
+    }
+
     AAction& jump(double jumpSpeed = ROBOT_MAX_JUMP_SPEED) {
         this->jumpSpeed = jumpSpeed;
         return *this;

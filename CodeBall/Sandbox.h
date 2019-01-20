@@ -744,6 +744,7 @@ struct Sandbox {
 
     void oppStrat() {
         if (GameInfo::isOpponentCrashed) {
+            // TODO: clear actions
             return;
         }
 
@@ -801,9 +802,6 @@ struct Sandbox {
         }
         if (microticksPerTick < MICROTICKS_PER_TICK && _ballsCacheValid && _ballsCacheIterator < (int) _ballsCache.size()) {
             auto& cached = _ballsCache[_ballsCacheIterator];
-//            if (!cached.equals(ball) || !cached.velocity.equals(ball.velocity)) {
-//                std::cout << "";
-//            }
             ball.velocity = cached.velocity;
             ball.x = cached.x;
             ball.y = cached.y;

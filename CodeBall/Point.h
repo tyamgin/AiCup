@@ -76,7 +76,7 @@ struct Point {
     }
 
     Point _y(double newY) const {
-        Point res;
+        Point res = *this;
         res.y = newY;
         return res;
     }
