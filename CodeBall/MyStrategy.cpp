@@ -17,8 +17,12 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     GameInfo::maxTickCount = rules.max_tick_count;
     GameInfo::isNitro = false;// !game.nitro_packs.empty();
     GameInfo::isFinal = rules.team_size > 2;
+    GameInfo::teamSize = rules.team_size;
+    for (auto& robot : game.robots) {
+        GameInfo::isTeammateById[robot.id] = robot.is_teammate;
+    }
     GameInfo::GameScore newScore = {0, 0};
-    for (auto&player : game.players) {
+    for (auto& player : game.players) {
         if (player.me) {
             newScore.my = player.score;
         } else {

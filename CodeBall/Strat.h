@@ -118,44 +118,19 @@ public:
         }
     };
 
-    struct ActionSeqItem {
-        int count = 0;
-        AAction action;
-
-        enum Type {
-            Action
-        };
-    };
-
-    struct ActionSeq : public std::vector<ActionSeqItem> {
-        void add(const ActionSeqItem& item) {
-            if (item.count > 0) {
-                push_back(item);
-            }
-        }
-    };
-
     std::unordered_map<int, int> lastShotTime;
 
 
     bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
-
         //
-        //
+        // TODO:
         // Столкновение не с мячем, а с роботом,
         //
-        //
-
 
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
-
-        bool isTeammateById[7];
-        for (auto x : env.robots()) {
-            isTeammateById[x->id] = x->isTeammate;
-        }
 
         const auto myId = env.me()->id;
         Metric sel;
@@ -332,7 +307,7 @@ public:
                                 auto prevBallZ = meJumpSnd.ball.z;
                                 meJumpSnd.doTick(1);
                                 for (auto& item : meJumpSnd.robotBallCollisions) {
-                                    if (!isTeammateById[item.id1]) {
+                                    if (!GameInfo::isTeammateById[item.id1]) {
                                         hasOppTouch = true;
                                     }
                                 }

@@ -639,8 +639,8 @@ struct Sandbox {
             }
         }
 
-        Point collision_normal;
         for (auto& robot : robots) {
+            Point collision_normal;
             collide_entities<ABall>(*robot, ball);
             if (collide_with_arena(*robot, collision_normal)) {
                 robot->touch = true;
