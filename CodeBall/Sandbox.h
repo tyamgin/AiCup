@@ -498,7 +498,7 @@ struct Sandbox {
     template<typename T>
     void collide_entities(ARobot& a, T& b) {
         constexpr const double secondMass = std::is_same<T, ARobot>::value ? ROBOT_MASS : BALL_MASS;
-        double secondRadius, secondRadiusChangeSpeed;
+        double secondRadius = 0, secondRadiusChangeSpeed = 0;
         if constexpr (std::is_same<T, ARobot>::value) {
             secondRadius = b.radius;
             secondRadiusChangeSpeed = b.radius_change_speed;
