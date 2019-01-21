@@ -7,7 +7,7 @@
 struct ABall : public Unit {
     ABall() : Unit() {
         radius = BALL_RADIUS;
-        mass = BALL_MASS;
+        //mass = BALL_MASS;
     }
 
     explicit ABall(model::Ball ball) {
@@ -18,7 +18,7 @@ struct ABall : public Unit {
         velocity.y = ball.velocity_y;
         velocity.z = ball.velocity_z;
         radius = BALL_RADIUS;
-        mass = BALL_MASS;
+        //mass = BALL_MASS;
     }
 };
 

@@ -502,7 +502,9 @@ struct Sandbox {
         if constexpr (std::is_same<T, ARobot>::value) {
             secondRadius = b.radius;
             secondRadiusChangeSpeed = b.radius_change_speed;
-        } else {
+        }
+
+        if constexpr (std::is_same<T, ABall>::value) {
             secondRadius = BALL_RADIUS;
             secondRadiusChangeSpeed = 0;
         }

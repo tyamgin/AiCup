@@ -7,8 +7,7 @@
 struct Unit : public Point {
     Point velocity;
     double radius = 0;
-    double mass = 0;
-    double radius_change_speed = 0; // tmp field for simulator
+    //double mass = 0;
 
     void move(double delta_time) {
         velocity.clamp(MAX_ENTITY_SPEED);
