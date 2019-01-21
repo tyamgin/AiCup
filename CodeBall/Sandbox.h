@@ -95,7 +95,7 @@ struct Sandbox {
     }
 
 
-    Point collide_with_arena(ABall &e) {
+    void collide_with_arena(ABall& e) {
         Point normal;
         double penetration;
         if (dan_to_arena_new(e, penetration, normal)) {
@@ -103,24 +103,21 @@ struct Sandbox {
             auto velocity = e.velocity * normal; // radius_change_speed for ball = 0
             if (velocity < 0) {
                 e.velocity -= normal * ((1 + BALL_ARENA_E) * velocity);
-                return normal;
             }
         }
-        return Point();
     }
 
-    Point collide_with_arena(ARobot &e) {
-        Point normal;
+    bool collide_with_arena(ARobot& e, Point& normal) {
         double penetration;
         if (dan_to_arena_new(e, penetration, normal)) {
             e += normal * penetration;
             auto velocity = (e.velocity * normal) - e.radius_change_speed;
             if (velocity < 0) {
                 e.velocity -= normal * velocity; // ROBOT_ARENA_E = 0
-                return normal;
+                return true;
             }
         }
-        return Point();
+        return false;
     }
 
     bool dan_to_arena_quarter2(const Unit& point, double& distance, Point& normal) {
@@ -642,14 +639,14 @@ struct Sandbox {
             }
         }
 
+        Point collision_normal;
         for (auto& robot : robots) {
             collide_entities<ABall>(*robot, ball);
-            auto collision_normal = collide_with_arena(*robot);
-            if (collision_normal.length2() < EPS2) {
-                robot->touch = false;
-            } else {
+            if (collide_with_arena(*robot, collision_normal)) {
                 robot->touch = true;
                 robot->touchNormal = collision_normal;
+            } else {
+                robot->touch = false;
             }
         }
 
