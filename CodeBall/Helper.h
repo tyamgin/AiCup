@@ -27,4 +27,11 @@ public:
     }
 };
 
+template<typename T>
+inline void updMin(T& dst, const T& src) {
+    if (src < dst) {
+        dst = src;
+    }
+}
+
 #endif //CODEBALL_HELPER_H

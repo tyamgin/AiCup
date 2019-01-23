@@ -65,6 +65,7 @@ public:
     };
 
     struct Metric {
+        int j = -1, k = -1;
         Direction dir;
         bool hasGoal = false;
         bool hasShot = false;
@@ -121,12 +122,14 @@ public:
     std::unordered_map<int, int> lastShotTime;
 
 
-    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Direction drawDir = {}, int drawJ = -1, int drawK = -1, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
+    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
         //
         // TODO:
-        // Столкновение не с мячем, а с роботом,
+        // Улучшить удары по роботам
         //
         // Точнее сиимить подборы после сейвов
+        //
+        // Можно убрать из симы неактивных игроков (например, свой вратать после удара)
         //
 
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
@@ -136,10 +139,9 @@ public:
 
         const auto myId = env.me()->id;
         Metric sel;
-        int selJ = -1, selK = -1;
         AAction firstAction;
 
-        static std::unordered_map<int, Direction> prevDir;
+        static std::unordered_map<int, Metric> prevMetric;
         std::vector<Direction> dirs;
         Sandbox ballSnd = env;
         ballSnd.my.clear();
@@ -176,11 +178,11 @@ public:
 
             ballSnd.doTick(5);
         }
-        if (prevDir.count(myId)) {
-            dirs.push_back(prevDir[myId]);
+        if (prevMetric.count(myId)) {
+            dirs.push_back(prevMetric[myId].dir);
         }
-        if (drawJ >= 0) {
-            dirs = {drawDir};
+        if (drawMetric != nullptr) {
+            dirs = {drawMetric->dir};
         }
         std::sort(dirs.begin(), dirs.end());
         dirs.erase(std::unique(dirs.begin(), dirs.end()), dirs.end());
@@ -220,7 +222,7 @@ public:
 
                 meJumpSnd.me()->action = jmpAction;
 
-                if (j <= drawJ) {
+                if (drawMetric && j <= drawMetric->j) {
                     Visualizer::addSphere(*meJumpSnd.me(), rgba(0, 0.8, 0, al));
                     Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
                     Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
@@ -243,7 +245,7 @@ public:
                             break;
                         }
 
-                        if (j == drawJ && k <= drawK) {
+                        if (drawMetric && j == drawMetric->j && k <= drawMetric->k) {
                             Visualizer::addSphere(*meJumpSnd.me(), rgba(0.7, 0.8, 0, al));
                             Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
                             //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
@@ -283,7 +285,7 @@ public:
 
                             for (int q = 0; q <= rcK; q++) {
                                 meJumpSnd.doTick(q == rcK ? MICROTICKS_PER_TICK : 1);
-                                minZ = std::min(minZ, meJumpSnd.ball.z);
+                                updMin(minZ, meJumpSnd.ball.z);
                             }
                             // TODO: что если коллизии после пересчёта не будет?
 
@@ -312,7 +314,7 @@ public:
                                         hasOppTouch = true;
                                     }
                                 }
-                                minZ = std::min(minZ, meJumpSnd.ball.z);
+                                updMin(minZ, meJumpSnd.ball.z);
                                 if (meJumpSnd.ball.z > prevBallZ) {
                                     positiveChange += meJumpSnd.ball.z - prevBallZ;
                                     positiveTicks++;
@@ -320,8 +322,8 @@ public:
 
                                 //passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 if (w > 30) {
-                                    auto passTar1 = fw->_y(0) + (fw->id == myId ? Helper::goalDir(*fw, 7) + Point(0, 4, 0) : Helper::goalDir(*fw, 9) + Point(0, 7, 0));
-                                    passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
+                                    auto passTar1 = fw->_y(0) + (fw->id == myId ? Helper::goalDir(*fw, 7) + Point(0, 4, 0) : Helper::goalDir(*fw, 9) + Point(0, 10, 0));
+                                    updMin(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
 
@@ -343,7 +345,7 @@ public:
                                 }
 
 
-                                if (j == drawJ && k <= drawK) {
+                                if (drawMetric && j == drawMetric->j && k <= drawMetric->k) {
                                     Visualizer::addSphere(meJumpSnd.ball, rgba(1, 1, drawMetric->hasGoal ? 0 : 1, al));
                                     //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.25));
                                     //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.25));
@@ -351,7 +353,7 @@ public:
                             }
 
                             double penalty = sqrt(minCounterDist2) - ROBOT_RADIUS - BALL_RADIUS;
-                            if (j == drawJ && k <= drawK) {
+                            if (drawMetric && j == drawMetric->j && k <= drawMetric->k) {
                                 Visualizer::addLine(md1, md2, 20, rgba(0, 0, 0));
                                 for (int i = 0; i <= 24; i++) {
                                     Visualizer::addSphere(md1 + (md2 - md1) / 24 * i, 0.2, rgba(0, 0, 0));
@@ -376,13 +378,11 @@ public:
                                 //if (!isAttacker || meJumpSnd.hasGoal > 0 || tt.z < -20)
                                 {
 
-                                    Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
+                                    Metric cand = {j, k, dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
                                                    shotTick - env.tick, minZ, hasOppTouch, goalHeight,
                                                    sqrt(passMinDist2)};
 
-                                    if (selJ == -1 || sel < cand) {
-                                        selJ = j;
-                                        selK = k;
+                                    if (sel.j == -1 || sel < cand) {
                                         sel = cand;
                                         firstAction = j == 0 ? jmpAction : firstJAction;
                                     }
@@ -414,19 +414,19 @@ public:
             }
         }
 
-        if (selJ >= 0) {
+        if (sel.j >= 0) {
             resMetric = sel;
             resAction = firstAction;
             auto teammateLastShotTime = lastShotTime[env.teammate1()->id];
             auto ret = sel.timeToShot < teammateLastShotTime;
 #ifdef DEBUG
-            if (drawJ < 0) {
+            if (drawMetric == nullptr) {
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(isAttacker, t1, t2, sel.dir, selJ, selK, &sel, ret ? 1 : 0.3);
+                tryShotOutOrGoal(isAttacker, t1, t2, &sel, ret ? 1 : 0.3);
             }
 #endif
-            prevDir[myId] = sel.dir;
+            prevMetric[myId] = sel;
             lastShotTime[myId] = sel.timeToShot;
             return ret;
         }
@@ -619,7 +619,7 @@ public:
                     r->action.vel(Helper::maxVelocityTo(*r, ballSnd.ball));
 
                     if (r->getDistanceTo(tar) < (r->isTeammate ? 3 : 6)) {
-                        minTime[r->id] = std::min(minTime[r->id], j);
+                        updMin(minTime[r->id], j);
                     }
                 }
                 e.doTick(1);

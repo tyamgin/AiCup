@@ -54,7 +54,7 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     }
     if (scoreChanged) {
 #if M_TIME_LOGS
-        std::cout << newScore.my << ":" << newScore.opp << endl;
+        std::cout << env.tick << ": " << newScore.my << ":" << newScore.opp << endl;
 #endif
         waitForTick = env.tick + RESET_TICKS - 1;
         return;
