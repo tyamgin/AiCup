@@ -29,7 +29,7 @@ struct Sandbox {
     bool stopOnGoal = true;
     bool deduceOppSimple = true;
     bool oppGkStrat = false;
-    int oppCounterStrat = 0;
+    int oppCounterStrat = 0; // 0, 1, 2
 
     static std::vector<ABall> _ballsCache;
     int _ballsCacheIterator = 0;

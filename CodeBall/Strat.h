@@ -201,6 +201,9 @@ public:
         };
 
         auto counterPenalty = [isAttacker](Sandbox &e) {
+            if (GameInfo::isOpponentCrashed) {
+                return false;
+            }
             if (!isAttacker) {
                 return e.ball.z < ARENA_Z * 0.5;
             }
@@ -362,7 +365,7 @@ public:
 
                             double goalHeight = meJumpSnd.ball.y;
                             bool hasGoal = meJumpSnd.hasGoal > 0;
-                            if (hasGoal) {
+                            if (hasGoal && !GameInfo::isOpponentCrashed) {
                                 if (noFarGoal && isFar && goalHeight < ARENA_GOAL_HEIGHT * 0.7) {
                                     hasGoal = false;
                                 }
