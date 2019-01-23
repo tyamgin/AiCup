@@ -12,13 +12,13 @@ rm local_runner/$ts.txt
     --p2-name 31003 \
     --results-file $ts.txt \
     --seed $ts \
-    --duration 100000 \
+    --duration 300000 \
     --nitro true \
     --noshow \
     &
 echo "LR started"
 sleep 2
 ./cmake-build-release/CodeBall 127.0.0.1 31002 0000000000000000 &
-./release/m43 127.0.0.1 31003 0000000000000000 > /dev/null
+./release/m44 127.0.0.1 31003 0000000000000000 > /dev/null
 
 cat local_runner/$ts.txt

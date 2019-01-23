@@ -706,6 +706,9 @@ struct Sandbox {
 
     void _oppGkStrat() {
         auto gk = opp[0].z > opp[1].z ? &opp[0] : &opp[1];
+        if (!gk->touch) {
+            return;
+        }
 
         constexpr const auto w = ARENA_GOAL_WIDTH/2 - ROBOT_MAX_RADIUS - 1.2;
 
@@ -720,14 +723,13 @@ struct Sandbox {
         }
         target_pos.z = ARENA_DEPTH / 2.0 - 1;
 
-        // Установка нужных полей для желаемого действия
         auto delta = Point(target_pos.x - gk->x, 0.0, target_pos.z - gk->z);
         auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
         if (gk->z > ARENA_DEPTH / 2 - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сльно быстро шататься
             speed = delta.length() / tt;
         gk->action.targetVelocity = delta.take(speed);
 
-        if (gk->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 3)) {
+        if (gk->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
             gk->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
         }
     }
@@ -743,7 +745,9 @@ struct Sandbox {
 
     void oppStrat() {
         if (GameInfo::isOpponentCrashed) {
-            // TODO: clear actions
+            for (auto&x : opp) {
+                x.action = AAction();
+            }
             return;
         }
 

@@ -97,7 +97,7 @@ public:
             }
             double base;
             if (hasGoal) {
-                base = (positiveChange / (positiveTicks + 2*timeToShot)) - pen - injPen - touchPen + dir.speedFactor + heightAdd;
+                base = (positiveChange / (positiveTicks + 2*timeToShot + 1)) - pen - injPen - touchPen + dir.speedFactor + heightAdd;
             } else {
                 base = -passMinDist - pen * 30;
             }
@@ -214,7 +214,7 @@ public:
 
             for (auto j = 0; j <= 65; j++) {
                 Sandbox meJumpSnd = meSnd;
-                auto mvAction = AAction().vel(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
+                auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
                 auto jmpAction = mvAction;
                 jmpAction.jump();
 
@@ -286,25 +286,21 @@ public:
                                 minZ = std::min(minZ, meJumpSnd.ball.z);
                             }
                             // TODO: что если коллизии после пересчёта не будет?
-                            auto tt = *meJumpSnd.me();
 
-                            fw->action = AAction().vel(Helper::maxVelocityTo(*fw, oppGoal));
+                            fw->action = AAction(Helper::maxVelocityTo(*fw, oppGoal));
 
                             int shotTick = meJumpSnd.tick;
 
                             meJumpSnd.oppGkStrat = true;
-                            double penalty = 0;
-
-
                             meJumpSnd.oppCounterStrat = 2;
 
                             int positiveTicks = 0;
                             double positiveChange = 0;
                             bool hasGk = false;
                             for (auto& x : meJumpSnd.opp) {
-                                hasGk |= x.z > ARENA_Z - 5;
+                                hasGk |= x.z > ARENA_Z - 8;
                             }
-                            bool isFar = meJumpSnd.me()->z < 6;
+                            bool isFar = meJumpSnd.me()->z < -10;
                             bool noFarGoal = false;
                             bool hasOppTouch = false;
 
@@ -342,7 +338,7 @@ public:
                                         }
                                     }
                                 }
-                                if (w > 10 && meJumpSnd.ball.z < BALL_RADIUS * 1.1 && hasGk) {
+                                if (w > 10 && meJumpSnd.ball.y < BALL_RADIUS * 1.1 && hasGk) {
                                     noFarGoal = true;
                                 }
 
@@ -353,36 +349,35 @@ public:
                                     //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.25));
                                 }
                             }
-                            //if (calcPenalty)
-                            {
-                                auto dst = sqrt(minCounterDist2) - ROBOT_RADIUS - BALL_RADIUS;
-                                if (j == drawJ && k <= drawK) {
-                                    Visualizer::addLine(md1, md2, 20, rgba(0, 0, 0));
-                                    for (int i = 0; i <= 24; i++) {
-                                        Visualizer::addSphere(md1 + (md2 - md1) / 24 * i, 0.2, rgba(0, 0, 0));
-                                    }
+
+                            double penalty = sqrt(minCounterDist2) - ROBOT_RADIUS - BALL_RADIUS;
+                            if (j == drawJ && k <= drawK) {
+                                Visualizer::addLine(md1, md2, 20, rgba(0, 0, 0));
+                                for (int i = 0; i <= 24; i++) {
+                                    Visualizer::addSphere(md1 + (md2 - md1) / 24 * i, 0.2, rgba(0, 0, 0));
                                 }
-                                penalty = dst;
                             }
 
+                            double goalHeight = meJumpSnd.ball.y;
                             bool hasGoal = meJumpSnd.hasGoal > 0;
-                            if (hasGoal && noFarGoal && isFar && meJumpSnd.ball.z < ARENA_GOAL_HEIGHT * 0.7) {
-                                hasGoal = false;
+                            if (hasGoal) {
+                                if (noFarGoal && isFar && goalHeight < ARENA_GOAL_HEIGHT * 0.7) {
+                                    hasGoal = false;
+                                }
+
+                                if (meJumpSnd.tick - shotTick > 30 && hasOppTouch) {
+                                    hasGoal = false;
+                                }
                             }
 
-                            if (meJumpSnd.tick - shotTick > 30 && hasOppTouch) {
-                                hasGoal = false;
-                            }
-
-                            if (hasShot && positiveTicks > 5 && meJumpSnd.hasGoal >= 0
-                                || !hasShot && meJumpSnd.hasGoal > 0) {
+                            if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0) {
 
                                 //if (meJumpSnd.hasGoal > 0 || meSnd.me()->z < ARENA_Z * 0.3 || std::abs(meSnd.me()->x) > ARENA_GOAL_WIDTH/2 * 1.3)
                                 //if (!isAttacker || meJumpSnd.hasGoal > 0 || tt.z < -20)
                                 {
 
                                     Metric cand = {dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
-                                                   shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball.y,
+                                                   shotTick - env.tick, minZ, hasOppTouch, goalHeight,
                                                    sqrt(passMinDist2)};
 
                                     if (selJ == -1 || sel < cand) {
