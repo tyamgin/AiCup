@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ts=$(date +%s)
-ts=555
+#ts=555
 
 rm local_runner/$ts.txt
 
@@ -12,13 +12,13 @@ rm local_runner/$ts.txt
     --p2-name 31003 \
     --results-file $ts.txt \
     --seed $ts \
-    --duration 6000 \
+    --duration 100000 \
     --nitro true \
     --noshow \
     &
 echo "LR started"
 sleep 1
 ./cmake-build-release/CodeBall 127.0.0.1 31002 0000000000000000 &
-./release/m44.1 127.0.0.1 31003 0000000000000000 > /dev/null
+./release/m44.2 127.0.0.1 31003 0000000000000000 > /dev/null
 
 cat local_runner/$ts.txt

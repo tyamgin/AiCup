@@ -8,6 +8,7 @@ struct GameInfo {
     static int teamSize;
     static bool isOpponentCrashed;
     static bool isTeammateById[7];
+    static bool usedNitro[7];
 
     struct GameScore {
         int my = 0, opp = 0;

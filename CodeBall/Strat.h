@@ -222,6 +222,7 @@ public:
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
                 auto jmpAction = mvAction;
                 jmpAction.jump();
+                //jmpAction.nitro();
 
                 meJumpSnd.me()->action = jmpAction;
 
@@ -437,6 +438,8 @@ public:
     }
 
     bool tryTakeNitro(bool isAttacker, AAction& resAction) {
+        return false;
+
         if (!GameInfo::isNitro) {
             return false;
         }
@@ -687,9 +690,40 @@ public:
             for (auto tm : env.teammates(me.id))
                 tm->action = prevEnv.robot(tm->id)->action;
         } else if (env.roundTick > 0) {
+            for (auto& opp : env.opp) {
+                if (opp.nitroAmount < prevEnv.robot(opp.id)->nitroAmount) {
+                    GameInfo::usedNitro[opp.id] = true;
+                    for (int i = 0; i < 12; i++) {
+                        double ang = 2 * M_PI / 12 * i;
+                        Point pt(cos(ang), 0, sin(ang));
+                        Visualizer::useNitro(opp);
+                    }
+                }
+            }
+
             prevEnv.doTick();
             checkEvalState();
         }
+
+//        if (env.tick >= 23) {
+//            for (int w = 0; w < 10; w++) {
+//                auto e100 = env;
+//                auto e1 = env;
+//                auto vel = e1.me()->velocity * 1.2;
+//                e1.me()->action.jump().nitro().vel(vel);
+//                e100.me()->action.jump().nitro().vel(vel);
+//                e1.doTick(1);
+//                e100.doTick();
+//                auto me1 = e1.me();
+//                auto me100 = e100.me();
+//                std::cout << "";
+//            }
+//        }
+//
+//        if (env.tick >= 20) {
+//            action.jump();
+//            return;
+//        }
 
         const int alarmTicks = 45;
 

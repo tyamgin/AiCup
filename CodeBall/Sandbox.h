@@ -582,6 +582,7 @@ struct Sandbox {
             auto& robot = *robotPtr;
             if (robot.touch) {
                 auto targetVelocity = robot.action.targetVelocity;
+                // TODO: подавать сразу готовую
                 targetVelocity.clamp(ROBOT_MAX_GROUND_SPEED);
 
                 auto dot = robot.touchNormal * targetVelocity;
@@ -725,7 +726,7 @@ struct Sandbox {
 
         auto delta = Point(target_pos.x - gk->x, 0.0, target_pos.z - gk->z);
         auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
-        if (gk->z > ARENA_DEPTH / 2 - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сльно быстро шататься
+        if (gk->z > ARENA_DEPTH / 2 - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сильно быстро шататься
             speed = delta.length() / tt;
         gk->action.targetVelocity = delta.take(speed);
 

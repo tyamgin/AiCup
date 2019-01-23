@@ -15,7 +15,7 @@ int waitForTick = -1;
 
 void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
     GameInfo::maxTickCount = rules.max_tick_count;
-    GameInfo::isNitro = false;// !game.nitro_packs.empty();
+    GameInfo::isNitro = !game.nitro_packs.empty();
     GameInfo::isFinal = rules.team_size > 2;
     GameInfo::teamSize = rules.team_size;
     for (auto& robot : game.robots) {
@@ -69,6 +69,10 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     action.target_velocity_x = a.targetVelocity.x;
     action.target_velocity_y = a.targetVelocity.y;
     action.target_velocity_z = a.targetVelocity.z;
+
+    if (a.useNitro) {
+        Visualizer::useNitro(*env.me());
+    }
 
     strat.env.robot(me.id)->action = a;
     strat.prevEnv = strat.env;

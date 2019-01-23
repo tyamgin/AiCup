@@ -3,6 +3,7 @@
 
 #include "nlohmann.h"
 #include "Unit.h"
+#include "Robot.h"
 
 #ifdef DEBUG
 #define M_VISUALIZER 1
@@ -124,6 +125,16 @@ struct Visualizer {
     static void addText(Args && ...args) {
 #if M_VISUALIZER
         figures.push_back(new RText(std::forward<Args>(args)...));
+#endif
+    }
+
+    static void useNitro(const ARobot& robot) {
+#if M_VISUALIZER
+        for (int i = 0; i < 12; i++) {
+            double ang = 2 * M_PI / 12 * i;
+            Point pt(cos(ang), 0, sin(ang));
+            addLine(robot + pt, (robot + pt)._y(0), 4, rgba(1, 1, 1));
+        }
 #endif
     }
 
