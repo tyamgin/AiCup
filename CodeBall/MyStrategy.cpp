@@ -70,7 +70,7 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
     action.target_velocity_y = a.targetVelocity.y;
     action.target_velocity_z = a.targetVelocity.z;
 
-    if (a.useNitro) {
+    if (a.useNitro && me.nitro_amount > 0) {
         Visualizer::useNitro(*env.me());
     }
 

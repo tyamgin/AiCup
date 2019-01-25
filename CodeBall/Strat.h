@@ -47,9 +47,21 @@ public:
         }
     }
 
+    struct Correction {
+        double fx = 1, fy = 1, fz = 1;
+
+        std::string toString() const {
+            std::stringstream out;
+            out << fx << " " << fy << " " << fz;
+            return out.str();
+        }
+    };
+
     struct Direction {
         Point dir;
         double speedFactor;
+        Correction correction;
+        bool toBallAfterJump = false;
 
         bool operator <(const Direction& other) const {
             if (speedFactor != other.speedFactor)
@@ -78,6 +90,12 @@ public:
         double goalHeight;
         double passMinDist;
 
+        double getHeightAdd() const {
+            if (hasGoal) {
+                return goalHeight / ARENA_GOAL_HEIGHT / 2;
+            }
+            return 0;
+        }
 
         auto getComparable() const {
             const double xx = 5;
@@ -92,13 +110,10 @@ public:
             if (hasGoal && hasOppTouch) {
                 touchPen = 0.3;
             }
-            double heightAdd = 0;
-            if (hasGoal) {
-                heightAdd += goalHeight / ARENA_GOAL_HEIGHT / 2;
-            }
+
             double base;
             if (hasGoal) {
-                base = (positiveChange / (positiveTicks + 2*timeToShot + 1)) - pen - injPen - touchPen + dir.speedFactor + heightAdd;
+                base = (positiveChange / (positiveTicks + 2*timeToShot + 1)) - pen - injPen - touchPen + dir.speedFactor + getHeightAdd();
             } else {
                 base = -passMinDist - pen * 30;
             }
@@ -111,11 +126,13 @@ public:
 
         std::string toString() {
             return std::string(hasGoal ? "GOAL" : "SHOT") +
-                " pow=" + std::to_string(dir.speedFactor) +
+                //" pow=" + std::to_string(dir.speedFactor) +
                 " t=" + std::to_string(timeToShot) +
                 " p=" + std::to_string(penalty) +
                 " " + std::to_string(std::get<2>(getComparable())) +
-                (hasOppTouch ? " (!)" : "");
+                (hasGoal ? " h=" + std::to_string(getHeightAdd()) : "") +
+                (hasOppTouch ? " (!)" : "") +
+                " pf=" + dir.correction.toString();
         }
     };
 
@@ -127,7 +144,7 @@ public:
         // TODO:
         // Улучшить удары по роботам
         //
-        // Точнее сиимить подборы после сейвов
+        // Точнее симить подборы после сейвов
         //
         // Можно убрать из симы неактивных игроков (например, свой вратать после удара)
         //
@@ -146,19 +163,40 @@ public:
         Sandbox ballSnd = env;
         ballSnd.my.clear();
 
-        bool sm = false;
+        if (prevMetric.count(myId)) {
+            dirs.push_back(prevMetric[myId].dir);
+        }
 
-        for (int i = 0; i < 48; i++) {
-            if (i % 6 == env.tick % 6) {
-                auto ang = 2 * M_PI / 48 * i;
-                dirs.push_back({Point(cos(ang), 0, sin(ang)), 1});
-                if (sm) {
-                    if (isAttacker && env.tick % 3 == 0) {
-                        dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.8});
+        std::vector<std::vector<double>> yCorrs = {
+                {0.99, 1.01, 1.02, 1.03},
+                {0.9, 0.95, 0.98, 1.05},
+        };
+        std::vector<std::vector<double>> xCorrs = {
+                {0.8, 0.9, 0.99, 1.01, 1.1, 1.2},
+                {0.7, 0.85, 0.98, 1.02, 1.15, 1.3},
+        };
+
+        if (!dirs.empty() && env.me()->isDetouched() && env.me()->nitroAmount > EPS) {
+            auto prv = dirs[0];
+            for (size_t yCorrsIdx = 0; yCorrsIdx < yCorrs.size(); yCorrsIdx++) {
+                if (yCorrsIdx == 0 || yCorrsIdx % yCorrs.size() == env.tick % yCorrs.size()) {
+                    for (double fy : yCorrs[yCorrsIdx]) {
+                        dirs.push_back({prv.dir._y(prv.dir.y * fy), prv.speedFactor, {1, fy, 1}});
                     }
-                    if (isAttacker && env.tick % 5 == 4) {
-                        dirs.push_back({Point(cos(ang), 0, sin(ang)), 0.65});
+                }
+            }
+            for (size_t xCorrsIdx = 0; xCorrsIdx < xCorrs.size(); xCorrsIdx++) {
+                if (xCorrsIdx % xCorrs.size() == env.tick % xCorrs.size()) {
+                    for (double fx : xCorrs[xCorrsIdx]) {
+                        dirs.push_back({prv.dir._x(prv.dir.x * fx), prv.speedFactor, {fx, 1, 1}});
                     }
+                }
+            }
+        } else {
+            for (int i = 0; i < 48; i++) {
+                if (i % 6 == env.tick % 6) {
+                    auto ang = 2 * M_PI / 48 * i;
+                    dirs.push_back({Point(cos(ang), 0, sin(ang)), 1, Correction(), true});
                 }
             }
         }
@@ -166,21 +204,11 @@ public:
         for (auto i = 0; i <= 50 && ballSnd.hasGoal == 0; i++) {
             if (i % 5 == 0 || i <= 6) {
                 dirs.push_back({ballSnd.ball - *env.me(), 1});
-                if (sm) {
-                    if (isAttacker && env.tick % 3 == 0) {
-                        dirs.push_back({ballSnd.ball - *env.me(), 0.8});
-                    }
-                    if (isAttacker && env.tick % 5 == 4) {
-                        dirs.push_back({ballSnd.ball - *env.me(), 0.65});
-                    }
-                }
             }
 
             ballSnd.doTick(5);
         }
-        if (prevMetric.count(myId)) {
-            dirs.push_back(prevMetric[myId].dir);
-        }
+
         if (drawMetric != nullptr) {
             dirs = {drawMetric->dir};
         }
@@ -222,7 +250,9 @@ public:
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
                 auto jmpAction = mvAction;
                 jmpAction.jump();
-                //jmpAction.nitro();
+                jmpAction.nitro();
+
+                AAction firstKAction;
 
                 meJumpSnd.me()->action = jmpAction;
 
@@ -243,6 +273,12 @@ public:
 
                     int rcK = -1;
                     for (k = 0; k <= jumpMaxTicks; k++) {
+                        if (dir.toBallAfterJump && meJumpSnd.me()->nitroAmount > EPS) {
+                            meJumpSnd.me()->action.vel(Helper::maxVelocityTo(*meJumpSnd.me(), meJumpSnd.ball));
+                        }
+                        if (k == 0) {
+                            firstKAction = meJumpSnd.me()->action;
+                        }
                         meJumpSnd.doTick(1);
 
                         if (skipRobotsCollisions(meJumpSnd)) {
@@ -283,11 +319,14 @@ public:
 
                             meJumpSnd = meSnd;
                             ARobot* fw = meJumpSnd.my[0].z > env.my[1].z ? &meJumpSnd.my[0] : &meJumpSnd.my[1];
-                            fw->action = AAction().vel(Helper::maxVelocityTo(*fw, oppGoal));
+                            fw->action = AAction(Helper::maxVelocityTo(*fw, oppGoal));
                             meJumpSnd.me()->action = jmpAction;
                             double minZ = meJumpSnd.ball.z;
 
                             for (int q = 0; q <= rcK; q++) {
+                                if (dir.toBallAfterJump && meJumpSnd.me()->nitroAmount > EPS) {
+                                    meJumpSnd.me()->action.vel(Helper::maxVelocityTo(*meJumpSnd.me(), meJumpSnd.ball));
+                                }
                                 meJumpSnd.doTick(q == rcK ? MICROTICKS_PER_TICK : 1);
                                 updMin(minZ, meJumpSnd.ball.z);
                             }
@@ -388,7 +427,7 @@ public:
 
                                     if (sel.j == -1 || sel < cand) {
                                         sel = cand;
-                                        firstAction = j == 0 ? jmpAction : firstJAction;
+                                        firstAction = j == 0 ? firstKAction : firstJAction;
                                     }
                                 }
                             }
@@ -413,7 +452,8 @@ public:
 
             }
 
-            if (!env.me()->touch || env.me()->touchNormal.y < EPS) {
+            auto me = env.me();
+            if (me->isDetouched() && me->nitroAmount < EPS) {
                 break;
             }
         }
@@ -423,13 +463,18 @@ public:
             resAction = firstAction;
             auto teammateLastShotTime = lastShotTime[env.teammate1()->id];
             auto ret = sel.timeToShot < teammateLastShotTime;
-#ifdef DEBUG
+
             if (drawMetric == nullptr) {
+                Logger::instance()->corrXYZStat[0][sel.dir.correction.fx]++;
+                Logger::instance()->corrXYZStat[1][sel.dir.correction.fy]++;
+                Logger::instance()->corrXYZStat[2][sel.dir.correction.fz]++;
+#ifdef DEBUG
                 AAction t1;
                 Metric t2;
                 tryShotOutOrGoal(isAttacker, t1, t2, &sel, ret ? 1 : 0.3);
-            }
 #endif
+            }
+
             prevMetric[myId] = sel;
             lastShotTime[myId] = sel.timeToShot;
             return ret;
@@ -437,8 +482,17 @@ public:
         return false;
     }
 
+
+
     bool tryTakeNitro(bool isAttacker, AAction& resAction) {
-        return false;
+        OP_START(TAKE_NITRO);
+        auto ret = _tryTakeNitro(isAttacker, resAction);
+        OP_END(TAKE_NITRO);
+        return ret;
+    }
+
+    bool _tryTakeNitro(bool isAttacker, AAction& resAction) {
+        //return false;
 
         if (!GameInfo::isNitro) {
             return false;
@@ -682,7 +736,7 @@ public:
 
     bool alarm;
 
-    void act(AAction &action, bool isFirst) {
+    void act(AAction& action, bool isFirst) {
         auto& ball = env.ball;
         auto& me = *env.me();
 
@@ -704,6 +758,17 @@ public:
             prevEnv.doTick();
             checkEvalState();
         }
+
+
+//        action.vel(Helper::maxVelocityTo(me, myGoal));
+//        if (env.tick >= 15) {
+//            action.jump();
+//        }
+//        if (me.id == 2 && env.tick > 15) {
+//            action.vel(Helper::maxVelocityToDir(me, Point(0, 1, 0)));
+//            action.nitro();
+//        }
+//        return;
 
 //        if (env.tick >= 23) {
 //            for (int w = 0; w < 10; w++) {
@@ -783,10 +848,6 @@ public:
                 Visualizer::addText(msg);
                 return;
             //}
-        }
-        if (tryTakeNitro(is_attacker, action)) {
-            Visualizer::addText("Go to nitro");
-            return;
         }
 
         if (is_attacker) {
@@ -890,6 +951,8 @@ public:
                     }
                     if (firstAction) {
                         action = firstAction.value();
+                    } else if (tryTakeNitro(is_attacker, action)) {
+                        Visualizer::addText("Go to nitro");
                     } else {
                         action = goToGoalCenterStrat(env);
                     }

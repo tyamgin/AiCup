@@ -41,6 +41,10 @@ struct ARobot : public Unit {
         touchNormal.z = robot.touch_normal_z;
         //mass = ROBOT_MASS;
     }
+
+    bool isDetouched() const {
+        return !touch || touchNormal.y < EPS;
+    }
 };
 
 #endif //CODEBALL_ROBOT_H

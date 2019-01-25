@@ -23,6 +23,7 @@
 enum LoggerAction {
     LA_ALL,
     LA_DO_TICK,
+    LA_TAKE_NITRO,
     LA_K,
     LA_KW,
 
@@ -33,6 +34,7 @@ struct Logger {
     std::vector<std::chrono::system_clock::time_point> _timers;
     long long _cumulativeDuration[LA_ACTIONS_COUNT];
     int dans[10000];
+    std::unordered_map<double, int> corrXYZStat[3];
     int tick;
 
     Logger() {
@@ -82,11 +84,17 @@ struct Logger {
         out << "[Summary]" << std::endl;
         out << "] ALL                         " << _cumulativeDuration[LA_ALL]                         / 1000 << "ms" << std::endl;
         out << "] DO_TICK                     " << _cumulativeDuration[LA_DO_TICK]                     / 1000 << "ms" << std::endl;
+        out << "] TAKE_NITRO                  " << _cumulativeDuration[LA_TAKE_NITRO]                  / 1000 << "ms" << std::endl;
         out << "] K                           " << _cumulativeDuration[LA_K]                           / 1000 << "ms" << std::endl;
         out << "] KW                          " << _cumulativeDuration[LA_KW]                          / 1000 << "ms" << std::endl;
         for (int i = 0; i < int(sizeof(dans) / sizeof(dans[0])); i++) {
             if (dans[i] > 0) {
                 out << "Dan " << i << ": " << dans[i] << std::endl;
+            }
+        }
+        for (int i = 0; i < 3; i++) {
+            for (auto& mp : corrXYZStat[i]) {
+                out << "Corr" << "XYZ"[i] << " " << mp.first << ":" << mp.second << std::endl;
             }
         }
         return out.str();

@@ -75,9 +75,21 @@ struct Point {
         return *this;
     }
 
+    Point _x(double newX) const {
+        Point res = *this;
+        res.x = newX;
+        return res;
+    }
+
     Point _y(double newY) const {
         Point res = *this;
         res.y = newY;
+        return res;
+    }
+
+    Point _z(double newZ) const {
+        Point res = *this;
+        res.z = newZ;
         return res;
     }
 
