@@ -35,6 +35,8 @@ struct Logger {
     long long _cumulativeDuration[LA_ACTIONS_COUNT];
     int dans[10000];
     std::unordered_map<double, int> corrXYZStat[3];
+    int sandboxTicksCount = 0;
+    int sandbox3TicksCount = 0;
     int tick;
 
     Logger() {
@@ -97,6 +99,8 @@ struct Logger {
                 out << "Corr" << "XYZ"[i] << " " << mp.first << ":" << mp.second << std::endl;
             }
         }
+        out << "Sandbox ticks " << sandboxTicksCount << std::endl;
+        out << "Sandbox 3ticks " << sandbox3TicksCount << std::endl;
         return out.str();
     }
 

@@ -778,6 +778,11 @@ struct Sandbox {
             firstMicrotickSeparate |= std::abs(x->radius - radiusByJumpSpeed(x->action.jumpSpeed)) > EPS;
         firstMicrotickSeparate &= microticksPerTick < MICROTICKS_PER_TICK;
 
+#if M_TIME_LOGS
+        Logger::instance()->sandboxTicksCount++;
+        Logger::instance()->sandbox3TicksCount += firstMicrotickSeparate;
+#endif
+
         hasRandomCollision = false;
         robotBallCollisions.clear();
         robotsCollisions.clear();

@@ -155,7 +155,7 @@ public:
             return false;
 
         const auto myId = env.me()->id;
-        Metric sel;
+        Metric sel, cand;
         AAction firstAction;
 
         static std::unordered_map<int, Metric> prevMetric;
@@ -421,7 +421,7 @@ public:
                                 //if (!isAttacker || meJumpSnd.hasGoal > 0 || tt.z < -20)
                                 {
 
-                                    Metric cand = {j, k, dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
+                                    cand = {j, k, dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
                                                    shotTick - env.tick, minZ, hasOppTouch, goalHeight,
                                                    sqrt(passMinDist2)};
 
@@ -532,6 +532,7 @@ public:
                 int gotchaJ = -1;
                 AAction firstJAction;
 
+
                 for (int j = 0; j < 20; j++) {
                     if (!intersected) {
                         auto g = backSnd.getIntersectedNitroPack(*backSnd.me());
@@ -562,7 +563,7 @@ public:
                     selTm = gotchaTm;
                 }
 
-                auto act = AAction().vel(Helper::maxVelocityTo(*me, pack)).nitro();
+                auto act = AAction(Helper::maxVelocityTo(*me, pack));
                 me->action = act;
                 if (i == 0)
                     firstIAction = act;
@@ -580,10 +581,7 @@ public:
                 }
             }
         }
-        if (selI == -1) {
-            return false;
-        }
-        return true;
+        return minTm < INT_MAX;
     }
 
     AAction goToGoalCenterStrat(Sandbox &e) {
@@ -951,7 +949,7 @@ public:
                     }
                     if (firstAction) {
                         action = firstAction.value();
-                    } else if (tryTakeNitro(is_attacker, action)) {
+                    } else if (ball.z > -ARENA_Z + 10 && (!firstToBall || firstToBall.value().isTeammate || ball.z > 5) && tryTakeNitro(is_attacker, action)) {
                         Visualizer::addText("Go to nitro");
                     } else {
                         action = goToGoalCenterStrat(env);
