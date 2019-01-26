@@ -432,7 +432,7 @@ public:
                                 //if (meJumpSnd.hasGoal > 0 || meSnd.me()->z < ARENA_Z * 0.3 || std::abs(meSnd.me()->x) > ARENA_GOAL_WIDTH/2 * 1.3)
                                 //if (!isAttacker || meJumpSnd.hasGoal > 0 || tt.z < -20)
                                 {
-                                    touchFloorCount = 0; // TODO
+                                    //touchFloorCount = 0; // TODO
 
                                     cand = {j, k, dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
                                                    shotTick - env.tick, minZ, hasOppTouch, goalHeight,
