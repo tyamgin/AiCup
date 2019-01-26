@@ -432,8 +432,6 @@ public:
                                 //if (meJumpSnd.hasGoal > 0 || meSnd.me()->z < ARENA_Z * 0.3 || std::abs(meSnd.me()->x) > ARENA_GOAL_WIDTH/2 * 1.3)
                                 //if (!isAttacker || meJumpSnd.hasGoal > 0 || tt.z < -20)
                                 {
-                                    //touchFloorCount = 0; // TODO
-
                                     cand = {j, k, dir, hasGoal, hasShot, positiveChange, positiveTicks, penalty,
                                                    shotTick - env.tick, minZ, hasOppTouch, goalHeight,
                                                    sqrt(passMinDist2), touchFloorCount};
@@ -769,37 +767,6 @@ public:
             prevEnv.doTick();
             checkEvalState();
         }
-
-
-//        action.vel(Helper::maxVelocityTo(me, myGoal));
-//        if (env.tick >= 15) {
-//            action.jump();
-//        }
-//        if (me.id == 2 && env.tick > 15) {
-//            action.vel(Helper::maxVelocityToDir(me, Point(0, 1, 0)));
-//            action.nitro();
-//        }
-//        return;
-
-//        if (env.tick >= 23) {
-//            for (int w = 0; w < 10; w++) {
-//                auto e100 = env;
-//                auto e1 = env;
-//                auto vel = e1.me()->velocity * 1.2;
-//                e1.me()->action.jump().nitro().vel(vel);
-//                e100.me()->action.jump().nitro().vel(vel);
-//                e1.doTick(1);
-//                e100.doTick();
-//                auto me1 = e1.me();
-//                auto me100 = e100.me();
-//                std::cout << "";
-//            }
-//        }
-//
-//        if (env.tick >= 20) {
-//            action.jump();
-//            return;
-//        }
 
         const int alarmTicks = 45;
 
