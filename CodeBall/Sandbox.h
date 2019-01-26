@@ -718,16 +718,22 @@ struct Sandbox {
 
         if (ball.velocity.z > EPS && ball.z > 1) {
             // Найдем время и место, в котором мяч пересечет линию ворот
-            tt = (ARENA_DEPTH / 2.0 - ball.z) / ball.velocity.z;
+            tt = (ARENA_Z - ball.z) / ball.velocity.z;
             auto x = ball.x + ball.velocity.x * tt;
             target_pos.x = std::clamp(x, -w, w);
         }
-        target_pos.z = ARENA_DEPTH / 2.0 - 1;
+        target_pos.z = ARENA_Z + 1;
 
         auto delta = Point(target_pos.x - gk->x, 0.0, target_pos.z - gk->z);
-        auto speed = ROBOT_MAX_GROUND_SPEED / 4 * std::min(delta.length(), 4.0);
-        if (gk->z > ARENA_DEPTH / 2 - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1 && tt >= 0)// чтобы не сильно быстро шататься
-            speed = delta.length() / tt;
+        auto deltaLength2 = delta.length2();
+        const double dd = SQR(4);
+        double speed;
+
+        if (tt > 0 && gk->z > ARENA_Z - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1)// чтобы не сильно быстро шататься
+            speed = deltaLength2 / SQR(tt);
+        else
+            speed = deltaLength2 > dd ? ROBOT_MAX_GROUND_SPEED : ROBOT_MAX_GROUND_SPEED / dd * deltaLength2;
+
         gk->action.targetVelocity = delta.take(speed);
 
         if (gk->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
@@ -737,7 +743,9 @@ struct Sandbox {
 
     void _oppCounterStrat() {
         auto ct = opp[0].z < opp[1].z ? &opp[0] : &opp[1];
-        ct->action.targetVelocity = Helper::maxVelocityTo(*ct, ball);
+        if (oppCounterStrat < 3) {
+            ct->action.targetVelocity = Helper::maxVelocityTo(*ct, ball);
+        }
 
         if (oppCounterStrat > 1 && ct->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
             ct->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
@@ -755,7 +763,12 @@ struct Sandbox {
         if (deduceOppSimple) {
             for (auto &x : opp) {
                 x.action.jumpSpeed = x.touch ? 0 : ROBOT_MAX_JUMP_SPEED;
-                x.action.targetVelocity = x.velocity;
+                if (!x.touch && x.nitroAmount > EPS && GameInfo::usedNitro[x.id]) {
+                    x.action.targetVelocity = x.velocity * 10;
+                    x.action.useNitro = true;
+                } else {
+                    x.action.targetVelocity = x.velocity;
+                }
             }
         }
 
@@ -824,6 +837,16 @@ struct Sandbox {
 
         OP_END(DO_TICK);
     }
+
+    void doTicksBallFast(int ticks) {
+        constexpr const auto deltaTimeTick = 1.0 / TICKS_PER_SECOND;
+        double deltaTime = deltaTimeTick * ticks;
+        update(deltaTime);
+
+        tick += ticks;
+        roundTick += ticks;
+    }
+
 
     bool needDoTick() const {
         return hasGoal == 0 || !stopOnGoal;
