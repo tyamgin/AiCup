@@ -1006,7 +1006,7 @@ public:
                     }
                     if (firstAction) {
                         action = firstAction.value();
-                    } else if (ball.z > -ARENA_Z + 10 && (!firstToBall || firstToBall.value().isTeammate || ball.z > 5) && tryTakeNitro(is_attacker, action)) {
+                    } else if (ball.z > -ARENA_Z + 10 && (!firstToBall || firstToBall.value().isTeammate || Sandbox::_ballsCache[20].z > 15) && tryTakeNitro(is_attacker, action)) {
                         Visualizer::addText("Go to nitro");
                     } else {
                         action = goToGoalCenterStrat(env);
