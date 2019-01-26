@@ -725,7 +725,7 @@ public:
 
     std::tuple<std::optional<ARobot>, std::optional<ARobot>> evalToBall() {
         Sandbox ballSnd = env;
-        ballSnd.stopOnGoal = false;
+        ballSnd.stopOnGoal = GameInfo::isNitro;
         std::vector<int> minTime(7, INT_MAX);
 
         double ballHeight = BALL_RADIUS + ROBOT_MAX_RADIUS*5;
