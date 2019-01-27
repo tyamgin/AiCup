@@ -154,8 +154,8 @@ public:
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
-//        if (isAttacker && env.me()->z > -ARENA_Z / 2 && env.me()->z > env.ball.z + 3)
-//            return false;
+        if (isAttacker && env.me()->z > -ARENA_Z / 2 && env.me()->z > env.ball.z + 3 && env.ball.velocity.z < -2)
+            return false;
 
         int leafsCount = 0;
 
@@ -270,10 +270,13 @@ public:
                     Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                 }
 
-                if (meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 14)) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
+                const int pp = GameInfo::isFinal ? 12 : 14;
+                const int gg = GameInfo::isFinal ? 8 : 9;
+
+                if (meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + pp)) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
                     OP_START(K);
 
-                    const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0;
+                    const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0 - GameInfo::isFinal * 2;
 
                     bool qwe = false;
 
@@ -282,7 +285,7 @@ public:
                     int rcK = -1;
 
                     for (k = 0; k <= jumpMaxTicks; k++) {
-                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 9)) {
+                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + gg)) {
                             qwe = true;
                             break;
                         }
@@ -461,6 +464,10 @@ public:
 
                             break;
                         }
+
+                        if (hasShot) {
+                            break;
+                        }
                     }
 
                     OP_END(K);
@@ -502,7 +509,7 @@ public:
             }
             auto ret = !hasTeammateShot;
             if (sel.qwe) {
-                std::cout << "AAAAAAA\n";
+                //std::cout << "AAAAAAA\n";
             }
 
             if (drawMetric == nullptr) {
