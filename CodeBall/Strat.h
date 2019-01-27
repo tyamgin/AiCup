@@ -320,7 +320,7 @@ public:
 
                         int thr = meJumpSnd.me()->nitroAmount > EPS ? -30 : -30;
 
-                        if (hasShot && (myCollisionVel >= 0 || /*isAttacker && meJumpSnd.ball.z > 0 ||*/ !isAttacker && meJumpSnd.ball.z < thr)
+                        if (hasShot && (myCollisionVel >= 0 || !isAttacker && meJumpSnd.ball.z < thr)
                             || !hasShot && k == jumpMaxTicks && rcK != -1 && meJumpSnd.me()->z > -10) {
                             OP_START(KW);
 
@@ -391,15 +391,13 @@ public:
                                     touchFloorCount++;
                                 }
 
-                                //passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 if (w > 30) {
                                     auto passTar1 = forward->_y(0) + (forward->id == myId ? Helper::goalDir(*forward, 7) + Point(0, 4, 0) : Helper::goalDir(*forward, 9) + Point(0, 10, 0));
                                     updMin(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
 
-                                auto calcPenalty = counterPenalty(meJumpSnd);
-                                if (calcPenalty /*meJumpSnd.ball.z < 0*/) {
+                                if (counterPenalty(meJumpSnd)) {
                                     for (auto& o : meJumpSnd.opp) {
                                         if (o.z + 5 > meJumpSnd.ball.z) {
                                             auto dst2 = o.getDistanceTo2(meJumpSnd.ball);
@@ -446,19 +444,14 @@ public:
                             leafsCount++;
 
                             if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0) {
+                                cand = {env.tick, j, k, dir,
+                                        hasGoal, hasShot, positiveChange, positiveTicks, penalty,
+                                        shotTick - env.tick, minZ, hasOppTouch, goalHeight,
+                                        sqrt(passMinDist2), touchFloorCount};
 
-                                //if (meJumpSnd.hasGoal > 0 || meSnd.me()->z < ARENA_Z * 0.3 || std::abs(meSnd.me()->x) > ARENA_GOAL_WIDTH/2 * 1.3)
-                                //if (!isAttacker || meJumpSnd.hasGoal > 0 || tt.z < -20)
-                                {
-                                    cand = {env.tick, j, k, dir,
-                                            hasGoal, hasShot, positiveChange, positiveTicks, penalty,
-                                            shotTick - env.tick, minZ, hasOppTouch, goalHeight,
-                                            sqrt(passMinDist2), touchFloorCount};
-
-                                    if (sel.j == -1 || sel < cand) {
-                                        sel = cand;
-                                        firstAction = j == 0 ? firstKAction : firstJAction;
-                                    }
+                                if (sel.j == -1 || sel < cand) {
+                                    sel = cand;
+                                    firstAction = j == 0 ? firstKAction : firstJAction;
                                 }
                             }
 
