@@ -23,7 +23,7 @@ struct Sandbox {
     std::vector<ARobot> my, opp;
     std::vector<ANitroPack> nitroPacks;
     int tick = 0, roundTick = 0;
-    int meId = 0;
+    int meIdx = 0;
 
     RandomGenerator rnd;
     bool stopOnGoal = true;
@@ -42,10 +42,13 @@ struct Sandbox {
     Sandbox() {
     }
 
-    Sandbox(const model::Game& game, const model::Rules& rules, int meId) : meId(meId) {
+    Sandbox(const model::Game& game, const model::Rules& rules, int meId) {
         tick = game.current_tick;
         for (auto& r : game.robots) {
             if (r.is_teammate) {
+                if (r.id == meId) {
+                    meIdx = my.size();
+                }
                 my.emplace_back(r);
             } else {
                 opp.emplace_back(r);
@@ -60,17 +63,13 @@ struct Sandbox {
     }
 
     ARobot* me() {
-        for (auto& x : my)
-            if (x.id == meId)
-                return &x;
-        return nullptr;
-    }
-
-    ARobot* teammate1() {
-        for (auto& x : my)
-            if (x.id != meId)
-                return &x;
-        return nullptr;
+#ifdef LOCAL
+        if (my.size() <= meIdx) {
+            std::cerr << "Sandbox::me() illegal call" << std::endl;
+            exit(1);
+        }
+#endif
+        return &my[meIdx];
     }
 
     ARobot* robot(int id) {
@@ -694,11 +693,32 @@ struct Sandbox {
         }
     }
 
+    void clearMyRobots() {
+        my.clear();
+    }
+
+    void clearOppRobots() {
+        opp.clear();
+    }
+
+    void clearMe() {
+#ifdef LOCAL
+        if (my.size() <= meIdx) {
+            std::cerr << "Sandbox::clearMe() illegal call" << std::endl;
+            exit(1);
+        }
+#endif
+        my.erase(my.begin() + meIdx);
+    }
+
     void clearRobots(bool keepMe = false) {
         if (keepMe) {
-            for (int i = (int) my.size() - 1; i >= 0; i--)
-                if (my[i].id != meId)
+            for (int i = (int) my.size() - 1; i >= 0; i--) {
+                if (i != meIdx) {
                     my.erase(my.begin() + i);
+                }
+            }
+            meIdx = 0;
         } else {
             my.clear();
         }

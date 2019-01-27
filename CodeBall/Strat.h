@@ -162,7 +162,7 @@ public:
 
         std::vector<Direction> dirs;
         Sandbox ballSnd = env;
-        ballSnd.my.clear();
+        ballSnd.clearMyRobots();
 
         if (prevMetric.count(myId)) {
             dirs.push_back(prevMetric[myId].dir);
@@ -660,7 +660,7 @@ public:
 
     int selectGk() {
         auto snd = env;
-        snd.opp.clear();
+        snd.clearOppRobots();
         std::vector<std::tuple<int, double, int>> gotcha(7, {INT_MAX, 100.0, INT_MAX});
         for (auto& x : snd.my) {
             std::get<1>(gotcha[x.id]) = x.z;
@@ -787,9 +787,7 @@ public:
 //            }
 //        }
 
-        for (int i = (int) snd.my.size() - 1; i >= 0; i--)
-            if (snd.my[i].id == me.id)
-                snd.my.erase(snd.my.begin() + i);
+        snd.clearMe();
 
         std::optional<AAction> firstAction, secondAction;
 

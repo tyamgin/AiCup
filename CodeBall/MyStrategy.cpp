@@ -92,10 +92,10 @@ MyStrategy::MyStrategy() {
     if (flushed) {
         return;
     }
-    cout << ">>> Ваша реклама в STDOUT <<<" << endl;
-    cerr << ">>> Ваша реклама в STDERR <<<" << endl
-         << "email: tyamgin@mail.ru" << endl
-         << "tg: @tyamgin" << endl;
+//    cout << ">>> Ваша реклама в STDOUT <<<" << endl;
+//    cerr << ">>> Ваша реклама в STDERR <<<" << endl
+//         << "email: tyamgin@mail.ru" << endl
+//         << "tg: @tyamgin" << endl;
 
     flushed = true;
 }
