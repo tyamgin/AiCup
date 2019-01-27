@@ -89,6 +89,7 @@ public:
         double goalHeight = 0;
         double passMinDist = 0;
         int touchFloorCount = 0;
+        bool qwe = false;
 
         double getHeightAdd() const {
             if (hasGoal) {
@@ -269,16 +270,20 @@ public:
                     Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                 }
 
-                if (meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 12)) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
+                if (meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 14)) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
                     OP_START(K);
 
                     const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0;
 
+                    bool qwe = false;
+
                     int k;
 
                     int rcK = -1;
+
                     for (k = 0; k <= jumpMaxTicks; k++) {
-                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 7)) {
+                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 9)) {
+                            qwe = true;
                             break;
                         }
 
@@ -444,7 +449,7 @@ public:
                                 cand = {env.tick, j, k, dir,
                                         hasGoal, hasShot, positiveChange, positiveTicks, penalty,
                                         shotTick - env.tick, minZ, hasOppTouch, goalHeight,
-                                        sqrt(passMinDist2), touchFloorCount};
+                                        sqrt(passMinDist2), touchFloorCount, qwe};
 
                                 if (sel.j == -1 || sel < cand) {
                                     sel = cand;
@@ -496,6 +501,9 @@ public:
                 }
             }
             auto ret = !hasTeammateShot;
+            if (sel.qwe) {
+                std::cout << "AAAAAAA\n";
+            }
 
             if (drawMetric == nullptr) {
                 Logger::instance()->corrXYZStat[0][sel.dir.correction.fx]++;
