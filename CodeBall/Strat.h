@@ -208,7 +208,7 @@ public:
         }
 
         for (auto i = 0; i <= 54 && ballSnd.hasGoal == 0; i++) {
-            if (i % 6 == 0 || i <= 6) {
+            if (i % 6 == 0 || i <= 1) {
                 dirs.push_back({ballSnd.ball - *env.me(), 1});
             }
 
@@ -274,7 +274,7 @@ public:
                 if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 12) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
                     OP_START(K);
 
-                    const int jumpMaxTicks = 20 + (meJumpSnd.me()->nitroAmount > EPS) * 0;
+                    const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * 0;
 
                     int k;
 
@@ -1006,7 +1006,7 @@ public:
                     }
                     if (firstAction) {
                         action = firstAction.value();
-                    } else if (ball.z > -ARENA_Z + 10 && (!firstToBall || firstToBall.value().isTeammate || Sandbox::_ballsCache[20].z > 15) && tryTakeNitro(is_attacker, action)) {
+                    } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(is_attacker, action)) {
                         Visualizer::addText("Go to nitro");
                     } else {
                         action = goToGoalCenterStrat(env);
