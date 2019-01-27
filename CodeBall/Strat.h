@@ -274,7 +274,7 @@ public:
                 if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 12) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
                     OP_START(K);
 
-                    const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * 0;
+                    const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0;
 
                     int k;
 
@@ -327,8 +327,8 @@ public:
                             double passMinDist2 = 10000;
 
                             meJumpSnd = meSnd;
-                            ARobot* fw = meJumpSnd.my[0].z > env.my[1].z ? &meJumpSnd.my[0] : &meJumpSnd.my[1];
-                            fw->action = AAction(Helper::maxVelocityTo(*fw, oppGoal));
+                            ARobot* forward = meJumpSnd.my[0].z > env.my[1].z ? &meJumpSnd.my[0] : &meJumpSnd.my[1];
+                            forward->action = AAction(Helper::maxVelocityTo(*forward, oppGoal));
                             meJumpSnd.me()->action = jmpAction;
                             double minZ = meJumpSnd.ball.z;
 
@@ -341,7 +341,7 @@ public:
                             }
                             // TODO: что если коллизии после пересчёта не будет?
 
-                            fw->action = AAction(Helper::maxVelocityTo(*fw, oppGoal));
+                            forward->action = AAction(Helper::maxVelocityTo(*forward, oppGoal));
 
                             int shotTick = meJumpSnd.tick;
 
@@ -393,7 +393,7 @@ public:
 
                                 //passMinDist2 = std::min(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 if (w > 30) {
-                                    auto passTar1 = fw->_y(0) + (fw->id == myId ? Helper::goalDir(*fw, 7) + Point(0, 4, 0) : Helper::goalDir(*fw, 9) + Point(0, 10, 0));
+                                    auto passTar1 = forward->_y(0) + (forward->id == myId ? Helper::goalDir(*forward, 7) + Point(0, 4, 0) : Helper::goalDir(*forward, 9) + Point(0, 10, 0));
                                     updMin(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
@@ -830,11 +830,7 @@ public:
             for (auto& opp : env.opp) {
                 if (opp.nitroAmount < prevEnv.robot(opp.id)->nitroAmount) {
                     GameInfo::usedNitro[opp.id] = true;
-                    for (int i = 0; i < 12; i++) {
-                        double ang = 2 * M_PI / 12 * i;
-                        Point pt(cos(ang), 0, sin(ang));
-                        Visualizer::useNitro(opp);
-                    }
+                    Visualizer::useNitro(opp);
                 }
             }
 
@@ -894,11 +890,9 @@ public:
             return;
         }
         if (is_attacker && tryShotOutOrGoal(is_attacker, action, metric)) {
-            //if (metric.hasGoal) {
-                std::string msg = metric.toString();
-                Visualizer::addText(msg);
-                return;
-            //}
+            std::string msg = metric.toString();
+            Visualizer::addText(msg);
+            return;
         }
 
         if (is_attacker) {
