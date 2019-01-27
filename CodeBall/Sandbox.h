@@ -97,7 +97,7 @@ struct Sandbox {
     }
 
 
-    void collide_with_arena(ABall& e) {
+    static void collide_with_arena(ABall& e) {
         Point normal;
         double penetration;
         if (dan_to_arena_new(e, penetration, normal)) {
@@ -109,7 +109,7 @@ struct Sandbox {
         }
     }
 
-    bool collide_with_arena(ARobot& e, Point& normal) {
+    static bool collide_with_arena(ARobot& e, Point& normal) {
         double penetration;
         if (dan_to_arena_new(e, penetration, normal)) {
             e += normal * penetration;
@@ -122,7 +122,7 @@ struct Sandbox {
         return false;
     }
 
-    bool dan_to_arena_quarter2(const Unit& point, double& distance, Point& normal) {
+    static bool dan_to_arena_quarter2(const Unit& point, double& distance, Point& normal) {
 
 #if M_LOG_DANS
 #define LOG_DAN(id) Logger::instance()->dans[id]++;
@@ -431,12 +431,11 @@ struct Sandbox {
 #undef DAN_TO_CYLINDER_Y_OUTER
     }
 
-
-    bool dan_to_arena_old(Unit point, double& penetration, Point& normal) {
+    static bool dan_to_arena_old(Unit point, double& penetration, Point& normal) {
         return false;
     }
 
-    bool dan_to_arena_new(Unit point, double& penetration, Point& normal) {
+    static bool dan_to_arena_new(Unit point, double& penetration, Point& normal) {
         auto negate_x = point.x < 0;
         auto negate_z = point.z < 0;
         if (negate_x)
@@ -458,7 +457,7 @@ struct Sandbox {
         return true;
     }
 
-    bool dan_to_arena(Unit point, double& penetration, Point& normal) {
+    static bool dan_to_arena(Unit point, double& penetration, Point& normal) {
         Point no, nn;
         double po, pn;
         auto r_old = dan_to_arena_old(point, po, no);
@@ -689,8 +688,10 @@ struct Sandbox {
             return;
         }
 
-        if (abs(ball.z) > ARENA_Z + BALL_RADIUS) {
-            hasGoal = ball.z < 0 ? -1 : 1;
+        if (ball.z > ARENA_Z + BALL_RADIUS) {
+            hasGoal = 1;
+        } else if (ball.z < -ARENA_Z - BALL_RADIUS) {
+            hasGoal = -1;
         }
     }
 
@@ -726,9 +727,8 @@ struct Sandbox {
         opp.clear();
     }
 
-    void _oppGkStrat() {
-        auto gk = opp[0].z > opp[1].z ? &opp[0] : &opp[1];
-        if (!gk->touch) {
+    void _oppGkStrat(ARobot& gk) {
+        if (!gk.touch) {
             return;
         }
 
@@ -745,31 +745,37 @@ struct Sandbox {
         }
         target_pos.z = ARENA_Z + 1;
 
-        auto delta = Point(target_pos.x - gk->x, 0.0, target_pos.z - gk->z);
+        auto delta = Point(target_pos.x - gk.x, 0.0, target_pos.z - gk.z);
         auto deltaLength2 = delta.length2();
         const double dd = SQR(4);
         double speed;
 
-        if (tt > 0 && gk->z > ARENA_Z - 2 && std::abs(gk->x) < ARENA_GOAL_WIDTH/2 - 1)// чтобы не сильно быстро шататься
+        if (tt > 0 && gk.z > ARENA_Z - 2 && std::abs(gk.x) < ARENA_GOAL_WIDTH/2 - 1)// чтобы не сильно быстро шататься
             speed = deltaLength2 / SQR(tt);
         else
             speed = deltaLength2 > dd ? ROBOT_MAX_GROUND_SPEED : ROBOT_MAX_GROUND_SPEED / dd * deltaLength2;
 
-        gk->action.targetVelocity = delta.take(speed);
+        gk.action.targetVelocity = delta.take(speed);
 
-        if (gk->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
-            gk->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+        if (gk.getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
+            gk.action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
         }
     }
 
-    void _oppCounterStrat() {
-        auto ct = opp[0].z < opp[1].z ? &opp[0] : &opp[1];
-        if (oppCounterStrat < 3) {
-            ct->action.targetVelocity = Helper::maxVelocityTo(*ct, ball);
-        }
+    void _oppCounterStrat(int exceptId) {
+        for (auto& ct : opp) {
+            if (ct.id == exceptId)
+                continue;
+//            if (!ct.touch) // TODO: try this
+//                continue;
 
-        if (oppCounterStrat > 1 && ct->getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
-            ct->action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+            if (oppCounterStrat < 3) {
+                ct.action.targetVelocity = Helper::maxVelocityTo(ct, ball);
+            }
+
+            if (oppCounterStrat > 1 && ct.getDistanceTo2(ball) < SQR(ROBOT_RADIUS + BALL_RADIUS + 4)) {
+                ct.action.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
+            }
         }
     }
 
@@ -793,12 +799,19 @@ struct Sandbox {
             }
         }
 
-        if (oppGkStrat) {
-            _oppGkStrat();
-        }
+        if (!opp.empty()) {
+            if (oppGkStrat || oppCounterStrat) {
 
-        if (oppCounterStrat) {
-            _oppCounterStrat();
+                size_t gkIdx = Helper::whichMaxZ(opp);
+
+                if (oppGkStrat) {
+                    _oppGkStrat(opp[gkIdx]);
+                }
+
+                if (oppCounterStrat) {
+                    _oppCounterStrat(opp[gkIdx].id);
+                }
+            }
         }
     }
 

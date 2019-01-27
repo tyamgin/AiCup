@@ -27,6 +27,16 @@ public:
         static const Point oppGoal = Point(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
         return (oppGoal - pt)._y(0).take(len);
     }
+
+    static size_t whichMaxZ(const std::vector<ARobot>& arr) {
+        size_t whichMaxZ = 0;
+        for (size_t i = 1; i < arr.size(); i++) {
+            if (arr[i].z > arr[whichMaxZ].z) {
+                whichMaxZ = i;
+            }
+        }
+        return whichMaxZ;
+    }
 };
 
 template<typename T>

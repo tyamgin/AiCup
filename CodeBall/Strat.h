@@ -171,13 +171,13 @@ public:
             dirs.push_back(prevMetric[myId].dir);
         }
 
-        std::vector<std::vector<double>> yCorrs = {
+        static const std::vector<std::vector<double>> yCorrs = {
                 {0.99, 0.995, 1.01, 1.03},
                 {1.02},
                 {0.95, 0.98},
                 {0.9, 1.05},
         };
-        std::vector<std::vector<double>> xCorrs = {
+        static const std::vector<std::vector<double>> xCorrs = {
                 {0.8, 0.9, 1.1, 1.2},
                 {0.99, 1.01},
                 {0.7, 1.3},
@@ -332,7 +332,7 @@ public:
                             double passMinDist2 = 10000;
 
                             meJumpSnd = meSnd;
-                            ARobot* forward = meJumpSnd.my[0].z > env.my[1].z ? &meJumpSnd.my[0] : &meJumpSnd.my[1];
+                            ARobot* forward = &meJumpSnd.my[Helper::whichMaxZ(meJumpSnd.my)];
                             forward->action = AAction(Helper::maxVelocityTo(*forward, oppGoal));
                             meJumpSnd.me()->action = jmpAction;
                             double minZ = meJumpSnd.ball.z;
