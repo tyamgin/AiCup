@@ -18,6 +18,9 @@
 #include "Logger.h"
 #include "Helper.h"
 
+#define M_COLL_MASK(id) (1ull << uint64_t((id) - 1))
+#define M_COLL_MASK2(id1, id2) (1ull << uint64_t(((id1) - 1) * 6 + (id2) - 1))
+
 struct Sandbox {
     ABall ball;
     std::vector<ARobot> my, opp;
@@ -64,7 +67,7 @@ struct Sandbox {
 
     ARobot* me() {
 #ifdef LOCAL
-        if (my.size() <= meIdx) {
+        if ((int) my.size() <= meIdx) {
             std::cerr << "Sandbox::me() illegal call" << std::endl;
             exit(1);
         }
@@ -483,13 +486,8 @@ struct Sandbox {
         return r_new;
     }
 
-    struct CollisionInfo {
-        int id1;
-        int id2;
-        Point velocity;
-    };
-
-    std::vector<CollisionInfo> robotBallCollisions, robotsCollisions, nitroPacksCollected;
+    static uint64_t oppMask, myOppMask[7], myAnyMask[7];
+    uint64_t robotBallCollisions = 0, robotBallPositiveCollisions = 0, robotsCollisions = 0, nitroPacksCollected = 0;
 
     template<typename T>
     void collide_entities(ARobot& a, T& b) {
@@ -553,10 +551,13 @@ struct Sandbox {
         }
 
         if constexpr (std::is_same<T, ABall>::value) {
-            robotBallCollisions.push_back({a.id, -1, b.velocity});
+            robotBallCollisions |= M_COLL_MASK(a.id);
+            if (b.velocity.z >= 0) {
+                robotBallPositiveCollisions |= M_COLL_MASK(a.id);
+            }
         }
         if constexpr (std::is_same<T, ARobot>::value) {
-            robotsCollisions.push_back({a.id, b.id, b.velocity});
+            robotsCollisions |= M_COLL_MASK2(a.id, b.id);
         }
     }
 
@@ -661,7 +662,7 @@ struct Sandbox {
             if (pack && pack->respawnTicks == 0) {
                 robot->nitroAmount = MAX_NITRO_AMOUNT;
                 pack->respawnTicks = NITRO_PACK_RESPAWN_TICKS;
-                nitroPacksCollected.push_back({robot->id, pack->id});
+                nitroPacksCollected |= M_COLL_MASK2(robot->id, pack->id);
             }
         }
     }
@@ -703,7 +704,7 @@ struct Sandbox {
 
     void clearMe() {
 #ifdef LOCAL
-        if (my.size() <= meIdx) {
+        if ((int) my.size() <= meIdx) {
             std::cerr << "Sandbox::clearMe() illegal call" << std::endl;
             exit(1);
         }
@@ -817,9 +818,10 @@ struct Sandbox {
 #endif
 
         hasRandomCollision = false;
-        robotBallCollisions.clear();
-        robotsCollisions.clear();
-        nitroPacksCollected.clear();
+        robotBallCollisions = 0;
+        robotBallPositiveCollisions = 0;
+        robotsCollisions  = 0;
+        nitroPacksCollected = 0;
         constexpr const auto deltaTimeTick = 1.0 / TICKS_PER_SECOND;
         if (tick < GameInfo::maxTickCount && needDoTick()) {
             double deltaTime = deltaTimeTick / microticksPerTick;
@@ -839,7 +841,7 @@ struct Sandbox {
                 }
             }
         }
-        if (!robotBallCollisions.empty()) {
+        if (robotBallCollisions) {
             _ballsCacheValid = false;
         }
         if (microticksPerTick < MICROTICKS_PER_TICK && _ballsCacheValid && _ballsCacheIterator < (int) _ballsCache.size()) {

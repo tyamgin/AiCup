@@ -14,10 +14,29 @@ Strat strat;
 int waitForTick = -1;
 
 void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
-    GameInfo::maxTickCount = rules.max_tick_count;
-    GameInfo::isNitro = !game.nitro_packs.empty();
-    GameInfo::isFinal = rules.team_size > 2;
-    GameInfo::teamSize = rules.team_size;
+    if (game.current_tick == 0) {
+        GameInfo::maxTickCount = rules.max_tick_count;
+        GameInfo::isNitro = !game.nitro_packs.empty();
+        GameInfo::isFinal = rules.team_size > 2;
+        GameInfo::teamSize = rules.team_size;
+        Sandbox::oppMask = 0;
+        for (auto&x : game.robots) {
+            if (!x.is_teammate) {
+                Sandbox::oppMask |= M_COLL_MASK(x.id);
+            }
+            if (x.is_teammate) {
+                Sandbox::myOppMask[x.id] = 0;
+                Sandbox::myAnyMask[x.id] = 0;
+                for (auto& y : game.robots) {
+                    if (!y.is_teammate) {
+                        Sandbox::myOppMask[x.id] |= M_COLL_MASK2(x.id, y.id) | M_COLL_MASK2(y.id, x.id);
+                    }
+                    Sandbox::myAnyMask[x.id] |= M_COLL_MASK2(x.id, y.id) | M_COLL_MASK2(y.id, x.id);
+                }
+            }
+        }
+    }
+
     for (auto& robot : game.robots) {
         GameInfo::isTeammateById[robot.id] = robot.is_teammate;
     }

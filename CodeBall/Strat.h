@@ -153,6 +153,8 @@ public:
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
+//        if (isAttacker && env.me()->z > -ARENA_Z / 2 && env.me()->z > env.ball.z + 3)
+//            return false;
 
         int leafsCount = 0;
 
@@ -207,6 +209,7 @@ public:
             }
         }
 
+        //const int startI = env.me()->getDistanceTo(env.ball) - env.me()->radius - BALL_RADIUS
         for (auto i = 0; i <= 54 && ballSnd.hasGoal == 0; i++) {
             if (i % 6 == 0 || i <= 1) {
                 dirs.push_back({ballSnd.ball - *env.me(), 1});
@@ -226,12 +229,7 @@ public:
                 return false;
             }
 
-            for (auto& item : e.robotsCollisions) {
-                if (item.id1 == myId || item.id2 == myId) {
-                    return true;
-                }
-            }
-            return false;
+            return bool(e.robotsCollisions & Sandbox::myAnyMask[myId]);
         };
 
         auto counterPenalty = [isAttacker](Sandbox &e) {
@@ -271,7 +269,7 @@ public:
                     Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                 }
 
-                if (meSnd.me()->getDistanceTo(meSnd.ball) < BALL_RADIUS + ROBOT_MAX_RADIUS + 12) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
+                if (meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 12)) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
                     OP_START(K);
 
                     const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0;
@@ -280,6 +278,10 @@ public:
 
                     int rcK = -1;
                     for (k = 0; k <= jumpMaxTicks; k++) {
+                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 7)) {
+                            break;
+                        }
+
                         if (dir.toBallAfterJump && meJumpSnd.me()->nitroAmount > EPS) {
                             meJumpSnd.me()->action.vel(Helper::maxVelocityTo(*meJumpSnd.me(), meJumpSnd.ball));
                         }
@@ -299,28 +301,26 @@ public:
                             //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                         }
 
-                        double myCollisionVel = INT_MAX;
-                        for (auto& item : meJumpSnd.robotBallCollisions) {
-                            if (item.id1 == myId) {
-                                myCollisionVel = item.velocity.z;
-                                rcK = k;
-                            }
+                        bool hasShot = false;
+                        bool hasPositiveShot = false;
+                        if (meJumpSnd.robotBallCollisions & M_COLL_MASK(myId)) {
+                            hasShot = true;
+                            rcK = k;
                         }
-                        if (rcK == -1) {
-                            for (auto& item : meJumpSnd.robotsCollisions) {
-                                if (item.id1 == myId && !GameInfo::isTeammateById[item.id2] || item.id2 == myId && !GameInfo::isTeammateById[item.id1]) {
-                                    rcK = k;
-                                }
-                            }
+                        if (meJumpSnd.robotBallPositiveCollisions & M_COLL_MASK(myId)) {
+                            hasPositiveShot = true;
+                        }
+
+                        if (rcK == -1 && (meJumpSnd.robotsCollisions & Sandbox::myOppMask[myId])) {
+                            rcK = k;
                         }
 
                         double minCounterDist2 = 10000;
                         Point md1, md2;
-                        bool hasShot = myCollisionVel < INT_MAX;
 
                         int thr = meJumpSnd.me()->nitroAmount > EPS ? -30 : -30;
 
-                        if (hasShot && (myCollisionVel >= 0 || !isAttacker && meJumpSnd.ball.z < thr)
+                        if (hasShot && (hasPositiveShot || !isAttacker && meJumpSnd.ball.z < thr)
                             || !hasShot && k == jumpMaxTicks && rcK != -1 && meJumpSnd.me()->z > -10) {
                             OP_START(KW);
 
@@ -377,11 +377,8 @@ public:
                             for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
                                 auto prevBall = meJumpSnd.ball;
                                 meJumpSnd.doTick(1);
-                                for (auto& item : meJumpSnd.robotBallCollisions) {
-                                    if (!GameInfo::isTeammateById[item.id1]) {
-                                        hasOppTouch = true;
-                                    }
-                                }
+                                hasOppTouch |= Sandbox::oppMask & meJumpSnd.robotBallCollisions;
+
                                 updMin(minZ, meJumpSnd.ball.z);
                                 if (meJumpSnd.ball.z > prevBall.z) {
                                     positiveChange += meJumpSnd.ball.z - prevBall.z;
@@ -574,13 +571,10 @@ public:
                     if (!intersected) {
                         auto g = backSnd.getIntersectedNitroPack(*backSnd.me());
                         if (g) {
-                            for (auto &item : backSnd.nitroPacksCollected) {
-                                if (item.id1 == me->id && item.id2 == g->id) {
-                                    gotcha = true;
-                                    gotchaJ = j;
-                                    gotchaTm = backSnd.tick - env.tick;
-                                    break;
-                                }
+                            if (backSnd.nitroPacksCollected & M_COLL_MASK2(me->id, g->id)) {
+                                gotcha = true;
+                                gotchaJ = j;
+                                gotchaTm = backSnd.tick - env.tick;
                             }
                             intersected = true;
                         }
@@ -606,7 +600,7 @@ public:
                     firstIAction = act;
                 meSnd.doTick(1);
 
-                if (meSnd.nitroPacksCollected.size()) {
+                if (meSnd.nitroPacksCollected) {
                     break;//TODO
                 }
             }

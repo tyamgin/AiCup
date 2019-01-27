@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ts=$(date +%s)
-ts=555
+#ts=666
 
 rm local_runner/$ts.txt
 
@@ -14,6 +14,7 @@ rm local_runner/$ts.txt
     --seed $ts \
     --duration 3000 \
     --nitro true \
+    --team-size 2 \
     --noshow \
     &
 echo "LR started"

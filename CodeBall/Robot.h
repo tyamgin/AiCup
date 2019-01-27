@@ -8,12 +8,12 @@
 struct ARobot : public Unit {
     int id;
     //int playerId;
-    bool isTeammate;
     double nitroAmount;
-    bool touch;
     Point touchNormal;
     AAction action; // field for simulator
     double radius_change_speed = 0; // tmp field for simulator
+    bool isTeammate;
+    bool touch;
 
     ARobot() : Unit() {
         touch = false;
