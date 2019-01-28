@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ts=$(date +%s)
-#ts=666
+#ts=777
 
 rm local_runner/$ts.txt
 
@@ -20,6 +20,6 @@ rm local_runner/$ts.txt
 echo "LR started"
 sleep 1
 ./cmake-build-release/CodeBall 127.0.0.1 31002 0000000000000000 &
-./release/m54 127.0.0.1 31003 0000000000000000 > /dev/null
+./release/m53 127.0.0.1 31003 0000000000000000 > /dev/null
 
 cat local_runner/$ts.txt

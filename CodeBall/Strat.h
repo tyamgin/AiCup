@@ -154,7 +154,7 @@ public:
             return false;
         if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
-        if (isAttacker && env.me()->z > -ARENA_Z / 2 && env.me()->z > env.ball.z + 3 && env.ball.velocity.z < -2)
+        if (isAttacker && env.me()->z > -ARENA_Z / 2 && env.me()->z > env.ball.z + 3 && env.ball.velocity.z < -1)
             return false;
 
         int leafsCount = 0;
@@ -185,23 +185,27 @@ public:
                 {0.98, 1.02}
         };
 
+        bool skipOpt = GameInfo::isFinal && env.me()->id % 3 == env.tick % 3;
+
         if (!dirs.empty() && prevMetric[myId].tick >= env.tick - 1 && env.me()->isDetouched() && env.me()->nitroAmount > EPS) {
             auto prv = dirs[0];
             for (size_t yCorrsIdx = 0; yCorrsIdx < yCorrs.size(); yCorrsIdx++) {
-                if (yCorrsIdx == 0 || yCorrsIdx % yCorrs.size() == env.tick % yCorrs.size()) {
+                if (yCorrsIdx == 0 || (yCorrsIdx % yCorrs.size() == env.tick % yCorrs.size() && !skipOpt)) {
                     for (double fy : yCorrs[yCorrsIdx]) {
                         dirs.push_back({prv.dir._y(prv.dir.y * fy), prv.speedFactor, {1, fy, 1}});
                     }
                 }
             }
-            for (size_t xCorrsIdx = 0; xCorrsIdx < xCorrs.size(); xCorrsIdx++) {
-                if (xCorrsIdx % xCorrs.size() == env.tick % xCorrs.size()) {
-                    for (double fx : xCorrs[xCorrsIdx]) {
-                        dirs.push_back({prv.dir._x(prv.dir.x * fx), prv.speedFactor, {fx, 1, 1}});
+            if (!skipOpt) {
+                for (size_t xCorrsIdx = 0; xCorrsIdx < xCorrs.size(); xCorrsIdx++) {
+                    if (xCorrsIdx % xCorrs.size() == env.tick % xCorrs.size()) {
+                        for (double fx : xCorrs[xCorrsIdx]) {
+                            dirs.push_back({prv.dir._x(prv.dir.x * fx), prv.speedFactor, {fx, 1, 1}});
+                        }
                     }
                 }
             }
-        } else if (true) {
+        } else if (!skipOpt) {
             for (int i = 0; i < 48; i++) {
                 if (i % 6 == env.tick % 6) {
                     auto ang = 2 * M_PI / 48 * i;
@@ -210,13 +214,17 @@ public:
             }
         }
 
-        //const int startI = env.me()->getDistanceTo(env.ball) - env.me()->radius - BALL_RADIUS
-        for (auto i = 0; i <= 54 && ballSnd.hasGoal == 0; i++) {
-            if (i % 6 == 0 || i <= 1) {
-                dirs.push_back({ballSnd.ball - *env.me(), 1});
-            }
+        if (!skipOpt) {
+            const int startI = env.me()->getDistanceTo(env.ball) - env.me()->radius - BALL_RADIUS > 14 ? 20 : 0;
+            for (auto i = 0; i <= 54 && ballSnd.hasGoal == 0; i++) {
+                if (i >= startI) {
+                    if (i % 6 == 0 || i <= 1) {
+                        dirs.push_back({ballSnd.ball - *env.me(), 1});
+                    }
+                }
 
-            ballSnd.doTick(5);
+                ballSnd.doTick(5);
+            }
         }
 
         if (drawMetric != nullptr) {
