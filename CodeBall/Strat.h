@@ -89,7 +89,7 @@ public:
         double goalHeight = 0;
         double passMinDist = 0;
         int touchFloorCount = 0;
-        bool qwe = false;
+        bool _debugFalsePositive = false;
 
         double getHeightAdd() const {
             if (hasGoal) {
@@ -187,7 +187,7 @@ public:
                 {0.98, 1.02}
         };
 
-        bool skipOpt = false;//GameInfo::isFinal && env.me()->id % 3 == env.tick % 3;
+        bool skipOpt = GameInfo::isFinal && env.me()->id % 3 == env.tick % 3;
 
         if (!dirs.empty() && prevMetric[myId].tick >= env.tick - 1 && env.me()->isDetouched() && env.me()->nitroAmount > EPS) {
             auto prv = dirs[0];
@@ -262,30 +262,29 @@ public:
 
             bool isInGoal = false;
 
+            const int forKMaxDist = GameInfo::isFinal ? 12 : 14;
             int wildcard = 0;
-            for (auto j = 0; j <= 60; j++) {
-                Sandbox meJumpSnd = meSnd;
+            for (auto j = 0; j + wildcard <= 60; j++) {
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
-                auto jmpAction = mvAction;
-                jmpAction.jump();
-                jmpAction.nitro();
 
-                AAction firstKAction;
-
-                meJumpSnd.me()->action = jmpAction;
-
-                if (drawMetric && j <= drawMetric->j) {
-                    Visualizer::addSphere(*meJumpSnd.me(), rgba(0, 0.8, 0, al));
-                    Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
-                    Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
-                    Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
-                }
-
-                const int pp = GameInfo::isFinal ? 12 : 14;
-                const int gg = GameInfo::isFinal ? 8 : 9;
-
-                if (meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + pp)) {// && (!isInGoal || meSnd.me()->nitroAmount < EPS)) {
+                if (wildcard == 0 && meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + forKMaxDist)) {
                     OP_START(K);
+
+                    Sandbox meJumpSnd = meSnd;
+                    auto jmpAction = mvAction;
+                    jmpAction.jump();
+                    jmpAction.nitro();
+
+                    AAction firstKAction;
+
+                    meJumpSnd.me()->action = jmpAction;
+
+                    if (drawMetric && j <= drawMetric->j) {
+                        Visualizer::addSphere(*meJumpSnd.me(), rgba(0, 0.8, 0, al));
+                        Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
+                        Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
+                        Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
+                    }
 
                     const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0 - GameInfo::isFinal * 2;
 
@@ -296,16 +295,15 @@ public:
                     double minDist2ToBall = meSnd.me()->getDistanceTo2(meSnd.ball);
                     bool hasShot = false;
                     for (k = 0; k <= jumpMaxTicks && !hasShot; k++) {
-                        if (k == 0) {
-                            if (wildcard > 0) {
-                                wildCardCounts++;
-                                qwe = true;
-                                break;//
-                            }
-                        }
+//                        if (k == 0) {
+//                            if (wildcard > 0) {
+//                                wildCardCounts++;
+//                                qwe = true;
+//                            }
+//                        }
 
-//                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + gg)) {
-//                            qwe = true;
+//                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 9)) {
+//                            //qwe = true;
 //                            break;
 //                        }
 
@@ -490,22 +488,13 @@ public:
 
                     if (hasShot) {
                         wildcard = 0;
-                    } else if (k >= jumpMaxTicks) {
-                        for (int s = 10; s >= 3; s--) {
+                    } else if (k >= jumpMaxTicks) { // TODO: check robots collisions
+                        for (int s = 10; s >= 2; s--) {
                             if (minDist2ToBall > SQR(s + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
-                                wildcard = s - 1;
+                                wildcard = s == 2 ? 1 : 2 * (s - 2);
                                 break;
                             }
                         }
-//                        if (minDist2ToBall > SQR(9 + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
-//                            wildcard = 7;
-//                        } else if (minDist2ToBall > SQR(7 + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
-//                            wildcard = 5;
-//                        } else if (minDist2ToBall > SQR(6 + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
-//                            wildcard = 4;
-//                        } else {
-//                            wildcard = 0;
-//                        }
                     }
 
                     OP_END(K);
@@ -548,9 +537,9 @@ public:
                 }
             }
             auto ret = !hasTeammateShot;
-            if (sel.qwe) {
-                std::cout << "AAAAAAA\n";
-            }
+//            if (sel._debugFalsePositive) {
+//                std::cout << "AAAAAAA\n";
+//            }
 
             if (drawMetric == nullptr) {
                 Logger::instance()->corrXYZStat[0][sel.dir.correction.fx]++;
