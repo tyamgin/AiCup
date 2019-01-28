@@ -82,6 +82,12 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
 
     TIMER_START();
 
+#ifndef LOCAL
+    if (first && env.tick % 500 == 0) {
+        std::cout << env.tick << " ";
+    }
+#endif
+
     strat.act(a, first);
     action.use_nitro = a.useNitro;
     action.jump_speed = a.jumpSpeed;

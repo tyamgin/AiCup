@@ -821,9 +821,14 @@ struct Sandbox {
         oppStrat();
 
         bool firstMicrotickSeparate = false;
-        for (auto x : robots())
-            firstMicrotickSeparate |= std::abs(x->radius - radiusByJumpSpeed(x->action.jumpSpeed)) > EPS;
-        firstMicrotickSeparate &= microticksPerTick < MICROTICKS_PER_TICK;
+        if (microticksPerTick < MICROTICKS_PER_TICK) {
+            for (auto& x : my) {
+                if (std::abs(x.radius - radiusByJumpSpeed(x.action.jumpSpeed)) > EPS) {
+                    firstMicrotickSeparate = true;
+                    break;
+                }
+            }
+        }
 
 #if M_TIME_LOGS
         Logger::instance()->sandboxTicksCount++;
