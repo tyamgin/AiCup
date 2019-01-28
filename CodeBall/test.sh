@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 ts=$(date +%s)
-ts=777
+#ts=777
 
 rm local_runner/$ts.txt
 
@@ -12,7 +12,7 @@ rm local_runner/$ts.txt
     --p2-name 31003 \
     --results-file $ts.txt \
     --seed $ts \
-    --duration 5000 \
+    --duration 500000 \
     --nitro true \
     --team-size 2 \
     --noshow \
