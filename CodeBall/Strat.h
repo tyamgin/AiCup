@@ -151,6 +151,8 @@ public:
         //
         // Можно убрать из симы неактивных игроков (например, свой вратать после удара)
         //
+        // First to goal: учитывать tryShotOutOrGoal
+        //
 
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
@@ -267,6 +269,13 @@ public:
             for (auto j = 0; j + wildcard <= 60; j++) {
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
 
+                if (drawMetric && j <= drawMetric->j) {
+                    Visualizer::addSphere(*meSnd.me(), rgba(0, 0.8, 0, al));
+                    Visualizer::addSphere(meSnd.ball, rgba(0.4, 0.1, 0.4, al));
+                    Visualizer::addSphere(meSnd.opp[0], rgba(1, 0, 0, al * 0.5));
+                    Visualizer::addSphere(meSnd.opp[1], rgba(1, 0, 0, al * 0.5));
+                }
+
                 if (wildcard == 0 && meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + forKMaxDist)) {
                     OP_START(K);
 
@@ -278,13 +287,6 @@ public:
                     AAction firstKAction;
 
                     meJumpSnd.me()->action = jmpAction;
-
-                    if (drawMetric && j <= drawMetric->j) {
-                        Visualizer::addSphere(*meJumpSnd.me(), rgba(0, 0.8, 0, al));
-                        Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
-                        Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
-                        Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
-                    }
 
                     const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0 - GameInfo::isFinal * 2;
 
@@ -445,10 +447,7 @@ public:
 
                             double penalty = sqrt(minCounterDist2) - ROBOT_RADIUS - BALL_RADIUS;
                             if (drawMetric && j == drawMetric->j && k <= drawMetric->k) {
-                                Visualizer::addLine(md1, md2, 20, rgba(0, 0, 0));
-                                for (int i = 0; i <= 24; i++) {
-                                    Visualizer::addSphere(md1 + (md2 - md1) / 24 * i, 0.2, rgba(0, 0, 0));
-                                }
+                                Visualizer::addChain(md1, md2);
                             }
 
                             double goalHeight = meJumpSnd.ball.y;
@@ -562,14 +561,14 @@ public:
 
 
 
-    bool tryTakeNitro(bool isAttacker, AAction& resAction) {
+    bool tryTakeNitro(bool isAttacker, AAction& resAction, ANitroPack& resNitroPack) {
         OP_START(TAKE_NITRO);
-        auto ret = _tryTakeNitro(isAttacker, resAction);
+        auto ret = _tryTakeNitro(isAttacker, resAction, resNitroPack);
         OP_END(TAKE_NITRO);
         return ret;
     }
 
-    bool _tryTakeNitro(bool isAttacker, AAction& resAction) {
+    bool _tryTakeNitro(bool isAttacker, AAction& resAction, ANitroPack& resNitroPack) {
         //return false;
 
         if (!GameInfo::isNitro) {
@@ -652,6 +651,7 @@ public:
             if (minDistGotcha) {
                 if (selTm < minTm) {
                     resAction = selAction;
+                    resNitroPack = pack;
                     minTm = selTm;
                 }
             }
@@ -758,6 +758,14 @@ public:
         Sandbox ballSnd = env;
         ballSnd.stopOnGoal = GameInfo::isNitro;
         std::vector<int> minTime(7, INT_MAX);
+        // учитываем результаты tryShotOutOrGoal
+        for (const auto& item : prevMetric) {
+            auto& id = item.first;
+            auto& metric = item.second;
+            if (metric.tick >= env.tick - 1) {
+                minTime[id] = metric.timeToShot;
+            }
+        }
 
         double ballHeight = BALL_RADIUS + ROBOT_MAX_RADIUS*5;
 //        if (GameInfo::isNitro && ballSnd.me()->z + 2 < ballSnd.ball.z) {
@@ -806,7 +814,12 @@ public:
     Point oppGoal = Point(0, 0, ARENA_Z + ARENA_GOAL_DEPTH / 2);
     Point myGoal = Point(0, 0, -(ARENA_Z + ARENA_GOAL_DEPTH / 2));
 
-    std::pair<std::optional<AAction>, std::optional<AAction>> moveToBallUsual(bool isAttacker) {
+    struct TargetItem {
+        AAction action;
+        Point target;
+    };
+
+    std::pair<std::optional<TargetItem>, std::optional<TargetItem>> moveToBallUsual(bool isAttacker) {
         Sandbox snd = env;
         snd.stopOnGoal = false;
         auto me = *snd.me();
@@ -820,7 +833,7 @@ public:
 
         snd.clearMe();
 
-        std::optional<AAction> firstAction, secondAction;
+        std::optional<TargetItem> firstAction, secondAction;
 
         for (auto i = 1; i <= 12 * TICKS_PER_SECOND; i++) {
             snd.doTick(1);
@@ -837,11 +850,10 @@ public:
             act.targetVelocity = target_velocity;
 
             if (need_speed <= ROBOT_MAX_GROUND_SPEED) {
-                firstAction = act;
-                Visualizer::addLine(me, me + delta_pos, 1, rgba(0, 0, 1));
+                firstAction = {act, me + delta_pos};
                 break;
             }
-            secondAction = act;
+            secondAction = {act, me + delta_pos};
         }
         return {firstAction, secondAction};
     }
@@ -902,12 +914,13 @@ public:
         std::optional<ARobot> firstToBall, firstToBallMy;
         std::tie(firstToBall, firstToBallMy) = evalToBall();
         if (firstToBall) {
-            Visualizer::addLine(firstToBall.value(), firstToBall.value()._y(0) + Point(0, ARENA_HEIGHT, 0), 3, rgba(0, 0, 0));
+            Visualizer::markFirstToBall(firstToBall.value());
         }
 
         bool is_attacker = selectGk() != me.id;
         Metric metric;
-        std::optional<AAction> firstAction, secondAction;
+        std::optional<TargetItem> firstAction, secondAction;
+        ANitroPack nitroPackSelected;
 
 //        if (is_attacker) return;
 
@@ -955,17 +968,24 @@ public:
                 std::tie(firstAction, secondAction) = moveToBallUsual(is_attacker);
 
                 if (firstAction) {
-                    action = firstAction.value();
+                    action = firstAction.value().action;
+                    Visualizer::addTargetLines(me, firstAction.value().target);
                 } else if (secondAction) {
-                    action = secondAction.value();
+                    action = secondAction.value().action;
+                    Visualizer::addTargetLines(me, secondAction.value().target);
                 } else {
-                    if (ball.z > -6)
-                        action.vel(Helper::maxVelocityTo(me, Point(0, 0, 14)));
-                    else
+                    if (ball.z > -6) {
+                        Point target(0, 0, 14);
+                        action.vel(Helper::maxVelocityTo(me, target));
+                        Visualizer::addTargetLines(me, target);
+                    } else {
                         is_attacker = false;
+                    }
                 }
             } else {
-                action.targetVelocity = Helper::maxVelocityTo(me, Point(0, 0, 10));
+                Point target(0, 0, 10);
+                Visualizer::addTargetLines(me, target);
+                action.targetVelocity = Helper::maxVelocityTo(me, target);
             }
         }
 
@@ -1034,9 +1054,10 @@ public:
                         std::tie(firstAction, secondAction) = moveToBallUsual(is_attacker);
                     }
                     if (firstAction) {
-                        action = firstAction.value();
-                    } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(is_attacker, action)) {
-                        Visualizer::addText("Go to nitro");
+                        action = firstAction.value().action;
+                        Visualizer::addTargetLines(me, firstAction.value().target);
+                    } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(is_attacker, action, nitroPackSelected)) {
+                        Visualizer::addTargetLines(me, nitroPackSelected);
                     } else {
                         action = goToGoalCenterStrat(env);
                     }

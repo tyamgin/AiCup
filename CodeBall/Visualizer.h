@@ -138,6 +138,35 @@ struct Visualizer {
 #endif
     }
 
+    static void markFirstToBall(const ARobot& robot) {
+#if M_VISUALIZER
+        for (int i = 0; i < 12; i++) {
+            double ang = 2 * M_PI / 12 * i;
+            Point pt(cos(ang), 0, sin(ang));
+            addLine(robot + pt, (robot + pt)._y(ARENA_HEIGHT), 4, rgba(0, 0, 1));
+        }
+#endif
+    }
+
+    static void addTargetLines(const ARobot& robot, const Point& target) {
+#if M_VISUALIZER
+        for (int i = 0; i < 12; i++) {
+            double ang = 2 * M_PI / 12 * i;
+            Point pt(cos(ang), 0, sin(ang));
+            addLine(robot + pt, target, 4, rgba(1, 1, 1));
+        }
+#endif
+    }
+
+    static void addChain(const Point& md1, const Point& md2) {
+#if M_VISUALIZER
+        addLine(md1, md2, 20, rgba(0, 0, 0));
+        for (int i = 0; i <= 24; i++) {
+            addSphere(md1 + (md2 - md1) / 24 * i, 0.2, rgba(0, 0, 0));
+        }
+#endif
+    }
+
     static std::string dumpAndClean() {
         nlohmann::json ret = nlohmann::json::array();
         std::vector<RFigureBase*> newFigures;
