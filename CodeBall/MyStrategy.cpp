@@ -85,6 +85,9 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
 #ifndef LOCAL
     if (first && env.tick % 500 == 0) {
         std::cout << env.tick << " ";
+        if (env.tick % 5000 == 0) {
+            std::cout << std::endl;
+        }
     }
 #endif
 

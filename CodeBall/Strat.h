@@ -140,6 +140,8 @@ public:
 
     std::unordered_map<int, Metric> prevMetric;
 
+    int wildCardCounts = 0;
+
     bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
         //
         // TODO:
@@ -185,7 +187,7 @@ public:
                 {0.98, 1.02}
         };
 
-        bool skipOpt = GameInfo::isFinal && env.me()->id % 3 == env.tick % 3;
+        bool skipOpt = false;//GameInfo::isFinal && env.me()->id % 3 == env.tick % 3;
 
         if (!dirs.empty() && prevMetric[myId].tick >= env.tick - 1 && env.me()->isDetouched() && env.me()->nitroAmount > EPS) {
             auto prv = dirs[0];
@@ -233,7 +235,7 @@ public:
         std::sort(dirs.begin(), dirs.end());
         dirs.erase(std::unique(dirs.begin(), dirs.end()), dirs.end());
 
-        auto skipRobotsCollisions = [myId](Sandbox &e) {
+        auto skipRobotsCollisions = [myId](Sandbox& e) {
             if (e.ball.z > -10) {
                 return false;
             }
@@ -260,6 +262,7 @@ public:
 
             bool isInGoal = false;
 
+            int wildcard = 0;
             for (auto j = 0; j <= 60; j++) {
                 Sandbox meJumpSnd = meSnd;
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
@@ -286,17 +289,25 @@ public:
 
                     const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0 - GameInfo::isFinal * 2;
 
+                    int k;
+                    int rcK = -1;
                     bool qwe = false;
 
-                    int k;
-
-                    int rcK = -1;
-
-                    for (k = 0; k <= jumpMaxTicks; k++) {
-                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + gg)) {
-                            qwe = true;
-                            break;
+                    double minDist2ToBall = meSnd.me()->getDistanceTo2(meSnd.ball);
+                    bool hasShot = false;
+                    for (k = 0; k <= jumpMaxTicks && !hasShot; k++) {
+                        if (k == 0) {
+                            if (wildcard > 0) {
+                                wildCardCounts++;
+                                qwe = true;
+                                break;//
+                            }
                         }
+
+//                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + gg)) {
+//                            qwe = true;
+//                            break;
+//                        }
 
                         if (dir.toBallAfterJump && meJumpSnd.me()->nitroAmount > EPS) {
                             meJumpSnd.me()->action.vel(Helper::maxVelocityTo(*meJumpSnd.me(), meJumpSnd.ball));
@@ -305,6 +316,7 @@ public:
                             firstKAction = meJumpSnd.me()->action;
                         }
                         meJumpSnd.doTick(1);
+                        updMin(minDist2ToBall, meJumpSnd.me()->getDistanceTo2(meJumpSnd.ball));
 
                         if (skipRobotsCollisions(meJumpSnd)) {
                             break;
@@ -317,7 +329,6 @@ public:
                             //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                         }
 
-                        bool hasShot = false;
                         bool hasPositiveShot = false;
                         if (meJumpSnd.robotBallCollisions & M_COLL_MASK(myId)) {
                             hasShot = true;
@@ -472,13 +483,34 @@ public:
 
                             break;
                         }
+                    }
+                    if (wildcard > 0) {
+                        wildcard--;
+                    }
 
-                        if (hasShot) {
-                            break;
+                    if (hasShot) {
+                        wildcard = 0;
+                    } else if (k >= jumpMaxTicks) {
+                        for (int s = 10; s >= 3; s--) {
+                            if (minDist2ToBall > SQR(s + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
+                                wildcard = s - 1;
+                                break;
+                            }
                         }
+//                        if (minDist2ToBall > SQR(9 + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
+//                            wildcard = 7;
+//                        } else if (minDist2ToBall > SQR(7 + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
+//                            wildcard = 5;
+//                        } else if (minDist2ToBall > SQR(6 + ROBOT_MAX_RADIUS + BALL_RADIUS)) {
+//                            wildcard = 4;
+//                        } else {
+//                            wildcard = 0;
+//                        }
                     }
 
                     OP_END(K);
+                } else if (wildcard > 0) {
+                    wildcard--;
                 }
 
                 meSnd.me()->action = mvAction;
@@ -517,7 +549,7 @@ public:
             }
             auto ret = !hasTeammateShot;
             if (sel.qwe) {
-                //std::cout << "AAAAAAA\n";
+                std::cout << "AAAAAAA\n";
             }
 
             if (drawMetric == nullptr) {
@@ -849,6 +881,12 @@ public:
         const int alarmTicks = 45;
 
         if (isFirst) {
+#ifdef LOCAL
+            if (env.tick % 500 == 0) {
+                std::cout << env.tick << " wildcards " << wildCardCounts << std::endl;
+            }
+#endif
+
             std::vector<ABall> cache;
             Sandbox ballEnv = env;
             ballEnv.stopOnGoal = false;
