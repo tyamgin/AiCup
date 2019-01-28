@@ -142,7 +142,7 @@ public:
 
     int wildCardCounts = 0;
 
-    bool tryShotOutOrGoal(bool isAttacker, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
+    bool tryShotOutOrGoal(int isAttacker, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
         //
         // TODO:
         // Улучшить удары по роботам
@@ -561,14 +561,14 @@ public:
 
 
 
-    bool tryTakeNitro(bool isAttacker, const Point& afterNitroTarget, AAction& resAction, ANitroPack& resNitroPack) {
+    bool tryTakeNitro(int isAttacker, const Point& afterNitroTarget, AAction& resAction, ANitroPack& resNitroPack) {
         OP_START(TAKE_NITRO);
         auto ret = _tryTakeNitro(isAttacker, afterNitroTarget, resAction, resNitroPack);
         OP_END(TAKE_NITRO);
         return ret;
     }
 
-    bool _tryTakeNitro(bool isAttacker, const Point& afterNitroTarget, AAction& resAction, ANitroPack& resNitroPack) {
+    bool _tryTakeNitro(int isAttacker, const Point& afterNitroTarget, AAction& resAction, ANitroPack& resNitroPack) {
         if (!GameInfo::isNitro) {
             return false;
         }
@@ -821,7 +821,7 @@ public:
         Point target;
     };
 
-    std::pair<std::optional<TargetItem>, std::optional<TargetItem>> moveToBallUsual(bool isAttacker) {
+    std::pair<std::optional<TargetItem>, std::optional<TargetItem>> moveToBallUsual(int isAttacker) {
         Sandbox snd = env;
         snd.stopOnGoal = false;
         auto me = *snd.me();
@@ -919,33 +919,41 @@ public:
             Visualizer::markFirstToBall(firstToBall.value());
         }
 
-        bool is_attacker = selectGk() != me.id;
+        int gkId = selectGk();
+        int isAttacker = gkId != me.id;
+        int secondAttackerId = -1;
+        for (auto& x : env.my) {
+            if (x.id != me.id && x.id != gkId) {
+                secondAttackerId = x.id;
+            }
+        }
+
         Metric metric;
         std::optional<TargetItem> firstAction, secondAction;
         ANitroPack nitroPackSelected;
 
 //        if (is_attacker) return;
 
-        if (!is_attacker) {
+        if (!isAttacker) {
             Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
         }
 
 
-        if (is_attacker && env.roundTick <= 35) {
-            action = AAction().vel(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
+        if (isAttacker && env.roundTick <= 35) {
+            action = AAction(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
             return;
         }
-        if (!is_attacker && env.roundTick <= 30) {
+        if (!isAttacker && env.roundTick <= 30) {
             action = AAction().vel(Helper::maxVelocityTo(me, Point(0, 0, -ARENA_Z)));
             return;
         }
-        if (is_attacker && tryShotOutOrGoal(is_attacker, action, metric)) {
+        if (isAttacker && tryShotOutOrGoal(isAttacker, action, metric)) {
             std::string msg = metric.toString();
             Visualizer::addText(msg);
             return;
         }
 
-        if (is_attacker) {
+        if (isAttacker) {
             if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
                 int angles = 8;
                 Point bestV;
@@ -967,7 +975,7 @@ public:
                 Visualizer::addLine(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, rgba(1, 1, 0));
                 Visualizer::addLine(me, oppGoal, 0.2, rgba(0, 0, 1));
             } else if (!firstToBall || !firstToBall.value().isTeammate || firstToBall.value().id == me.id) {
-                std::tie(firstAction, secondAction) = moveToBallUsual(is_attacker);
+                std::tie(firstAction, secondAction) = moveToBallUsual(isAttacker);
                 auto firstOrSecond = firstAction;
                 if (!firstOrSecond) {
                     firstOrSecond = secondAction;
@@ -976,7 +984,7 @@ public:
                 if (firstOrSecond) {
                     auto target = firstOrSecond.value().target;
 
-                    if (tryTakeNitro(is_attacker, target, action, nitroPackSelected)) {
+                    if (tryTakeNitro(isAttacker, target, action, nitroPackSelected)) {
                         Visualizer::addTargetLines(me, nitroPackSelected);
                     } else {
                         action = firstOrSecond.value().action;
@@ -989,18 +997,28 @@ public:
                         action.vel(Helper::maxVelocityTo(me, target));
                         Visualizer::addTargetLines(me, target);
                     } else {
-                        is_attacker = false;
+                        isAttacker = 0; // TODO
                     }
                 }
             } else {
                 Point target(0, 0, 10);
+                if (GameInfo::isFinal) {
+                    Point t1(-4, 0, 1), t2(4, 0, 12);
+                    if (me.getDistanceTo(t1) + env.robot(secondAttackerId)->getDistanceTo(t2) <
+                        me.getDistanceTo(t2) + env.robot(secondAttackerId)->getDistanceTo(t1))
+                    {
+                        target = t1;
+                    } else {
+                        target = t2;
+                    }
+                }
                 Visualizer::addTargetLines(me, target);
                 action.targetVelocity = Helper::maxVelocityTo(me, target);
             }
         }
 
 
-        if (!is_attacker) {
+        if (!isAttacker) {
             Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
             bool condToShot;
@@ -1010,7 +1028,7 @@ public:
                     || alarm
                     || hasPrevShot;
 
-            if (condToShot && tryShotOutOrGoal(is_attacker, action, metric)) {
+            if (condToShot && tryShotOutOrGoal(isAttacker, action, metric)) {
 
                 std::string msg = "(gk) " + metric.toString();
                 Visualizer::addText(msg);
@@ -1061,12 +1079,12 @@ public:
                     action = defend.value();
                 } else {
                     if (firstToBallMy && firstToBallMy.value().id == me.id) {
-                        std::tie(firstAction, secondAction) = moveToBallUsual(is_attacker);
+                        std::tie(firstAction, secondAction) = moveToBallUsual(isAttacker);
                     }
                     if (firstAction) {
                         action = firstAction.value().action;
                         Visualizer::addTargetLines(me, firstAction.value().target);
-                    } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(is_attacker, Point(0, 0, -ARENA_Z), action, nitroPackSelected)) {
+                    } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(isAttacker, Point(0, 0, -ARENA_Z), action, nitroPackSelected)) {
                         Visualizer::addTargetLines(me, nitroPackSelected);
                     } else {
                         action = goToGoalCenterStrat(env);

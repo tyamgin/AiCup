@@ -14,7 +14,7 @@ rm local_runner/$ts.txt
     --seed $ts \
     --duration 500000 \
     --nitro true \
-    --team-size 2 \
+    --team-size 3 \
     --noshow \
     &
 echo "LR started"
