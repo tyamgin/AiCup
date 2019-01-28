@@ -872,7 +872,7 @@ public:
         if (isFirst) {
 #ifdef LOCAL
             if (env.tick % 500 == 0) {
-                std::cout << env.tick << " wildcards " << wildCardCounts << std::endl;
+                //std::cout << env.tick << " wildcards " << wildCardCounts << std::endl;
             }
 #endif
 
