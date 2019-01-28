@@ -561,38 +561,35 @@ public:
 
 
 
-    bool tryTakeNitro(bool isAttacker, AAction& resAction, ANitroPack& resNitroPack) {
+    bool tryTakeNitro(bool isAttacker, const Point& afterNitroTarget, AAction& resAction, ANitroPack& resNitroPack) {
         OP_START(TAKE_NITRO);
-        auto ret = _tryTakeNitro(isAttacker, resAction, resNitroPack);
+        auto ret = _tryTakeNitro(isAttacker, afterNitroTarget, resAction, resNitroPack);
         OP_END(TAKE_NITRO);
         return ret;
     }
 
-    bool _tryTakeNitro(bool isAttacker, AAction& resAction, ANitroPack& resNitroPack) {
-        //return false;
-
+    bool _tryTakeNitro(bool isAttacker, const Point& afterNitroTarget, AAction& resAction, ANitroPack& resNitroPack) {
         if (!GameInfo::isNitro) {
             return false;
         }
 
-        if (isAttacker) {
-            return false;
-        }
         if (env.me()->nitroAmount >= MAX_NITRO_AMOUNT) {
             return false;
         }
 
-        Point center(0, 0, -ARENA_Z);
         AAction selAction;
         int selI = -1, selJ = -1;
         int minTm = INT_MAX;
 
         for (auto& pack : env.nitroPacks) {
-            if (pack.z > 0) {
+            if (!isAttacker && pack.z > 0) {
+                continue;
+            }
+            if (isAttacker && env.me()->z * pack.z <= 0) {
                 continue;
             }
 
-            double minDistToCenter = 10000;
+            double minDistToTarget = 10000;
             bool minDistGotcha = false;
             int selTm = INT_MAX;
 
@@ -611,6 +608,10 @@ public:
 
 
                 for (int j = 0; j < 20; j++) {
+                    if (isAttacker && backSnd.tick - env.tick > 13) { // берем только очень близкие
+                        break;
+                    }
+
                     if (!intersected) {
                         auto g = backSnd.getIntersectedNitroPack(*backSnd.me());
                         if (g) {
@@ -623,13 +624,14 @@ public:
                         }
                     }
 
-                    backSnd.me()->action = AAction().vel(Helper::maxVelocityTo(*backSnd.me(), center));
-                    if (j == 0)
-                        firstJAction = AAction().vel(Helper::maxVelocityTo(*backSnd.me(), center));
+                    backSnd.me()->action = AAction(Helper::maxVelocityTo(*backSnd.me(), afterNitroTarget));
+                    if (j == 0) {
+                        firstJAction = backSnd.me()->action;
+                    }
                     backSnd.doTick(1);
                 }
-                if (intersected && backSnd.me()->getDistanceTo(center) < minDistToCenter) {
-                    minDistToCenter = backSnd.me()->getDistanceTo(center);
+                if (intersected && backSnd.me()->getDistanceTo(afterNitroTarget) < minDistToTarget) {
+                    minDistToTarget = backSnd.me()->getDistanceTo(afterNitroTarget);
                     minDistGotcha = gotcha;
                     selAction = i > 0 ? firstIAction : firstJAction;
                     selI = i;
@@ -637,10 +639,10 @@ public:
                     selTm = gotchaTm;
                 }
 
-                auto act = AAction(Helper::maxVelocityTo(*me, pack));
-                me->action = act;
-                if (i == 0)
-                    firstIAction = act;
+                me->action = AAction(Helper::maxVelocityTo(*me, pack));
+                if (i == 0) {
+                    firstIAction = me->action;
+                }
                 meSnd.doTick(1);
 
                 if (meSnd.nitroPacksCollected) {
@@ -966,14 +968,22 @@ public:
                 Visualizer::addLine(me, oppGoal, 0.2, rgba(0, 0, 1));
             } else if (!firstToBall || !firstToBall.value().isTeammate || firstToBall.value().id == me.id) {
                 std::tie(firstAction, secondAction) = moveToBallUsual(is_attacker);
+                auto firstOrSecond = firstAction;
+                if (!firstOrSecond) {
+                    firstOrSecond = secondAction;
+                }
 
-                if (firstAction) {
-                    action = firstAction.value().action;
-                    Visualizer::addTargetLines(me, firstAction.value().target);
-                } else if (secondAction) {
-                    action = secondAction.value().action;
-                    Visualizer::addTargetLines(me, secondAction.value().target);
+                if (firstOrSecond) {
+                    auto target = firstOrSecond.value().target;
+
+                    if (tryTakeNitro(is_attacker, target, action, nitroPackSelected)) {
+                        Visualizer::addTargetLines(me, nitroPackSelected);
+                    } else {
+                        action = firstOrSecond.value().action;
+                    }
+                    Visualizer::addTargetLines(me, target);
                 } else {
+                    // TODO: когда это достижимо?
                     if (ball.z > -6) {
                         Point target(0, 0, 14);
                         action.vel(Helper::maxVelocityTo(me, target));
@@ -1056,7 +1066,7 @@ public:
                     if (firstAction) {
                         action = firstAction.value().action;
                         Visualizer::addTargetLines(me, firstAction.value().target);
-                    } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(is_attacker, action, nitroPackSelected)) {
+                    } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(is_attacker, Point(0, 0, -ARENA_Z), action, nitroPackSelected)) {
                         Visualizer::addTargetLines(me, nitroPackSelected);
                     } else {
                         action = goToGoalCenterStrat(env);
