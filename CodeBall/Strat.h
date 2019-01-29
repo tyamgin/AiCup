@@ -86,37 +86,60 @@ public:
         int timeToShot = INT_MAX;
         double minBallZ = 0;
         bool hasOppTouch = false;
-        double goalHeight = 0;
+        ABall goalBall;
+        std::optional<ARobot> gkRobot;
         double passMinDist = 0;
         int touchFloorCount = 0;
         bool _debugFalsePositive = false;
 
         double getHeightAdd() const {
             if (hasGoal) {
-                return goalHeight / ARENA_GOAL_HEIGHT / 2;
+                return goalBall.y / ARENA_GOAL_HEIGHT / 2;
+            }
+            return 0;
+        }
+
+        double getWidthAdd() const {
+            return 0; // TODO
+
+            if (hasGoal && gkRobot) {
+                auto& gk = gkRobot.value();
+                auto diff = std::abs(goalBall.x - gk.x);
+                //if (diff > 1.15 && gk.isDetouched()) {
+                    return diff / ARENA_GOAL_WIDTH / 2;
+                //}
+            }
+            return 0;
+        }
+
+        double getCounterPenalty() const {
+            const double xx = 5;
+            return (xx - std::min(xx, penalty)) / xx * 1.;
+        }
+
+        double getGoalInjPen() const {
+            const auto goalZ = -(ARENA_Z + BALL_RADIUS);
+            const auto goalSafeZ = goalZ + 0.5;
+
+            if (minBallZ < goalSafeZ) {
+                return (minBallZ - goalSafeZ) / (goalZ - goalSafeZ) * 0.4;
+            }
+            return 0;
+        }
+
+        double getOpponentTouchPen() const {
+            if (hasGoal && hasOppTouch) {
+                return 0.3;
             }
             return 0;
         }
 
         auto getComparable() const {
-            const double xx = 5;
-            double pen = (xx - std::min(xx, penalty)) / xx * 1.;
-            const auto goalZ = -(ARENA_Z + BALL_RADIUS);
-            const auto goalSafeZ = goalZ + 0.5;
-            double injPen = 0;
-            if (minBallZ < goalSafeZ) {
-                injPen = (minBallZ - goalSafeZ) / (goalZ - goalSafeZ) * 0.4;
-            }
-            double touchPen = 0;
-            if (hasGoal && hasOppTouch) {
-                touchPen = 0.3;
-            }
-
             double base;
             if (hasGoal) {
-                base = (positiveChange / (positiveTicks + 2*timeToShot + 1)) - pen - injPen - touchPen + dir.speedFactor + getHeightAdd() - touchFloorCount * 0.4;
+                base = (positiveChange / (positiveTicks + 2*timeToShot + 1)) - getCounterPenalty() - getGoalInjPen() - getOpponentTouchPen() + dir.speedFactor + getHeightAdd() + getWidthAdd() - touchFloorCount * 0.4;
             } else {
-                base = -passMinDist - pen * 30 - touchFloorCount * 7;
+                base = -passMinDist - getCounterPenalty() * 30 - touchFloorCount * 7;
             }
             return std::make_tuple(hasGoal, hasShot, base);
         }
@@ -132,7 +155,7 @@ public:
                 " p=" + std::to_string(penalty) +
                 " " + std::to_string(std::get<2>(getComparable())) +
                 " qp=" + std::to_string(touchFloorCount) +
-                (hasGoal ? " h=" + std::to_string(getHeightAdd()) : "") +
+                (hasGoal ? " h=" + std::to_string(getHeightAdd()) + " w=" + std::to_string(getWidthAdd()) : "") +
                 (hasOppTouch ? " (!)" : "") +
                 " pf=" + dir.correction.toString();
         }
@@ -152,6 +175,8 @@ public:
         // Можно убрать из симы неактивных игроков (например, свой вратать после удара)
         //
         // First to goal: учитывать tryShotOutOrGoal
+        //
+        // penalty по убывающей
         //
 
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
@@ -252,10 +277,12 @@ public:
             if (!isAttacker) {
                 return e.ball.z < ARENA_Z * 0.5;
             }
-            return e.ball.z < 5;// e.ball.z < -ARENA_Z * 0.4;
+            return e.ball.z < 13;// e.ball.z < -ARENA_Z * 0.4;
         };
 
         const double al = 0.7 * drawAlpha;
+
+        bool ballFloorTouch = !isAttacker && hasGkFloorTouch();
 
         for (auto& dir : dirs) {
             Sandbox meSnd = env;
@@ -392,9 +419,13 @@ public:
 
                             int positiveTicks = 0;
                             double positiveChange = 0;
-                            bool hasGk = false;
+                            std::optional<ARobot> oppGk;
                             for (auto& x : meJumpSnd.opp) {
-                                hasGk |= x.z > ARENA_Z - 8;
+                                if (x.z > ARENA_Z - 8) {
+                                    if (!oppGk || oppGk.value().z < x.z) {
+                                        oppGk = x;
+                                    }
+                                }
                             }
                             bool isFar = meJumpSnd.me()->z < -10;
                             bool noFarGoal = false;
@@ -433,7 +464,7 @@ public:
                                         }
                                     }
                                 }
-                                if (w > 10 && meJumpSnd.ball.y < BALL_RADIUS * 1.1 && hasGk) {
+                                if (w > 10 && meJumpSnd.ball.y < BALL_RADIUS * 1.1 && oppGk) {
                                     noFarGoal = true;
                                 }
 
@@ -465,14 +496,17 @@ public:
                             leafsCount++;
 
                             if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0) {
-                                cand = {env.tick, j, k, dir,
-                                        hasGoal, hasShot, positiveChange, positiveTicks, penalty,
-                                        shotTick - env.tick, minZ, hasOppTouch, goalHeight,
-                                        sqrt(passMinDist2), touchFloorCount, qwe};
+                                if (!(ballFloorTouch && isInGoal)) {
 
-                                if (sel.j == -1 || sel < cand) {
-                                    sel = cand;
-                                    firstAction = j == 0 ? firstKAction : firstJAction;
+                                    cand = {env.tick, j, k, dir,
+                                            hasGoal, hasShot, positiveChange, positiveTicks, penalty,
+                                            shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball, oppGk,
+                                            sqrt(passMinDist2), touchFloorCount, qwe};
+
+                                    if (sel.j == -1 || sel < cand) {
+                                        sel = cand;
+                                        firstAction = j == 0 ? firstKAction : firstJAction;
+                                    }
                                 }
                             }
 
@@ -811,6 +845,21 @@ public:
                 minTimeAll = minTime[x->id], resAll = *x;
         }
         return {resAll, resAll}; //TODO
+    }
+
+    bool hasGkFloorTouch() {
+        // коснется ли мяч пола перед тем, как оттолкнуться от передней стенки или пересечь ворота
+        // костыль от выкрутасов вратаря
+        for (int i = 0; i < 80; i++) {
+            const auto& pos = Sandbox::_ballsCache[i];
+            if (pos.y < BALL_RADIUS + 1) {
+                return true;
+            }
+            if (pos.z < -ARENA_Z + BALL_RADIUS + 0.3) {
+                break;
+            }
+        }
+        return false;
     }
 
     Point oppGoal = Point(0, 0, ARENA_Z + ARENA_GOAL_DEPTH / 2);
