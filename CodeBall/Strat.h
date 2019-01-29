@@ -264,7 +264,7 @@ public:
 
             bool isInGoal = false;
 
-            const int forKMaxDist = GameInfo::isFinal ? 12 : 14;
+            const int forKMaxDist = 14;
             int wildcard = 0;
             for (auto j = 0; j + wildcard <= 60; j++) {
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
@@ -288,7 +288,7 @@ public:
 
                     meJumpSnd.me()->action = jmpAction;
 
-                    const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker) * 0 - GameInfo::isFinal * 2;
+                    const int jumpMaxTicks = 21 + (meJumpSnd.me()->nitroAmount > EPS) * (!isAttacker);
 
                     int k;
                     int rcK = -1;
