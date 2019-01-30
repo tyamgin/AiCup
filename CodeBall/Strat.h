@@ -540,7 +540,7 @@ public:
                 if (j == 0) {
                     firstJAction = mvAction;
                 }
-                meSnd.doTick(1);
+                meSnd.doTick(isAttacker || meSnd.me()->z > -ARENA_Z + ARENA_BOTTOM_RADIUS ? 1 : 5);
                 if (skipRobotsCollisions(meSnd)) {
                     break;
                 }
@@ -886,6 +886,8 @@ public:
     }
 
     bool hasGkFloorTouch() {
+        //return false;
+
         // коснется ли мяч пола перед тем, как оттолкнуться от передней стенки или пересечь ворота
         // костыль от выкрутасов вратаря
         for (int i = 0; i < 80; i++) {
@@ -1042,6 +1044,7 @@ public:
         if (isAttacker && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm, action, metric)) {
             std::string msg = metric.toString();
             Visualizer::addText(msg);
+            LOG(msg);
             return;
         }
 

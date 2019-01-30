@@ -14,7 +14,9 @@ Strat strat;
 int waitForTick = -1;
 
 void doAction(const model::Robot& me, const model::Rules& rules, const model::Game& game, model::Action& action) {
-    if (game.current_tick == 0) {
+    static bool init = false;
+    if (!init) {
+        init = true;
         GameInfo::maxTickCount = rules.max_tick_count;
         GameInfo::isNitro = !game.nitro_packs.empty();
         GameInfo::isFinal = rules.team_size > 2;
