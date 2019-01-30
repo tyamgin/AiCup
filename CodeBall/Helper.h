@@ -37,6 +37,16 @@ public:
         }
         return whichMaxZ;
     }
+
+    static size_t whichMinZ(const std::vector<ARobot>& arr) {
+        size_t whichMinZ = 0;
+        for (size_t i = 1; i < arr.size(); i++) {
+            if (arr[i].z < arr[whichMinZ].z) {
+                whichMinZ = i;
+            }
+        }
+        return whichMinZ;
+    }
 };
 
 template<typename T>

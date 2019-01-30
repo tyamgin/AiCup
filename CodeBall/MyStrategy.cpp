@@ -24,16 +24,16 @@ void doAction(const model::Robot& me, const model::Rules& rules, const model::Ga
             if (!x.is_teammate) {
                 Sandbox::oppMask |= M_COLL_MASK(x.id);
             }
-            if (x.is_teammate) {
-                Sandbox::myOppMask[x.id] = 0;
-                Sandbox::myAnyMask[x.id] = 0;
-                for (auto& y : game.robots) {
-                    if (!y.is_teammate) {
-                        Sandbox::myOppMask[x.id] |= M_COLL_MASK2(x.id, y.id) | M_COLL_MASK2(y.id, x.id);
-                    }
-                    Sandbox::myAnyMask[x.id] |= M_COLL_MASK2(x.id, y.id) | M_COLL_MASK2(y.id, x.id);
+
+            Sandbox::myOppMask[x.id] = 0;
+            Sandbox::myAnyMask[x.id] = 0;
+            for (auto& y : game.robots) {
+                if (x.is_teammate != y.is_teammate) {
+                    Sandbox::myOppMask[x.id] |= M_COLL_MASK2(x.id, y.id) | M_COLL_MASK2(y.id, x.id);
                 }
+                Sandbox::myAnyMask[x.id] |= M_COLL_MASK2(x.id, y.id) | M_COLL_MASK2(y.id, x.id);
             }
+
         }
     }
 

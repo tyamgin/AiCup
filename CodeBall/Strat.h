@@ -77,6 +77,7 @@ public:
     struct Metric {
         int tick = 0;
         int j = -1, k = -1;
+        AAction firstJAction, firstKAction;
         Direction dir;
         bool hasGoal = false;
         bool hasShot = false;
@@ -165,7 +166,7 @@ public:
 
     int wildCardCounts = 0;
 
-    bool tryShotOutOrGoal(int isAttacker, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
+    bool tryShotOutOrGoal(Sandbox& env, int isAttacker, bool alarm, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
         //
         // TODO:
         // Улучшить удары по роботам
@@ -214,7 +215,7 @@ public:
                 {0.98, 1.02}
         };
 
-        bool skipOpt = GameInfo::isFinal && env.me()->id % 3 == env.tick % 3;
+        bool skipOpt = GameInfo::isFinal && env.me()->id % 3 == env.tick % 3 && !env.isInverted;
 
         if (!dirs.empty() && prevMetric[myId].tick >= env.tick - 1 && env.me()->isDetouched() && env.me()->nitroAmount > EPS) {
             auto prv = dirs[0];
@@ -277,7 +278,7 @@ public:
             if (!isAttacker) {
                 return e.ball.z < ARENA_Z * 0.5;
             }
-            return e.ball.z < 13;// e.ball.z < -ARENA_Z * 0.4;
+            return e.ball.z < 5;// 13
         };
 
         const double al = 0.7 * drawAlpha;
@@ -338,6 +339,7 @@ public:
 
                         if (dir.toBallAfterJump && meJumpSnd.me()->nitroAmount > EPS) {
                             meJumpSnd.me()->action.vel(Helper::maxVelocityTo(*meJumpSnd.me(), meJumpSnd.ball));
+                            meJumpSnd.me()->action._toBall = true;
                         }
                         if (k == 0) {
                             firstKAction = meJumpSnd.me()->action;
@@ -372,9 +374,7 @@ public:
                         double minCounterDist2 = 10000;
                         Point md1, md2;
 
-                        int thr = meJumpSnd.me()->nitroAmount > EPS ? -30 : -30;
-
-                        if (hasShot && (hasPositiveShot || !isAttacker && meJumpSnd.ball.z < thr)
+                        if (hasShot && (hasPositiveShot || alarm || !isAttacker && meJumpSnd.ball.z < -30)
                             || !hasShot && k == jumpMaxTicks && rcK != -1 && meJumpSnd.me()->z > -10) {
                             OP_START(KW);
 
@@ -435,6 +435,7 @@ public:
                             for (int w = 0; w <= ballSimMaxTicks && meJumpSnd.hasGoal == 0; w++) {
                                 auto prevBall = meJumpSnd.ball;
                                 meJumpSnd.doTick(1);
+                                // TODO: oppMask for inverted
                                 hasOppTouch |= Sandbox::oppMask & meJumpSnd.robotBallCollisions;
 
                                 updMin(minZ, meJumpSnd.ball.z);
@@ -498,7 +499,7 @@ public:
                             if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0) {
                                 if (!(ballFloorTouch && isInGoal)) {
 
-                                    cand = {env.tick, j, k, dir,
+                                    cand = {env.tick, j, k, firstJAction, firstKAction, dir,
                                             hasGoal, hasShot, positiveChange, positiveTicks, penalty,
                                             shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball, oppGk,
                                             sqrt(passMinDist2), touchFloorCount, qwe};
@@ -547,6 +548,9 @@ public:
                 if (meSnd.me()->z < -ARENA_Z - ARENA_GOAL_DEPTH + ROBOT_MAX_RADIUS + 0.01) {
                     isInGoal = true;
                 }
+                if (env.isInverted) {
+                    break;
+                }
             }
 
             auto me = env.me();
@@ -582,7 +586,7 @@ public:
 #ifdef DEBUG
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(isAttacker, t1, t2, &sel, ret ? 1 : 0.3);
+                tryShotOutOrGoal(env, isAttacker, alarm, t1, t2, &sel, ret ? 1 : 0.3);
 #endif
 
                 prevMetric[myId] = sel;
@@ -593,6 +597,40 @@ public:
         return false;
     }
 
+    bool oppGoalPredict() {
+        if (GameInfo::isOpponentCrashed) {
+            return false;
+        }
+
+        RFigureBase::invertedMode = true;
+        bool alarm = false;
+        for (int i = 1; i <= 6; i++) {
+            Sandbox::_actionsCache[i].clear();
+        }
+        for (const auto& opp : env.opp) {
+            if (opp.z > 0) {
+                continue;
+            }
+            auto snd = env;
+            snd.invert(opp.id);
+            AAction resAction;
+            Metric resMetric;
+            tryShotOutOrGoal(snd, true, false, resAction, resMetric);
+            if (resMetric.hasGoal > 0 && opp.isDetouched()) {
+                resMetric.firstJAction.invert();
+                resMetric.firstKAction.invert();
+                for (int j = 0; j < resMetric.j; j++) {
+                    Sandbox::_actionsCache[opp.id].push_back(resMetric.firstJAction);
+                }
+                for (int k = 0; k <= resMetric.k; k++) {
+                    Sandbox::_actionsCache[opp.id].push_back(resMetric.firstKAction);
+                }
+                alarm = true;
+            }
+        }
+        RFigureBase::invertedMode = false;
+        return alarm;
+    }
 
 
     bool tryTakeNitro(int isAttacker, const Point& afterNitroTarget, AAction& resAction, ANitroPack& resNitroPack) {
@@ -852,7 +890,7 @@ public:
         // костыль от выкрутасов вратаря
         for (int i = 0; i < 80; i++) {
             const auto& pos = Sandbox::_ballsCache[i];
-            if (pos.y < BALL_RADIUS + 1) {
+            if (pos.y < BALL_RADIUS + 1 && pos.z < -ARENA_Z + 6) {
                 return true;
             }
             if (pos.z < -ARENA_Z + BALL_RADIUS + 0.3) {
@@ -909,7 +947,7 @@ public:
         return {firstAction, secondAction};
     }
 
-    bool alarm;
+    bool alarm = false, oppGoalAlarm = false;
 
     void act(AAction& action, bool isFirst) {
         auto& ball = env.ball;
@@ -996,7 +1034,12 @@ public:
             action = AAction().vel(Helper::maxVelocityTo(me, Point(0, 0, -ARENA_Z)));
             return;
         }
-        if (isAttacker && tryShotOutOrGoal(isAttacker, action, metric)) {
+
+        if (isFirst) {
+            oppGoalAlarm = oppGoalPredict();
+        }
+
+        if (isAttacker && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm, action, metric)) {
             std::string msg = metric.toString();
             Visualizer::addText(msg);
             return;
@@ -1077,7 +1120,7 @@ public:
                     || alarm
                     || hasPrevShot;
 
-            if (condToShot && tryShotOutOrGoal(isAttacker, action, metric)) {
+            if (condToShot && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm, action, metric)) {
 
                 std::string msg = "(gk) " + metric.toString();
                 Visualizer::addText(msg);

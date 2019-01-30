@@ -16,6 +16,13 @@ struct Unit : public Point {
         y += (velocity.y - GRAVITY / 2 * delta_time) * delta_time;
         velocity.y -= GRAVITY * delta_time;
     }
+
+    void invert() {
+        z = -z;
+        x = -x;
+        velocity.x = -velocity.x;
+        velocity.z = -velocity.z;
+    }
 };
 
 #endif //CODEBALL_UNIT_H

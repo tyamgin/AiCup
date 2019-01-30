@@ -8,6 +8,7 @@ struct AAction {
     Point targetVelocity;
     double jumpSpeed;
     bool useNitro;
+    bool _toBall = false;
 
     AAction() {
         jumpSpeed = 0;
@@ -15,6 +16,11 @@ struct AAction {
     }
 
     AAction(const Point& vel, double jumpSpeed = 0.0, bool useNitro = false) : targetVelocity(vel), jumpSpeed(jumpSpeed), useNitro(useNitro) {
+    }
+
+    void invert() {
+        targetVelocity.x = -targetVelocity.x;
+        targetVelocity.z = -targetVelocity.z;
     }
 
     AAction& jump(double jumpSpeed = ROBOT_MAX_JUMP_SPEED) {

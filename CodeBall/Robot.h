@@ -45,6 +45,13 @@ struct ARobot : public Unit {
     bool isDetouched() const {
         return !touch || touchNormal.y < EPS;
     }
+
+    void invert() {
+        Unit::invert();
+        isTeammate = !isTeammate;
+        touchNormal.x = -touchNormal.x;
+        touchNormal.z = -touchNormal.z;
+    }
 };
 
 #endif //CODEBALL_ROBOT_H

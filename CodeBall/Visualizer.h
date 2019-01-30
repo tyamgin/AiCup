@@ -27,6 +27,8 @@ struct RFigureBase {
 
     virtual nlohmann::json toJson() = 0;
     virtual ~RFigureBase() = default;
+
+    static bool invertedMode;
 };
 
 struct RSphere : public RFigureBase {
@@ -34,15 +36,15 @@ struct RSphere : public RFigureBase {
 
     RSphere(const Unit& unit, RColor color) : RFigureBase(color, 1) {
         radius = unit.radius;
-        x = unit.x;
+        x = unit.x * (invertedMode ? -1 : 1);
         y = unit.y;
-        z = unit.z;
+        z = unit.z * (invertedMode ? -1 : 1);
     }
 
     RSphere(const Point& unit, double radius, RColor color) : RFigureBase(color, 1), radius(radius) {
-        x = unit.x;
+        x = unit.x * (invertedMode ? -1 : 1);
         y = unit.y;
-        z = unit.z;
+        z = unit.z * (invertedMode ? -1 : 1);
     }
 
     nlohmann::json toJson() override {
@@ -65,9 +67,15 @@ struct RLine : public RFigureBase {
     Point p1, p2;
     double width;
 
-    RLine(const Point& p1, const Point& p2, double width, RColor color, int ttl = 1)
-        : RFigureBase(color, ttl), p1(p1), p2(p2), width(width) {
-
+    RLine(const Point& p1, const Point& p2, double width, RColor color, int ttl = 1) : RFigureBase(color, ttl), width(width) {
+        this->p1 = p1;
+        this->p2 = p2;
+        if (invertedMode) {
+            this->p1.x *= -1;
+            this->p1.z *= -1;
+            this->p2.x *= -1;
+            this->p2.z *= -1;
+        }
     }
 
     nlohmann::json toJson() override {
@@ -76,12 +84,12 @@ struct RLine : public RFigureBase {
         json["g"] = color.g;
         json["b"] = color.b;
         json["a"] = color.a;
-        json["x1"] = p1.x;
+        json["x1"] = p1.x * (invertedMode ? -1 : 1);
         json["y1"] = p1.y;
-        json["z1"] = p1.z;
-        json["x2"] = p2.x;
+        json["z1"] = p1.z * (invertedMode ? -1 : 1);
+        json["x2"] = p2.x * (invertedMode ? -1 : 1);
         json["y2"] = p2.y;
-        json["z2"] = p2.z;
+        json["z2"] = p2.z * (invertedMode ? -1 : 1);
         json["width"] = width;
         nlohmann::json ret;
         ret["Line"] = json;

@@ -35,12 +35,14 @@ struct Sandbox {
     int oppCounterStrat = 0; // 0, 1, 2, 3
 
     static std::vector<ABall> _ballsCache;
-    int _ballsCacheIterator = 0;
+    int _cacheIterator = 0;
     bool _ballsCacheValid = true;
 
     static void loadBallsCache(const std::vector<ABall>& cache) {
         _ballsCache = cache;
     }
+
+    static std::vector<AAction> _actionsCache[7];
 
     Sandbox() {
     }
@@ -769,6 +771,14 @@ struct Sandbox {
 //            if (!ct.touch) // TODO: try this
 //                continue;
 
+            if (_cacheIterator < (int) _actionsCache[ct.id].size()) {
+                ct.action = _actionsCache[ct.id][_cacheIterator];
+                if (ct.action._toBall) {
+                    ct.action.vel(Helper::maxVelocityTo(ct, ball));
+                }
+                continue;
+            }
+
             if (oppCounterStrat < 3) {
                 ct.action.targetVelocity = Helper::maxVelocityTo(ct, ball);
             }
@@ -862,14 +872,14 @@ struct Sandbox {
         if (robotBallCollisions) {
             _ballsCacheValid = false;
         }
-        if (microticksPerTick < MICROTICKS_PER_TICK && _ballsCacheValid && _ballsCacheIterator < (int) _ballsCache.size()) {
-            auto& cached = _ballsCache[_ballsCacheIterator];
+        if (microticksPerTick < MICROTICKS_PER_TICK && _ballsCacheValid && _cacheIterator < (int) _ballsCache.size() && !isInverted) {
+            auto& cached = _ballsCache[_cacheIterator];
             ball.velocity = cached.velocity;
             ball.x = cached.x;
             ball.y = cached.y;
             ball.z = cached.z;
         }
-        _ballsCacheIterator++;
+        _cacheIterator++;
 
         tick++;
         roundTick++;
@@ -894,6 +904,31 @@ struct Sandbox {
 
     bool hasRandomCollision = false;
     int hasGoal = 0; // -1, 0, 1
+    bool isInverted = false;
+
+    void invert(int newMeId) {
+        assert(!isInverted);
+        isInverted = true;
+        ball.invert();
+        for (auto& x : my)
+            x.invert();
+        for (auto& x : opp)
+            x.invert();
+        my.swap(opp);
+        for (auto& x : nitroPacks)
+            x.invert();
+        resetMeIdx(newMeId);
+    }
+
+    void resetMeIdx(int id) {
+        for (int i = 0; i < (int) my.size(); i++) {
+            if (my[i].id == id) {
+                meIdx = i;
+                break;
+            }
+        }
+    }
+
 };
 
 #endif //CODEBALL_SANDBOX_H
