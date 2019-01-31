@@ -1066,7 +1066,7 @@ public:
 
 
         if (isAttacker && env.roundTick <= 35) {
-            auto deltaX = GameInfo::isFinal ? 0.0 : (me.x < env.robot(secondAttackerId)->x ? -0.5 : 0.5);
+            auto deltaX = true ? 0.0 : (me.x < env.robot(secondAttackerId)->x ? -0.5 : 0.5);
             action = AAction(Helper::maxVelocityTo(me, env.ball + Point(deltaX, 0, -3.2)));
             return;
         }
