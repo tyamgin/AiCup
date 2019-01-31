@@ -60,17 +60,20 @@ public:
         double speedFactor;
         Correction correction;
         bool toBallAfterJump = false;
+        bool jumpOnly = false;
 
         bool operator <(const Direction& other) const {
             if (speedFactor != other.speedFactor)
                 return speedFactor < other.speedFactor;
+            if (jumpOnly != other.jumpOnly)
+                return jumpOnly > other.jumpOnly;
+            if (toBallAfterJump != other.toBallAfterJump)
+                return toBallAfterJump < other.toBallAfterJump;
             return dir < other.dir;
         }
 
         bool operator ==(const Direction& other) const {
-            if (speedFactor != other.speedFactor)
-                return false;
-            return dir == other.dir;
+            return !(*this < other) && !(other < *this);
         }
     };
 
@@ -79,7 +82,7 @@ public:
         int j = -1, k = -1;
         AAction firstJAction, firstKAction;
         Direction dir;
-        bool hasGoal = false;
+        int goal = 0;
         bool hasShot = false;
         double positiveChange = 0;
         int positiveTicks = 0;
@@ -94,7 +97,7 @@ public:
         bool _debugFalsePositive = false;
 
         double getHeightAdd() const {
-            if (hasGoal) {
+            if (goal > 0) {
                 return goalBall.y / ARENA_GOAL_HEIGHT / 2;
             }
             return 0;
@@ -103,7 +106,7 @@ public:
         double getWidthAdd() const {
             return 0; // TODO
 
-            if (hasGoal && gkRobot) {
+            if (goal > 0 && gkRobot) {
                 auto& gk = gkRobot.value();
                 auto diff = std::abs(goalBall.x - gk.x);
                 //if (diff > 1.15 && gk.isDetouched()) {
@@ -129,7 +132,7 @@ public:
         }
 
         double getOpponentTouchPen() const {
-            if (hasGoal && hasOppTouch) {
+            if (goal > 0 && hasOppTouch) {
                 return 0.3;
             }
             return 0;
@@ -137,12 +140,12 @@ public:
 
         auto getComparable() const {
             double base;
-            if (hasGoal) {
+            if (goal > 0) {
                 base = (positiveChange / (positiveTicks + 2*timeToShot + 1)) - getCounterPenalty() - getGoalInjPen() - getOpponentTouchPen() + dir.speedFactor + getHeightAdd() + getWidthAdd() - touchFloorCount * 0.4;
             } else {
                 base = -passMinDist - getCounterPenalty() * 30 - touchFloorCount * 7;
             }
-            return std::make_tuple(hasGoal, hasShot, base);
+            return std::make_tuple(goal, hasShot, base);
         }
 
         bool operator <(const Metric &m) const {
@@ -150,13 +153,13 @@ public:
         }
 
         std::string toString() {
-            return std::string(hasGoal ? "GOAL" : "SHOT") +
+            return std::string(goal > 0 ? "GOAL" : "SHOT") +
                 //" pow=" + std::to_string(dir.speedFactor) +
                 " t=" + std::to_string(timeToShot) +
                 " p=" + std::to_string(penalty) +
                 " " + std::to_string(std::get<2>(getComparable())) +
                 " qp=" + std::to_string(touchFloorCount) +
-                (hasGoal ? " h=" + std::to_string(getHeightAdd()) + " w=" + std::to_string(getWidthAdd()) : "") +
+                (goal > 0 ? " h=" + std::to_string(getHeightAdd()) + " w=" + std::to_string(getWidthAdd()) : "") +
                 (hasOppTouch ? " (!)" : "") +
                 " pf=" + dir.correction.toString();
         }
@@ -179,6 +182,7 @@ public:
         //
         // penalty по убывающей
         //
+        auto& mm = *env.me();
 
         if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
@@ -190,7 +194,7 @@ public:
         int leafsCount = 0;
 
         const auto myId = env.me()->id;
-        Metric sel, cand;
+        Metric sel, cand, ppp;
         AAction firstAction;
 
         std::vector<Direction> dirs;
@@ -198,6 +202,7 @@ public:
         ballSnd.clearMyRobots();
 
         if (prevMetric.count(myId)) {
+            ppp = prevMetric[myId];
             dirs.push_back(prevMetric[myId].dir);
         }
 
@@ -244,6 +249,19 @@ public:
             }
         }
 
+        const int beta = 0; // 387
+
+//        if (env.me()->isDetouched() && env.me()->nitroAmount > EPS && env.tick >= beta) {
+//            for (double xCorr : {1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
+//                for (double yCorr : {0.8, 0.9, 0.95, 0.99, 1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
+//                    for (int xSign = -1; xSign <= 1; xSign += 2) {
+//                        dirs.push_back({mm.velocity._x(mm.velocity.x * xCorr * xSign)._y(mm.velocity.y * yCorr),
+//                                        1, {xCorr * xSign, yCorr, 1}, false, true});
+//                    }
+//                }
+//            }
+//        }
+
         if (!skipOpt) {
             const int startI = env.me()->getDistanceTo(env.ball) - env.me()->radius - BALL_RADIUS > 14 ? 20 : 0;
             for (auto i = 0; i <= 54 && ballSnd.hasGoal == 0; i++) {
@@ -278,7 +296,7 @@ public:
             if (!isAttacker) {
                 return e.ball.z < ARENA_Z * 0.5;
             }
-            return e.ball.z < 5;// 13
+            return e.ball.z < 5; //13
         };
 
         const double al = 0.7 * drawAlpha;
@@ -375,7 +393,7 @@ public:
                         Point md1, md2;
 
                         if (hasShot && (hasPositiveShot || alarm || !isAttacker && meJumpSnd.ball.z < -30)
-                            || !hasShot && k == jumpMaxTicks && rcK != -1 && meJumpSnd.me()->z > -10) {
+                            || !hasShot && k == jumpMaxTicks && rcK != -1 && (meJumpSnd.me()->z > -10 || alarm && env.tick >= beta)) { // TODO
                             OP_START(KW);
 
                             double passMinDist2 = 10000;
@@ -471,7 +489,7 @@ public:
 
 
                                 if (drawMetric && j == drawMetric->j && k <= drawMetric->k) {
-                                    Visualizer::addSphere(meJumpSnd.ball, rgba(1, 1, drawMetric->hasGoal ? 0 : 1, al));
+                                    Visualizer::addSphere(meJumpSnd.ball, rgba(1, 1, drawMetric->goal > 0 ? 0 : 1, al));
                                     //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.25));
                                     //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.25));
                                 }
@@ -483,24 +501,24 @@ public:
                             }
 
                             double goalHeight = meJumpSnd.ball.y;
-                            bool hasGoal = meJumpSnd.hasGoal > 0;
-                            if (hasGoal && !GameInfo::isOpponentCrashed) {
+                            int goal = meJumpSnd.hasGoal;
+                            if (goal > 0 && !GameInfo::isOpponentCrashed) {
                                 if (noFarGoal && isFar && goalHeight < ARENA_GOAL_HEIGHT * 0.7) {
-                                    hasGoal = false;
+                                    goal = 0;
                                 }
 
                                 if (meJumpSnd.tick - shotTick > 30 && hasOppTouch) {
-                                    hasGoal = false;
+                                    goal = 0;
                                 }
                             }
 
                             leafsCount++;
 
-                            if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0) {
+                            if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0 || alarm && env.tick >= beta) {
                                 if (!(ballFloorTouch && isInGoal)) {
 
                                     cand = {env.tick, j, k, firstJAction, firstKAction, dir,
-                                            hasGoal, hasShot, positiveChange, positiveTicks, penalty,
+                                            goal, hasShot, positiveChange, positiveTicks, penalty,
                                             shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball, oppGk,
                                             sqrt(passMinDist2), touchFloorCount, qwe};
 
@@ -536,6 +554,10 @@ public:
                     wildcard--;
                 }
 
+                if (dir.jumpOnly) {
+                    break;
+                }
+
                 meSnd.me()->action = mvAction;
                 if (j == 0) {
                     firstJAction = mvAction;
@@ -559,7 +581,7 @@ public:
             }
         }
 
-        if (sel.j >= 0) {
+        if (sel.j >= 0 && sel.goal >= 0) {
             resMetric = sel;
             resAction = firstAction;
             bool hasTeammateShot = false;
@@ -616,7 +638,7 @@ public:
             AAction resAction;
             Metric resMetric;
             tryShotOutOrGoal(snd, true, false, resAction, resMetric);
-            if (resMetric.hasGoal > 0 && opp.isDetouched()) {
+            if (resMetric.goal > 0 && opp.isDetouched()) {
                 resMetric.firstJAction.invert();
                 resMetric.firstKAction.invert();
                 for (int j = 0; j < resMetric.j; j++) {
@@ -1041,7 +1063,7 @@ public:
             oppGoalAlarm = oppGoalPredict();
         }
 
-        if (isAttacker && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm, action, metric)) {
+        if (isAttacker && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm || alarm, action, metric)) {
             std::string msg = metric.toString();
             Visualizer::addText(msg);
             LOG(msg);
@@ -1120,10 +1142,10 @@ public:
             condToShot = firstToBallMy && firstToBallMy.value().id == me.id
                     || ball.velocity.z < 0 && ball.z < -ARENA_Z * (GameInfo::isNitro ? 0.5 : 0.5)
                     || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5
-                    || alarm
+                    || alarm || oppGoalAlarm
                     || hasPrevShot;
 
-            if (condToShot && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm, action, metric)) {
+            if (condToShot && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm || alarm, action, metric)) {
 
                 std::string msg = "(gk) " + metric.toString();
                 Visualizer::addText(msg);
