@@ -692,8 +692,10 @@ struct Sandbox {
 
         if (ball.z > ARENA_Z + BALL_RADIUS) {
             hasGoal = 1;
+            goalTick = tick;
         } else if (ball.z < -ARENA_Z - BALL_RADIUS) {
             hasGoal = -1;
+            goalTick = tick;
         }
     }
 
@@ -904,6 +906,7 @@ struct Sandbox {
 
     bool hasRandomCollision = false;
     int hasGoal = 0; // -1, 0, 1
+    int goalTick = -1;
     bool isInverted = false;
 
     void invert(int newMeId) {

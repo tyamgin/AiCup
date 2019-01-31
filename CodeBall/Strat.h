@@ -88,6 +88,7 @@ public:
         int positiveTicks = 0;
         double penalty = 0;
         int timeToShot = INT_MAX;
+        int timeToGoal = INT_MAX;
         double minBallZ = 0;
         bool hasOppTouch = false;
         ABall goalBall;
@@ -166,6 +167,7 @@ public:
     };
 
     std::unordered_map<int, Metric> prevMetric;
+    Metric prevAlarmMetric;
 
     int wildCardCounts = 0;
 
@@ -182,18 +184,18 @@ public:
         //
         // penalty по убывающей
         //
-        auto& mm = *env.me();
+        auto mm = env.me();
 
-        if (isAttacker && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
+        if (isAttacker && mm->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
-        if (isAttacker && env.ball.z < env.me()->z && env.me()->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
+        if (isAttacker && env.ball.z < mm->z && mm->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 12)
             return false;
-        if (isAttacker && env.me()->z > -ARENA_Z / 2 && env.me()->z > env.ball.z + 3 && env.ball.velocity.z < -1)
+        if (isAttacker && mm->z > -ARENA_Z / 2 && mm->z > env.ball.z + 3 && env.ball.velocity.z < -1)
             return false;
 
         int leafsCount = 0;
 
-        const auto myId = env.me()->id;
+        const auto myId = mm->id;
         Metric sel, cand, ppp;
         AAction firstAction;
 
@@ -220,9 +222,12 @@ public:
                 {0.98, 1.02}
         };
 
-        bool skipOpt = GameInfo::isFinal && env.me()->id % 3 == env.tick % 3 && !env.isInverted;
+        bool skipOpt = GameInfo::isFinal && mm->id % 3 == env.tick % 3 && !env.isInverted;
+        if (!isAttacker && alarm) {
+            skipOpt = false;
+        }
 
-        if (!dirs.empty() && prevMetric[myId].tick >= env.tick - 1 && env.me()->isDetouched() && env.me()->nitroAmount > EPS) {
+        if (!dirs.empty() && prevMetric[myId].tick >= env.tick - 1 && mm->isDetouched() && mm->nitroAmount > EPS) {
             auto prv = dirs[0];
             for (size_t yCorrsIdx = 0; yCorrsIdx < yCorrs.size(); yCorrsIdx++) {
                 if (yCorrsIdx == 0 || (yCorrsIdx % yCorrs.size() == env.tick % yCorrs.size() && !skipOpt)) {
@@ -241,9 +246,11 @@ public:
                 }
             }
         } else if (!skipOpt) {
-            for (int i = 0; i < 48; i++) {
-                if (i % 6 == env.tick % 6) {
-                    auto ang = 2 * M_PI / 48 * i;
+            const int anglesCount = !isAttacker && alarm ? 96 : 48;
+            const int interval = 6;
+            for (int i = 0; i < anglesCount; i++) {
+                if (i % interval == env.tick % interval) {
+                    auto ang = 2 * M_PI / anglesCount * i;
                     dirs.push_back({Point(cos(ang), 0, sin(ang)), 1, Correction(), true});
                 }
             }
@@ -251,7 +258,7 @@ public:
 
         const int beta = 0; // 387
 
-//        if (env.me()->isDetouched() && env.me()->nitroAmount > EPS && env.tick >= beta) {
+//        if (mm->isDetouched() && mm->nitroAmount > EPS && env.tick >= beta) {
 //            for (double xCorr : {1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
 //                for (double yCorr : {0.8, 0.9, 0.95, 0.99, 1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
 //                    for (int xSign = -1; xSign <= 1; xSign += 2) {
@@ -263,11 +270,11 @@ public:
 //        }
 
         if (!skipOpt) {
-            const int startI = env.me()->getDistanceTo(env.ball) - env.me()->radius - BALL_RADIUS > 14 ? 20 : 0;
+            const int startI = mm->getDistanceTo(env.ball) - mm->radius - BALL_RADIUS > 14 ? 20 : 0;
             for (auto i = 0; i <= 54 && ballSnd.hasGoal == 0; i++) {
                 if (i >= startI) {
                     if (i % 6 == 0 || i <= 1) {
-                        dirs.push_back({ballSnd.ball - *env.me(), 1});
+                        dirs.push_back({ballSnd.ball - *mm, 1});
                     }
                 }
 
@@ -517,9 +524,11 @@ public:
                             if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0 || alarm && env.tick >= beta) {
                                 if (!(ballFloorTouch && isInGoal)) {
 
+                                    auto timeToShot = shotTick - env.tick;
+                                    auto timeToGoal = goal > 0 ? meJumpSnd.goalTick - env.tick : INT_MAX;
                                     cand = {env.tick, j, k, firstJAction, firstKAction, dir,
                                             goal, hasShot, positiveChange, positiveTicks, penalty,
-                                            shotTick - env.tick, minZ, hasOppTouch, meJumpSnd.ball, oppGk,
+                                            timeToShot, timeToGoal, minZ, hasOppTouch, meJumpSnd.ball, oppGk,
                                             sqrt(passMinDist2), touchFloorCount, qwe};
 
                                     if (sel.j == -1 || sel < cand) {
@@ -566,6 +575,9 @@ public:
                 if (skipRobotsCollisions(meSnd)) {
                     break;
                 }
+//                if (dir.toBallAfterJump) {
+//                    Visualizer::addSphere(*meSnd.me(), rgba(0, 10, 0, 0.2));
+//                }
 
                 if (meSnd.me()->z < -ARENA_Z - ARENA_GOAL_DEPTH + ROBOT_MAX_RADIUS + 0.01) {
                     isInGoal = true;
@@ -574,9 +586,8 @@ public:
                     break;
                 }
             }
-
-            auto me = env.me();
-            if (me->isDetouched() && me->nitroAmount < EPS) {
+            
+            if (mm->isDetouched() && mm->nitroAmount < EPS) {
                 break;
             }
         }
@@ -648,6 +659,9 @@ public:
                     Sandbox::_actionsCache[opp.id].push_back(resMetric.firstKAction);
                 }
                 alarm = true;
+                if (prevAlarmMetric.tick < env.tick || prevAlarmMetric.timeToGoal > resMetric.timeToGoal) {
+                    prevAlarmMetric = resMetric;
+                }
             }
         }
         RFigureBase::invertedMode = false;
