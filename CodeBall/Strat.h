@@ -171,7 +171,7 @@ public:
 
     int wildCardCounts = 0;
 
-    bool tryShotOutOrGoal(Sandbox& env, int isAttacker, bool alarm, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
+    bool tryShotOutOrGoal(Sandbox& env, int isAttacker, bool simpleAlarm, bool oppGoalAlarm, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
         //
         // TODO:
         // Улучшить удары по роботам
@@ -185,6 +185,7 @@ public:
         // penalty по убывающей
         //
         auto mm = env.me();
+        auto alarm = simpleAlarm || oppGoalAlarm;
 
         if (isAttacker && mm->getDistanceTo(env.ball) >= BALL_RADIUS + ROBOT_MAX_RADIUS + 24)
             return false;
@@ -258,7 +259,7 @@ public:
 
         const int beta = 0; // 387
 
-//        if (mm->isDetouched() && mm->nitroAmount > EPS && env.tick >= beta) {
+//        if (mm->isDetouched() && mm->nitroAmount > EPS) {
 //            for (double xCorr : {1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
 //                for (double yCorr : {0.8, 0.9, 0.95, 0.99, 1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
 //                    for (int xSign = -1; xSign <= 1; xSign += 2) {
@@ -308,7 +309,7 @@ public:
 
         const double al = 0.7 * drawAlpha;
 
-        bool ballFloorTouch = !isAttacker && hasGkFloorTouch();
+        bool ballFloorTouch = !isAttacker && !oppGoalAlarm && hasGkFloorTouch();
 
         for (auto& dir : dirs) {
             Sandbox meSnd = env;
@@ -400,7 +401,7 @@ public:
                         Point md1, md2;
 
                         if (hasShot && (hasPositiveShot || alarm || !isAttacker && meJumpSnd.ball.z < -30)
-                            || !hasShot && k == jumpMaxTicks && rcK != -1 && (meJumpSnd.me()->z > -10 || alarm && env.tick >= beta)) { // TODO
+                            || !hasShot && k == jumpMaxTicks && rcK != -1 && (meJumpSnd.me()->z > -10 || alarm)) { // TODO
                             OP_START(KW);
 
                             double passMinDist2 = 10000;
@@ -521,7 +522,7 @@ public:
 
                             leafsCount++;
 
-                            if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0 || alarm && env.tick >= beta) {
+                            if (hasShot && meJumpSnd.hasGoal >= 0 || !hasShot && meJumpSnd.hasGoal > 0 || alarm) {
                                 if (!(ballFloorTouch && isInGoal)) {
 
                                     auto timeToShot = shotTick - env.tick;
@@ -619,7 +620,7 @@ public:
 #ifdef DEBUG
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(env, isAttacker, alarm, t1, t2, &sel, ret ? 1 : 0.3);
+                tryShotOutOrGoal(env, isAttacker, simpleAlarm, oppGoalAlarm, t1, t2, &sel, ret ? 1 : 0.3);
 #endif
 
                 prevMetric[myId] = sel;
@@ -648,7 +649,7 @@ public:
             snd.invert(opp.id);
             AAction resAction;
             Metric resMetric;
-            tryShotOutOrGoal(snd, true, false, resAction, resMetric);
+            tryShotOutOrGoal(snd, true, false, false, resAction, resMetric);
             if (resMetric.goal > 0 && opp.isDetouched()) {
                 resMetric.firstJAction.invert();
                 resMetric.firstKAction.invert();
@@ -903,7 +904,7 @@ public:
                     r->action.vel(Helper::maxVelocityTo(*r, ballSnd.ball));
 
                     if (r->getDistanceTo(tar) < (r->isTeammate ? 3 : 6 + GameInfo::isNitro * 0)) {
-                        updMin(minTime[r->id], j);
+                        updMin(minTime[r->id], std::max(i, j));
                     }
                 }
                 e.doTick(1);
@@ -928,7 +929,7 @@ public:
         // костыль от выкрутасов вратаря
         for (int i = 0; i < 80; i++) {
             const auto& pos = Sandbox::_ballsCache[i];
-            if (pos.y < BALL_RADIUS + 1 && pos.z < -ARENA_Z + 6) {
+            if (pos.y < BALL_RADIUS + 3 && pos.z < -ARENA_Z + 6) {
                 return true;
             }
             if (pos.z < -ARENA_Z + BALL_RADIUS + 0.3) {
@@ -985,8 +986,6 @@ public:
         return {firstAction, secondAction};
     }
 
-    bool alarm = false, oppGoalAlarm = false;
-
     void act(AAction& action, bool isFirst) {
         auto& ball = env.ball;
         auto& me = *env.me();
@@ -1007,6 +1006,8 @@ public:
         }
 
         const int alarmTicks = 45;
+        static bool simpleAlarm = false;
+        static bool oppGoalAlarm = false;
 
         if (isFirst) {
 #ifdef LOCAL
@@ -1026,14 +1027,14 @@ public:
                 ballEnv.doTick();
                 cache.push_back(ballEnv.ball);
                 if (i == alarmTicks - 1) {
-                    alarm = ballEnv.hasGoal < 0;
+                    simpleAlarm = ballEnv.hasGoal < 0;
                 }
             }
             Sandbox::loadBallsCache(cache);
         }
 
-        if (alarm) {
-            Visualizer::addText("ALARM!!!");
+        if (simpleAlarm) {
+            Visualizer::addText("SIMPLE ALARM!");
         }
 
         bool hasPrevShot = prevMetric.count(me.id) && prevMetric[me.id].tick >= env.tick - 1;
@@ -1065,7 +1066,8 @@ public:
 
 
         if (isAttacker && env.roundTick <= 35) {
-            action = AAction(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
+            auto deltaX = GameInfo::isFinal ? 0.0 : (me.x < env.robot(secondAttackerId)->x ? -0.5 : 0.5);
+            action = AAction(Helper::maxVelocityTo(me, env.ball + Point(deltaX, 0, -3.2)));
             return;
         }
         if (!isAttacker && env.roundTick <= 30) {
@@ -1077,7 +1079,7 @@ public:
             oppGoalAlarm = oppGoalPredict();
         }
 
-        if (isAttacker && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm || alarm, action, metric)) {
+        if (isAttacker && tryShotOutOrGoal(env, isAttacker, simpleAlarm, oppGoalAlarm, action, metric)) {
             std::string msg = metric.toString();
             Visualizer::addText(msg);
             LOG(msg);
@@ -1116,17 +1118,17 @@ public:
                     auto target = firstOrSecond.value().target;
 
                     if (tryTakeNitro(isAttacker, target, action, nitroPackSelected)) {
-                        Visualizer::addTargetLines(me, nitroPackSelected);
+                        Visualizer::addTargetLines(me, nitroPackSelected, rgba(0, 0, 1));
                     } else {
                         action = firstOrSecond.value().action;
                     }
-                    Visualizer::addTargetLines(me, target);
+                    Visualizer::addTargetLines(me, target, rgba(1, 1, 1));
                 } else {
                     // TODO: когда это достижимо?
                     if (ball.z > -6) {
                         Point target(0, 0, 14);
                         action.vel(Helper::maxVelocityTo(me, target));
-                        Visualizer::addTargetLines(me, target);
+                        Visualizer::addTargetLines(me, target, rgba(1, 0, 0));
                     } else {
                         isAttacker = 0; // TODO
                     }
@@ -1143,7 +1145,7 @@ public:
                         target = t2;
                     }
                 }
-                Visualizer::addTargetLines(me, target);
+                Visualizer::addTargetLines(me, target, rgba(0, 0, 0));
                 action.targetVelocity = Helper::maxVelocityTo(me, target);
             }
         }
@@ -1156,10 +1158,10 @@ public:
             condToShot = firstToBallMy && firstToBallMy.value().id == me.id
                     || ball.velocity.z < 0 && ball.z < -ARENA_Z * (GameInfo::isNitro ? 0.5 : 0.5)
                     || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5
-                    || alarm || oppGoalAlarm
+                    || simpleAlarm || oppGoalAlarm
                     || hasPrevShot;
 
-            if (condToShot && tryShotOutOrGoal(env, isAttacker, oppGoalAlarm || alarm, action, metric)) {
+            if (condToShot && tryShotOutOrGoal(env, isAttacker, simpleAlarm, oppGoalAlarm, action, metric)) {
 
                 std::string msg = "(gk) " + metric.toString();
                 Visualizer::addText(msg);
@@ -1168,7 +1170,7 @@ public:
                 std::optional<AAction> defend;
                 Sandbox e1 = env;
 
-                if (alarm) {
+                if (simpleAlarm) {
                     Sandbox e2 = env;
                     AAction act;
                     act.jumpSpeed = ROBOT_MAX_JUMP_SPEED;
@@ -1214,9 +1216,9 @@ public:
                     }
                     if (firstAction) {
                         action = firstAction.value().action;
-                        Visualizer::addTargetLines(me, firstAction.value().target);
+                        Visualizer::addTargetLines(me, firstAction.value().target, rgba(1, 1, 1));
                     } else if (ball.z > -ARENA_Z + 10 && Sandbox::_ballsCache[20].z > 15 && tryTakeNitro(isAttacker, Point(0, 0, -ARENA_Z), action, nitroPackSelected)) {
-                        Visualizer::addTargetLines(me, nitroPackSelected);
+                        Visualizer::addTargetLines(me, nitroPackSelected, rgba(0, 0, 1));
                     } else {
                         action = goToGoalCenterStrat(env);
                     }
