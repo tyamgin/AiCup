@@ -170,20 +170,18 @@ public:
     std::unordered_map<int, Metric> prevMetric;
     Metric prevAlarmMetric;
 
-    int wildCardCounts = 0;
-
     bool tryShotOutOrGoal(Sandbox& env, int isAttacker, bool simpleAlarm, bool oppGoalAlarm, AAction &resAction, Metric& resMetric, Metric* drawMetric = nullptr, double drawAlpha = 1.0) {
         //
         // TODO:
         // Улучшить удары по роботам
         //
-        // Точнее симить подборы после сейвов
         //
         // Можно убрать из симы неактивных игроков (например, свой вратать после удара)
         //
-        // First to goal: учитывать tryShotOutOrGoal
         //
         // penalty по убывающей
+        //
+        // add jumpOnly (хотябы только текущую скорость)
         //
         auto mm = env.me();
         auto alarm = simpleAlarm || oppGoalAlarm;
@@ -347,22 +345,10 @@ public:
 
                     int k;
                     int rcK = -1;
-                    bool qwe = false;
 
                     double minDist2ToBall = meSnd.me()->getDistanceTo2(meSnd.ball);
                     bool hasShot = false;
                     for (k = 0; k <= jumpMaxTicks && !hasShot; k++) {
-//                        if (k == 0) {
-//                            if (wildcard > 0) {
-//                                wildCardCounts++;
-//                                qwe = true;
-//                            }
-//                        }
-
-//                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) >= SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 9)) {
-//                            //qwe = true;
-//                            break;
-//                        }
 
                         if (dir.toBallAfterJump && meJumpSnd.me()->nitroAmount > EPS) {
                             meJumpSnd.me()->action.vel(Helper::maxVelocityTo(*meJumpSnd.me(), meJumpSnd.ball));
@@ -381,8 +367,6 @@ public:
                         if (drawMetric && j == drawMetric->j && k <= drawMetric->k) {
                             Visualizer::addSphere(*meJumpSnd.me(), rgba(0.7, 0.8, 0, al));
                             Visualizer::addSphere(meJumpSnd.ball, rgba(0.4, 0.1, 0.4, al));
-                            //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.5));
-                            //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                         }
 
                         bool hasPositiveShot = false;
@@ -402,7 +386,7 @@ public:
                         Point md1, md2;
 
                         if (hasShot && (hasPositiveShot || alarm || !isAttacker && meJumpSnd.ball.z < -30)
-                            || !hasShot && k == jumpMaxTicks && rcK != -1 && (meJumpSnd.me()->z > -10 || alarm)) { // TODO
+                            || !hasShot && k == jumpMaxTicks && rcK != -1 && (meJumpSnd.me()->z > -10 || alarm)) {
                             OP_START(KW);
 
                             double passMinDist2 = 10000;
@@ -499,8 +483,6 @@ public:
 
                                 if (drawMetric && j == drawMetric->j && k <= drawMetric->k) {
                                     Visualizer::addSphere(meJumpSnd.ball, rgba(1, 1, drawMetric->goal > 0 ? 0 : 1, al));
-                                    //Visualizer::addSphere(meJumpSnd.opp[0], rgba(1, 0, 0, al * 0.25));
-                                    //Visualizer::addSphere(meJumpSnd.opp[1], rgba(1, 0, 0, al * 0.25));
                                 }
                             }
 
@@ -531,7 +513,7 @@ public:
                                     cand = {env.tick, j, k, firstJAction, firstKAction, dir,
                                             goal, hasShot, positiveChange, positiveTicks, penalty,
                                             timeToShot, timeToGoal, minZ, hasOppTouch, meJumpSnd.ball, oppGk,
-                                            sqrt(passMinDist2), touchFloorCount, qwe};
+                                            sqrt(passMinDist2), touchFloorCount};
 
                                     if (sel.j == -1 || sel < cand) {
                                         sel = cand;
@@ -612,9 +594,6 @@ public:
                 }
             }
             sel.active = !hasTeammateShot;
-//            if (sel._debugFalsePositive) {
-//                std::cout << "AAAAAAA\n";
-//            }
 
             if (drawMetric == nullptr) {
                 Logger::instance()->corrXYZStat[0][sel.dir.correction.fx]++;
@@ -1040,12 +1019,6 @@ public:
         static bool oppGoalAlarm = false;
 
         if (isFirst) {
-#ifdef LOCAL
-            if (env.tick % 500 == 0) {
-                //std::cout << env.tick << " wildcards " << wildCardCounts << std::endl;
-            }
-#endif
-
             std::vector<ABall> cache;
             Sandbox ballEnv = env;
             ballEnv.stopOnGoal = false;
