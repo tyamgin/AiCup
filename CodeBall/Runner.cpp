@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
 #if M_NO_RANDOM
     runStr += " --disable-random";
 #endif
-    system((runStr + " --nitro true --team-size 3 --duration 40000 --seed 93323 --p2-name " + prevBin + " --p2 tcp-31002 &").c_str());
+    system((runStr + " --nitro true --team-size 3 --duration 40000 --seed 94323 --p2-name " + prevBin + " --p2 tcp-31002 &").c_str());
     cerr << "local runner started" << endl;
 
     usleep(2000 * 1000);

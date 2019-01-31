@@ -96,6 +96,7 @@ public:
         double passMinDist = 0;
         int touchFloorCount = 0;
         bool _debugFalsePositive = false;
+        bool active = true;
 
         double getHeightAdd() const {
             if (goal > 0) {
@@ -597,17 +598,20 @@ public:
             resMetric = sel;
             resAction = firstAction;
             bool hasTeammateShot = false;
-            for (auto&x : env.my) {
-                if (x.id != myId && prevMetric.count(x.id) && prevMetric[x.id].tick >= env.tick - 1) { // TODO: prevTick may be the same
-                    auto m = prevMetric[x.id];
-                    if (std::abs(sel.timeToShot - m.timeToShot) <= 10) {
-                        hasTeammateShot |= sel < m;
-                    } else {
-                        hasTeammateShot |= sel.timeToShot > m.timeToShot;
+            if (!env.isInverted) {
+                for (auto &x : env.my) {
+                    if (x.id != myId && prevMetric.count(x.id) &&
+                        prevMetric[x.id].tick >= env.tick - 1) { // TODO: prevTick may be the same
+                        auto m = prevMetric[x.id];
+                        if (std::abs(sel.timeToShot - m.timeToShot) <= 10) {
+                            hasTeammateShot |= sel < m;
+                        } else {
+                            hasTeammateShot |= sel.timeToShot > m.timeToShot;
+                        }
                     }
                 }
             }
-            auto ret = !hasTeammateShot;
+            sel.active = !hasTeammateShot;
 //            if (sel._debugFalsePositive) {
 //                std::cout << "AAAAAAA\n";
 //            }
@@ -620,13 +624,13 @@ public:
 #ifdef DEBUG
                 AAction t1;
                 Metric t2;
-                tryShotOutOrGoal(env, isAttacker, simpleAlarm, oppGoalAlarm, t1, t2, &sel, ret ? 1 : 0.3);
+                tryShotOutOrGoal(env, isAttacker, simpleAlarm, oppGoalAlarm, t1, t2, &sel, sel.active ? 1 : 0.3);
 #endif
 
                 prevMetric[myId] = sel;
             }
 
-            return ret;
+            return sel.active;
         }
         return false;
     }
@@ -879,12 +883,6 @@ public:
         }
 
         double ballHeight = BALL_RADIUS + ROBOT_MAX_RADIUS*5;
-//        if (GameInfo::isNitro && ballSnd.me()->z + 2 < ballSnd.ball.z) {
-//            ballHeight += 4;
-//            if (ballSnd.me()->nitroAmount > EPS) {
-//                ballHeight += 2;
-//            }
-//        }
 
         for (int i = 0; i <= 100; i++) {
             ballSnd.doTick(1);
@@ -952,18 +950,50 @@ public:
         snd.stopOnGoal = false;
         auto me = *snd.me();
         double ballHeight = BALL_RADIUS + 3;
-//        if (GameInfo::isNitro && me.z + 2 < snd.ball.z) {
-//            ballHeight += 4;
-//            if (me.nitroAmount > EPS) {
-//                ballHeight += 2;
-//            }
-//        }
 
         snd.clearMe();
+
+        int activeId = -1;
+        Metric activeMetric;
+        std::vector<AAction> activeActions;
+
+        for (auto& item : prevMetric) {
+            if (item.second.tick >= env.tick - 1 && item.second.active) {
+                activeId = item.first;
+                if (activeId == me.id || !GameInfo::isTeammateById[activeId]) {
+                    continue;
+                }
+
+                activeMetric = item.second;
+
+                for (int j = 0; j < activeMetric.j; j++) {
+                    activeActions.push_back(activeMetric.firstJAction);
+                }
+                for (int k = 0; k <= activeMetric.k; k++) {
+                    activeActions.push_back(activeMetric.firstKAction);
+                }
+                std::reverse(activeActions.begin(), activeActions.end());
+
+                if (activeMetric.tick < env.tick && !activeActions.empty()) {
+                    activeActions.pop_back();
+                }
+
+                break;
+            }
+        }
 
         std::optional<TargetItem> firstAction, secondAction;
 
         for (auto i = 1; i <= 12 * TICKS_PER_SECOND; i++) {
+            if (activeId != -1 && !activeActions.empty()) {
+                auto act = activeActions.back();
+                activeActions.pop_back();
+                auto r = snd.robot(activeId);
+                r->action = act;
+                if (act._toBall) {
+                    r->action.vel(Helper::maxVelocityTo(*r, snd.ball));
+                }
+            }
             snd.doTick(1);
             if (snd.ball.y > ballHeight)
                 continue;
@@ -1087,6 +1117,7 @@ public:
         }
 
         if (isAttacker) {
+            bool halfback = false;
             if (env.ball.getDistanceTo(me) < BALL_RADIUS + ROBOT_RADIUS + 0.1) {
                 int angles = 8;
                 Point bestV;
@@ -1107,7 +1138,11 @@ public:
                 action.targetVelocity = bestV;//(oppGoal - me).take(ROBOT_MAX_GROUND_SPEED);
                 Visualizer::addLine(me, me + action.targetVelocity * 2 * ROBOT_RADIUS, 3, rgba(1, 1, 0));
                 Visualizer::addLine(me, oppGoal, 0.2, rgba(0, 0, 1));
-            } else if (!firstToBall || !firstToBall.value().isTeammate || firstToBall.value().id == me.id) {
+            } else if (!firstToBall
+                || !firstToBall.value().isTeammate
+                || firstToBall.value().id == me.id
+                || (halfback = firstToBall.value().isTeammate && me.z < env.robot(secondAttackerId)->z)) {
+
                 std::tie(firstAction, secondAction) = moveToBallUsual(isAttacker);
                 auto firstOrSecond = firstAction;
                 if (!firstOrSecond) {
@@ -1122,7 +1157,7 @@ public:
                     } else {
                         action = firstOrSecond.value().action;
                     }
-                    Visualizer::addTargetLines(me, target, rgba(1, 1, 1));
+                    Visualizer::addTargetLines(me, target, halfback ? rgba(0, 0, 1) : rgba(1, 1, 1));
                 } else {
                     // TODO: когда это достижимо?
                     if (ball.z > -6) {

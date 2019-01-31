@@ -78,14 +78,13 @@ struct Sandbox {
     }
 
     ARobot* robot(int id) {
-        for (size_t i = 0; i < my.size(); i++) {
-            if (my[i].id == id) {
-                return &my[i];
-            }
-            if (opp[i].id == id) {
-                return &opp[i];
-            }
-        }
+        for (auto& x : my)
+            if (x.id == id)
+                return &x;
+        for (auto& x : opp)
+            if (x.id == id)
+                return &x;
+
         LOG_ERROR("Can't find robot by id " + std::to_string(id));
         return nullptr;
     }
