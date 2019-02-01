@@ -1081,7 +1081,7 @@ public:
         }
 
 
-        if (false && GameInfo::isFinal) {
+        if (GameInfo::isFinal) {
             if (isAttacker && env.roundTick <= 40) {
                 action = AAction(Helper::maxVelocityTo(me, env.ball));
                 return;
@@ -1135,7 +1135,7 @@ public:
             } else if (!firstToBall
                 || !firstToBall.value().isTeammate
                 || firstToBall.value().id == me.id
-                || (halfback = GameInfo::isFinal /*&& firstToBall.value().isTeammate && me.z < env.robot(secondAttackerId)->z*/)) {
+                || (halfback = GameInfo::isFinal && firstToBall.value().isTeammate && me.z < env.robot(secondAttackerId)->z)) {
 
                 std::tie(firstAction, secondAction) = moveToBallUsual(isAttacker);
                 auto firstOrSecond = firstAction;
