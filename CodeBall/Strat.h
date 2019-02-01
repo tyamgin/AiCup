@@ -258,11 +258,11 @@ public:
 
         const int beta = 0; // 387
 
-//        if (mm->isDetouched() && mm->nitroAmount > EPS) {
-//            for (double xCorr : {1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
-//                for (double yCorr : {0.8, 0.9, 0.95, 0.99, 1.0, 1.01, 1.05, 1.1, 1.2, 1.3}) {
+//        if (!env.isInverted && mm->isDetouched() && mm->nitroAmount > EPS) {
+//            for (double xCorr : {1.0, 1.010001, 1.050001, 1.100001, 1.200001, 1.300001}) {
+//                for (double yCorr : {0.800001, 0.900001, 0.950001, 0.990001, 1.0, 1.010001, 1.050001, 1.100001, 1.200001, 1.300001}) {
 //                    for (int xSign = -1; xSign <= 1; xSign += 2) {
-//                        dirs.push_back({mm.velocity._x(mm.velocity.x * xCorr * xSign)._y(mm.velocity.y * yCorr),
+//                        dirs.push_back({mm->velocity._x(mm->velocity.x * xCorr * xSign)._y(mm->velocity.y * yCorr),
 //                                        1, {xCorr * xSign, yCorr, 1}, false, true});
 //                    }
 //                }
@@ -323,7 +323,7 @@ public:
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
 
                 if (drawMetric && j <= drawMetric->j) {
-                    Visualizer::addSphere(*meSnd.me(), rgba(0, 0.8, 0, al));
+                    Visualizer::addSphere(*meSnd.me(), env.isInverted ? rgba(0.8, 0, 0, al) : rgba(0, 0.8, 0, al));
                     Visualizer::addSphere(meSnd.ball, rgba(0.4, 0.1, 0.4, al));
                     Visualizer::addSphere(meSnd.opp[0], rgba(1, 0, 0, al * 0.5));
                     Visualizer::addSphere(meSnd.opp[1], rgba(1, 0, 0, al * 0.5));
@@ -596,10 +596,16 @@ public:
             sel.active = !hasTeammateShot;
 
             if (drawMetric == nullptr) {
-                Logger::instance()->corrXYZStat[0][sel.dir.correction.fx]++;
-                Logger::instance()->corrXYZStat[1][sel.dir.correction.fy]++;
-                Logger::instance()->corrXYZStat[2][sel.dir.correction.fz]++;
+#ifdef LOCAL
+                if (sel.dir.jumpOnly) {
+                    Logger::instance()->corrXYZOnlyJumpStat[Point(sel.dir.correction.fx, sel.dir.correction.fy, sel.dir.correction.fz)]++;
+                } else {
+                    Logger::instance()->corrXYZStat[0][sel.dir.correction.fx]++;
+                    Logger::instance()->corrXYZStat[1][sel.dir.correction.fy]++;
+                    Logger::instance()->corrXYZStat[2][sel.dir.correction.fz]++;
+                }
                 LOG("Leafs: " + std::to_string(leafsCount));
+#endif
 #ifdef DEBUG
                 AAction t1;
                 Metric t2;
@@ -1068,11 +1074,19 @@ public:
         }
 
 
-        if (isAttacker && env.roundTick <= 35) {
-            auto deltaX = true ? 0.0 : (me.x < env.robot(secondAttackerId)->x ? -0.5 : 0.5);
-            action = AAction(Helper::maxVelocityTo(me, env.ball + Point(deltaX, 0, -3.2)));
-            return;
+        if (GameInfo::isFinal) {
+            if (isAttacker && env.roundTick <= 40) {
+                action = AAction(Helper::maxVelocityTo(me, env.ball));
+                return;
+            }
+        } else {
+            if (isAttacker && env.roundTick <= 35) {
+                auto deltaX = true ? 0.0 : (me.x < env.robot(secondAttackerId)->x ? -0.5 : 0.5);
+                action = AAction(Helper::maxVelocityTo(me, env.ball + Point(deltaX, 0, -3.2)));
+                return;
+            }
         }
+
         if (!isAttacker && env.roundTick <= 30) {
             action = AAction().vel(Helper::maxVelocityTo(me, Point(0, 0, -ARENA_Z)));
             return;

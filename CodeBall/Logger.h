@@ -35,6 +35,7 @@ struct Logger {
     long long _cumulativeDuration[LA_ACTIONS_COUNT];
     int dans[10000];
     std::unordered_map<double, int> corrXYZStat[3];
+    std::map<Point, int> corrXYZOnlyJumpStat;
     int sandboxTicksCount = 0;
     int sandbox3TicksCount = 0;
     int tick;
@@ -98,6 +99,9 @@ struct Logger {
             for (auto& mp : corrXYZStat[i]) {
                 out << "Corr" << "XYZ"[i] << " " << mp.first << ":" << mp.second << std::endl;
             }
+        }
+        for (auto& mp : corrXYZOnlyJumpStat) {
+            out << "Corr jump only " << mp.first.x << "," << mp.first.y << "," << mp.first.z << ":" << mp.second << std::endl;
         }
         out << "Sandbox ticks " << sandboxTicksCount << std::endl;
         out << "Sandbox 3ticks " << sandbox3TicksCount << std::endl;

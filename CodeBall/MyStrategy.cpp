@@ -140,9 +140,11 @@ void MyStrategy::act(const model::Robot& me, const model::Rules& rules, const mo
 
     Logger::instance()->cumulativeTimerEnd(LA_ALL);
 
-    if (game.current_tick % 500 == 0 && game.current_tick > 0) {
-        //cout << Logger::instance()->getSummary() << endl;
+#ifdef LOCAL
+    if (game.current_tick % 2500 == 0 && game.current_tick > 0) {
+        cout << Logger::instance()->getSummary() << endl;
     }
+#endif
     if (game.current_tick == 0) {
         run_tests();
     }
