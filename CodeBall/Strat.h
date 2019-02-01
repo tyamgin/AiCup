@@ -203,7 +203,7 @@ public:
         Sandbox ballSnd = env;
         ballSnd.clearMyRobots();
 
-        if (prevMetric.count(myId)) {
+        if (prevMetric.count(myId) && prevMetric[myId].tick >= env.tick - 1) {
             ppp = prevMetric[myId];
             dirs.push_back(prevMetric[myId].dir);
         }
@@ -222,7 +222,7 @@ public:
                 {0.98, 1.02}
         };
 
-        bool skipOpt = GameInfo::isFinal && mm->id % 3 == env.tick % 3 && !env.isInverted;
+        bool skipOpt = GameInfo::isFinal && !env.isInverted && (mm->id % 3 == env.tick % 3 || (mm->id + 1) % 3 == env.tick % 6);
         if (!isAttacker && alarm) {
             skipOpt = false;
         }
@@ -317,7 +317,6 @@ public:
 
             bool isInGoal = false;
 
-            const int forKMaxDist = 14;
             int wildcard = 0;
             for (auto j = 0; j + wildcard <= 60; j++) {
                 auto mvAction = AAction(Helper::maxVelocityToDir(*meSnd.me(), dir.dir, dir.speedFactor));
@@ -329,7 +328,7 @@ public:
                     Visualizer::addSphere(meSnd.opp[1], rgba(1, 0, 0, al * 0.5));
                 }
 
-                if (wildcard == 0 && meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + forKMaxDist)) {
+                if (wildcard == 0 && meSnd.me()->getDistanceTo2(meSnd.ball) < SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 14)) {
                     OP_START(K);
 
                     Sandbox meJumpSnd = meSnd;
@@ -349,6 +348,10 @@ public:
                     double minDist2ToBall = meSnd.me()->getDistanceTo2(meSnd.ball);
                     bool hasShot = false;
                     for (k = 0; k <= jumpMaxTicks && !hasShot; k++) {
+//                        if (k == jumpMaxTicks / 2 && meSnd.me()->getDistanceTo2(meSnd.ball) > SQR(BALL_RADIUS + ROBOT_MAX_RADIUS + 12)) {
+//                            breaksCount++;
+//                            break;
+//                        }
 
                         if (dir.toBallAfterJump && meJumpSnd.me()->nitroAmount > EPS) {
                             meJumpSnd.me()->action.vel(Helper::maxVelocityTo(*meJumpSnd.me(), meJumpSnd.ball));
@@ -931,6 +934,8 @@ public:
     };
 
     std::pair<std::optional<TargetItem>, std::optional<TargetItem>> moveToBallUsual(int isAttacker) {
+        OP_START(MOVE_TO_BALL);
+
         Sandbox snd = env;
         snd.stopOnGoal = false;
         auto me = *snd.me();
@@ -998,6 +1003,8 @@ public:
             }
             secondAction = {act, me + delta_pos};
         }
+
+        OP_END(MOVE_TO_BALL);
         return {firstAction, secondAction};
     }
 
