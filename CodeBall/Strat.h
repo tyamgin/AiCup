@@ -1081,7 +1081,7 @@ public:
         }
 
 
-        if (GameInfo::isFinal) {
+        if (false && GameInfo::isFinal) {
             if (isAttacker && env.roundTick <= 40) {
                 action = AAction(Helper::maxVelocityTo(me, env.ball));
                 return;
