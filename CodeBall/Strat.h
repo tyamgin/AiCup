@@ -303,7 +303,7 @@ public:
             if (!isAttacker) {
                 return e.ball.z < ARENA_Z * 0.5;
             }
-            return e.ball.z < 5; //13
+            return e.ball.z < 13;
         };
 
         const double al = 0.7 * drawAlpha;
@@ -462,7 +462,7 @@ public:
                                 }
 
                                 if (w > 25) {
-                                    auto passTar1 = forward->_y(0) + (forward->id == myId ? Helper::goalDir(*forward, 7) + Point(0, 4, 0) : Helper::goalDir(*forward, 8) + Point(0, 7, 0));
+                                    auto passTar1 = forward->_y(0) + (forward->id == myId ? Helper::goalDir(*forward, 7) + Point(0, 4, 0) : Helper::goalDir(*forward, 9) + Point(0, 10, 0));
                                     updMin(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
@@ -1266,7 +1266,7 @@ public:
                         action = firstOrSecond.value().action;
                     }
                     Visualizer::addTargetLines(me, target, halfback ? rgba(0, 0, 1) : rgba(1, 1, 1));
-                } else { 
+                } else {
                     // TODO: когда это достижимо?
                     if (ball.z > -6) {
                         Point target(0, 0, 14);
@@ -1279,7 +1279,7 @@ public:
             } else {
                 Point target(0, 0, 10);
                 if (GameInfo::isFinal) {
-                    target = Point(0, 0, 15);
+                    target = Point(0, 0, 10);
 //                    Point t1(-4, 0, 1), t2(4, 0, 12);
 //                    if (me.getDistanceTo(t1) + env.robot(secondAttackerId)->getDistanceTo(t2) <
 //                        me.getDistanceTo(t2) + env.robot(secondAttackerId)->getDistanceTo(t1))
