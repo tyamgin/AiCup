@@ -857,7 +857,7 @@ public:
         return {};
     }
 
-    std::tuple<std::optional<ARobot>, std::optional<ARobot>> evalToBall() {
+    std::tuple<std::optional<ARobot>, std::optional<ARobot>, std::optional<ARobot>> evalToBall(int gkId) {
         OP_START(EVAL_TO_BALL);
 
         Sandbox ballSnd = env;
@@ -908,11 +908,16 @@ public:
             }
         }
         std::pair<int, bool> minTimeAll(INT_MAX, false);
-        std::optional<ARobot> resAll;
+        std::pair<int, int> minTimeMy(INT_MAX, 0);
+        std::optional<ARobot> resAll, resMy;
         for (auto x : env.robots()) {
             if (std::make_pair(minTime[x->id], x->isTeammate) < minTimeAll) {
                 minTimeAll = std::make_pair(minTime[x->id], x->isTeammate);
                 resAll = *x;
+            }
+            if (x->id != gkId && x->isTeammate && std::make_pair(minTime[x->id], x->id) < minTimeMy) {
+                minTimeMy = std::make_pair(minTime[x->id], x->id);
+                resMy = *x;
             }
         }
         int minTimeMySecond = INT_MAX;
@@ -927,7 +932,7 @@ public:
         }
 
         OP_END(EVAL_TO_BALL);
-        return {resAll, resSecondMy};
+        return {resAll, resSecondMy, resMy};
     }
 
     bool hasGkFloorTouch() {
@@ -1208,8 +1213,8 @@ public:
             return;
         }
 
-        std::optional<ARobot> firstToBall, secondToBallMy;
-        std::tie(firstToBall, secondToBallMy) = evalToBall();
+        std::optional<ARobot> firstToBall, secondToBallMy, firstToBallMy;
+        std::tie(firstToBall, secondToBallMy, firstToBallMy) = evalToBall(gkId);
         if (firstToBall) {
             Visualizer::markFirstToBall(firstToBall.value());
         }
@@ -1261,7 +1266,7 @@ public:
                         action = firstOrSecond.value().action;
                     }
                     Visualizer::addTargetLines(me, target, halfback ? rgba(0, 0, 1) : rgba(1, 1, 1));
-                } else {
+                } else { 
                     // TODO: когда это достижимо?
                     if (ball.z > -6) {
                         Point target(0, 0, 14);
