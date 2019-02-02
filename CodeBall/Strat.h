@@ -209,8 +209,8 @@ public:
         }
 
         static const std::vector<std::vector<double>> yCorrs = {
-                {0.99, 0.995, 1.01, 1.03},
-                {1.02},
+                {0.99, 0.995, 1.01, 1.1},
+                {1.03},
                 {0.95, 0.98},
                 {0.9, 1.05},
         };
@@ -461,8 +461,8 @@ public:
                                     touchFloorCount++;
                                 }
 
-                                if (w > 30) {
-                                    auto passTar1 = forward->_y(0) + (forward->id == myId ? Helper::goalDir(*forward, 7) + Point(0, 4, 0) : Helper::goalDir(*forward, 9) + Point(0, 10, 0));
+                                if (w > 25) {
+                                    auto passTar1 = forward->_y(0) + (forward->id == myId ? Helper::goalDir(*forward, 7) + Point(0, 4, 0) : Helper::goalDir(*forward, 8) + Point(0, 7, 0));
                                     updMin(passMinDist2, meJumpSnd.ball.getDistanceTo2(passTar1));
                                 }
 
@@ -858,6 +858,8 @@ public:
     }
 
     std::tuple<std::optional<ARobot>, std::optional<ARobot>> evalToBall() {
+        OP_START(EVAL_TO_BALL);
+
         Sandbox ballSnd = env;
         ballSnd.stopOnGoal = GameInfo::isNitro;
         std::vector<int> minTime(7, INT_MAX);
@@ -869,18 +871,27 @@ public:
                 minTime[id] = metric.timeToShot;
             }
         }
+        Evaluator activeActions1;
+        int activeId = fillActiveActions(activeActions1);
+        auto activeActions0 = activeActions1;
 
         double ballHeight = BALL_RADIUS + ROBOT_MAX_RADIUS*5;
 
-        for (int i = 0; i <= 100; i++) {
+        for (int i = 0; i <= 120; i++) {
+            activeActions0.eval(ballSnd);
+
             ballSnd.doTick(1);
             if (ballSnd.ball.y > ballHeight)
                 continue;
             if (i % 5 != 0)
                 continue;
 
+            auto activeActions = activeActions1;
+
             auto e = env;
-            for (int j = 0; j < 100; j++) {
+            for (int j = 0; j <= i; j++) {
+                activeActions.eval(e);
+
                 for (auto r : e.robots()) {
                     Point oppGoal(0, 0, ARENA_DEPTH / 2 + ARENA_GOAL_DEPTH / 2);
                     if (!r->isTeammate)
@@ -889,23 +900,34 @@ public:
                     auto tar = ballSnd.ball + (ballSnd.ball - oppGoal)._y(0).take(BALL_RADIUS * 1);
                     r->action.vel(Helper::maxVelocityTo(*r, ballSnd.ball));
 
-                    if (r->getDistanceTo(tar) < (r->isTeammate ? 3 : 6 + GameInfo::isNitro * 0)) {
+                    if (r->getDistanceTo2(tar) < SQR(r->isTeammate ? 5 : 6 + GameInfo::isNitro * 0)) {
                         updMin(minTime[r->id], std::max(i, j));
                     }
                 }
                 e.doTick(1);
             }
         }
-        int minTimeMy = INT_MAX;
-        int minTimeAll = INT_MAX;
-        std::optional<ARobot> resMy, resAll;
+        std::pair<int, bool> minTimeAll(INT_MAX, false);
+        std::optional<ARobot> resAll;
         for (auto x : env.robots()) {
-            if (x->isTeammate && minTime[x->id] < minTimeMy)
-                minTimeMy = minTime[x->id], resMy = *x;
-            if (minTime[x->id] < minTimeAll)
-                minTimeAll = minTime[x->id], resAll = *x;
+            if (std::make_pair(minTime[x->id], x->isTeammate) < minTimeAll) {
+                minTimeAll = std::make_pair(minTime[x->id], x->isTeammate);
+                resAll = *x;
+            }
         }
-        return {resAll, resAll}; //TODO
+        int minTimeMySecond = INT_MAX;
+        std::optional<ARobot> resSecondMy;
+        if (resAll && resAll.value().isTeammate) {
+            for (auto x : env.robots()) {
+                if (x->isTeammate && x->id != resAll.value().id && minTime[x->id] < minTimeMySecond) {
+                    minTimeMySecond = minTime[x->id];
+                    resSecondMy = *x;
+                }
+            }
+        }
+
+        OP_END(EVAL_TO_BALL);
+        return {resAll, resSecondMy};
     }
 
     bool hasGkFloorTouch() {
@@ -933,6 +955,54 @@ public:
         Point target;
     };
 
+    struct Evaluator {
+        int activeId = -1;
+        Metric m;
+
+        void eval(Sandbox& snd) {
+            if (activeId == -1) {
+                return;
+            }
+            if (m.j > 0) {
+                auto r = snd.robot(activeId);
+                r->action = AAction(Helper::maxVelocityToDir(*r, m.dir.dir, m.dir.speedFactor));
+                m.j--;
+                return;
+            }
+            if (m.k > 0) {
+                auto r = snd.robot(activeId);
+                r->action = AAction(Helper::maxVelocityToDir(*r, m.dir.dir, m.dir.speedFactor), ROBOT_MAX_JUMP_SPEED, true);
+                if (m.dir.toBallAfterJump && r->nitroAmount > EPS) {
+                    r->action.vel(Helper::maxVelocityTo(*r, snd.ball));
+                }
+                m.k--;
+                return;
+            }
+        }
+    };
+
+    int fillActiveActions(Evaluator& ev) {
+        for (auto& item : prevMetric) {
+            if (item.second.tick >= env.tick - 1 && item.second.active) {
+                int activeId = item.first;
+                if (activeId == env.me()->id || !GameInfo::isTeammateById[activeId]) {
+                    continue;
+                }
+
+                ev.activeId = activeId;
+                ev.m = item.second;
+                if (ev.m.tick < env.tick) {
+                    if (ev.m.j > 0)
+                        ev.m.j--;
+                    else if (ev.m.k > 0)
+                        ev.m.k--;
+                }
+                return activeId;
+            }
+        }
+        return -1;
+    }
+
     std::pair<std::optional<TargetItem>, std::optional<TargetItem>> moveToBallUsual(int isAttacker) {
         OP_START(MOVE_TO_BALL);
 
@@ -943,48 +1013,19 @@ public:
 
         snd.clearMe();
 
-        int activeId = -1;
-        Metric activeMetric;
-        std::vector<AAction> activeActions;
-
-        for (auto& item : prevMetric) {
-            if (item.second.tick >= env.tick - 1 && item.second.active) {
-                activeId = item.first;
-                if (activeId == me.id || !GameInfo::isTeammateById[activeId]) {
-                    continue;
-                }
-
-                activeMetric = item.second;
-
-                for (int j = 0; j < activeMetric.j; j++) {
-                    activeActions.push_back(activeMetric.firstJAction);
-                }
-                for (int k = 0; k <= activeMetric.k; k++) {
-                    activeActions.push_back(activeMetric.firstKAction);
-                }
-                std::reverse(activeActions.begin(), activeActions.end());
-
-                if (activeMetric.tick < env.tick && !activeActions.empty()) {
-                    activeActions.pop_back();
-                }
-
-                break;
-            }
-        }
+        Evaluator activeActions;
+        int activeId = fillActiveActions(activeActions);
 
         std::optional<TargetItem> firstAction, secondAction;
 
         for (auto i = 1; i <= 12 * TICKS_PER_SECOND; i++) {
-            if (activeId != -1 && !activeActions.empty()) {
-                auto act = activeActions.back();
-                activeActions.pop_back();
-                auto r = snd.robot(activeId);
-                r->action = act;
-                if (act._toBall) {
-                    r->action.vel(Helper::maxVelocityTo(*r, snd.ball));
-                }
+            if (activeId != me.id && activeId != -1) {
+                activeActions.eval(snd);
             }
             snd.doTick(1);
+            if (i < 120) {
+                Visualizer::addSphere(snd.ball, 0.1, rgba(0, 0, 0));
+            }
             if (snd.ball.y > ballHeight)
                 continue;
             auto t = 1.0 * i / TICKS_PER_SECOND;
@@ -1006,6 +1047,47 @@ public:
 
         OP_END(MOVE_TO_BALL);
         return {firstAction, secondAction};
+    }
+
+    bool doFirstTicks(AAction& resAction, Point center) {
+        double maxZ = -1;
+        auto snd = env;
+        snd.clearRobots(true);
+        int selI = -1, selJ = -1, selP = -1;
+        AAction selAction;
+        for (int i = 0; i < 40; i++) {
+            for (int p = 1; p <= 15; p++) {
+                auto jumpSnd = snd;
+                for (int j = 0; j < 40; j++) {
+                    jumpSnd.me()->action = AAction(Helper::maxVelocityTo(*jumpSnd.me(), center._y(jumpSnd.me()->y)), p, true);
+                    auto prevBall = jumpSnd.ball;
+                    jumpSnd.doTick(1);
+                    if (jumpSnd.robotBallCollisions & M_COLL_MASK(jumpSnd.me()->id)) {
+                        for (int w = 0; w < 20; w++) {
+                            jumpSnd.doTick(1);
+                        }
+                        auto dz = jumpSnd.ball.z - prevBall.z;
+                        if (dz > maxZ) {
+                            maxZ = dz;
+                            selI = i;
+                            selJ = j;
+                            selP = p;
+                            selAction = i == 0
+                                    ? AAction(Helper::maxVelocityTo(*env.me(), center._y(env.me()->y)), p, true)
+                                    : AAction(Helper::maxVelocityTo(*env.me(), center._y(env.me()->y)));
+                        }
+                        break;
+                    }
+                }
+            }
+            snd.me()->action = AAction(Helper::maxVelocityTo(*snd.me(), center._y(snd.me()->y)));
+            snd.doTick(1);
+        }
+        if (selI != -1) {
+            resAction = selAction;
+            return true;
+        }
+        return false;
     }
 
     void act(AAction& action, bool isFirst) {
@@ -1055,10 +1137,9 @@ public:
 
         bool hasPrevShot = prevMetric.count(me.id) && prevMetric[me.id].tick >= env.tick - 1;
 
-        std::optional<ARobot> firstToBall, firstToBallMy;
-        std::tie(firstToBall, firstToBallMy) = evalToBall();
-        if (firstToBall) {
-            Visualizer::markFirstToBall(firstToBall.value());
+
+        if (env.tick >= 376) {
+            //std::cout << "";
         }
 
         int gkId = selectGk();
@@ -1081,17 +1162,34 @@ public:
         }
 
 
-        if (false && GameInfo::isFinal) {
-            if (isAttacker && env.roundTick <= 40) {
-                action = AAction(Helper::maxVelocityTo(me, env.ball));
+        if (true || !GameInfo::isFinal) {
+            if (isAttacker && env.roundTick <= 35) {
+                action = AAction(Helper::maxVelocityTo(me, env.ball + Point(0, 0, -3.2)));
                 return;
             }
         } else {
-            if (isAttacker && env.roundTick <= 35) {
-                auto deltaX = true ? 0.0 : (me.x < env.robot(secondAttackerId)->x ? -0.5 : 0.5);
-                action = AAction(Helper::maxVelocityTo(me, env.ball + Point(deltaX, 0, -3.2)));
+
+            if (env.roundTick <= 45) {
+                int cnt = 0;
+                for (auto& x : env.my)
+                    cnt += x.x > me.x + EPS;
+                Point cen = ball + (cnt == 2 ? Point(-1, 0, 0) : cnt == 0 ? Point(1, 0, 0) : Point(0, 0, 0));
+                if (/*cnt == 1 &&*/ doFirstTicks(action, cen)) {
+
+                }
                 return;
             }
+
+
+//            if (isAttacker && env.roundTick <= 35) {
+//                if (env.roundTick > 20 || me.z >= env.robot(secondAttackerId)->z) {
+//                    auto deltaX = true ? 0.0 : (me.x < env.robot(secondAttackerId)->x ? -0.5 : 0.5);
+//                    action = AAction(Helper::maxVelocityTo(me, env.ball));
+//                } else {
+//                    action.targetVelocity = Helper::maxVelocityTo(me, me._x(0)) / 10;
+//                }
+//                return;
+//            }
         }
 
         if (!isAttacker && env.roundTick <= 30) {
@@ -1108,6 +1206,12 @@ public:
             Visualizer::addText(msg);
             LOG(msg);
             return;
+        }
+
+        std::optional<ARobot> firstToBall, secondToBallMy;
+        std::tie(firstToBall, secondToBallMy) = evalToBall();
+        if (firstToBall) {
+            Visualizer::markFirstToBall(firstToBall.value());
         }
 
         if (isAttacker) {
@@ -1135,7 +1239,12 @@ public:
             } else if (!firstToBall
                 || !firstToBall.value().isTeammate
                 || firstToBall.value().id == me.id
-                || (halfback = GameInfo::isFinal && firstToBall.value().isTeammate && me.z < env.robot(secondAttackerId)->z)) {
+                || (halfback = GameInfo::isFinal && secondToBallMy && secondToBallMy.value().id == me.id)
+//                        firstToBall.value().isTeammate && (
+//                            firstToBall.value().id == gkId && me.z < env.robot(secondAttackerId)->z ||
+//                            firstToBall.value().id == secondAttackerId && prevMetric.count(secondAttackerId) && prevMetric[secondAttackerId].tick >= env.tick - 1
+//                        ))
+                        ) {
 
                 std::tie(firstAction, secondAction) = moveToBallUsual(isAttacker);
                 auto firstOrSecond = firstAction;
@@ -1165,14 +1274,15 @@ public:
             } else {
                 Point target(0, 0, 10);
                 if (GameInfo::isFinal) {
-                    Point t1(-4, 0, 1), t2(4, 0, 12);
-                    if (me.getDistanceTo(t1) + env.robot(secondAttackerId)->getDistanceTo(t2) <
-                        me.getDistanceTo(t2) + env.robot(secondAttackerId)->getDistanceTo(t1))
-                    {
-                        target = t1;
-                    } else {
-                        target = t2;
-                    }
+                    target = Point(0, 0, 15);
+//                    Point t1(-4, 0, 1), t2(4, 0, 12);
+//                    if (me.getDistanceTo(t1) + env.robot(secondAttackerId)->getDistanceTo(t2) <
+//                        me.getDistanceTo(t2) + env.robot(secondAttackerId)->getDistanceTo(t1))
+//                    {
+//                        target = t1;
+//                    } else {
+//                        target = t2;
+//                    }
                 }
                 Visualizer::addTargetLines(me, target, rgba(0, 0, 0));
                 action.targetVelocity = Helper::maxVelocityTo(me, target);
@@ -1184,7 +1294,7 @@ public:
             Visualizer::addSphere(me, me.radius * 1.1, rgba(1, 0.7, 0));
 
             bool condToShot;
-            condToShot = firstToBallMy && firstToBallMy.value().id == me.id
+            condToShot = firstToBall && firstToBall.value().id == me.id
                     || ball.velocity.z < 0 && ball.z < -ARENA_Z * (GameInfo::isNitro ? 0.5 : 0.5)
                     || me.getDistanceTo(ball) < BALL_RADIUS + ROBOT_RADIUS + 5
                     || simpleAlarm || oppGoalAlarm
@@ -1240,7 +1350,7 @@ public:
                 if (defend) {
                     action = defend.value();
                 } else {
-                    if (firstToBallMy && firstToBallMy.value().id == me.id) {
+                    if (firstToBall && firstToBall.value().id == me.id) {
                         std::tie(firstAction, secondAction) = moveToBallUsual(isAttacker);
                     }
                     if (firstAction) {
