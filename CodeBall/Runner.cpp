@@ -13,11 +13,11 @@ int main(int argc, char* argv[]) {
     cerr << "Starting local runner" << endl;
 
     string runStr = "/Users/tyamgin/Projects/AiCup/CodeBall/local_runner/codeball2018";
-    string prevBin = "m67";
+    string prevBin = "m65";
 #if M_NO_RANDOM
     runStr += " --disable-random";
 #endif
-    system((runStr + " --nitro true --team-size 3 --duration 40000 --seed 99469 --p2-name " + prevBin + " --p2 tcp-31002 &").c_str());
+    system((runStr + " --nitro true --team-size 3 --duration 40000 --seed 95327 --p2-name " + prevBin + " --p2 tcp-31002 &").c_str());
     cerr << "local runner started" << endl;
 
     usleep(2000 * 1000);

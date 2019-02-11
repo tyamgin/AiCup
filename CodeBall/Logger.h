@@ -25,7 +25,6 @@ enum LoggerAction {
     LA_DO_TICK,
     LA_TAKE_NITRO,
     LA_MOVE_TO_BALL,
-    LA_EVAL_TO_BALL,
     LA_K,
     LA_KW,
 
@@ -91,7 +90,6 @@ struct Logger {
         out << "] DO_TICK                     " << _cumulativeDuration[LA_DO_TICK]                     / 1000 << "ms" << std::endl;
         out << "] TAKE_NITRO                  " << _cumulativeDuration[LA_TAKE_NITRO]                  / 1000 << "ms" << std::endl;
         out << "] MOVE_TO_BALL                " << _cumulativeDuration[LA_MOVE_TO_BALL]                / 1000 << "ms" << std::endl;
-        out << "] EVAL_TO_BALL                " << _cumulativeDuration[LA_EVAL_TO_BALL]                / 1000 << "ms" << std::endl;
         out << "] K                           " << _cumulativeDuration[LA_K]                           / 1000 << "ms" << std::endl;
         out << "] KW                          " << _cumulativeDuration[LA_KW]                          / 1000 << "ms" << std::endl;
         for (int i = 0; i < int(sizeof(dans) / sizeof(dans[0])); i++) {

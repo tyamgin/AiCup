@@ -432,10 +432,6 @@ struct Sandbox {
 #undef DAN_TO_CYLINDER_Y_OUTER
     }
 
-    static bool dan_to_arena_old(Unit point, double& penetration, Point& normal) {
-        return false;
-    }
-
     static bool dan_to_arena_new(Unit point, double& penetration, Point& normal) {
         auto negate_x = point.x < 0;
         auto negate_z = point.z < 0;
@@ -456,34 +452,6 @@ struct Sandbox {
         normal.normalize();
         penetration = point.radius - distance;
         return true;
-    }
-
-    static bool dan_to_arena(Unit point, double& penetration, Point& normal) {
-        Point no, nn;
-        double po, pn;
-        auto r_old = dan_to_arena_old(point, po, no);
-        auto r_new = dan_to_arena_old(point, pn, nn);
-
-        if (r_old != r_new) {
-            std::cerr << "err\n";
-            dan_to_arena_old(point, po, no);
-            dan_to_arena_new(point, pn, nn);
-            dan_to_arena_old(point, po, no);
-            dan_to_arena_new(point, pn, nn);
-            exit(1);
-        }
-        if (r_new && !no.equals(nn, 1e-7)) {
-            std::cerr << "err2\n";
-            dan_to_arena_old(point, po, no);
-            dan_to_arena_new(point, pn, nn);
-            dan_to_arena_old(point, po, no);
-            dan_to_arena_new(point, pn, nn);
-            exit(1);
-        }
-        penetration = pn;
-        normal = nn;
-        return r_old;
-        return r_new;
     }
 
     static uint64_t oppMask, myOppMask[7], myAnyMask[7];
