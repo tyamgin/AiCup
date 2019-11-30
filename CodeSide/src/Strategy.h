@@ -1,7 +1,8 @@
 #ifndef CODESIDE_STRATEGY_H
 #define CODESIDE_STRATEGY_H
 
-#include "Constants.h"
+#include "constants.h"
+#include "sandbox.h"
 
 double distanceSqr(Vec2Double a, Vec2Double b) {
     return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);

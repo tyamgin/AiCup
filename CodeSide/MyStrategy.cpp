@@ -10,9 +10,10 @@ MyStrategy::MyStrategy() = default;
 
 Strategy strategy;
 
-#define CAT(a, ...) PRIMITIVE_CAT(a, __VA_ARGS__)
-#define PRIMITIVE_CAT(a, ...) a ## __VA_ARGS__
-#define STR(a) #a
+#define CAT_(a, b) a##b
+#define CAT(a, b) CAT_(a, b)
+#define QUOTE_(...) #__VA_ARGS__
+#define QUOTE(...) QUOTE_(__VA_ARGS__)
 
 void debugPrintGameParams(const Game& game, bool print) {
 #define PRINT_GAME_PROP(type, const_str, p) do {                                                                \
@@ -51,33 +52,30 @@ void debugPrintGameParams(const Game& game, bool print) {
     PRINT_GAME_PROP(double, MINE_EXPLOSION_RADIUS, mineExplosionParams.radius);
     PRINT_GAME_PROP(int, MINE_EXPLOSION_DAMAGE, mineExplosionParams.damage);
 
-#define WEAPON_TYPE_0 PISTOL
-#define WEAPON_TYPE_1 ASSAULT_RIFLE
-#define WEAPON_TYPE_2 ROCKET_LAUNCHER
-#define PRINT_WEAPON_PROP(type, weapon_type, p, const_str) do {\
-            auto val = game.properties.weaponParams.find((WeaponType)weapon_type)->second. p;\
-            cout << "constexpr const " << #type << " " << STR(PRIMITIVE_CAT(WEAPON_TYPE_, weapon_type)) << "_" << #const_str << " = " << val << ";\n";\
-            if (std::abs(( CAT(WEAPON_TYPE_ ## weapon_type) ## _ ## const_str) - val) > 1e-9) {\
+#define PRINT_WEAPON_PROP(type, weapon_idx, weapon_type, p, const_str) do {\
+            auto val = game.properties.weaponParams.find((WeaponType)weapon_idx)->second. p;\
+            cout << "constexpr const " << #type << " " << #weapon_type << "_" << #const_str << " = " << val << ";\n";\
+            if (std::abs(CAT(weapon_type, CAT(_, const_str)) - val) > 1e-9) {\
                 cerr << #const_str << " wrong constant value\n";\
                 exit(1);\
             }\
         } while(0)
 
-#define PRINT_WEAPON_PROPS(i) \
-        PRINT_WEAPON_PROP(int, i, magazineSize, MAGAZINE_SIZE);\
-        PRINT_WEAPON_PROP(double, i, fireRate, FIRE_RATE);\
-        PRINT_WEAPON_PROP(double, i, reloadTime, RELOAD_TIME);\
-        PRINT_WEAPON_PROP(double, i, minSpread, MIN_SPREAD);\
-        PRINT_WEAPON_PROP(double, i, maxSpread, MAX_SPREAD);\
-        PRINT_WEAPON_PROP(double, i, recoil, RECOIL);\
-        PRINT_WEAPON_PROP(double, i, aimSpeed, AIM_SPEED);\
-        PRINT_WEAPON_PROP(double, i, bullet.speed, BULLET_SPEED);\
-        PRINT_WEAPON_PROP(double, i, bullet.size, BULLET_SIZE);\
-        PRINT_WEAPON_PROP(int, i, bullet.damage, BULLET_DAMAGE);\
+#define PRINT_WEAPON_PROPS(weapon_idx, weapon_type) \
+        PRINT_WEAPON_PROP(int, weapon_idx, weapon_type, magazineSize, MAGAZINE_SIZE);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, fireRate, FIRE_RATE);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, reloadTime, RELOAD_TIME);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, minSpread, MIN_SPREAD);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, maxSpread, MAX_SPREAD);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, recoil, RECOIL);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, aimSpeed, AIM_SPEED);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, bullet.speed, BULLET_SPEED);\
+        PRINT_WEAPON_PROP(double, weapon_idx, weapon_type, bullet.size, BULLET_SIZE);\
+        PRINT_WEAPON_PROP(int, weapon_idx, weapon_type, bullet.damage, BULLET_DAMAGE);\
 
-//    PRINT_WEAPON_PROPS(0);
-//    PRINT_WEAPON_PROPS(1);
-//    PRINT_WEAPON_PROPS(2);
+    PRINT_WEAPON_PROPS(0, PISTOL);
+    PRINT_WEAPON_PROPS(1, ASSAULT_RIFLE);
+    PRINT_WEAPON_PROPS(2, ROCKET_LAUNCHER);
 
 
 #undef PRINT_GAME_PROP
