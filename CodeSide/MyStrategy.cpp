@@ -1,58 +1,95 @@
 #include "MyStrategy.hpp"
+#include "src/Strategy.h"
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 
-MyStrategy::MyStrategy() {}
+using namespace std;
 
-double distanceSqr(Vec2Double a, Vec2Double b) {
-    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
+MyStrategy::MyStrategy() = default;
+
+Strategy strategy;
+
+#define CAT(a, ...) PRIMITIVE_CAT(a, __VA_ARGS__)
+#define PRIMITIVE_CAT(a, ...) a ## __VA_ARGS__
+#define STR(a) #a
+
+void debugPrintGameParams(const Game& game, bool print) {
+#define PRINT_GAME_PROP(type, const_str, p) do {                                                                \
+        auto val = game.properties. p;                                                                          \
+        if (print) {                                                                                            \
+            cout << "constexpr const " << #type << " " << #const_str << " = " << val << ";\n";                  \
+        }                                                                                                       \
+        if (std::abs(const_str - val) > 1e-9) {                                                                 \
+            cerr << #const_str << " wrong constant value " << const_str << " (right is " << val << ")\n";       \
+            exit(1);                                                                                            \
+        }                                                                                                       \
+    } while(0)
+
+    PRINT_GAME_PROP(int, MAX_TICK_COUNT, maxTickCount);
+    //PRINT_GAME_PROP(int, TEAM_SIZE, teamSize);
+    PRINT_GAME_PROP(double, TICKS_PER_SECOND, ticksPerSecond);
+    PRINT_GAME_PROP(int, UPDATES_PER_TICK, updatesPerTick);
+    PRINT_GAME_PROP(double, LOOT_BOX_SIZE, lootBoxSize.x);
+    PRINT_GAME_PROP(double, LOOT_BOX_SIZE, lootBoxSize.y);
+    PRINT_GAME_PROP(double, UNIT_SIZE_X, unitSize.x);
+    PRINT_GAME_PROP(double, UNIT_SIZE_Y, unitSize.y);
+    PRINT_GAME_PROP(double, UNIT_MAX_HORIZONTAL_SPEED, unitMaxHorizontalSpeed);
+    PRINT_GAME_PROP(double, UNIT_FALL_SPEED, unitFallSpeed);
+    PRINT_GAME_PROP(double, UNIT_JUMP_TIME, unitJumpTime);
+    PRINT_GAME_PROP(double, UNIT_JUMP_SPEED, unitJumpSpeed);
+    PRINT_GAME_PROP(double, JUMP_PAD_JUMP_TIME, jumpPadJumpTime);
+    PRINT_GAME_PROP(double, JUMP_PAD_JUMP_SPEED, jumpPadJumpSpeed);
+    PRINT_GAME_PROP(int, UNIT_MAX_HEALTH, unitMaxHealth);
+    PRINT_GAME_PROP(int, HEALTH_PACK_HEALTH, healthPackHealth);
+    PRINT_GAME_PROP(double, MINE_SIZE, mineSize.x);
+    PRINT_GAME_PROP(double, MINE_SIZE, mineSize.y);
+    PRINT_GAME_PROP(double, MINE_PREPARE_TIME, minePrepareTime);
+    PRINT_GAME_PROP(double, MINE_TRIGGER_TIME, mineTriggerTime);
+    PRINT_GAME_PROP(double, MINE_TRIGGER_RADIUS, mineTriggerRadius);
+    PRINT_GAME_PROP(int, KILL_SCORE, killScore);
+    PRINT_GAME_PROP(double, MINE_EXPLOSION_RADIUS, mineExplosionParams.radius);
+    PRINT_GAME_PROP(int, MINE_EXPLOSION_DAMAGE, mineExplosionParams.damage);
+
+#define WEAPON_TYPE_0 PISTOL
+#define WEAPON_TYPE_1 ASSAULT_RIFLE
+#define WEAPON_TYPE_2 ROCKET_LAUNCHER
+#define PRINT_WEAPON_PROP(type, weapon_type, p, const_str) do {\
+            auto val = game.properties.weaponParams.find((WeaponType)weapon_type)->second. p;\
+            cout << "constexpr const " << #type << " " << STR(PRIMITIVE_CAT(WEAPON_TYPE_, weapon_type)) << "_" << #const_str << " = " << val << ";\n";\
+            if (std::abs(( CAT(WEAPON_TYPE_ ## weapon_type) ## _ ## const_str) - val) > 1e-9) {\
+                cerr << #const_str << " wrong constant value\n";\
+                exit(1);\
+            }\
+        } while(0)
+
+#define PRINT_WEAPON_PROPS(i) \
+        PRINT_WEAPON_PROP(int, i, magazineSize, MAGAZINE_SIZE);\
+        PRINT_WEAPON_PROP(double, i, fireRate, FIRE_RATE);\
+        PRINT_WEAPON_PROP(double, i, reloadTime, RELOAD_TIME);\
+        PRINT_WEAPON_PROP(double, i, minSpread, MIN_SPREAD);\
+        PRINT_WEAPON_PROP(double, i, maxSpread, MAX_SPREAD);\
+        PRINT_WEAPON_PROP(double, i, recoil, RECOIL);\
+        PRINT_WEAPON_PROP(double, i, aimSpeed, AIM_SPEED);\
+        PRINT_WEAPON_PROP(double, i, bullet.speed, BULLET_SPEED);\
+        PRINT_WEAPON_PROP(double, i, bullet.size, BULLET_SIZE);\
+        PRINT_WEAPON_PROP(int, i, bullet.damage, BULLET_DAMAGE);\
+
+//    PRINT_WEAPON_PROPS(0);
+//    PRINT_WEAPON_PROPS(1);
+//    PRINT_WEAPON_PROPS(2);
+
+
+#undef PRINT_GAME_PROP
+
+
+    //std::shared_ptr<ExplosionParams> explosion;
+
+
+
 }
 
-UnitAction MyStrategy::getAction(const Unit &unit, const Game &game, Debug &debug) {
-    const Unit *nearestEnemy = nullptr;
-    for (const Unit &other : game.units) {
-        if (other.playerId != unit.playerId) {
-            if (nearestEnemy == nullptr ||
-                distanceSqr(unit.position, other.position) < distanceSqr(unit.position, nearestEnemy->position)) {
-                nearestEnemy = &other;
-            }
-        }
-    }
-    const LootBox *nearestWeapon = nullptr;
-    for (const LootBox &lootBox : game.lootBoxes) {
-        if (std::dynamic_pointer_cast<Item::Weapon>(lootBox.item)) {
-            if (nearestWeapon == nullptr ||
-                distanceSqr(unit.position, lootBox.position) < distanceSqr(unit.position, nearestWeapon->position)) {
-                nearestWeapon = &lootBox;
-            }
-        }
-    }
-
-    Vec2Double targetPos = unit.position;
-    if (unit.weapon == nullptr && nearestWeapon != nullptr) {
-        targetPos = nearestWeapon->position;
-    } else if (nearestEnemy != nullptr) {
-        targetPos = nearestEnemy->position;
-    }
-    debug.draw(CustomData::Log(
-            std::string("Target pos: ") + targetPos.toString()));
-    Vec2Double aim = Vec2Double(0, 0);
-    if (nearestEnemy != nullptr) {
-        aim = Vec2Double(nearestEnemy->position.x - unit.position.x,
-                         nearestEnemy->position.y - unit.position.y);
-    }
-    bool jump = targetPos.y > unit.position.y;
-    if (targetPos.x > unit.position.x && game.level.tiles[size_t(unit.position.x + 1)][size_t(unit.position.y)] == Tile::WALL) {
-        jump = true;
-    }
-    if (targetPos.x < unit.position.x && game.level.tiles[size_t(unit.position.x - 1)][size_t(unit.position.y)] == Tile::WALL) {
-        jump = true;
-    }
-    UnitAction action;
-    action.velocity = targetPos.x - unit.position.x;
-    action.jump = jump;
-    action.jumpDown = !action.jump;
-    action.aim = aim;
-    action.shoot = true;
-    action.swapWeapon = false;
-    action.plantMine = false;
-    return action;
+UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
+    debugPrintGameParams(game, true); exit(0);
+    return strategy.getAction(unit, game, debug);
 }
