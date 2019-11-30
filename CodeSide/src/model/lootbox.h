@@ -9,6 +9,7 @@ enum class ELootType {
     ROCKET_LAUNCHER = 2,
     HEALTH_PACK = 3,
     MINE = 4,
+    NONE = 5,
 };
 
 class TLootBox : public TRectangle {

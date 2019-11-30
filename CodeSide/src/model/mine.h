@@ -6,7 +6,7 @@
 class TMine : public TRectangle {
 public:
     int playerId;
-    double timer;
+    double timer; // -1
     double triggerRadius;
     MineState state;
 

@@ -3,6 +3,10 @@
 
 #include "point.h"
 #include "rectangle.h"
+#include "level.h"
+#include "action.h"
+#include "lootbox.h"
+#include "weapon.h"
 
 class TUnit : public TRectangle {
 public:
@@ -21,7 +25,8 @@ public:
     bool onLadder;
     int mines;
 
-    std::optional<Weapon> weapon;
+    TWeapon weapon;
+    TAction action;
 
     explicit TUnit(const Unit& unit) : TRectangle(unit.position, UNIT_SIZE_X, UNIT_SIZE_Y) {
         playerId = unit.playerId;
@@ -36,6 +41,9 @@ public:
         onGround = unit.onGround;
         onLadder = unit.onLadder;
         mines = unit.mines;
+        if (unit.weapon) {
+            weapon = TWeapon(*unit.weapon);
+        }
     }
 
     TUnit(const TUnit& unit) : TRectangle(unit) {
@@ -51,6 +59,38 @@ public:
         onGround = unit.onGround;
         onLadder = unit.onLadder;
         mines = unit.mines;
+        weapon = unit.weapon;
+    }
+
+    bool isOnLadder() const {
+        double x = (x1 + x2) / 2;
+        double y = (y1 + y2) / 2;
+        return TLevel::getTileType(x, y) == LADDER || TLevel::getTileType(x, y2) == LADDER;
+    }
+
+    bool applyLoot(TLootBox& loot) {
+        switch (loot.type) {
+            case ELootType::HEALTH_PACK:
+                if (health < UNIT_MAX_HEALTH) {
+                    health = UNIT_MAX_HEALTH;
+                    return true;
+                }
+                return false;
+            case ELootType::MINE:
+                mines++;
+                return true;
+            default: // weapon
+                if (weapon.type == ELootType::NONE) {
+                    weapon = TWeapon(loot.type);
+                    return true;
+                }
+                if (action.swapWeapon) {
+                    auto oldType = weapon.type;
+                    weapon = TWeapon(loot.type);
+                    loot.type = oldType;
+                }
+                return false;
+        }
     }
 };
 

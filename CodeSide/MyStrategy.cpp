@@ -15,7 +15,7 @@ Strategy strategy;
 #define QUOTE_(...) #__VA_ARGS__
 #define QUOTE(...) QUOTE_(__VA_ARGS__)
 
-void debugPrintGameParams(const Game& game, bool print) {
+void debugCheckGameParams(const Game& game, bool print) {
 #define PRINT_GAME_PROP(type, const_str, p) do {                                                                \
         auto val = game.properties. p;                                                                          \
         if (print) {                                                                                            \
@@ -79,15 +79,19 @@ void debugPrintGameParams(const Game& game, bool print) {
 
 
 #undef PRINT_GAME_PROP
+#undef PRINT_WEAPON_PROP
+#undef PRINT_WEAPON_PROPS
 
 
     //std::shared_ptr<ExplosionParams> explosion;
-
-
-
 }
 
 UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
-    debugPrintGameParams(game, true); exit(0);
+    TLevel::tiles = game.level.tiles;
+    if (game.currentTick <= 1) {
+        debugCheckGameParams(game, false);
+    }
     return strategy.getAction(unit, game, debug);
 }
+
+std::vector<std::vector<Tile>> TLevel::tiles;

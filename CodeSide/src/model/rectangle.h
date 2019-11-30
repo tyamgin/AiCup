@@ -1,6 +1,12 @@
 #ifndef CODESIDE_RECTANGLE_H
 #define CODESIDE_RECTANGLE_H
 
+#include "point.h"
+
+inline bool isIn(double l, double r, double x) {
+    return l - EPS <= x && x <= r + EPS;
+}
+
 class TRectangle {
 public:
     double x1, y1, x2, y2;
@@ -21,6 +27,11 @@ public:
         x2 = rect.x2;
         y1 = rect.y1;
         y2 = rect.y2;
+    }
+
+    bool intersectsWith(const TRectangle& rect) const {
+        return (isIn(x1, x2, rect.x1) || isIn(x1, x2, rect.x2)) &&
+               (isIn(y1, y2, rect.y1) || isIn(y1, y2, rect.y2));
     }
 };
 
