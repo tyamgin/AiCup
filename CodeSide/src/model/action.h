@@ -11,6 +11,17 @@ public:
     bool swapWeapon;
     bool plantMine;
 
+    TAction() {
+        aim.x = 0;
+        aim.y = 0;
+        velocity = 0;
+        jump = false;
+        jumpDown = false;
+        shoot = false;
+        swapWeapon = false;
+        plantMine = false;
+    }
+
     UnitAction toUnitAction() const {
         return UnitAction(velocity, jump, jumpDown, {aim.x, aim.y}, shoot, swapWeapon, plantMine);
     }

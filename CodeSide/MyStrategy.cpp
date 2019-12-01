@@ -88,6 +88,7 @@ void debugCheckGameParams(const Game& game, bool print) {
 
 UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
     TLevel::tiles = game.level.tiles;
+    TLevel::myId = unit.playerId;
     if (game.currentTick <= 1) {
         debugCheckGameParams(game, false);
     }
@@ -95,3 +96,4 @@ UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debu
 }
 
 std::vector<std::vector<Tile>> TLevel::tiles;
+int TLevel::myId = 0;

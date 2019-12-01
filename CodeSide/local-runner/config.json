@@ -1,0 +1,26 @@
+{
+  "options_preset": {
+    "Custom": {
+      "level": {
+        "LoadFrom": {
+          "path": "levels/level.txt"
+        }
+      },
+      "properties": null
+    }
+  },
+  "players": [
+    {
+      "Tcp": {
+        "host": null,
+        "port": 31001,
+        "accept_timeout": null,
+        "timeout": null,
+        "token": null
+      }
+    },
+    {
+      "Empty": null
+    }
+  ]
+}

@@ -15,13 +15,13 @@ public:
     int health;
 
     bool canJump;
-    double jumpSpeed;
+    //double jumpSpeed;
     double jumpMaxTime;
     bool jumpCanCancel;
 
-    bool walkedRight;
-    bool stand;
-    bool onGround;
+    //bool walkedRight;
+    //bool stand;
+    //bool onGround;
     bool onLadder;
     int mines;
 
@@ -33,12 +33,12 @@ public:
         id = unit.id;
         health = unit.health;
         canJump = unit.jumpState.canJump;
-        jumpSpeed = unit.jumpState.speed;
+        //jumpSpeed = unit.jumpState.speed;
         jumpMaxTime = unit.jumpState.maxTime;
         jumpCanCancel = unit.jumpState.canCancel;
-        walkedRight = unit.walkedRight;
-        stand = unit.stand;
-        onGround = unit.onGround;
+        //walkedRight = unit.walkedRight;
+        //stand = unit.stand;
+        //onGround = unit.onGround;
         onLadder = unit.onLadder;
         mines = unit.mines;
         if (unit.weapon) {
@@ -51,15 +51,16 @@ public:
         id = unit.id;
         health = unit.health;
         canJump = unit.canJump;
-        jumpSpeed = unit.jumpSpeed;
+        //jumpSpeed = unit.jumpSpeed;
         jumpMaxTime = unit.jumpMaxTime;
         jumpCanCancel = unit.jumpCanCancel;
-        walkedRight = unit.walkedRight;
-        stand = unit.stand;
-        onGround = unit.onGround;
+        //walkedRight = unit.walkedRight;
+        //stand = unit.stand;
+        //onGround = unit.onGround;
         onLadder = unit.onLadder;
         mines = unit.mines;
         weapon = unit.weapon;
+        action = unit.action;
     }
 
     bool isOnLadder() const {
