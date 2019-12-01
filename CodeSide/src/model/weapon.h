@@ -45,20 +45,24 @@ public:
 
     explicit TWeapon(ELootType lootType) {
         type = lootType;
-        magazine = 0;
         wasShooting = false; // TODO: точно?
         switch (lootType) {
             case ELootType::PISTOL:
                 spread = PISTOL_MIN_SPREAD;
+                fireTimer = PISTOL_RELOAD_TIME;
+                magazine = PISTOL_MAGAZINE_SIZE;
                 break;
             case ELootType::ASSAULT_RIFLE:
                 spread = ASSAULT_RIFLE_MIN_SPREAD;
+                fireTimer = ASSAULT_RIFLE_RELOAD_TIME;
+                magazine = ASSAULT_RIFLE_MAGAZINE_SIZE;
                 break;
             default:
                 spread = ROCKET_LAUNCHER_MIN_SPREAD;
+                fireTimer = ROCKET_LAUNCHER_RELOAD_TIME;
+                magazine = ROCKET_LAUNCHER_MAGAZINE_SIZE;
                 break;
         }
-        fireTimer = 0; // TODO
         lastAngle = 1000;
         lastFireTick = -1;
     }
@@ -73,7 +77,15 @@ public:
         lastFireTick = weapon.lastFireTick;
     }
 
-
+    void decreaseFireTimer() {
+        if (fireTimer < 0.5) {
+            return;
+        }
+        fireTimer -= 1.0 / TICKS_PER_SECOND;
+        if (fireTimer < EPS) {
+            fireTimer = -1;
+        }
+    }
 };
 
 #endif //CODESIDE_WEAPON_H

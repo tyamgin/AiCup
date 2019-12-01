@@ -32,29 +32,42 @@ class Strategy {
             if (prevUnit.health != curUnit.health) {
                 std::cerr << "Prev state unit.health mismatch " << prevUnit.health << " vs " << curUnit.health << std::endl;
             }
-//            if (std::abs(prevUnit.jumpSpeed - curUnit.jumpSpeed) > 1e-8) {
-//                std::cerr << "Prev state unit.jumpSpeed mismatch " << prevUnit.jumpSpeed << " vs " << curUnit.jumpSpeed << std::endl;
-//            }
-
-            // ... jumpMaxTime
-            // ... jumpCanCancel
-            // ... walkedRight
-            // ... stand
-            // ... onGround
-            // ... onLadder
             if (prevUnit.canJump != curUnit.canJump) {
+                // not critical
                 std::cerr << "Prev state unit.canJump mismatch " << prevUnit.canJump << " vs " << curUnit.canJump << std::endl;
+            } else {
+                if (prevUnit.canJump && std::abs(prevUnit.jumpMaxTime - curUnit.jumpMaxTime) > 1e-8) {
+                    std::cerr << "Prev state unit.jumpMaxTime mismatch " << prevUnit.jumpMaxTime << " vs " << curUnit.jumpMaxTime << std::endl;
+                }
             }
-//            if (prevUnit.onGround != curUnit.onGround) {
-//                std::cerr << "Prev state unit.onGround mismatch " << prevUnit.onGround << " vs " << curUnit.onGround << std::endl;
-//            }
+
             if (prevUnit.onLadder != curUnit.onLadder) {
                 std::cerr << "Prev state unit.onLadder mismatch " << prevUnit.onLadder << " vs " << curUnit.onLadder << std::endl;
             }
             if (prevUnit.mines != curUnit.mines) {
                 std::cerr << "Prev state unit.mines mismatch " << prevUnit.mines << " vs " << curUnit.mines << std::endl;
             }
-            // ... weapon
+            if (prevUnit.weapon.type != curUnit.weapon.type) {
+                std::cerr << "Prev state unit.weapon.type mismatch " << (int)prevUnit.weapon.type << " vs " << (int)curUnit.weapon.type << std::endl;
+            }
+            if (prevUnit.weapon.magazine != curUnit.weapon.magazine) {
+                std::cerr << "Prev state unit.weapon.magazine mismatch " << (int)prevUnit.weapon.magazine << " vs " << (int)curUnit.weapon.magazine << std::endl;
+            }
+            if (prevUnit.weapon.wasShooting != curUnit.weapon.wasShooting) {
+                std::cerr << "Prev state unit.weapon.wasShooting mismatch " << (int)prevUnit.weapon.wasShooting << " vs " << (int)curUnit.weapon.wasShooting << std::endl;
+            }
+            if (prevUnit.weapon.lastFireTick != curUnit.weapon.lastFireTick) {
+                std::cerr << "Prev state unit.weapon.lastFireTick mismatch " << (int)prevUnit.weapon.lastFireTick << " vs " << (int)curUnit.weapon.lastFireTick << std::endl;
+            }
+            if (std::abs(prevUnit.weapon.spread - curUnit.weapon.spread) > 1e-8) {
+                std::cerr << "Prev state unit.weapon.spread mismatch " << (int)prevUnit.weapon.spread << " vs " << (int)curUnit.weapon.spread << std::endl;
+            }
+            if (std::abs(prevUnit.weapon.fireTimer - curUnit.weapon.fireTimer) > 1e-8) {
+                std::cerr << "Prev state unit.weapon.fireTimer mismatch " << (int)prevUnit.weapon.fireTimer << " vs " << (int)curUnit.weapon.fireTimer << std::endl;
+            }
+            if (std::abs(prevUnit.weapon.lastAngle - curUnit.weapon.lastAngle) > 1e-8) {
+                std::cerr << "Prev state unit.weapon.lastAngle mismatch " << (int)prevUnit.weapon.lastAngle << " vs " << (int)curUnit.weapon.lastAngle << std::endl;
+            }
         }
     }
 
@@ -112,7 +125,7 @@ public:
     UnitAction getAction(const Unit& unit, const Game& game, Debug& debug) {
         TSandbox env(TUnit(unit), game);
         if (env.currentTick > 1) {
-            if (env.currentTick == 128) {
+            if (env.currentTick == 68) {
                 env.currentTick += 0;
             }
             prevEnv.doTick();
@@ -122,9 +135,9 @@ public:
         TAction action;
         //auto action = _strategy(unit, game, debug);
         if (env.currentTick == 0) {
-
-        } else if (env.currentTick == 1) {
-            action.velocity = UNIT_MAX_HORIZONTAL_SPEED;
+            // do nothing
+        } else if (env.currentTick <= 300) {
+            action.velocity = 10;
         } else {
             action.jump = true;
         }

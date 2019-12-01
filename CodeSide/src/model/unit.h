@@ -69,28 +69,36 @@ public:
         return TLevel::getTileType(x, y) == LADDER || TLevel::getTileType(x, y2) == LADDER;
     }
 
-    bool applyLoot(TLootBox& loot) {
+    void maybeApplyLoot(TLootBox& loot) {
+        if (loot.type != ELootType::NONE && intersectsWith(loot)) {
+            applyLoot(loot);
+        }
+    }
+
+    void applyLoot(TLootBox& loot) {
         switch (loot.type) {
             case ELootType::HEALTH_PACK:
                 if (health < UNIT_MAX_HEALTH) {
                     health = UNIT_MAX_HEALTH;
-                    return true;
+                    loot.type = ELootType::NONE;
                 }
-                return false;
+                return;
             case ELootType::MINE:
                 mines++;
-                return true;
+                loot.type = ELootType::NONE;
+                return;
             default: // weapon
                 if (weapon.type == ELootType::NONE) {
                     weapon = TWeapon(loot.type);
-                    return true;
+                    loot.type = ELootType::NONE;
+                    return;
                 }
                 if (action.swapWeapon) {
                     auto oldType = weapon.type;
                     weapon = TWeapon(loot.type);
                     loot.type = oldType;
                 }
-                return false;
+                return;
         }
     }
 };

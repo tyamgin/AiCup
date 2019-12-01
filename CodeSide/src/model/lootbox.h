@@ -30,6 +30,14 @@ public:
     TLootBox(const TLootBox& lootbox) : TRectangle(lootbox) {
         type = lootbox.type;
     }
+
+    int getRow() const {
+        return int(x2);
+    }
+
+    int getCol() const {
+        return int(y2);
+    }
 };
 
 #endif //CODESIDE_LOOTBOX_H
