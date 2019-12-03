@@ -4,8 +4,6 @@ project(CodeSide)
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winconsistent-missing-override")
-
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
 endif()
@@ -18,6 +16,8 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
         -fno-optimize-sibling-calls -fno-strict-aliasing \
         -lm -O2 -Wall -Wtype-limits -Wno-unknown-pragmas")
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winconsistent-missing-override")
 
 add_definitions(-DLOCAL)
 

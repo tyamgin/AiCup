@@ -87,19 +87,16 @@ void debugCheckGameParams(const Game& game, bool print) {
 }
 
 UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
-    TLevel::tiles = game.level.tiles;
-    TLevel::myId = unit.playerId;
-    TLevel::width = (int) TLevel::tiles.size();
-    TLevel::height = (int) TLevel::tiles[0].size();
+    TLevel::init(unit, game);
 
     if (game.currentTick <= 1) {
         debugCheckGameParams(game, false);
     }
-    printf("%d %.13f\n", game.currentTick, unit.position.y);
+    printf("t=%d y1=%.13f loots=%d\n", game.currentTick, unit.position.y, (int)game.lootBoxes.size());
     return strategy.getAction(unit, game, debug);
 }
 
 int TLevel::width = 0;
 int TLevel::height = 0;
-std::vector<std::vector<Tile>> TLevel::tiles;
+std::vector<std::vector<ETile>> TLevel::tiles;
 int TLevel::myId = 0;

@@ -134,25 +134,47 @@ class Strategy {
     TAction _ladderLeftStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
         TAction action;
         //auto action = _strategy(unit, game, debug);
-        if (env.currentTick < 100) {
+        if (env.currentTick < 100 / UPDATES_PER_TICK) {
             action.velocity = 1;
-        } else if (env.currentTick < 1800) {
+        } else if (env.currentTick < 1800 / UPDATES_PER_TICK) {
             action.velocity = 10;
-        } else if (env.currentTick < 4000) {
+        } else if (env.currentTick < 4000 / UPDATES_PER_TICK) {
             action.jump = true;
-        } else if (env.currentTick < 4700) {
+        } else if (env.currentTick < 4700 / UPDATES_PER_TICK) {
             action.velocity = -10;
-        } else if (env.currentTick < 5400) {
+        } else if (env.currentTick < 5400 / UPDATES_PER_TICK) {
             action.velocity = 10;
-        } else if (env.currentTick < 6000) {
+        } else if (env.currentTick < 6000 / UPDATES_PER_TICK) {
             action.jump = true;
-        } else if (env.currentTick < 6200) {
+        } else if (env.currentTick < 6200 / UPDATES_PER_TICK) {
             action.jumpDown = true;
-        } else if (env.currentTick < 10000) {
+        } else if (env.currentTick < 10000 / UPDATES_PER_TICK) {
             action.jumpDown = true;
             action.velocity = 1;
-        } else {
+        } else if (env.currentTick < 39800 / UPDATES_PER_TICK) {
             action.velocity = 6;
+        } else if (env.currentTick < 59600 / UPDATES_PER_TICK) {
+            action.velocity = -10;
+        } else if (env.currentTick < 61900 / UPDATES_PER_TICK) {
+            action.velocity = 10;
+        } else if (env.currentTick < 70000 / UPDATES_PER_TICK) {
+            action.jump = true;
+        } else if (env.currentTick < 72400 / UPDATES_PER_TICK) {
+            action.velocity = 10;
+        } else if (env.currentTick < 76900 / UPDATES_PER_TICK) {
+            action.velocity = -10;
+            action.jump = true;
+        } else if (env.currentTick < 80000 / UPDATES_PER_TICK) {
+            action.velocity = 10;
+            action.jump = true;
+        } else if (env.currentTick < 80900 / UPDATES_PER_TICK) {
+            action.velocity = -10;
+            action.jump = true;
+        } else if (env.currentTick < 81300 / UPDATES_PER_TICK) {
+            action.jump = true;
+        } else {
+            action.velocity = 10;
+            action.jump = true;
         }
         return action;
     }

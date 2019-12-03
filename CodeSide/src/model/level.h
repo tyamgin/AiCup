@@ -5,36 +5,56 @@
 
 constexpr const double TILE_EPS = 0.0;//1e-8;
 
+enum class ETile : uint32_t {
+    EMPTY = 0,
+    WALL = 1,
+    PLATFORM = 2,
+    LADDER = 4,
+    JUMP_PAD = 8
+};
+
 class TLevel {
 public:
     static int width;
     static int height;
-    static std::vector<std::vector<Tile>> tiles;
+    static std::vector<std::vector<ETile>> tiles;
     static int myId;
 
-    static Tile getTileType(double x, double y) {
+    static ETile getTileType(double x, double y) {
         return tiles[(int) x][(int) y];
     }
 
-    static bool isLeftWall(double x, double y) {
-        auto tile = tiles[(int) (x + TILE_EPS)][(int) y];
-        return tile == WALL;
+    static void init(const Unit& unit, const Game& game) {
+        myId = unit.playerId;
+        const auto& inpTiles = game.level.tiles;
+        width = (int) inpTiles.size();
+        height = (int) inpTiles[0].size();
+        if (tiles.empty()) {
+            tiles = std::vector<std::vector<ETile>>((size_t) width, std::vector<ETile>((size_t) height));
+            for (int i = 0; i < width; i++) {
+                for (int j = 0; j < height; j++) {
+                    switch (inpTiles[i][j]) {
+                        case WALL:
+                            tiles[i][j] = ETile::WALL;
+                            break;
+                        case PLATFORM:
+                            tiles[i][j] = ETile::PLATFORM;
+                            break;
+                        case LADDER:
+                            tiles[i][j] = ETile::LADDER;
+                            break;
+                        case JUMP_PAD:
+                            tiles[i][j] = ETile::JUMP_PAD;
+                            break;
+                        case EMPTY:
+                        default:
+                            tiles[i][j] = ETile::EMPTY;
+                            break;
+                    }
+                }
+            }
+        }
     }
-
-    static bool isRightWall(double x, double y) {
-        auto tile = tiles[(int) (x - TILE_EPS)][(int) y];
-        return tile == WALL;
-    }
-//
-//    static bool isUpperWall(double x1, double x2, double y) {
-//        return tiles[(int) (x1 + TILE_EPS)][(int) (y - TILE_EPS)] == WALL ||
-//               tiles[(int) (x2 - TILE_EPS)][(int) (y - TILE_EPS)] == WALL;
-//    }
-//
-//    static bool isGround(double x, double y, bool jumpDown) {
-//        auto tile = tiles[(int) x][(int) (y + TILE_EPS)];
-//        return tile == WALL || (jumpDown && tile == PLATFORM);
-//    }
 };
 
 #endif //CODESIDE_LEVEL_H

@@ -4,7 +4,8 @@
 #include "point.h"
 
 inline bool isIn(double l, double r, double x) {
-    return l - EPS <= x && x <= r + EPS;
+    //return l - EPS <= x && x <= r + EPS;
+    return l <= x && x <= r;
 }
 
 class TRectangle {

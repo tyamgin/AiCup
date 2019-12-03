@@ -21,7 +21,9 @@ public:
     std::vector<TLootBox> lootBoxes;
     std::shared_ptr<std::vector<std::vector<unsigned>>> lootBoxIndex;
 
-    TSandbox() = default;
+    TSandbox() {
+        currentTick = -1;
+    }
 
     TSandbox(const TUnit& unit, const Game& game) {
         currentTick = game.currentTick;
@@ -36,9 +38,6 @@ public:
         for (const Mine& m : game.mines) {
             mines.emplace_back(m);
         }
-        std::sort(lootBoxes.begin(), lootBoxes.end(), [](const TLootBox& a, const TLootBox& b) {
-            return std::make_pair(a.getRow(), a.getCol()) < std::make_pair(b.getRow(), b.getCol());
-        });
         std::sort(units.begin(), units.end(), [](const TUnit& a, const TUnit& b) {
             return a.id < b.id;
         });
@@ -75,15 +74,26 @@ public:
 private:
     void _doMicroTick(int updatesPerTick) {
         for (auto& unit : units) {
+            for (int i = int(unit.x1); i <= int(unit.x2); i++) {
+                for (int j = int(unit.y1 + 1e-8); j <= int(unit.y2 + 1e-8); j++) {
+                    unsigned idx = (*lootBoxIndex)[i][j];
+                    if (idx != UINT32_MAX) {
+                        unit.maybeApplyLoot(lootBoxes[idx]);
+                    }
+                }
+            }
+
             const auto& action = unit.action;
             auto onLadder = unit.isOnLadder();
             double dx = action.velocity / (TICKS_PER_SECOND * updatesPerTick);
             double side_x = action.velocity > 0 ? unit.x2 : unit.x1;
+            auto goingUp = unit.canJump && (action.jump || !unit.jumpCanCancel);
+            auto qwe = uint32_t(ETile::WALL);
             if (action.velocity > 0) {
                 int xcell = int(unit.x2 + dx);
-                if (TLevel::tiles[xcell][int(unit.y1)] == WALL ||
-                    TLevel::tiles[xcell][int(unit.y2)] == WALL ||
-                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == WALL) {
+                if (((uint32_t)TLevel::tiles[xcell][int(unit.y1)] & qwe) ||
+                    ((uint32_t)TLevel::tiles[xcell][int(unit.y2)] & qwe) ||
+                    ((uint32_t)TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] & qwe)) {
 
                     unit.x2 = xcell - FUCKING_EPS;
                     unit.x1 = unit.x2 - UNIT_SIZE_X;
@@ -93,11 +103,11 @@ private:
                 }
             } else if (action.velocity < 0) {
                 int xcell = int(unit.x1 + dx);
-                if (TLevel::tiles[xcell][int(unit.y1)] == WALL ||
-                    TLevel::tiles[xcell][int(unit.y2)] == WALL ||
-                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == WALL) {
+                if (((uint32_t)TLevel::tiles[xcell][int(unit.y1)] & qwe) ||
+                    ((uint32_t)TLevel::tiles[xcell][int(unit.y2)] & qwe) ||
+                    ((uint32_t)TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] & qwe)) {
 
-                    unit.x1 = xcell + FUCKING_EPS;
+                    unit.x1 = xcell + 1 + FUCKING_EPS;
                     unit.x2 = unit.x1 + UNIT_SIZE_X;
                 } else {
                     unit.x1 += dx;
@@ -105,11 +115,11 @@ private:
                 }
             }
 
-            if (unit.canJump && (action.jump || !unit.jumpCanCancel)) {
+            if (goingUp) {
                 double dy = (unit.jumpCanCancel ? UNIT_JUMP_SPEED : JUMP_PAD_JUMP_SPEED) / (TICKS_PER_SECOND * updatesPerTick);
 
                 int ycell = int(unit.y2 + dy);
-                if (TLevel::tiles[int(unit.x1)][ycell] == WALL || TLevel::tiles[int(unit.x2)][ycell] == WALL) {
+                if (TLevel::tiles[int(unit.x1)][ycell] == ETile::WALL || TLevel::tiles[int(unit.x2)][ycell] == ETile::WALL) {
                     unit.jumpMaxTime = 0;
                     unit.canJump = false;
                     unit.jumpCanCancel = false;
@@ -119,9 +129,9 @@ private:
                     unit.y1 += dy;
                     unit.y2 += dy;
                     if (unit.isOnLadder()) {
-                        if (!onLadder) {
-
-                        }
+                        unit.jumpMaxTime = UNIT_JUMP_TIME;
+                        unit.canJump = true;
+                        unit.jumpCanCancel = true;
                     } else {
                         unit.jumpMaxTime -= 1.0 / TICKS_PER_SECOND / updatesPerTick;
                     }
@@ -129,13 +139,24 @@ private:
             } else if (action.jumpDown || !onLadder) {
                 double dy = -UNIT_FALL_SPEED / (TICKS_PER_SECOND * updatesPerTick);
 
-                int ycell = int(unit.y1 + dy);
-                int x1cell = int(unit.x1);
-                int x2cell = int(unit.x2);
-                auto tile1 = TLevel::tiles[x1cell][ycell];
-                auto tile2 = TLevel::tiles[x2cell][ycell];
+                auto wallMask = uint32_t(ETile::WALL);
+                if (!action.jumpDown) {
+                    if (TLevel::getTileType(unit.x1, unit.y1) == ETile::PLATFORM || TLevel::getTileType(unit.x2, unit.y1) == ETile::PLATFORM) {
 
-                if (tile1 == WALL || tile2 == WALL || (!action.jumpDown && (tile1 == PLATFORM || tile2 == PLATFORM))) {
+                    } else {
+                        wallMask |= uint32_t(ETile::PLATFORM);
+                    }
+                    auto unit2 = unit;
+                    unit2.y1 += dy, unit2.y2 += dy;
+                    if (!unit.isOnLadder() && unit2.isOnLadder()) {
+                        wallMask |= uint32_t(ETile::LADDER);
+                    }
+                }
+
+                int ycell = int(unit.y1 + dy);
+                if (((uint32_t)TLevel::tiles[int(unit.x1)][ycell] & wallMask) ||
+                    ((uint32_t)TLevel::tiles[int(unit.x2)][ycell] & wallMask)) {
+
                     unit.jumpMaxTime = UNIT_JUMP_TIME;
                     unit.canJump = true;
                     unit.jumpCanCancel = true;
@@ -172,29 +193,22 @@ private:
                 unit.jumpCanCancel = false;
             }
 
-            bool intersectsWithPad = TLevel::getTileType(unit.x1, unit.y1) == JUMP_PAD ||
-                                     TLevel::getTileType(unit.x1, unit.y2) == JUMP_PAD ||
-                                     TLevel::getTileType(unit.x1, unit.y1 + UNIT_HALF_HEIGHT) == JUMP_PAD ||
-                                     TLevel::getTileType(unit.x2, unit.y1) == JUMP_PAD ||
-                                     TLevel::getTileType(unit.x2, unit.y2) == JUMP_PAD ||
-                                     TLevel::getTileType(unit.x2, unit.y1 + UNIT_HALF_HEIGHT) == JUMP_PAD;
+            if (!unit.jumpCanCancel && unit.isOnLadder()) {
+                unit.canJump = true;
+                unit.jumpMaxTime = UNIT_JUMP_TIME;
+                unit.jumpCanCancel = true;
+            }
+
+            bool intersectsWithPad = TLevel::getTileType(unit.x1, unit.y1) == ETile::JUMP_PAD ||
+                                     TLevel::getTileType(unit.x1, unit.y2) == ETile::JUMP_PAD ||
+                                     TLevel::getTileType(unit.x1, unit.y1 + UNIT_HALF_HEIGHT) == ETile::JUMP_PAD ||
+                                     TLevel::getTileType(unit.x2, unit.y1) == ETile::JUMP_PAD ||
+                                     TLevel::getTileType(unit.x2, unit.y2) == ETile::JUMP_PAD ||
+                                     TLevel::getTileType(unit.x2, unit.y1 + UNIT_HALF_HEIGHT) == ETile::JUMP_PAD;
             if (intersectsWithPad) {
                 unit.jumpCanCancel = false;
                 unit.canJump = true;
                 unit.jumpMaxTime = JUMP_PAD_JUMP_TIME;
-            }
-
-            {
-                int x1 = int(unit.x1);
-                int x2 = int(unit.x2);
-                int y = int(unit.y1 + 1e-8);
-                unsigned idx1 = (*lootBoxIndex)[x1][y], idx2 = (*lootBoxIndex)[x2][y];
-                if (idx1 != UINT32_MAX) {
-                    unit.maybeApplyLoot(lootBoxes[idx1]);
-                }
-                if (idx2 != UINT32_MAX && idx1 != idx2) {
-                    unit.maybeApplyLoot(lootBoxes[idx2]);
-                }
             }
         }
     }
