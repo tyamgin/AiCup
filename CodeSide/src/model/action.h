@@ -8,6 +8,7 @@ public:
     bool jump;
     bool jumpDown;
     bool shoot;
+    bool reload;
     bool swapWeapon;
     bool plantMine;
 
@@ -18,12 +19,13 @@ public:
         jump = false;
         jumpDown = false;
         shoot = false;
+        reload = false;
         swapWeapon = false;
         plantMine = false;
     }
 
     UnitAction toUnitAction() const {
-        return UnitAction(velocity, jump, jumpDown, {aim.x, aim.y}, shoot, swapWeapon, plantMine);
+        return UnitAction(velocity, jump, jumpDown, {aim.x, aim.y}, shoot, reload, swapWeapon, plantMine);
     }
 };
 

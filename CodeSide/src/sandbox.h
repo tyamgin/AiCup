@@ -87,13 +87,12 @@ private:
             auto onLadder = unit.isOnLadder();
             double dx = action.velocity / (TICKS_PER_SECOND * updatesPerTick);
             double side_x = action.velocity > 0 ? unit.x2 : unit.x1;
-            auto goingUp = unit.canJump && (action.jump || !unit.jumpCanCancel);
-            auto qwe = uint32_t(ETile::WALL);
+
             if (action.velocity > 0) {
                 int xcell = int(unit.x2 + dx);
-                if (((uint32_t)TLevel::tiles[xcell][int(unit.y1)] & qwe) ||
-                    ((uint32_t)TLevel::tiles[xcell][int(unit.y2)] & qwe) ||
-                    ((uint32_t)TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] & qwe)) {
+                if (TLevel::tiles[xcell][int(unit.y1)] == ETile::WALL ||
+                    TLevel::tiles[xcell][int(unit.y2)] == ETile::WALL ||
+                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
 
                     unit.x2 = xcell - FUCKING_EPS;
                     unit.x1 = unit.x2 - UNIT_SIZE_X;
@@ -103,9 +102,9 @@ private:
                 }
             } else if (action.velocity < 0) {
                 int xcell = int(unit.x1 + dx);
-                if (((uint32_t)TLevel::tiles[xcell][int(unit.y1)] & qwe) ||
-                    ((uint32_t)TLevel::tiles[xcell][int(unit.y2)] & qwe) ||
-                    ((uint32_t)TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] & qwe)) {
+                if (TLevel::tiles[xcell][int(unit.y1)] == ETile::WALL ||
+                    TLevel::tiles[xcell][int(unit.y2)] == ETile::WALL ||
+                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
 
                     unit.x1 = xcell + 1 + FUCKING_EPS;
                     unit.x2 = unit.x1 + UNIT_SIZE_X;
@@ -115,7 +114,7 @@ private:
                 }
             }
 
-            if (goingUp) {
+            if (unit.canJump && (action.jump || !unit.jumpCanCancel)) {
                 double dy = (unit.jumpCanCancel ? UNIT_JUMP_SPEED : JUMP_PAD_JUMP_SPEED) / (TICKS_PER_SECOND * updatesPerTick);
 
                 int ycell = int(unit.y2 + dy);
@@ -141,14 +140,10 @@ private:
 
                 auto wallMask = uint32_t(ETile::WALL);
                 if (!action.jumpDown) {
-                    if (TLevel::getTileType(unit.x1, unit.y1) == ETile::PLATFORM || TLevel::getTileType(unit.x2, unit.y1) == ETile::PLATFORM) {
-
-                    } else {
+                    if (TLevel::getTileType(unit.x1, unit.y1) != ETile::PLATFORM && TLevel::getTileType(unit.x2, unit.y1) != ETile::PLATFORM) {
                         wallMask |= uint32_t(ETile::PLATFORM);
                     }
-                    auto unit2 = unit;
-                    unit2.y1 += dy, unit2.y2 += dy;
-                    if (!unit.isOnLadder() && unit2.isOnLadder()) {
+                    if (unit.isStandOnLadder(dy)) {
                         wallMask |= uint32_t(ETile::LADDER);
                     }
                 }

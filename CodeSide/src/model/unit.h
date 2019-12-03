@@ -69,6 +69,12 @@ public:
                TLevel::getTileType(x, y1 + UNIT_HALF_HEIGHT) == ETile::LADDER;
     }
 
+    bool isStandOnLadder(double dy) const {
+        double x = x1 + UNIT_HALF_WIDTH;
+        return !(TLevel::getTileType(x, y1) == ETile::LADDER || TLevel::getTileType(x, y1 + UNIT_HALF_HEIGHT) == ETile::LADDER) &&
+               (TLevel::getTileType(x, y1 + dy) == ETile::LADDER || TLevel::getTileType(x, y1 + dy + UNIT_HALF_HEIGHT) == ETile::LADDER);
+    }
+
     void maybeApplyLoot(TLootBox& loot) {
         if (loot.type != ELootType::NONE && intersectsWith(loot)) {
             applyLoot(loot);
