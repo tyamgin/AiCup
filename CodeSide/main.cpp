@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <iostream>
 
 class Runner {
 public:
@@ -44,6 +45,18 @@ private:
 };
 
 int main(int argc, char *argv[]) {
+#ifdef DEBUG
+  std::cerr << "Starting local runner" << std::endl;
+
+  std::string runStr = "/Users/tyamgin/Projects/AiCup/CodeSide/local-runner/aicup2019";
+  std::string prevBin = "m65";
+  system((runStr + " --config config.json &").c_str());
+  std::cerr << "local runner started" << std::endl;
+
+  usleep(2000 * 1000);
+  //system(("/Users/tyamgin/Projects/AiCup/CodeBall/release/" + prevBin + " 127.0.0.1 31002 0000000000000000 &").c_str());
+#endif
+
   std::string host = argc < 2 ? "127.0.0.1" : argv[1];
   int port = argc < 3 ? 31001 : atoi(argv[2]);
   std::string token = argc < 4 ? "0000000000000000" : argv[3];

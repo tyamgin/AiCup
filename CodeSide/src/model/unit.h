@@ -64,9 +64,9 @@ public:
     }
 
     bool isOnLadder() const {
-        double x = (x1 + x2) / 2;
-        double y = (y1 + y2) / 2;
-        return TLevel::getTileType(x, y) == LADDER || TLevel::getTileType(x, y2) == LADDER;
+        double x = x1 + UNIT_HALF_WIDTH;
+        return TLevel::getTileType(x, y1) == LADDER ||
+               TLevel::getTileType(x, y1 + UNIT_HALF_HEIGHT) == LADDER;
     }
 
     void maybeApplyLoot(TLootBox& loot) {

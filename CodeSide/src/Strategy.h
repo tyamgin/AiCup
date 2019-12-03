@@ -9,9 +9,11 @@ double distanceSqr(Vec2Double a, Vec2Double b) {
 }
 
 class Strategy {
-    TSandbox prevEnv;
+    TSandbox prevEnv, prevEnv2;
 
     void _compareState(const TSandbox& prevEnv, const TSandbox& env) {
+        const double eps = 1e-10;
+
         if (prevEnv.currentTick != env.currentTick) {
             std::cerr << "Prev state currentTick mismatch " << prevEnv.currentTick << " vs " << env.currentTick << std::endl;
         }
@@ -23,24 +25,30 @@ class Strategy {
             if (prevUnit.playerId != TLevel::myId) {
                 continue;
             }
-            if (std::abs(prevUnit.x1 - curUnit.x1) > 1e-8) {
+            if (std::abs(prevUnit.x1 - curUnit.x1) > eps) {
                 std::cerr << "Prev state unit.x1 mismatch " << prevUnit.x1 << " vs " << curUnit.x1 << std::endl;
             }
-            if (std::abs(prevUnit.y1 - curUnit.y1) > 1e-8) { //  NOTE: после первого тика y почему-то сдвинули на 1e-9
+            if (std::abs(prevUnit.x2 - curUnit.x2) > eps) {
+                std::cerr << "Prev state unit.x2 mismatch " << prevUnit.x2 << " vs " << curUnit.x2 << std::endl;
+            }
+            if (std::abs(prevUnit.y1 - curUnit.y1) > eps) { //  NOTE: после первого тика y почему-то сдвинули на 1e-9
                 std::cerr << "Prev state unit.y1 mismatch " << prevUnit.y1 << " vs " << curUnit.y1 << std::endl;
+            }
+            if (std::abs(prevUnit.y2 - curUnit.y2) > eps) { //  NOTE: после первого тика y почему-то сдвинули на 1e-9
+                std::cerr << "Prev state unit.y2 mismatch " << prevUnit.y2 << " vs " << curUnit.y2 << std::endl;
             }
             if (prevUnit.health != curUnit.health) {
                 std::cerr << "Prev state unit.health mismatch " << prevUnit.health << " vs " << curUnit.health << std::endl;
             }
             if (prevUnit.canJump != curUnit.canJump) {
-                // not critical
                 std::cerr << "Prev state unit.canJump mismatch " << prevUnit.canJump << " vs " << curUnit.canJump << std::endl;
-            } else {
-                if (prevUnit.canJump && std::abs(prevUnit.jumpMaxTime - curUnit.jumpMaxTime) > 1e-8) {
-                    std::cerr << "Prev state unit.jumpMaxTime mismatch " << prevUnit.jumpMaxTime << " vs " << curUnit.jumpMaxTime << std::endl;
-                }
             }
-
+            if (std::abs(prevUnit.jumpMaxTime - curUnit.jumpMaxTime) > eps) {
+                std::cerr << "Prev state unit.jumpMaxTime mismatch " << prevUnit.jumpMaxTime << " vs " << curUnit.jumpMaxTime << std::endl;
+            }
+            if (prevUnit.jumpCanCancel != curUnit.jumpCanCancel) {
+                std::cerr << "Prev state unit.jumpCanCancel mismatch " << prevUnit.jumpCanCancel << " vs " << curUnit.jumpCanCancel << std::endl;
+            }
             if (prevUnit.onLadder != curUnit.onLadder) {
                 std::cerr << "Prev state unit.onLadder mismatch " << prevUnit.onLadder << " vs " << curUnit.onLadder << std::endl;
             }
@@ -54,21 +62,22 @@ class Strategy {
                 std::cerr << "Prev state unit.weapon.magazine mismatch " << (int)prevUnit.weapon.magazine << " vs " << (int)curUnit.weapon.magazine << std::endl;
             }
             if (prevUnit.weapon.wasShooting != curUnit.weapon.wasShooting) {
-                std::cerr << "Prev state unit.weapon.wasShooting mismatch " << (int)prevUnit.weapon.wasShooting << " vs " << (int)curUnit.weapon.wasShooting << std::endl;
+                std::cerr << "Prev state unit.weapon.wasShooting mismatch " << prevUnit.weapon.wasShooting << " vs " << curUnit.weapon.wasShooting << std::endl;
             }
             if (prevUnit.weapon.lastFireTick != curUnit.weapon.lastFireTick) {
                 std::cerr << "Prev state unit.weapon.lastFireTick mismatch " << (int)prevUnit.weapon.lastFireTick << " vs " << (int)curUnit.weapon.lastFireTick << std::endl;
             }
-            if (std::abs(prevUnit.weapon.spread - curUnit.weapon.spread) > 1e-8) {
-                std::cerr << "Prev state unit.weapon.spread mismatch " << (int)prevUnit.weapon.spread << " vs " << (int)curUnit.weapon.spread << std::endl;
+            if (std::abs(prevUnit.weapon.spread - curUnit.weapon.spread) > eps) {
+                std::cerr << "Prev state unit.weapon.spread mismatch " << prevUnit.weapon.spread << " vs " << curUnit.weapon.spread << std::endl;
             }
-            if (std::abs(prevUnit.weapon.fireTimer - curUnit.weapon.fireTimer) > 1e-8) {
-                std::cerr << "Prev state unit.weapon.fireTimer mismatch " << (int)prevUnit.weapon.fireTimer << " vs " << (int)curUnit.weapon.fireTimer << std::endl;
+            if (std::abs(prevUnit.weapon.fireTimer - curUnit.weapon.fireTimer) > eps) {
+                std::cerr << "Prev state unit.weapon.fireTimer mismatch " << prevUnit.weapon.fireTimer << " vs " << curUnit.weapon.fireTimer << std::endl;
             }
-            if (std::abs(prevUnit.weapon.lastAngle - curUnit.weapon.lastAngle) > 1e-8) {
-                std::cerr << "Prev state unit.weapon.lastAngle mismatch " << (int)prevUnit.weapon.lastAngle << " vs " << (int)curUnit.weapon.lastAngle << std::endl;
+            if (std::abs(prevUnit.weapon.lastAngle - curUnit.weapon.lastAngle) > eps) {
+                std::cerr << "Prev state unit.weapon.lastAngle mismatch " << prevUnit.weapon.lastAngle << " vs " << curUnit.weapon.lastAngle << std::endl;
             }
         }
+        prevEnv2.doTick();
     }
 
     TAction _strategy(const Unit& unit, const Game& game, Debug& debug) {
@@ -121,26 +130,63 @@ class Strategy {
         action.plantMine = false;
         return action;
     }
-public:
-    UnitAction getAction(const Unit& unit, const Game& game, Debug& debug) {
-        TSandbox env(TUnit(unit), game);
-        if (env.currentTick > 1) {
-            if (env.currentTick == 68) {
-                env.currentTick += 0;
-            }
-            prevEnv.doTick();
-            _compareState(prevEnv, env);
-        }
 
+    TAction _ladderLeftStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
         TAction action;
         //auto action = _strategy(unit, game, debug);
-        if (env.currentTick == 0) {
+        if (env.currentTick < 100) {
+            action.velocity = 1;
+        } else if (env.currentTick < 1800) {
+            action.velocity = 10;
+        } else if (env.currentTick < 4000) {
+            action.jump = true;
+        } else if (env.currentTick < 4700) {
+            action.velocity = -10;
+        } else if (env.currentTick < 5400) {
+            action.velocity = 10;
+        } else if (env.currentTick < 6000) {
+            action.jump = true;
+        } else if (env.currentTick < 6200) {
+            action.jumpDown = true;
+        } else if (env.currentTick < 10000) {
+            action.jumpDown = true;
+            action.velocity = 1;
+        } else {
+            action.velocity = 6;
+        }
+        return action;
+    }
+
+
+    TAction _ladderDownStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
+        TAction action;
+        //auto action = _strategy(unit, game, debug);
+        if (env.currentTick < 100) {
             // do nothing
-        } else if (env.currentTick <= 300) {
+        } else if (env.currentTick < 1800) {
             action.velocity = 10;
         } else {
             action.jump = true;
         }
+        return action;
+    }
+
+public:
+    UnitAction getAction(const Unit& unit, const Game& game, Debug& debug) {
+        TSandbox env(TUnit(unit), game);
+        if (env.currentTick > 1) {
+            if (env.currentTick == 3801) {
+                env.currentTick += 0;
+            }
+            prevEnv2 = prevEnv;
+            prevEnv.doTick();
+            _compareState(prevEnv, env);
+        }
+
+        //auto action = _strategy(unit, game, debug);
+        auto action = _ladderLeftStrategy(unit, env, debug);
+        //auto action = _ladderDownStrategy(unit, env, debug);
+
 
         for (auto& u : env.units) {
             if (u.id == unit.id) {

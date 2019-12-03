@@ -1,6 +1,8 @@
 #ifndef CODESIDE_SANDBOX_H
 #define CODESIDE_SANDBOX_H
 
+#define FUCKING_EPS 1e-9
+
 #include "model/unit.h"
 #include "model/mine.h"
 #include "model/lootbox.h"
@@ -74,58 +76,100 @@ private:
     void _doMicroTick(int updatesPerTick) {
         for (auto& unit : units) {
             const auto& action = unit.action;
+            auto onLadder = unit.isOnLadder();
             double dx = action.velocity / (TICKS_PER_SECOND * updatesPerTick);
             double side_x = action.velocity > 0 ? unit.x2 : unit.x1;
             if (action.velocity > 0) {
-                if (!TLevel::isRightWall(unit.x2 + dx, unit.y1) &&
-                    !TLevel::isRightWall(unit.x2 + dx, unit.y2) &&
-                    !TLevel::isRightWall(unit.x2 + dx, unit.y1 + UNIT_HALF_HEIGHT)) {
+                int xcell = int(unit.x2 + dx);
+                if (TLevel::tiles[xcell][int(unit.y1)] == WALL ||
+                    TLevel::tiles[xcell][int(unit.y2)] == WALL ||
+                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == WALL) {
 
+                    unit.x2 = xcell - FUCKING_EPS;
+                    unit.x1 = unit.x2 - UNIT_SIZE_X;
+                } else {
                     unit.x1 += dx;
                     unit.x2 += dx;
                 }
             } else if (action.velocity < 0) {
-                if (!TLevel::isLeftWall(unit.x1 + dx, unit.y1) &&
-                    !TLevel::isLeftWall(unit.x1 + dx, unit.y2) &&
-                    !TLevel::isLeftWall(unit.x1 + dx, unit.y1 + UNIT_HALF_HEIGHT)) {
+                int xcell = int(unit.x1 + dx);
+                if (TLevel::tiles[xcell][int(unit.y1)] == WALL ||
+                    TLevel::tiles[xcell][int(unit.y2)] == WALL ||
+                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == WALL) {
 
+                    unit.x1 = xcell + FUCKING_EPS;
+                    unit.x2 = unit.x1 + UNIT_SIZE_X;
+                } else {
                     unit.x1 += dx;
                     unit.x2 += dx;
                 }
             }
 
-            if (unit.jumpMaxTime < -EPS) {
-                unit.canJump = false;
-            }
+            if (unit.canJump && (action.jump || !unit.jumpCanCancel)) {
+                double dy = (unit.jumpCanCancel ? UNIT_JUMP_SPEED : JUMP_PAD_JUMP_SPEED) / (TICKS_PER_SECOND * updatesPerTick);
 
-            for (int rep = 0; rep < 2; rep++) {
-                if (unit.canJump && (action.jump || !unit.jumpCanCancel)) {
-                    double dy = (unit.jumpCanCancel ? UNIT_JUMP_SPEED : JUMP_PAD_JUMP_SPEED) / (TICKS_PER_SECOND * updatesPerTick);
-                    if (!TLevel::isUpperWall(unit.x1, unit.x2, unit.y2 + dy)) {
-                        unit.y1 += dy;
-                        unit.y2 += dy;
+                int ycell = int(unit.y2 + dy);
+                if (TLevel::tiles[int(unit.x1)][ycell] == WALL || TLevel::tiles[int(unit.x2)][ycell] == WALL) {
+                    unit.jumpMaxTime = 0;
+                    unit.canJump = false;
+                    unit.jumpCanCancel = false;
+                    unit.y2 = ycell - FUCKING_EPS;
+                    unit.y1 = unit.y2 - UNIT_SIZE_Y;
+                } else {
+                    unit.y1 += dy;
+                    unit.y2 += dy;
+                    if (unit.isOnLadder()) {
+                        if (!onLadder) {
+
+                        }
+                    } else {
                         unit.jumpMaxTime -= 1.0 / TICKS_PER_SECOND / updatesPerTick;
-                        break;
-                    } else {
-                        unit.jumpMaxTime = 0;
-                        unit.canJump = false;
                     }
-                } else if (action.jumpDown || !unit.canJump) {
-                    double dy = -UNIT_FALL_SPEED / (TICKS_PER_SECOND * updatesPerTick);
-                    if (!TLevel::isGround(unit.x1, unit.y1 + dy, action.jumpDown) &&
-                        !TLevel::isGround(unit.x2, unit.y1 + dy, action.jumpDown)) {
+                }
+            } else if (action.jumpDown || !onLadder) {
+                double dy = -UNIT_FALL_SPEED / (TICKS_PER_SECOND * updatesPerTick);
 
-                        unit.y1 += dy;
-                        unit.y2 += dy;
-                        break;
-                    } else {
+                int ycell = int(unit.y1 + dy);
+                int x1cell = int(unit.x1);
+                int x2cell = int(unit.x2);
+                auto tile1 = TLevel::tiles[x1cell][ycell];
+                auto tile2 = TLevel::tiles[x2cell][ycell];
+
+                if (tile1 == WALL || tile2 == WALL || (!action.jumpDown && (tile1 == PLATFORM || tile2 == PLATFORM))) {
+                    unit.jumpMaxTime = UNIT_JUMP_TIME;
+                    unit.canJump = true;
+                    unit.jumpCanCancel = true;
+                    unit.y1 = ycell + (1 + FUCKING_EPS);
+                    unit.y2 = unit.y1 + UNIT_SIZE_Y;
+                } else {
+                    unit.y1 += dy;
+                    unit.y2 += dy;
+                    if (unit.isOnLadder()) {
                         unit.jumpMaxTime = UNIT_JUMP_TIME;
                         unit.canJump = true;
                         unit.jumpCanCancel = true;
+                    } else {
+                        unit.jumpMaxTime = 0;
+                        unit.canJump = false;
+                        unit.jumpCanCancel = false;
                     }
-                } else {
-                    break;
                 }
+            } else {
+                if (unit.isOnLadder()) {
+                    unit.jumpMaxTime = UNIT_JUMP_TIME;
+                    unit.canJump = true;
+                    unit.jumpCanCancel = true;
+                } else {
+                    unit.jumpMaxTime = 0;
+                    unit.canJump = false;
+                    unit.jumpCanCancel = false;
+                }
+            }
+
+            if (unit.jumpMaxTime <= -1e-11) {
+                unit.canJump = false;
+                unit.jumpMaxTime = 0;
+                unit.jumpCanCancel = false;
             }
 
             bool intersectsWithPad = TLevel::getTileType(unit.x1, unit.y1) == JUMP_PAD ||

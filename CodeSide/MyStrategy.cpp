@@ -54,9 +54,9 @@ void debugCheckGameParams(const Game& game, bool print) {
 
 #define PRINT_WEAPON_PROP(type, weapon_idx, weapon_type, p, const_str) do {\
             auto val = game.properties.weaponParams.find((WeaponType)weapon_idx)->second. p;\
-            cout << "constexpr const " << #type << " " << #weapon_type << "_" << #const_str << " = " << val << ";\n";\
+            if (print) cout << "constexpr const " << #type << " " << #weapon_type << "_" << #const_str << " = " << val << ";\n";\
             if (std::abs(CAT(weapon_type, CAT(_, const_str)) - val) > 1e-9) {\
-                cerr << #const_str << " wrong constant value\n";\
+                cerr << #const_str << " wrong constant value " << val << " (right is " << CAT(weapon_type, CAT(_, const_str)) << ")\n";\
                 exit(1);\
             }\
         } while(0)
@@ -95,6 +95,7 @@ UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debu
     if (game.currentTick <= 1) {
         debugCheckGameParams(game, false);
     }
+    printf("%d %.13f\n", game.currentTick, unit.position.y);
     return strategy.getAction(unit, game, debug);
 }
 
