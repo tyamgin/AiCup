@@ -49,9 +49,6 @@ class Strategy {
             if (prevUnit.jumpCanCancel != curUnit.jumpCanCancel) {
                 std::cerr << "Prev state unit.jumpCanCancel mismatch " << prevUnit.jumpCanCancel << " vs " << curUnit.jumpCanCancel << std::endl;
             }
-            if (prevUnit.onLadder != curUnit.onLadder) {
-                std::cerr << "Prev state unit.onLadder mismatch " << prevUnit.onLadder << " vs " << curUnit.onLadder << std::endl;
-            }
             if (prevUnit.mines != curUnit.mines) {
                 std::cerr << "Prev state unit.mines mismatch " << prevUnit.mines << " vs " << curUnit.mines << std::endl;
             }
