@@ -86,7 +86,6 @@ private:
             const auto& action = unit.action;
             auto onLadder = unit.isOnLadder();
             double dx = action.velocity / (TICKS_PER_SECOND * updatesPerTick);
-            double side_x = action.velocity > 0 ? unit.x2 : unit.x1;
 
             if (action.velocity > 0) {
                 int xcell = int(unit.x2 + dx);
