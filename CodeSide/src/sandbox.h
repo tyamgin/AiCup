@@ -199,17 +199,17 @@ private:
                 unit.jumpCanCancel = true;
             }
 
-            bool intersectsWithPad = TLevel::getTileType(unit.x1, unit.y1) == ETile::JUMP_PAD ||
-                                     TLevel::getTileType(unit.x1, unit.y2) == ETile::JUMP_PAD ||
-                                     TLevel::getTileType(unit.x1, unit.y1 + UNIT_HALF_HEIGHT) == ETile::JUMP_PAD ||
-                                     TLevel::getTileType(unit.x2, unit.y1) == ETile::JUMP_PAD ||
-                                     TLevel::getTileType(unit.x2, unit.y2) == ETile::JUMP_PAD ||
-                                     TLevel::getTileType(unit.x2, unit.y1 + UNIT_HALF_HEIGHT) == ETile::JUMP_PAD;
-            if (intersectsWithPad) {
-                unit.jumpCanCancel = false;
-                unit.canJump = true;
-                unit.jumpMaxTime = JUMP_PAD_JUMP_TIME;
+            for (int i = int(unit.x1); i <= int(unit.x2); i++) {
+                for (int j = int(unit.y1); j <= int(unit.y2); j++) {
+                    if (TLevel::tiles[i][j] == ETile::JUMP_PAD) {
+                        unit.jumpCanCancel = false;
+                        unit.canJump = true;
+                        unit.jumpMaxTime = JUMP_PAD_JUMP_TIME;
+                        goto endPadLoop;
+                    }
+                }
             }
+            endPadLoop:;
         }
     }
 };

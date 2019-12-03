@@ -17,7 +17,7 @@ if (CMAKE_BUILD_TYPE MATCHES Release)
         -lm -O2 -Wall -Wtype-limits -Wno-unknown-pragmas")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Winconsistent-missing-override")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 
 add_definitions(-DLOCAL)
 
