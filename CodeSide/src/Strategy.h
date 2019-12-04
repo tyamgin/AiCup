@@ -176,6 +176,16 @@ class Strategy {
         return action;
     }
 
+    TAction _jumpStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
+        TAction action;
+        //auto action = _strategy(unit, game, debug);
+        if (env.currentTick < 100) {
+            // do nothing
+        } else {
+            action.jump = true;
+        }
+        return action;
+    }
 
     TAction _ladderDownStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
         TAction action;
@@ -204,6 +214,7 @@ public:
 
         //auto action = _strategy(unit, game, debug);
         auto action = _ladderLeftStrategy(unit, env, debug);
+        //auto action = _jumpStrategy(unit, env, debug);
         //auto action = _ladderDownStrategy(unit, env, debug);
 
 

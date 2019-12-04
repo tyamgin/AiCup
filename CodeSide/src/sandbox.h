@@ -121,7 +121,7 @@ private:
                     unit.jumpMaxTime = 0;
                     unit.canJump = false;
                     unit.jumpCanCancel = false;
-                    unit.y2 = ycell - FUCKING_EPS;
+                    unit.y2 = std::max(unit.y2, ycell - FUCKING_EPS);
                     unit.y1 = unit.y2 - UNIT_SIZE_Y;
                 } else {
                     unit.y1 += dy;
@@ -154,7 +154,7 @@ private:
                     unit.jumpMaxTime = UNIT_JUMP_TIME;
                     unit.canJump = true;
                     unit.jumpCanCancel = true;
-                    unit.y1 = ycell + (1 + FUCKING_EPS);
+                    unit.y1 = std::min(unit.y1, ycell + (1 + FUCKING_EPS));
                     unit.y2 = unit.y1 + UNIT_SIZE_Y;
                 } else {
                     unit.y1 += dy;
