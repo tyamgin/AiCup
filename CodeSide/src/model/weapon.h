@@ -7,7 +7,7 @@ class TWeapon {
 public:
     ELootType type;
     int magazine;
-    bool wasShooting;
+    //bool wasShooting;
     double spread;
     double fireTimer; // -1
     double lastAngle; // DEFAULT_LAST_ANGLE
@@ -28,7 +28,7 @@ public:
     TWeapon() {
         type = ELootType::NONE;
         magazine = 0;
-        wasShooting = false;
+        //wasShooting = false;
         spread = 0;
         fireTimer = -1;
         lastAngle = DEFAULT_LAST_ANGLE;
@@ -38,7 +38,7 @@ public:
     explicit TWeapon(const Weapon& weapon) {
         type = (ELootType) weapon.typ;
         magazine = weapon.magazine;
-        wasShooting = weapon.wasShooting;
+        //wasShooting = weapon.wasShooting;
         spread = weapon.spread;
         fireTimer = weapon.fireTimer ? *weapon.fireTimer : -1;
         lastAngle = weapon.lastAngle ? *weapon.lastAngle : DEFAULT_LAST_ANGLE;
@@ -47,7 +47,7 @@ public:
 
     explicit TWeapon(ELootType lootType) {
         type = lootType;
-        wasShooting = false; // TODO: точно?
+        //wasShooting = false; // TODO: точно?
         switch (lootType) {
             case ELootType::PISTOL:
                 spread = PISTOL_MIN_SPREAD;
@@ -70,40 +70,11 @@ public:
     TWeapon(const TWeapon& weapon) {
         type = weapon.type;
         magazine = weapon.magazine;
-        wasShooting = weapon.wasShooting;
+        //wasShooting = weapon.wasShooting;
         spread = weapon.spread;
         fireTimer = weapon.fireTimer;
         lastAngle = weapon.lastAngle;
         lastFireTick = weapon.lastFireTick;
-    }
-
-    double recoil() const {
-        return type == ELootType::PISTOL ? PISTOL_RECOIL : (
-                type == ELootType::ASSAULT_RIFLE ? ASSAULT_RIFLE_RECOIL :
-                ROCKET_LAUNCHER_RECOIL
-        );
-    }
-
-    double aimSpeed() const {
-        return type == ELootType::PISTOL ? PISTOL_AIM_SPEED : (
-                type == ELootType::ASSAULT_RIFLE ? ASSAULT_RIFLE_AIM_SPEED :
-                ROCKET_LAUNCHER_AIM_SPEED
-        );
-    }
-
-    void reloadMagazine() {
-        switch (type) {
-            case ELootType::PISTOL:
-                magazine = PISTOL_MAGAZINE_SIZE;
-                break;
-            case ELootType::ASSAULT_RIFLE:
-                magazine = ASSAULT_RIFLE_MAGAZINE_SIZE;
-                break;
-            default:
-                magazine = ROCKET_LAUNCHER_MAGAZINE_SIZE;
-                break;
-        }
-        fireTimer = WEAPON_RELOAD_TIME;
     }
 
     void shot() {

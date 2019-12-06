@@ -59,9 +59,9 @@ class Strategy {
             if (prevUnit.weapon.magazine != curUnit.weapon.magazine) {
                 std::cerr << "Prev state unit.weapon.magazine mismatch " << (int)prevUnit.weapon.magazine << " vs " << (int)curUnit.weapon.magazine << std::endl;
             }
-            if (prevUnit.weapon.wasShooting != curUnit.weapon.wasShooting) {
-                std::cerr << "Prev state unit.weapon.wasShooting mismatch " << prevUnit.weapon.wasShooting << " vs " << curUnit.weapon.wasShooting << std::endl;
-            }
+//            if (prevUnit.weapon.wasShooting != curUnit.weapon.wasShooting) {
+//                std::cerr << "Prev state unit.weapon.wasShooting mismatch " << prevUnit.weapon.wasShooting << " vs " << curUnit.weapon.wasShooting << std::endl;
+//            }
             if (prevUnit.weapon.lastFireTick != curUnit.weapon.lastFireTick) {
                 std::cerr << "Prev state unit.weapon.lastFireTick mismatch " << (int)prevUnit.weapon.lastFireTick << " vs " << (int)curUnit.weapon.lastFireTick << std::endl;
             }
