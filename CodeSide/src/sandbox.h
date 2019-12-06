@@ -87,13 +87,7 @@ private:
                 weapon.lastFireTick = currentTick;
             }
         }
-        if (weapon.type == ELootType::PISTOL) {
-            weapon.spread = std::max(weapon.spread - PISTOL_AIM_SPEED / updatesPerSecond, PISTOL_MIN_SPREAD);
-        } else if (weapon.type == ELootType::ASSAULT_RIFLE) {
-            weapon.spread = std::max(weapon.spread - ASSAULT_RIFLE_AIM_SPEED / updatesPerSecond, ASSAULT_RIFLE_MIN_SPREAD);
-        } else {
-            weapon.spread = std::max(weapon.spread - ROCKET_LAUNCHER_AIM_SPEED / updatesPerSecond, ROCKET_LAUNCHER_MIN_SPREAD);
-        }
+        weapon.spread = std::max(weapon.spread - WEAPON_AIM_SPEED[(int) weapon.type] / updatesPerSecond, WEAPON_MIN_SPREAD[(int) weapon.type]);
         if (weapon.fireTimer > -0.5) {
             weapon.fireTimer -= WEAPON_RELOAD_TIME / updatesPerSecond;
             if (weapon.fireTimer < 0) {

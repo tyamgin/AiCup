@@ -13,6 +13,8 @@ enum class ELootType {
     NONE = 5,
 };
 static_assert(sizeof(WEAPON_DAMAGE) / sizeof(WEAPON_DAMAGE[0]) == (int)ELootType::NONE + 1);
+static_assert(sizeof(WEAPON_AIM_SPEED) / sizeof(WEAPON_AIM_SPEED[0]) == (int)ELootType::NONE + 1);
+static_assert(sizeof(WEAPON_MIN_SPREAD) / sizeof(WEAPON_MIN_SPREAD[0]) == (int)ELootType::NONE + 1);
 
 class TLootBox : public TRectangle {
 public:

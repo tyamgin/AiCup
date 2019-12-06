@@ -73,10 +73,22 @@ constexpr const double WEAPON_MAX_SPREAD = 0.7;
 #endif
 
 constexpr const int WEAPON_DAMAGE[6] = {
-    PISTOL_BULLET_DAMAGE,
-    ASSAULT_RIFLE_BULLET_DAMAGE,
-    ROCKET_LAUNCHER_BULLET_DAMAGE,
-    0, 0, 0
+        PISTOL_BULLET_DAMAGE,
+        ASSAULT_RIFLE_BULLET_DAMAGE,
+        ROCKET_LAUNCHER_BULLET_DAMAGE,
+        0, 0, 0
+};
+constexpr const double WEAPON_AIM_SPEED[6] = {
+        PISTOL_AIM_SPEED,
+        ASSAULT_RIFLE_AIM_SPEED,
+        ROCKET_LAUNCHER_AIM_SPEED,
+        0, 0, 0
+};
+constexpr const double WEAPON_MIN_SPREAD[6] = {
+        PISTOL_MIN_SPREAD,
+        ASSAULT_RIFLE_MIN_SPREAD,
+        ROCKET_LAUNCHER_MIN_SPREAD,
+        0, 0, 0
 };
 
 constexpr const double UNIT_HALF_WIDTH = UNIT_SIZE_X / 2;
