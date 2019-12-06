@@ -5,31 +5,30 @@
 
 class TBullet : public TRectangle {
 public:
-    WeaponType weaponType;
+    ELootType weaponType;
     int unitId;
-    int playerId;
     TPoint velocity;
-    int damage;
-    std::shared_ptr<ExplosionParams> explosionParams;
 
-    explicit TBullet(const Bullet& bullet) : TRectangle(bullet.position, bullet.size, bullet.size) {
-        weaponType = bullet.weaponType;
+    TBullet() : TRectangle(0, 0, 0, 0) {
+        weaponType = ELootType::NONE;
+        unitId = -1;
+    }
+
+    explicit TBullet(const Bullet& bullet) : TRectangle(bullet.position.x - bullet.size / 2,
+                                                        bullet.position.y - bullet.size / 2,
+                                                        bullet.position.x + bullet.size / 2,
+                                                        bullet.position.y + bullet.size / 2) {
+        weaponType = (ELootType) bullet.weaponType;
         unitId = bullet.unitId;
-        playerId = bullet.playerId;
         velocity.x = bullet.velocity.x;
         velocity.y = bullet.velocity.y;
-        damage = bullet.damage;
-        // TODO: explosionParams
     }
 
     TBullet(const TBullet& bullet) : TRectangle(bullet) {
         weaponType = bullet.weaponType;
         unitId = bullet.unitId;
-        playerId = bullet.playerId;
         velocity.x = bullet.velocity.x;
         velocity.y = bullet.velocity.y;
-        damage = bullet.damage;
-        // TODO: explosionParams
     }
 };
 

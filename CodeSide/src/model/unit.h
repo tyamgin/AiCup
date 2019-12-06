@@ -1,6 +1,7 @@
 #ifndef CODESIDE_UNIT_H
 #define CODESIDE_UNIT_H
 
+#include "../constants.h"
 #include "point.h"
 #include "rectangle.h"
 #include "level.h"
@@ -125,6 +126,61 @@ public:
 
     TPoint center() const {
         return TPoint(x1 + UNIT_HALF_WIDTH, y1 + UNIT_HALF_HEIGHT);
+    }
+
+    TBullet shot() {
+        TBullet res;
+        res.weaponType = weapon.type;
+        res.unitId = id;
+        weapon.magazine -= 1;
+        switch (weapon.type) {
+            case ELootType::PISTOL:
+                if (weapon.magazine == 0) {
+                    weapon.magazine = PISTOL_MAGAZINE_SIZE;
+                    weapon.fireTimer = WEAPON_RELOAD_TIME;
+                } else {
+                    weapon.fireTimer = PISTOL_FIRE_RATE;
+                }
+                weapon.spread += PISTOL_RECOIL;
+                res.x1 = x1 + (UNIT_HALF_WIDTH - PISTOL_BULLET_SIZE / 2);
+                res.x2 = res.x1 + PISTOL_BULLET_SIZE;
+                res.y1 = y1 + (UNIT_HALF_HEIGHT - PISTOL_BULLET_SIZE / 2);
+                res.y2 = res.y1 + PISTOL_BULLET_SIZE;
+                res.velocity = action.aim.normalized() * PISTOL_BULLET_SPEED;
+                break;
+            case ELootType::ASSAULT_RIFLE:
+                if (weapon.magazine == 0) {
+                    weapon.magazine = ASSAULT_RIFLE_MAGAZINE_SIZE;
+                    weapon.fireTimer = WEAPON_RELOAD_TIME;
+                } else {
+                    weapon.fireTimer = ASSAULT_RIFLE_FIRE_RATE;
+                }
+                weapon.spread += ASSAULT_RIFLE_RECOIL;
+                res.x1 = x1 + (UNIT_HALF_WIDTH - ASSAULT_RIFLE_BULLET_SIZE / 2);
+                res.x2 = res.x1 + ASSAULT_RIFLE_BULLET_SIZE;
+                res.y1 = y1 + (UNIT_HALF_HEIGHT - ASSAULT_RIFLE_BULLET_SIZE / 2);
+                res.y2 = res.y1 + ASSAULT_RIFLE_BULLET_SIZE;
+                res.velocity = action.aim.normalized() * ASSAULT_RIFLE_BULLET_SPEED;
+                break;
+            default:
+                if (weapon.magazine == 0) {
+                    weapon.magazine = ROCKET_LAUNCHER_MAGAZINE_SIZE;
+                    weapon.fireTimer = WEAPON_RELOAD_TIME;
+                } else {
+                    weapon.fireTimer = ROCKET_LAUNCHER_FIRE_RATE;
+                }
+                weapon.spread += ROCKET_LAUNCHER_RECOIL;
+                res.x1 = x1 + (UNIT_HALF_WIDTH - ROCKET_LAUNCHER_BULLET_SIZE / 2);
+                res.x2 = res.x1 + ROCKET_LAUNCHER_BULLET_SIZE;
+                res.y1 = y1 + (UNIT_HALF_HEIGHT - ROCKET_LAUNCHER_BULLET_SIZE / 2);
+                res.y2 = res.y1 + ROCKET_LAUNCHER_BULLET_SIZE;
+                res.velocity = action.aim.normalized() * ROCKET_LAUNCHER_BULLET_SPEED;
+                break;
+        }
+        if (weapon.spread > WEAPON_MAX_SPREAD) {
+            weapon.spread = WEAPON_MAX_SPREAD;
+        }
+        return res;
     }
 };
 

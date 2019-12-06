@@ -83,7 +83,7 @@ private:
             }
             weapon.lastAngle = newAngle;
             if (unit.action.shoot && weapon.magazine > 0 && weapon.fireTimer < -0.5) {
-                weapon.shot();
+                bullets.emplace_back(unit.shot());
                 weapon.lastFireTick = currentTick;
             }
         }
@@ -239,6 +239,32 @@ private:
             }
             endPadLoop:;
         }
+
+        for (int i = 0; i < (int) bullets.size(); i++) {
+            auto& bullet = bullets[i];
+            auto dx = bullet.velocity.x / updatesPerSecond;
+            auto dy = bullet.velocity.y / updatesPerSecond;
+            bullet.x1 += dx;
+            bullet.x2 += dx;
+            bullet.y1 += dy;
+            bullet.y2 += dy;
+            if (_isBulletOut(bullet)) {
+                // TODO: урон
+                bullets.erase(bullets.begin() + i);
+                i--;
+            }
+        }
+    }
+
+    bool _isBulletOut(const TBullet& bullet) const {
+        for (int i = int(bullet.x1); i <= int(bullet.x2); i++) {
+            for (int j = int(bullet.y1); j <= int(bullet.y2); j++) {
+                if (getTile(i, j) == ETile::WALL) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 };
 

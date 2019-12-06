@@ -1,6 +1,8 @@
 #ifndef CODESIDE_WEAPON_H
 #define CODESIDE_WEAPON_H
 
+#include "bullet.h"
+
 #define DEFAULT_LAST_ANGLE 1000
 
 class TWeapon {
@@ -75,42 +77,6 @@ public:
         fireTimer = weapon.fireTimer;
         lastAngle = weapon.lastAngle;
         lastFireTick = weapon.lastFireTick;
-    }
-
-    void shot() {
-        magazine -= 1;
-        switch (type) {
-            case ELootType::PISTOL:
-                if (magazine == 0) {
-                    magazine = PISTOL_MAGAZINE_SIZE;
-                    fireTimer = WEAPON_RELOAD_TIME;
-                } else {
-                    fireTimer = PISTOL_FIRE_RATE;
-                }
-                spread += PISTOL_RECOIL;
-                break;
-            case ELootType::ASSAULT_RIFLE:
-                if (magazine == 0) {
-                    magazine = ASSAULT_RIFLE_MAGAZINE_SIZE;
-                    fireTimer = WEAPON_RELOAD_TIME;
-                } else {
-                    fireTimer = ASSAULT_RIFLE_FIRE_RATE;
-                }
-                spread += ASSAULT_RIFLE_RECOIL;
-                break;
-            default:
-                if (magazine == 0) {
-                    magazine = ROCKET_LAUNCHER_MAGAZINE_SIZE;
-                    fireTimer = WEAPON_RELOAD_TIME;
-                } else {
-                    fireTimer = ROCKET_LAUNCHER_FIRE_RATE;
-                }
-                spread += ROCKET_LAUNCHER_RECOIL;
-                break;
-        }
-        if (spread > WEAPON_MAX_SPREAD) {
-            spread = WEAPON_MAX_SPREAD;
-        }
     }
 };
 

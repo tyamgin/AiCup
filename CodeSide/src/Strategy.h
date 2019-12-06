@@ -5,6 +5,8 @@
 #include "sandbox.h"
 #include "findpath.h"
 
+#include <algorithm>
+
 double distanceSqr(Vec2Double a, Vec2Double b) {
     return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
 }
@@ -12,7 +14,7 @@ double distanceSqr(Vec2Double a, Vec2Double b) {
 class Strategy {
     TSandbox prevEnv, prevEnv2;
 
-    void _compareState(const TSandbox& prevEnv, const TSandbox& env) {
+    void _compareState(TSandbox& prevEnv, TSandbox& env) {
         const double eps = 1e-10;
 
         if (prevEnv.currentTick != env.currentTick) {
@@ -32,10 +34,10 @@ class Strategy {
             if (std::abs(prevUnit.x2 - curUnit.x2) > eps) {
                 std::cerr << "Prev state unit.x2 mismatch " << prevUnit.x2 << " vs " << curUnit.x2 << std::endl;
             }
-            if (std::abs(prevUnit.y1 - curUnit.y1) > eps) { //  NOTE: после первого тика y почему-то сдвинули на 1e-9
+            if (std::abs(prevUnit.y1 - curUnit.y1) > eps) {
                 std::cerr << "Prev state unit.y1 mismatch " << prevUnit.y1 << " vs " << curUnit.y1 << std::endl;
             }
-            if (std::abs(prevUnit.y2 - curUnit.y2) > eps) { //  NOTE: после первого тика y почему-то сдвинули на 1e-9
+            if (std::abs(prevUnit.y2 - curUnit.y2) > eps) {
                 std::cerr << "Prev state unit.y2 mismatch " << prevUnit.y2 << " vs " << curUnit.y2 << std::endl;
             }
             if (prevUnit.health != curUnit.health) {
@@ -75,6 +77,45 @@ class Strategy {
                 std::cerr << "Prev state unit.weapon.lastAngle mismatch " << prevUnit.weapon.lastAngle << " vs " << curUnit.weapon.lastAngle << std::endl;
             }
         }
+        if (prevEnv.bullets.size() != env.bullets.size()) {
+            std::cerr << "Prev state bullet.size mismatch " << prevEnv.bullets.size() << " vs " << env.bullets.size() << std::endl;
+        } else {
+            auto comp = [](const TBullet& a, const TBullet& b) {
+                if (a.unitId != b.unitId) {
+                    return a.unitId < b.unitId;
+                }
+                if (std::abs(a.x1 - b.x1) > EPS) {
+                    return a.x1 < b.x1;
+                }
+                return a.y1 < b.y1;
+            };
+            std::sort(prevEnv.bullets.begin(), prevEnv.bullets.end(), comp);
+            std::sort(env.bullets.begin(), env.bullets.end(), comp);
+
+            for (int i = 0; i < (int) prevEnv.bullets.size(); i++) {
+                auto& prevBullet = prevEnv.bullets[i];
+                auto& curBullet = env.bullets[i];
+                if (std::abs(prevBullet.x1 - curBullet.x1) > eps) {
+                    std::cerr << "Prev state bullet.x1 mismatch " << prevBullet.x1 << " vs " << curBullet.x1 << std::endl;
+                }
+                if (std::abs(prevBullet.x2 - curBullet.x2) > eps) {
+                    std::cerr << "Prev state bullet.x2 mismatch " << prevBullet.x2 << " vs " << curBullet.x2 << std::endl;
+                }
+                if (std::abs(prevBullet.y1 - curBullet.y1) > eps) {
+                    std::cerr << "Prev state bullet.y1 mismatch " << prevBullet.y1 << " vs " << curBullet.y1 << std::endl;
+                }
+                if (std::abs(prevBullet.y2 - curBullet.y2) > eps) {
+                    std::cerr << "Prev state bullet.y2 mismatch " << prevBullet.y2 << " vs " << curBullet.y2 << std::endl;
+                }
+                if (std::abs(prevBullet.velocity.x - curBullet.velocity.x) > eps) {
+                    std::cerr << "Prev state bullet.velocity.x mismatch " << prevBullet.velocity.x << " vs " << curBullet.velocity.x << std::endl;
+                }
+                if (std::abs(prevBullet.velocity.y - curBullet.velocity.y) > eps) {
+                    std::cerr << "Prev state bullet.velocity.y mismatch " << prevBullet.velocity.y << " vs " << curBullet.velocity.y << std::endl;
+                }
+            }
+        }
+
         prevEnv2.doTick();
     }
 
