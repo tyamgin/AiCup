@@ -57,4 +57,21 @@ public:
     }
 };
 
+inline ETile getTile(int i, int j) {
+    return TLevel::tiles[i][j];
+}
+
+inline bool isStayableTile(int i, int j) {
+    if (getTile(i, j + 1) == ETile::WALL) {
+        return false;
+    }
+    if (getTile(i, j) == ETile::WALL) {
+        return false;
+    }
+    if (getTile(i, j) == ETile::LADDER) {
+        return true;
+    }
+    return getTile(i, j - 1) == ETile::WALL || getTile(i, j - 1) == ETile::PLATFORM;
+}
+
 #endif //CODESIDE_LEVEL_H

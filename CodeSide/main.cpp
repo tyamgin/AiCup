@@ -45,7 +45,7 @@ private:
 };
 
 int main(int argc, char *argv[]) {
-#ifdef DEBUG
+//#ifdef DEBUG
   std::cerr << "Starting local runner" << std::endl;
 
   std::string runStr = "/Users/tyamgin/Projects/AiCup/CodeSide/local-runner/aicup2019";
@@ -55,7 +55,7 @@ int main(int argc, char *argv[]) {
 
   usleep(2000 * 1000);
   //system(("/Users/tyamgin/Projects/AiCup/CodeBall/release/" + prevBin + " 127.0.0.1 31002 0000000000000000 &").c_str());
-#endif
+//#endif
 
   std::string host = argc < 2 ? "127.0.0.1" : argv[1];
   int port = argc < 3 ? 31001 : atoi(argv[2]);

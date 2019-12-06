@@ -93,4 +93,34 @@ struct TPoint {
     }
 };
 
+struct TCell {
+    int x, y;
+
+    TCell() : x(0), y(0) {
+    }
+
+    TCell(int x, int y) : x(x), y(y) {
+    }
+
+    explicit TCell(const TPoint& point) {
+        x = int(point.x);
+        y = int(point.y);
+    }
+
+    bool operator ==(const TCell& cell) const {
+        return x == cell.x && y == cell.y;
+    }
+
+    bool operator !=(const TCell& cell) const {
+        return x != cell.x || y != cell.y;
+    }
+
+    bool operator <(const TCell& cell) const {
+        if (x != cell.x) {
+            return x < cell.x;
+        }
+        return y < cell.y;
+    }
+};
+
 #endif //CODESIDE_POINT_H

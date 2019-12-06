@@ -22,6 +22,17 @@ public:
     TWeapon weapon;
     TAction action;
 
+    TUnit() : TRectangle(0, 0, 0, 0) {
+        playerId = -1;
+        id = -1;
+        health = 0;
+        canJump = false;
+        canJump = false;
+        jumpMaxTime = 0;
+        jumpCanCancel = 0;
+        mines = 0;
+    }
+
     explicit TUnit(const Unit& unit) : TRectangle(unit.position, UNIT_SIZE_X, UNIT_SIZE_Y) {
         playerId = unit.playerId;
         id = unit.id;
@@ -90,6 +101,26 @@ public:
                 }
                 return;
         }
+    }
+
+    bool approxIdValid() const {
+        const double px = 1 / 6.0;
+        for (int i = int(x1 - px); i <= int(x2 + px); i++) {
+            for (int j = int(y1); j <= int(y2 + px); j++) {
+                if (getTile(i, j) == ETile::WALL) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    bool approxIsStand() const {
+        if (isOnLadder()) {
+            return true;
+        }
+        return (TLevel::getTileType(x1 + 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x1 + 1e-8, y1 - 1e-8) != ETile::EMPTY) ||
+               (TLevel::getTileType(x2 - 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x2 - 1e-8, y1 - 1e-8) != ETile::EMPTY);
     }
 };
 
