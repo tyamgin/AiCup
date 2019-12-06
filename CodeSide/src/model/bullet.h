@@ -30,6 +30,10 @@ public:
         velocity.x = bullet.velocity.x;
         velocity.y = bullet.velocity.y;
     }
+
+    int damage() const {
+        return WEAPON_DAMAGE[(int) weaponType];
+    }
 };
 
 #endif //CODESIDE_BULLET_H

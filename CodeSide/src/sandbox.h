@@ -240,27 +240,58 @@ private:
             endPadLoop:;
         }
 
+        _updateBullets(updatesPerSecond, true);
+        _updateBullets(updatesPerSecond, false);
+    }
+
+    void _updateBullets(double updatesPerSecond, bool checkUnitCollisionsOnly) {
         for (int i = 0; i < (int) bullets.size(); i++) {
             auto& bullet = bullets[i];
-            auto dx = bullet.velocity.x / updatesPerSecond;
-            auto dy = bullet.velocity.y / updatesPerSecond;
-            bullet.x1 += dx;
-            bullet.x2 += dx;
-            bullet.y1 += dy;
-            bullet.y2 += dy;
-            if (_isBulletOut(bullet)) {
-                // TODO: урон
+            if (!checkUnitCollisionsOnly) {
+                auto dx = bullet.velocity.x / updatesPerSecond;
+                auto dy = bullet.velocity.y / updatesPerSecond;
+                bullet.x1 += dx;
+                bullet.x2 += dx;
+                bullet.y1 += dy;
+                bullet.y2 += dy;
+            }
+            if (_bulletOut(bullet, checkUnitCollisionsOnly)) {
                 bullets.erase(bullets.begin() + i);
                 i--;
             }
         }
     }
 
-    bool _isBulletOut(const TBullet& bullet) const {
-        for (int i = int(bullet.x1); i <= int(bullet.x2); i++) {
-            for (int j = int(bullet.y1); j <= int(bullet.y2); j++) {
-                if (getTile(i, j) == ETile::WALL) {
+    bool _bulletOut(const TBullet& bullet, bool checkUnitCollisionsOnly) {
+        if (!_bulletOutIn(bullet, checkUnitCollisionsOnly)) {
+            return false;
+        }
+        if (bullet.weaponType == ELootType::ROCKET_LAUNCHER) {
+            for (auto& unit : units) {
+                if (unit.intersectsWith(bullet.x1, bullet.y1, bullet.x2, bullet.y2)) {
+                    unit.health -= bullet.damage();
+                }
+            }
+        }
+        return true;
+    }
+
+    bool _bulletOutIn(const TBullet& bullet, bool checkUnitCollisionsOnly) {
+        if (checkUnitCollisionsOnly) {
+            for (auto& unit : units) {
+                if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
+                    if (bullet.weaponType != ELootType::ROCKET_LAUNCHER) {
+                        unit.health -= bullet.damage();
+                    }
                     return true;
+                }
+            }
+        } else {
+            for (int i = int(bullet.x1); i <= int(bullet.x2); i++) {
+                for (int j = int(bullet.y1); j <= int(bullet.y2); j++) {
+                    if (getTile(i, j) == ETile::WALL) {
+                        return true;
+                    }
                 }
             }
         }

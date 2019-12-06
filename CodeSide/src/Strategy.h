@@ -25,6 +25,10 @@ class Strategy {
         for (int i = 0; i < (int) env.units.size(); i++) {
             const auto& prevUnit = prevEnv.units[i];
             const auto& curUnit = env.units[i];
+            if (prevUnit.health != curUnit.health) {
+                std::cerr << "Prev state unit.health mismatch " << prevUnit.health << " vs " << curUnit.health << std::endl;
+            }
+
             if (prevUnit.playerId != TLevel::myId) {
                 continue;
             }
@@ -39,9 +43,6 @@ class Strategy {
             }
             if (std::abs(prevUnit.y2 - curUnit.y2) > eps) {
                 std::cerr << "Prev state unit.y2 mismatch " << prevUnit.y2 << " vs " << curUnit.y2 << std::endl;
-            }
-            if (prevUnit.health != curUnit.health) {
-                std::cerr << "Prev state unit.health mismatch " << prevUnit.health << " vs " << curUnit.health << std::endl;
             }
             if (prevUnit.canJump != curUnit.canJump) {
                 std::cerr << "Prev state unit.canJump mismatch " << prevUnit.canJump << " vs " << curUnit.canJump << std::endl;
@@ -229,7 +230,7 @@ class Strategy {
             action.aim = TPoint(15, 1);
         } else {
             action.shoot = true;
-            action.aim = TPoint(15, 1);
+            action.aim = TPoint(1, 0.0);
         }
         return action;
     }

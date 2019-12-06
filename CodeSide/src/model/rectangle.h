@@ -34,6 +34,11 @@ public:
         return (isIn(x1, x2, rect.x1) || isIn(x1, x2, rect.x2)) &&
                (isIn(y1, y2, rect.y1) || isIn(y1, y2, rect.y2));
     }
+
+    bool intersectsWith(double rx1, double ry1, double rx2, double ry2) const {
+        return (isIn(x1, x2, rx1) || isIn(x1, x2, rx2)) &&
+               (isIn(y1, y2, ry1) || isIn(y1, y2, ry2));
+    }
 };
 
 #endif //CODESIDE_RECTANGLE_H

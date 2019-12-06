@@ -3,6 +3,7 @@
 
 #include "rectangle.h"
 
+
 enum class ELootType {
     PISTOL = 0,
     ASSAULT_RIFLE = 1,
@@ -11,6 +12,7 @@ enum class ELootType {
     MINE = 4,
     NONE = 5,
 };
+static_assert(sizeof(WEAPON_DAMAGE) / sizeof(WEAPON_DAMAGE[0]) == (int)ELootType::NONE + 1);
 
 class TLootBox : public TRectangle {
 public:
