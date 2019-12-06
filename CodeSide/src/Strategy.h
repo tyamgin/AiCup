@@ -177,6 +177,22 @@ class Strategy {
         return action;
     }
 
+    TAction _rifleTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
+        // requires seed=12
+        TAction action;
+        //auto action = _strategy(unit, game, debug);
+        if (env.currentTick < 100 / UPDATES_PER_TICK) {
+            action.velocity = 1;
+        } else if (env.currentTick < 1000 / UPDATES_PER_TICK) {
+            action.velocity = 10;
+            action.aim = TPoint(15, 1);
+        } else {
+            action.shoot = true;
+            action.aim = TPoint(15, 1);
+        }
+        return action;
+    }
+
     TAction _jumpStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
         TAction action;
         //auto action = _strategy(unit, game, debug);
@@ -219,32 +235,28 @@ public:
         }
 
         //auto action = _strategy(unit, game, debug);
-        auto action = _ladderLeftStrategy(unit, env, debug);
+        auto action = _rifleTestStrategy(unit, env, debug);
         if (env.currentTick == 0) {
             TPathFinder::initMap();
         }
-#ifdef DEBUG
-        //asd();
-#endif
-        if (env.currentTick == 114) {
-            env.currentTick += 0;
-        }
-        TPathFinder pathFinder(&env, unit);
-        std::vector<TPoint> path;
-        std::vector<TAction> acts;
-        if (pathFinder.findPath(TPoint(10.1, 24.1), path, acts)) {
-            for (int i = 1; i < (int)path.size(); i++) {
-                float x1 = path[i - 1].x;
-                float y1 = path[i - 1].y;
-                float x2 = path[i].x;
-                float y2 = path[i].y;
-                debug.draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
-            }
-            action = acts[0];
-            std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
-        } else {
 
-        }
+
+//        TPathFinder pathFinder(&env, unit);
+//        std::vector<TPoint> path;
+//        std::vector<TAction> acts;
+//        if (pathFinder.findPath(TPoint(10.1, 24.1), path, acts)) {
+//            for (int i = 1; i < (int)path.size(); i++) {
+//                float x1 = path[i - 1].x;
+//                float y1 = path[i - 1].y;
+//                float x2 = path[i].x;
+//                float y2 = path[i].y;
+//                debug.draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
+//            }
+//            action = acts[0];
+//            std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
+//        } else {
+//
+//        }
 
         //auto action = _jumpStrategy(unit, env, debug);
         //auto action = _ladderDownStrategy(unit, env, debug);

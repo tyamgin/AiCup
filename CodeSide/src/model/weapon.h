@@ -1,6 +1,8 @@
 #ifndef CODESIDE_WEAPON_H
 #define CODESIDE_WEAPON_H
 
+#define DEFAULT_LAST_ANGLE 1000
+
 class TWeapon {
 public:
     ELootType type;
@@ -8,7 +10,7 @@ public:
     bool wasShooting;
     double spread;
     double fireTimer; // -1
-    double lastAngle; // 1000
+    double lastAngle; // DEFAULT_LAST_ANGLE
     int lastFireTick; // -1
 
     // WeaponParams
@@ -29,7 +31,7 @@ public:
         wasShooting = false;
         spread = 0;
         fireTimer = -1;
-        lastAngle = 1000;
+        lastAngle = DEFAULT_LAST_ANGLE;
         lastFireTick = -1;
     }
 
@@ -39,7 +41,7 @@ public:
         wasShooting = weapon.wasShooting;
         spread = weapon.spread;
         fireTimer = weapon.fireTimer ? *weapon.fireTimer : -1;
-        lastAngle = weapon.lastAngle ? *weapon.lastAngle : 1000;
+        lastAngle = weapon.lastAngle ? *weapon.lastAngle : DEFAULT_LAST_ANGLE;
         lastFireTick = weapon.lastFireTick ? *weapon.lastFireTick : -1;
     }
 
@@ -49,21 +51,19 @@ public:
         switch (lootType) {
             case ELootType::PISTOL:
                 spread = PISTOL_MIN_SPREAD;
-                fireTimer = PISTOL_RELOAD_TIME;
                 magazine = PISTOL_MAGAZINE_SIZE;
                 break;
             case ELootType::ASSAULT_RIFLE:
                 spread = ASSAULT_RIFLE_MIN_SPREAD;
-                fireTimer = ASSAULT_RIFLE_RELOAD_TIME;
                 magazine = ASSAULT_RIFLE_MAGAZINE_SIZE;
                 break;
             default:
                 spread = ROCKET_LAUNCHER_MIN_SPREAD;
-                fireTimer = ROCKET_LAUNCHER_RELOAD_TIME;
                 magazine = ROCKET_LAUNCHER_MAGAZINE_SIZE;
                 break;
         }
-        lastAngle = 1000;
+        fireTimer = WEAPON_RELOAD_TIME;
+        lastAngle = DEFAULT_LAST_ANGLE;
         lastFireTick = -1;
     }
 
@@ -77,13 +77,68 @@ public:
         lastFireTick = weapon.lastFireTick;
     }
 
-    void decreaseFireTimer() {
-        if (fireTimer < 0.5) {
-            return;
+    double recoil() const {
+        return type == ELootType::PISTOL ? PISTOL_RECOIL : (
+                type == ELootType::ASSAULT_RIFLE ? ASSAULT_RIFLE_RECOIL :
+                ROCKET_LAUNCHER_RECOIL
+        );
+    }
+
+    double aimSpeed() const {
+        return type == ELootType::PISTOL ? PISTOL_AIM_SPEED : (
+                type == ELootType::ASSAULT_RIFLE ? ASSAULT_RIFLE_AIM_SPEED :
+                ROCKET_LAUNCHER_AIM_SPEED
+        );
+    }
+
+    void reloadMagazine() {
+        switch (type) {
+            case ELootType::PISTOL:
+                magazine = PISTOL_MAGAZINE_SIZE;
+                break;
+            case ELootType::ASSAULT_RIFLE:
+                magazine = ASSAULT_RIFLE_MAGAZINE_SIZE;
+                break;
+            default:
+                magazine = ROCKET_LAUNCHER_MAGAZINE_SIZE;
+                break;
         }
-        fireTimer -= 1.0 / TICKS_PER_SECOND;
-        if (fireTimer < EPS) {
-            fireTimer = -1;
+        fireTimer = WEAPON_RELOAD_TIME;
+    }
+
+    void shot() {
+        magazine -= 1;
+        switch (type) {
+            case ELootType::PISTOL:
+                if (magazine == 0) {
+                    magazine = PISTOL_MAGAZINE_SIZE;
+                    fireTimer = WEAPON_RELOAD_TIME;
+                } else {
+                    fireTimer = PISTOL_FIRE_RATE;
+                }
+                spread += PISTOL_RECOIL;
+                break;
+            case ELootType::ASSAULT_RIFLE:
+                if (magazine == 0) {
+                    magazine = ASSAULT_RIFLE_MAGAZINE_SIZE;
+                    fireTimer = WEAPON_RELOAD_TIME;
+                } else {
+                    fireTimer = ASSAULT_RIFLE_FIRE_RATE;
+                }
+                spread += ASSAULT_RIFLE_RECOIL;
+                break;
+            default:
+                if (magazine == 0) {
+                    magazine = ROCKET_LAUNCHER_MAGAZINE_SIZE;
+                    fireTimer = WEAPON_RELOAD_TIME;
+                } else {
+                    fireTimer = ROCKET_LAUNCHER_FIRE_RATE;
+                }
+                spread += ROCKET_LAUNCHER_RECOIL;
+                break;
+        }
+        if (spread > WEAPON_MAX_SPREAD) {
+            spread = WEAPON_MAX_SPREAD;
         }
     }
 };

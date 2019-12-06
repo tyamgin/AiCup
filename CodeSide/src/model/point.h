@@ -91,6 +91,14 @@ struct TPoint {
         y /= b;
         return *this;
     }
+
+    double getAngleTo(const TPoint& to) const {
+        return atan2(to.y - y, to.x - x);
+    }
+
+    double getAngle() const {
+        return atan2(y, x);
+    }
 };
 
 struct TCell {

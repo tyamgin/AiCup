@@ -62,11 +62,40 @@ public:
 
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
+        for (auto& unit : units) {
+            auto& weapon = unit.weapon;
+            if (weapon.type == ELootType::NONE) {
+                weapon.fireTimer = -1;
+                weapon.lastAngle = DEFAULT_LAST_ANGLE;
+                continue;
+            }
+            if (unit.action.aim.length2() >= SQR(0.5)) {
+                auto newAngle = unit.action.aim.getAngle();
+                if (weapon.lastAngle < 100) {
+                    weapon.spread = std::min(weapon.spread + std::abs(newAngle - weapon.lastAngle), WEAPON_MAX_SPREAD);
+                }
+                weapon.lastAngle = newAngle;
+                if (unit.action.shoot && weapon.magazine > 0 && weapon.fireTimer < -0.5) {
+                    weapon.shot();
+                    weapon.lastFireTick = currentTick;
+                }
+            }
+            if (weapon.type == ELootType::PISTOL) {
+                weapon.spread = std::max(weapon.spread - PISTOL_AIM_SPEED / TICKS_PER_SECOND, PISTOL_MIN_SPREAD);
+            } else if (weapon.type == ELootType::ASSAULT_RIFLE) {
+                weapon.spread = std::max(weapon.spread - ASSAULT_RIFLE_AIM_SPEED / TICKS_PER_SECOND, ASSAULT_RIFLE_MIN_SPREAD);
+            } else {
+                weapon.spread = std::max(weapon.spread - ROCKET_LAUNCHER_AIM_SPEED / TICKS_PER_SECOND, ROCKET_LAUNCHER_MIN_SPREAD);
+            }
+            if (weapon.fireTimer > -0.5) {
+                weapon.fireTimer -= WEAPON_RELOAD_TIME / TICKS_PER_SECOND;
+                if (weapon.fireTimer < 0) {
+                    weapon.fireTimer = -1;
+                }
+            }
+        }
         for (int microTick = 0; microTick < updatesPerTick; microTick++) {
             _doMicroTick(updatesPerTick);
-        }
-        for (auto& unit : units) {
-            unit.weapon.decreaseFireTimer();
         }
         currentTick++;
     }
