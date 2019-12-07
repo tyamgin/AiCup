@@ -3,6 +3,7 @@
 
 #include "constants.h"
 #include "sandbox.h"
+#include "draw.h"
 #include "findpath.h"
 
 #include <algorithm>
@@ -265,6 +266,8 @@ class Strategy {
 
 public:
     UnitAction getAction(const Unit& _unit, const Game& game, Debug& debug) {
+        TDrawUtil().drawGrid();
+
         TUnit unit(_unit);
         TSandbox env(unit, game);
         if (env.currentTick > 1) {
@@ -286,16 +289,16 @@ public:
         TPathFinder pathFinder(&env, unit);
         std::vector<TPoint> path;
         std::vector<TAction> acts;
-        //TPoint tar(10.1, 24.1);
-        TPoint tar;
-        for (auto& u : env.units) {
-            if (u.playerId != unit.playerId) {
-                tar = u.center();
-            }
-        }
+        TPoint tar(10.1, 24.1);
+//        TPoint tar;
+//        for (auto& u : env.units) {
+//            if (u.playerId != unit.playerId) {
+//                tar = u.center();
+//            }
+//        }
 
         debug.draw(CustomData::Rect({float(tar.x), float(tar.y)}, {0.1, 0.1}, ColorFloat(0, 0, 1, 1)));
-        auto reachable = pathFinder.getReachable();
+        auto reachable = pathFinder.getReachableForDraw();
         for (auto& p : reachable) {
             debug.draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
         }

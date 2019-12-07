@@ -2,6 +2,8 @@
 #define CODESIDE_FINDPATH_H
 
 #include <vector>
+#include <set>
+#include <map>
 #include <queue>
 #include <memory.h>
 
@@ -33,11 +35,18 @@ struct TState {
 #define MAXZ 35
 #define INF 0x3f3f3f3f
 
-int dist[SZ][SZ][MAXZ];
-TState prev[SZ][SZ][MAXZ];
-TAction prevAct[SZ][SZ][MAXZ];
+int dist[SZ][SZ];
+TState prev[SZ][SZ];
+TAction prevAct[SZ][SZ];
 bool isStand[SZ][SZ];
 bool isValid[SZ][SZ];
+bool isBound[SZ][SZ];
+
+using TDfsGoesResult = std::vector<TState>;
+std::map<TState, TDfsGoesResult> dfsGoesCache;
+static bool _drawMode;
+std::set<TState> dfsVisitedStates;
+TDfsGoesResult dfsResultBorderPoints;
 
 class TPathFinder {
     const TSandbox* env;
@@ -45,6 +54,54 @@ class TPathFinder {
     TState startState;
     //std::vector<std::vector<double>> dist;
     //std::vector<std::vector<TCell>> prev;
+
+    static std::vector<TState> _getCellGoesDfs(const TState& state) {
+        std::vector<TState> res;
+        for (int xDirection = -1; xDirection <= 1; xDirection++) {
+            if (isValid[state.x + xDirection][state.y + 1]) {
+                res.push_back({state.x + xDirection, state.y + 1, state.timeLeft - 1});
+            }
+        }
+        return res;
+    }
+
+    static void _dfs(TState state) {
+        if (_drawMode) {
+            TDrawUtil().debugPoint(state.getPoint());
+        }
+        dfsVisitedStates.insert(state);
+        if (isBound[state.x][state.y]) {
+            dfsResultBorderPoints.emplace_back(state);
+        }
+        if (state.timeLeft == 0) {
+            return;
+        }
+        for (const auto& to : _getCellGoesDfs(state)) {
+            if (!dfsVisitedStates.count(to)) {
+                _dfs(to);
+            }
+        }
+    }
+
+    static TDfsGoesResult _getJumpGoes(const TState& state) {
+//        if (state.x == 24*6 + 4 && state.y == 14*6) {
+//            _drawMode = true;
+//        } else {
+//            _drawMode = false;
+//        }
+        auto it = dfsGoesCache.find(state);
+        if (it != dfsGoesCache.end()) {
+            return it->second;
+        }
+
+        dfsVisitedStates.clear();
+        dfsResultBorderPoints.clear();
+        TState start = state;
+        start.timeLeft = 33;
+        _dfs(start);
+        dfsGoesCache[state] = dfsResultBorderPoints;
+        return dfsResultBorderPoints;
+    }
 
 public:
     static void initMap() {
@@ -64,14 +121,15 @@ public:
                         int jj = j*6 + dj;
                         isValid[ii][jj] = unit.approxIdValid();
                         isStand[ii][jj] = isValid[ii][jj] && unit.approxIsStand();
-                        auto r = getTile(i, j - 1);
-                        auto l = getTile(i - 1, j - 1);
-                        if (di == 0 && dj == 0 && tileMatch(r, ETile::WALL) && !tileMatch(l, ETile::WALL)) {
-                            isStand[ii][jj] = isValid[ii][jj] = false;
-                        }
-                        if (di == 0 && dj == 0 && tileMatch(l, ETile::WALL) && !tileMatch(r, ETile::WALL)) {
-                            isStand[ii][jj] = isValid[ii][jj] = false;
-                        }
+                        isBound[ii][jj] = (di == 3 || di == 2 || di == 4);
+//                        auto r = getTile(i, j - 1);
+//                        auto l = getTile(i - 1, j - 1);
+//                        if (di == 0 && dj == 0 && tileMatch(r, ETile::WALL) && !tileMatch(l, ETile::WALL)) {
+//                            isStand[ii][jj] = isValid[ii][jj] = false;
+//                        }
+//                        if (di == 0 && dj == 0 && tileMatch(l, ETile::WALL) && !tileMatch(r, ETile::WALL)) {
+//                            isStand[ii][jj] = isValid[ii][jj] = false;
+//                        }
                     }
                 }
             }
@@ -82,24 +140,22 @@ public:
         this->env = env;
         this->startUnit = start;
         this->startState = _getUnitState(this->startUnit);
-        _bfs();
+        _dijkstra();
     }
 
     bool findPath(const TPoint& target, std::vector<TPoint>& res, std::vector<TAction>& resAct) {
         TState targetState = _getPointState(target);
         TState selectedTargetState;
         std::pair<int, int> minDist(INF, INF);
-        for (int dx = -5; dx <= 5; dx++) {
-            for (int dy = -1; dy <= 5; dy++) {
-                for (int z = 0; z < MAXZ; z++) {
-                    if (targetState.x + dx > 0 && targetState.x + dx < SZ && targetState.y + dy > 0 && targetState.y + dy < SZ) {
-                        std::pair<int, int> cand(dist[targetState.x + dx][targetState.y + dy][z], std::abs(dx) + std::abs(dy));
-                        if (cand < minDist) {
-                            minDist = cand;
-                            selectedTargetState.x = targetState.x + dx;
-                            selectedTargetState.y = targetState.y + dy;
-                            selectedTargetState.timeLeft = z;
-                        }
+        for (int dx = -7; dx <= 7; dx++) {
+            for (int dy = -7; dy <= 7; dy++) {
+                if (targetState.x + dx > 0 && targetState.x + dx < SZ && targetState.y + dy > 0 && targetState.y + dy < SZ) {
+                    std::pair<int, int> cand(dist[targetState.x + dx][targetState.y + dy], std::abs(dx) + std::abs(dy));
+                    if (cand < minDist) {
+                        minDist = cand;
+                        selectedTargetState.x = targetState.x + dx;
+                        selectedTargetState.y = targetState.y + dy;
+                        selectedTargetState.timeLeft = 0;
                     }
                 }
             }
@@ -110,8 +166,8 @@ public:
 
         while (selectedTargetState != startState) {
             res.push_back(selectedTargetState.getPoint());
-            resAct.push_back(prevAct[selectedTargetState.x][selectedTargetState.y][selectedTargetState.timeLeft]);
-            selectedTargetState = prev[selectedTargetState.x][selectedTargetState.y][selectedTargetState.timeLeft];
+            resAct.push_back(prevAct[selectedTargetState.x][selectedTargetState.y]);
+            selectedTargetState = prev[selectedTargetState.x][selectedTargetState.y];
         }
 
         auto startStatePoint = startState.getPoint();
@@ -129,18 +185,17 @@ public:
         return true;
     }
 
-    std::vector<TPoint> getReachable() {
+    std::vector<TPoint> getReachableForDraw() {
         std::vector<TPoint> res;
-        for (int i = 0; i < SZ; i += 3) {
-            for (int j = 0; j < SZ; j += 3) {
-                for (int z = 0; z < MAXZ; z++) {
-                    if (dist[i][j][z] < INF) {
-                        res.push_back(TState{i, j, z}.getPoint());
-                        break;
-                    }
+#if M_DRAW_REACHABILITY_X > 0 && M_DRAW_REACHABILITY_Y > 0
+        for (int i = 0; i < SZ; i += M_DRAW_REACHABILITY_X) {
+            for (int j = 0; j < SZ; j += M_DRAW_REACHABILITY_Y) {
+                if (dist[i][j] < INF) {
+                    res.push_back(TState{i, j, 0}.getPoint());
                 }
             }
         }
+#endif
         return res;
     }
 
@@ -159,69 +214,51 @@ private:
         return res;
     }
 
-    std::vector<std::pair<TState, TAction>> _getCellGoes(const TState& state) {
-        std::vector<std::pair<TState, TAction>> res;
+    std::vector<TState> _getCellGoes(const TState& state) {
+        std::vector<TState> res;
         for (int xDirection = -1; xDirection <= 1; xDirection++) {
             auto stx = state;
             stx.x += xDirection;
-            TAction actionx;
-            actionx.velocity = xDirection * UNIT_MAX_HORIZONTAL_SPEED;
 
+            // идти по платформе
             if (isStand[stx.x][stx.y]) {
-                if (!isStand[state.x][state.y])
-                    actionx.jump = true;
-                res.emplace_back(stx, actionx);
-            }
-            if (state.timeLeft > 0) {
-                stx.y = state.y + 1;
-                stx.timeLeft = state.timeLeft - 1;
-                actionx.jump = true;
-                actionx.jumpDown = false;
-                if (isValid[stx.x][stx.y]) {
-                    res.emplace_back(stx, actionx);
-                }
-            }
-            if (isStand[state.x][state.y]) {
-                stx.y = state.y + 1;
-                stx.timeLeft = 32;
-                actionx.jump = true;
-                actionx.jumpDown = false;
-                if (isValid[stx.x][stx.y]) {
-                    res.emplace_back(stx, actionx);
-                }
+                res.emplace_back(stx);
             }
 
+            // лететь вниз
             stx.y = state.y - 1;
-            stx.timeLeft = 0;
-            actionx.jump = false;
-            actionx.jumpDown = true;
             if (isValid[stx.x][stx.y]) {
-                res.emplace_back(stx, actionx);
+                res.emplace_back(stx);
             }
         }
+        // прыгать
+        if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
+            auto jumpGoes = _getJumpGoes(state);
+            res.insert(res.end(), jumpGoes.begin(), jumpGoes.end());
+        }
+
         return res;
     }
 
-    void _bfs() {
-        //dist = std::vector<std::vector<double>>(TLevel::width, std::vector<double>(TLevel::height, 100000.0));
-        //prev = std::vector<std::vector<TCell>>(TLevel::width, std::vector<TCell>(TLevel::height, {-1, -1}));
+    void _dijkstra() {
         memset(dist, 63, sizeof(dist));
-
-        dist[this->startState.x][this->startState.y][this->startState.timeLeft] = 0;
-        std::queue<TState> q;
-        q.push(this->startState);
+        std::priority_queue<std::pair<double, TState>> q;
+        q.push(std::make_pair(0.0, startState));
+        dist[startState.x][startState.y] = 0;
         while (!q.empty()) {
-            auto v = q.front();
+            auto v = q.top().second;
+            auto curDist = -q.top().first;
             q.pop();
+            if (curDist > dist[v.x][v.y]) {
+                continue;
+            }
 
-            for (const auto& tt : _getCellGoes(v)) {
-                auto& to = tt.first;
-                auto& act = tt.second;
-                if (dist[v.x][v.y][v.timeLeft] + 1 < dist[to.x][to.y][to.timeLeft]) {
-                    dist[to.x][to.y][to.timeLeft] = dist[v.x][v.y][v.timeLeft] + 1;
-                    prev[to.x][to.y][to.timeLeft] = v;
-                    prevAct[to.x][to.y][to.timeLeft] = act;
-                    q.push(to);
+            for (const auto& to : _getCellGoes(v)) {
+                auto dst = std::abs(to.x - v.x) + std::abs(to.y - v.y);
+                if (dist[v.x][v.y] + dst < dist[to.x][to.y]) {
+                    dist[to.x][to.y] = dist[v.x][v.y] + dst;
+                    prev[to.x][to.y] = v;
+                    q.push(std::make_pair(-dist[to.x][to.y], to));
                 }
             }
         }

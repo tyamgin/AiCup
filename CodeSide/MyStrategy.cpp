@@ -90,6 +90,7 @@ void debugCheckGameParams(const Game& game, bool print) {
 
 UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
     TLevel::init(unit, game);
+    TDrawUtil::debug = std::make_shared<Debug>(debug);
     if (game.currentTick == 0) {
         cout << TLevel::toString() << endl;
     }
@@ -105,3 +106,5 @@ int TLevel::width = 0;
 int TLevel::height = 0;
 std::vector<std::vector<ETile>> TLevel::tiles;
 int TLevel::myId = 0;
+
+std::shared_ptr<Debug> TDrawUtil::debug;
