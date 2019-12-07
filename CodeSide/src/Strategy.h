@@ -270,7 +270,7 @@ public:
 
         TUnit unit(_unit);
         TSandbox env(unit, game);
-        if (env.currentTick == 156) {
+        if (env.currentTick == 154) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {

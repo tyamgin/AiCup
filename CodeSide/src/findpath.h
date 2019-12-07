@@ -236,6 +236,7 @@ public:
         firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
         bool fall = isStand[startState.x][startState.y] && !startUnit.approxIsStand();
         if (std::abs(dx) > 1e-10 || fall) {
+            firstAction.jump = fall;
             resAct.push_back(firstAction);
         }
 
@@ -263,8 +264,8 @@ public:
 private:
     TState _getPointState(const TPoint& point) {
         TState res;
-        res.x = int(point.x / (1.0 / 6) + 1e-10);
-        res.y = int(point.y / (1.0 / 6) + 1e-10);
+        res.x = int(point.x / (1.0 / 6) + 1e-8);
+        res.y = int((point.y + 1 / 60.0) / (1.0 / 6) + 1e-8);
         return res;
     }
 
@@ -282,13 +283,13 @@ private:
 
             // идти по платформе
             if (isStand[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER][state.x][state.y]) {
-                res.emplace_back(stx, 1.0);
+                res.emplace_back(stx, 0.99);
             }
 
             // лететь вниз
             stx.y = state.y - 1;
             if (isValid[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
-                res.emplace_back(stx, 1.0);
+                res.emplace_back(stx, 0.99);
             }
         }
         // прыгать
@@ -346,7 +347,7 @@ private:
         std::priority_queue<std::pair<double, TState>> q;
         for (const auto& s : _getJumpGoes(startState, true)) {
             double dst = std::abs(s.y - startState.y);
-            q.push(std::make_pair(dst, s));
+            q.push(std::make_pair(-dst, s));
             dist[s.x][s.y] = dst;
             prev[s.x][s.y] = startState;
         }

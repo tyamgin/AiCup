@@ -125,8 +125,8 @@ public:
     }
 
     bool approxIsStandGround(double dx = 0) const {
-        return (TLevel::getTileType(x1 + dx + 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x1 + dx + 1e-8, y1 - 1e-8) != ETile::EMPTY) ||
-               (TLevel::getTileType(x2 + dx - 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x2 + dx - 1e-8, y1 - 1e-8) != ETile::EMPTY);
+        return (!tileMatch(TLevel::getTileType(x1 + dx + 1e-8, y1), ETile::WALL, ETile::PLATFORM) && tileMatch(TLevel::getTileType(x1 + dx + 1e-8, y1 - 1e-8), ETile::WALL, ETile::PLATFORM)) ||
+               (!tileMatch(TLevel::getTileType(x2 + dx - 1e-8, y1), ETile::WALL, ETile::PLATFORM) && tileMatch(TLevel::getTileType(x2 + dx - 1e-8, y1 - 1e-8), ETile::WALL, ETile::PLATFORM));
     }
 
     TPoint center() const {
