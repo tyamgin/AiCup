@@ -384,10 +384,6 @@ private:
         resState = dfsTraceStateResult;
     }
 
-    double _getPenalty(const TState& state) {
-
-    }
-
     void _dijkstra() {
         dist = std::vector<std::vector<double>>(TLevel::width*6, std::vector<double>(TLevel::height*6, INF + 1.0));
         penalty = std::vector<std::vector<double>>(TLevel::width*6, std::vector<double>(TLevel::height*6, 0));

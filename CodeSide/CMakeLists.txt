@@ -7,11 +7,12 @@ set(CMAKE_CXX_STANDARD 17)
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
 endif()
-if (CMAKE_FAST_DEBUG MATCHES true)
+
+if (CMAKE_BUILD_TYPE MATCHES FastDebug)
     add_definitions(-DDEBUG)
 endif()
 
-if (CMAKE_BUILD_TYPE MATCHES Release)
+if ((CMAKE_BUILD_TYPE MATCHES Release) OR (CMAKE_BUILD_TYPE MATCHES FastDebug))
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
         -fno-optimize-sibling-calls -fno-strict-aliasing \
         -lm -O2 -Wall -Wtype-limits -Wno-unknown-pragmas")
