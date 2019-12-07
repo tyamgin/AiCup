@@ -214,12 +214,12 @@ public:
                 }
             }
         }
-        if (minDist.first >= INF) {
+        if (minDist.second >= INF) {
             return false;
         }
 
         for (auto s = selectedTargetState; !s.samePos(startState); s = prev[s.x][s.y]) {
-            if (prev[s.x][s.y].x == 0) {
+            if (prev[s.x][s.y].x == -1) {
                 std::cerr << "Error state\n";
                 break;
             }

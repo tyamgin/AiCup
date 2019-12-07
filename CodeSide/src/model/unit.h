@@ -81,7 +81,7 @@ public:
         switch (loot.type) {
             case ELootType::HEALTH_PACK:
                 if (health < UNIT_MAX_HEALTH) {
-                    health = UNIT_MAX_HEALTH;
+                    health = std::min(health + HEALTH_PACK_HEALTH, UNIT_MAX_HEALTH);
                     loot.type = ELootType::NONE;
                 }
                 return;

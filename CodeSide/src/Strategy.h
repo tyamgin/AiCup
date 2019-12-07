@@ -123,31 +123,52 @@ class Strategy {
         prevEnv2.doTick();
     }
 
+    std::optional<TAction> _strategyLoot(const TUnit& unit, bool isHealth) {
+        std::vector<TPoint> pathPoints;
+        std::vector<TAction> actions;
+
+
+        double minDist = INF;
+        TLootBox* selectedLb = nullptr;
+        TPoint selectedPos;
+        pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit) {
+            TLootBox* lb;
+            if (dist < minDist && (lb = env.findLootBox(unit)) != nullptr) {
+                if (isHealth && lb->type == ELootType::HEALTH_PACK ||
+                    !isHealth && (lb->type == ELootType::PISTOL || lb->type == ELootType::ROCKET_LAUNCHER || lb->type == ELootType::ASSAULT_RIFLE)) {
+
+                    minDist = dist;
+                    selectedLb = lb;
+                    selectedPos = unit.position();
+                }
+            }
+        });
+        if (selectedLb != nullptr) {
+            if (pathFinder.findPath(selectedPos, pathPoints, actions) && actions.size() > 0) {
+                TDrawUtil().drawPath(pathPoints);
+                return actions[0];
+            }
+        }
+        return {};
+    }
+
     TAction _strategy(const TUnit& unit) {
         std::vector<TPoint> pathPoints;
         std::vector<TAction> actions;
 
         if (unit.weapon.type == ELootType::NONE) {
-            double minDist = INF;
-            TLootBox* selectedLb = nullptr;
-            TPoint selectedPos;
-            pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit) {
-                TLootBox* lb;
-                if (dist < minDist && (lb = env.findLootBox(unit)) != nullptr) {
-                    if (lb->type == ELootType::PISTOL || lb->type == ELootType::ROCKET_LAUNCHER || lb->type == ELootType::ASSAULT_RIFLE) {
-                        minDist = dist;
-                        selectedLb = lb;
-                        selectedPos = unit.position();
-                    }
-                }
-            });
-            if (selectedLb != nullptr) {
-                if (pathFinder.findPath(selectedPos, pathPoints, actions) && actions.size() > 0) {
-                    TDrawUtil().drawPath(pathPoints);
-                    return actions[0];
-                }
+            auto maybeAct = _strategyLoot(unit, false);
+            if (maybeAct) {
+                return maybeAct.value();
             }
         }
+        if (unit.health < 80) {
+            auto maybeAct = _strategyLoot(unit, true);
+            if (maybeAct) {
+                return maybeAct.value();
+            }
+        }
+
         TUnit* target = nullptr;
         for (auto& u : env.units) {
             if (u.playerId != unit.playerId) {
