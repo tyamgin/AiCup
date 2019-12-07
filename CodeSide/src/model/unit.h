@@ -104,11 +104,11 @@ public:
         }
     }
 
-    bool approxIdValid() const {
-        const double px = 1 / 6.0;
-        for (int i = int(x1 - px); i <= int(x2 + px); i++) {
-            for (int j = int(y1); j <= int(y2 + px); j++) {
-                if (getTile(i, j) == ETile::WALL) {//TODO
+    bool approxIdValid(double dx = 0, double dy = 0) const {
+        const double px = 0;//1 / 6.0;
+        for (int i = int(x1 + dx - px); i <= int(x2 + dx + px); i++) {
+            for (int j = int(y1 + dy); j <= int(y2 + dy + px); j++) {
+                if (getTile(i, j) == ETile::WALL) {
                     return false;
                 }
             }

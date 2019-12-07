@@ -42,12 +42,14 @@ struct TState {
 #define SZ (6 * 43)
 #define MAXZ 35
 #define INF 0x3f3f3f3f
+#define D_LEFT 0
+#define D_CENTER 1
+#define D_RIGHT 2
 
 bool isStand[SZ][SZ];
 bool isValid[SZ][SZ];
 bool isBound[SZ][SZ];
-bool isRightShit[SZ][SZ];
-bool isLeftShit[SZ][SZ];
+bool isBlockedMove[3][3][SZ][SZ];
 
 using TDfsGoesResult = std::vector<TState>;
 std::map<TState, TDfsGoesResult> dfsGoesCache;
@@ -70,10 +72,7 @@ class TPathFinder {
         std::vector<TState> res;
         for (int xDirection = -1; xDirection <= 1; xDirection++) {
             if (isValid[state.x + xDirection][state.y + 1]) {
-                if (xDirection > 0 && isRightShit[state.x][state.y]) {
-                    continue;
-                }
-                if (xDirection < 0 && isLeftShit[state.x][state.y]) {
+                if (isBlockedMove[xDirection + D_CENTER][D_CENTER + 1][state.x][state.y]) {
                     continue;
                 }
                 res.push_back({state.x + xDirection, state.y + 1, state.timeLeft - 1});
@@ -145,13 +144,14 @@ public:
 //        memset(isValid, 0, sizeof(isValid));
 //        memset(isStand, 0, sizeof(isStand));
         TUnit unit;
+        const double d = 1 / 6.0;
         for (int i = 1; i < TLevel::width - 1; i++) {
             for (int di = 0; di < 6; di++) {
-                unit.x1 = i + di * (1 / 6.0) - UNIT_HALF_WIDTH;
+                unit.x1 = i + di * d - UNIT_HALF_WIDTH;
                 unit.x2 = unit.x1 + UNIT_SIZE_X;
                 for (int j = 1; j < TLevel::height - 1; j++) {
                     for (int dj = 0; dj < 6; dj++) {
-                        unit.y1 = j + dj * (1 / 6.0);
+                        unit.y1 = j + dj * d;
                         unit.y2 = unit.y1 + UNIT_SIZE_Y;
 
                         int ii = i*6 + di;
@@ -162,20 +162,24 @@ public:
                             isStand[ii][jj] = false;
                         }
                         isBound[ii][jj] = (di == 3 || di == 2 || di == 4);
+
                         if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(1 / 6.0)) {
-                            isRightShit[ii][jj] = true;
+                            isBlockedMove[D_RIGHT][D_CENTER][ii][jj] = true;
                         }
                         if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(-1 / 6.0)) {
-                            isLeftShit[ii][jj] = true;
+                            isBlockedMove[D_LEFT][D_CENTER][ii][jj] = true;
                         }
-
-                        auto r = getTile(i, j - 1);
-                        auto l = getTile(i - 1, j - 1);
-                        if (di == 0 && dj == 0 && tileMatch(r, ETile::WALL) && !tileMatch(l, ETile::WALL)) {
-                            isStand[ii][jj] = isValid[ii][jj] = false;
+                        if (!unit.approxIdValid(d/2, d/2)) {
+                            isBlockedMove[D_RIGHT][D_RIGHT][ii][jj] = true;
                         }
-                        if (di == 0 && dj == 0 && tileMatch(l, ETile::WALL) && !tileMatch(r, ETile::WALL)) {
-                            isStand[ii][jj] = isValid[ii][jj] = false;
+                        if (!unit.approxIdValid(d/2, -d/2)) {
+                            isBlockedMove[D_RIGHT][D_LEFT][ii][jj] = true;
+                        }
+                        if (!unit.approxIdValid(-d/2, d/2)) {
+                            isBlockedMove[D_LEFT][D_RIGHT][ii][jj] = true;
+                        }
+                        if (!unit.approxIdValid(-d/2, -d/2)) {
+                            isBlockedMove[D_LEFT][D_LEFT][ii][jj] = true;
                         }
                     }
                 }
@@ -273,24 +277,17 @@ private:
     std::vector<std::pair<TState, double>> _getCellGoes(const TState& state) {
         std::vector<std::pair<TState, double>> res;
         for (int xDirection = -1; xDirection <= 1; xDirection++) {
-            if (xDirection < 0 && isLeftShit[state.x][state.y]) {
-                continue;
-            }
-            if (xDirection > 0 && isRightShit[state.x][state.y]) {
-                continue;
-            }
-
             auto stx = state;
             stx.x += xDirection;
 
             // идти по платформе
-            if (isStand[stx.x][stx.y]) {
+            if (isStand[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER][state.x][state.y]) {
                 res.emplace_back(stx, 1.0);
             }
 
             // лететь вниз
             stx.y = state.y - 1;
-            if (isValid[stx.x][stx.y]) {
+            if (isValid[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
                 res.emplace_back(stx, 1.0);
             }
         }
