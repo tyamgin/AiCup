@@ -124,6 +124,11 @@ public:
                (TLevel::getTileType(x2 - 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x2 - 1e-8, y1 - 1e-8) != ETile::EMPTY);
     }
 
+    bool approxIsStandGround(double dx = 0) const {
+        return (TLevel::getTileType(x1 + dx + 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x1 + dx + 1e-8, y1 - 1e-8) != ETile::EMPTY) ||
+               (TLevel::getTileType(x2 + dx - 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x2 + dx - 1e-8, y1 - 1e-8) != ETile::EMPTY);
+    }
+
     TPoint center() const {
         return TPoint(x1 + UNIT_HALF_WIDTH, y1 + UNIT_HALF_HEIGHT);
     }

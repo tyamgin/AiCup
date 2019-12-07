@@ -22,9 +22,17 @@ struct TState {
         return timeLeft < state.timeLeft;
     }
 
-    bool operator !=(const TState& state) const {
-        return x != state.x || y != state.y || timeLeft != state.timeLeft;
+    bool samePos(const TState& state) const {
+        return x == state.x && y == state.y;
     }
+
+//    bool operator !=(const TState& state) const {
+//        return x != state.x || y != state.y || timeLeft != state.timeLeft;
+//    }
+//
+//    bool operator ==(const TState& state) const {
+//        return x == state.x && y == state.y && timeLeft == state.timeLeft;
+//    }
 
     TPoint getPoint() const {
         return TPoint(x * (1 / 6.0), y * (1 / 6.0));
@@ -35,30 +43,39 @@ struct TState {
 #define MAXZ 35
 #define INF 0x3f3f3f3f
 
-int dist[SZ][SZ];
-TState prev[SZ][SZ];
-TAction prevAct[SZ][SZ];
 bool isStand[SZ][SZ];
 bool isValid[SZ][SZ];
 bool isBound[SZ][SZ];
+bool isRightShit[SZ][SZ];
+bool isLeftShit[SZ][SZ];
 
 using TDfsGoesResult = std::vector<TState>;
 std::map<TState, TDfsGoesResult> dfsGoesCache;
 static bool _drawMode;
 std::set<TState> dfsVisitedStates;
 TDfsGoesResult dfsResultBorderPoints;
+bool dfsStartMode;
+TState dfsTraceTarget;
+std::vector<TAction> dfsTraceActResult;
+std::vector<TState> dfsTraceStateResult;
 
 class TPathFinder {
     const TSandbox* env;
     TUnit startUnit;
     TState startState;
-    //std::vector<std::vector<double>> dist;
-    //std::vector<std::vector<TCell>> prev;
+    std::vector<std::vector<double>> dist;
+    std::vector<std::vector<TState>> prev;
 
     static std::vector<TState> _getCellGoesDfs(const TState& state) {
         std::vector<TState> res;
         for (int xDirection = -1; xDirection <= 1; xDirection++) {
             if (isValid[state.x + xDirection][state.y + 1]) {
+                if (xDirection > 0 && isRightShit[state.x][state.y]) {
+                    continue;
+                }
+                if (xDirection < 0 && isLeftShit[state.x][state.y]) {
+                    continue;
+                }
                 res.push_back({state.x + xDirection, state.y + 1, state.timeLeft - 1});
             }
         }
@@ -70,7 +87,7 @@ class TPathFinder {
             TDrawUtil().debugPoint(state.getPoint());
         }
         dfsVisitedStates.insert(state);
-        if (isBound[state.x][state.y]) {
+        if (dfsStartMode || isBound[state.x][state.y]) {
             dfsResultBorderPoints.emplace_back(state);
         }
         if (state.timeLeft == 0) {
@@ -83,30 +100,50 @@ class TPathFinder {
         }
     }
 
-    static TDfsGoesResult _getJumpGoes(const TState& state) {
-//        if (state.x == 24*6 + 4 && state.y == 14*6) {
-//            _drawMode = true;
-//        } else {
-//            _drawMode = false;
-//        }
-        auto it = dfsGoesCache.find(state);
-        if (it != dfsGoesCache.end()) {
-            return it->second;
+    static bool _dfsTrace(TState state) {
+        dfsVisitedStates.insert(state);
+        if (dfsTraceTarget.samePos(state)) {
+            return true;
+        }
+        if (state.timeLeft == 0) {
+            return false;
+        }
+        for (const auto& to : _getCellGoesDfs(state)) {
+            if (!dfsVisitedStates.count(to) && _dfsTrace(to)) {
+                TAction action;
+                action.velocity = (to.x - state.x) * UNIT_MAX_HORIZONTAL_SPEED;
+                action.jump = true;
+                dfsTraceActResult.push_back(action);
+                dfsTraceStateResult.push_back(to);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static TDfsGoesResult _getJumpGoes(const TState& state, bool startMode) {
+        dfsStartMode = startMode;
+
+        if (!startMode) {
+            auto it = dfsGoesCache.find(state);
+            if (it != dfsGoesCache.end()) {
+                return it->second;
+            }
         }
 
         dfsVisitedStates.clear();
         dfsResultBorderPoints.clear();
-        TState start = state;
-        start.timeLeft = 33;
-        _dfs(start);
-        dfsGoesCache[state] = dfsResultBorderPoints;
+        _dfs(state);
+        if (!startMode) {
+            dfsGoesCache[state] = dfsResultBorderPoints;
+        }
         return dfsResultBorderPoints;
     }
 
 public:
     static void initMap() {
-        memset(isValid, 0, sizeof(isValid));
-        memset(isStand, 0, sizeof(isStand));
+//        memset(isValid, 0, sizeof(isValid));
+//        memset(isStand, 0, sizeof(isStand));
         TUnit unit;
         for (int i = 1; i < TLevel::width - 1; i++) {
             for (int di = 0; di < 6; di++) {
@@ -121,15 +158,25 @@ public:
                         int jj = j*6 + dj;
                         isValid[ii][jj] = unit.approxIdValid();
                         isStand[ii][jj] = isValid[ii][jj] && unit.approxIsStand();
+                        if (di == 0 && unit.isOnLadder()) {
+                            isStand[ii][jj] = false;
+                        }
                         isBound[ii][jj] = (di == 3 || di == 2 || di == 4);
-//                        auto r = getTile(i, j - 1);
-//                        auto l = getTile(i - 1, j - 1);
-//                        if (di == 0 && dj == 0 && tileMatch(r, ETile::WALL) && !tileMatch(l, ETile::WALL)) {
-//                            isStand[ii][jj] = isValid[ii][jj] = false;
-//                        }
-//                        if (di == 0 && dj == 0 && tileMatch(l, ETile::WALL) && !tileMatch(r, ETile::WALL)) {
-//                            isStand[ii][jj] = isValid[ii][jj] = false;
-//                        }
+                        if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(1 / 6.0)) {
+                            isRightShit[ii][jj] = true;
+                        }
+                        if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(-1 / 6.0)) {
+                            isLeftShit[ii][jj] = true;
+                        }
+
+                        auto r = getTile(i, j - 1);
+                        auto l = getTile(i - 1, j - 1);
+                        if (di == 0 && dj == 0 && tileMatch(r, ETile::WALL) && !tileMatch(l, ETile::WALL)) {
+                            isStand[ii][jj] = isValid[ii][jj] = false;
+                        }
+                        if (di == 0 && dj == 0 && tileMatch(l, ETile::WALL) && !tileMatch(r, ETile::WALL)) {
+                            isStand[ii][jj] = isValid[ii][jj] = false;
+                        }
                     }
                 }
             }
@@ -146,16 +193,15 @@ public:
     bool findPath(const TPoint& target, std::vector<TPoint>& res, std::vector<TAction>& resAct) {
         TState targetState = _getPointState(target);
         TState selectedTargetState;
-        std::pair<int, int> minDist(INF, INF);
+        std::pair<double, int> minDist(INF, INF);
         for (int dx = -7; dx <= 7; dx++) {
             for (int dy = -7; dy <= 7; dy++) {
                 if (targetState.x + dx > 0 && targetState.x + dx < SZ && targetState.y + dy > 0 && targetState.y + dy < SZ) {
-                    std::pair<int, int> cand(dist[targetState.x + dx][targetState.y + dy], std::abs(dx) + std::abs(dy));
+                    std::pair<double, int> cand(dist[targetState.x + dx][targetState.y + dy], std::abs(dx) + std::abs(dy));
                     if (cand < minDist) {
                         minDist = cand;
                         selectedTargetState.x = targetState.x + dx;
                         selectedTargetState.y = targetState.y + dy;
-                        selectedTargetState.timeLeft = 0;
                     }
                 }
             }
@@ -164,10 +210,20 @@ public:
             return false;
         }
 
-        while (selectedTargetState != startState) {
-            res.push_back(selectedTargetState.getPoint());
-            resAct.push_back(prevAct[selectedTargetState.x][selectedTargetState.y]);
-            selectedTargetState = prev[selectedTargetState.x][selectedTargetState.y];
+        for (auto s = selectedTargetState; !s.samePos(startState); s = prev[s.x][s.y]) {
+            if (prev[s.x][s.y].x == 0) {
+                std::cerr << "Error state\n";
+                break;
+            }
+            std::vector<TAction> acts;
+            std::vector<TState> stts;
+            _getCellGoesTrace(prev[s.x][s.y], s, s.samePos(startState), acts, stts);
+            resAct.insert(resAct.end(), acts.rbegin(), acts.rend());
+            //std::reverse(stts.begin(), stts.end());
+            for (auto& ss : stts) {
+                res.push_back(ss.getPoint());
+            }
+            resAct.insert(resAct.end(), acts.begin(), acts.end());
         }
 
         auto startStatePoint = startState.getPoint();
@@ -188,8 +244,8 @@ public:
     std::vector<TPoint> getReachableForDraw() {
         std::vector<TPoint> res;
 #if M_DRAW_REACHABILITY_X > 0 && M_DRAW_REACHABILITY_Y > 0
-        for (int i = 0; i < SZ; i += M_DRAW_REACHABILITY_X) {
-            for (int j = 0; j < SZ; j += M_DRAW_REACHABILITY_Y) {
+        for (int i = 0; i < (int) dist.size(); i += M_DRAW_REACHABILITY_X) {
+            for (int j = 0; j < (int) dist[0].size(); j += M_DRAW_REACHABILITY_Y) {
                 if (dist[i][j] < INF) {
                     res.push_back(TState{i, j, 0}.getPoint());
                 }
@@ -214,37 +270,89 @@ private:
         return res;
     }
 
-    std::vector<TState> _getCellGoes(const TState& state) {
-        std::vector<TState> res;
+    std::vector<std::pair<TState, double>> _getCellGoes(const TState& state) {
+        std::vector<std::pair<TState, double>> res;
         for (int xDirection = -1; xDirection <= 1; xDirection++) {
+            if (xDirection < 0 && isLeftShit[state.x][state.y]) {
+                continue;
+            }
+            if (xDirection > 0 && isRightShit[state.x][state.y]) {
+                continue;
+            }
+
             auto stx = state;
             stx.x += xDirection;
 
             // идти по платформе
             if (isStand[stx.x][stx.y]) {
-                res.emplace_back(stx);
+                res.emplace_back(stx, 1.0);
             }
 
             // лететь вниз
             stx.y = state.y - 1;
             if (isValid[stx.x][stx.y]) {
-                res.emplace_back(stx);
+                res.emplace_back(stx, 1.0);
             }
         }
         // прыгать
         if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
-            auto jumpGoes = _getJumpGoes(state);
-            res.insert(res.end(), jumpGoes.begin(), jumpGoes.end());
+            auto jumpGoes = _getJumpGoes({state.x, state.y, 33}, false);
+            for (auto& j : jumpGoes) {
+                res.emplace_back(TState{j.x, j.y, 0}, j.y - state.y + 0.0);
+            }
         }
 
         return res;
     }
 
+    void _getCellGoesTrace(const TState& state, const TState& end, bool beg, std::vector<TAction>& resAct, std::vector<TState>& resState) {
+        for (int xDirection = -1; xDirection <= 1; xDirection++) {
+            auto stx = state;
+            stx.x += xDirection;
+            TAction act;
+            act.velocity = xDirection * UNIT_MAX_HORIZONTAL_SPEED;
+
+            // идти по платформе
+            if (stx.samePos(end)) {
+                resAct.emplace_back(act);
+                resState.emplace_back(stx);
+                return;
+            }
+
+            // лететь вниз
+            stx.y = state.y - 1;
+            act.jumpDown = true;
+            if (stx.samePos(end)) {
+                resAct.emplace_back(act);
+                resState.emplace_back(stx);
+                return;
+            }
+        }
+        // прыгать
+
+        dfsVisitedStates.clear();
+        dfsTraceActResult.clear();
+        dfsTraceStateResult.clear();
+        dfsTraceTarget = end;
+        if (!_dfsTrace({state.x, state.y, beg ? state.timeLeft : 33})) {
+            std::cerr << "Error trace dfs\n";
+            return;
+        }
+        resAct = dfsTraceActResult;
+        resState = dfsTraceStateResult;
+    }
+
     void _dijkstra() {
-        memset(dist, 63, sizeof(dist));
+        dist = std::vector<std::vector<double>>(TLevel::width*6, std::vector<double>(TLevel::height*6, INF + 1.0));
+        prev = std::vector<std::vector<TState>>(TLevel::width*6, std::vector<TState>(TLevel::height*6, {-1, -1}));
+
         std::priority_queue<std::pair<double, TState>> q;
-        q.push(std::make_pair(0.0, startState));
-        dist[startState.x][startState.y] = 0;
+        for (const auto& s : _getJumpGoes(startState, true)) {
+            double dst = std::abs(s.y - startState.y);
+            q.push(std::make_pair(dst, s));
+            dist[s.x][s.y] = dst;
+            prev[s.x][s.y] = startState;
+        }
         while (!q.empty()) {
             auto v = q.top().second;
             auto curDist = -q.top().first;
@@ -253,95 +361,13 @@ private:
                 continue;
             }
 
-            for (const auto& to : _getCellGoes(v)) {
-                auto dst = std::abs(to.x - v.x) + std::abs(to.y - v.y);
+            for (const auto& t : _getCellGoes(v)) {
+                auto& to = t.first;
+                auto dst = t.second;
                 if (dist[v.x][v.y] + dst < dist[to.x][to.y]) {
                     dist[to.x][to.y] = dist[v.x][v.y] + dst;
                     prev[to.x][to.y] = v;
                     q.push(std::make_pair(-dist[to.x][to.y], to));
-                }
-            }
-        }
-    }
-};
-
-
-
-
-
-class TPathFinder2 {
-    const TSandbox* env;
-    TCell start;
-    std::vector<std::vector<double>> dist;
-    std::vector<std::vector<TCell>> prev;
-
-public:
-    explicit TPathFinder2(const TSandbox* env, const TCell& start) {
-        this->env = env;
-        this->start = start;
-        _dijkstra();
-    }
-
-    bool findPathTo(const TCell& cell, std::vector<TCell>& res) {
-        auto cur = prev[cell.x][cell.y];
-        if (cur.x == -1) {
-            return false;
-        }
-        while (cur != start) {
-            res.push_back(cur);
-            cur = prev[cur.x][cur.y];
-        }
-        res.push_back(start);
-        std::reverse(res.begin(), res.end());
-        return true;
-    }
-
-private:
-    struct TEdge {
-        TCell cell;
-        double dist = 0.0;
-    };
-
-    std::vector<TEdge> _getCellGoes(const TCell& cell) {
-        std::vector<TEdge> res;
-        for (int h = 0; h < 6; h++) { // TODO
-            if (getTile(cell.x, cell.y + h) == ETile::WALL || getTile(cell.x, cell.y + h + 1) == ETile::WALL) {
-                break;
-            }
-            if (isStayableTile(cell.x, cell.y + h + 1)) {
-                res.push_back({{cell.x, cell.y + h + 1}, h + 0.0});
-            }
-
-            for (int dx = -1; dx <= 1; dx++) {
-                if (isStayableTile(cell.x + dx, cell.y + h)) {
-                    res.push_back({{cell.x + dx, cell.y + h}, h + 1.0});
-                }
-            }
-        }
-        return res;
-    }
-
-    void _dijkstra() {
-        dist = std::vector<std::vector<double>>(TLevel::width, std::vector<double>(TLevel::height, 100000.0));
-        prev = std::vector<std::vector<TCell>>(TLevel::width, std::vector<TCell>(TLevel::height, {-1, -1}));
-
-        dist[start.x][start.y] = 0;
-
-        std::priority_queue<std::pair<double, TCell>> q;
-        q.push(std::make_pair(0.0, start));
-        while (!q.empty()) {
-            auto v = q.top().second;
-            auto curDist = -q.top().first;
-            q.pop();
-            if (curDist > dist[v.x][v.y]) {
-                continue;
-            }
-
-            for (const auto& to : _getCellGoes(v)) {
-                if (dist[v.x][v.y] + to.dist < dist[to.cell.x][to.cell.y]) {
-                    dist[to.cell.x][to.cell.y] = dist[v.x][v.y] + to.dist;
-                    prev[to.cell.x][to.cell.y] = v;
-                    q.push(std::make_pair(-dist[to.cell.x][to.cell.y], to.cell));
                 }
             }
         }
