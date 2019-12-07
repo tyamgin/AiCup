@@ -268,7 +268,7 @@ public:
         TUnit unit(_unit);
         TSandbox env(unit, game);
         if (env.currentTick > 1) {
-            if (env.currentTick == 3801) {
+            if (env.currentTick == 25) {
                 env.currentTick += 0;
             }
             prevEnv2 = prevEnv;
@@ -277,28 +277,28 @@ public:
         }
 
         //auto action = _strategy(unit, game, debug);
-        auto action = _rifleTestStrategy(unit, env, debug);
+        //auto action = _rifleTestStrategy(unit, env, debug);
+        auto action = _ladderLeftStrategy(unit, env, debug);
         if (env.currentTick == 0) {
             TPathFinder::initMap();
         }
 
+        TPathFinder pathFinder(&env, unit);
+        std::vector<TPoint> path;
+        std::vector<TAction> acts;
+        if (pathFinder.findPath(TPoint(10.1, 24.1), path, acts)) {
+            for (int i = 1; i < (int)path.size(); i++) {
+                float x1 = path[i - 1].x;
+                float y1 = path[i - 1].y;
+                float x2 = path[i].x;
+                float y2 = path[i].y;
+                debug.draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
+            }
+            action = acts[0];
+            std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
+        } else {
 
-//        TPathFinder pathFinder(&env, unit);
-//        std::vector<TPoint> path;
-//        std::vector<TAction> acts;
-//        if (pathFinder.findPath(TPoint(10.1, 24.1), path, acts)) {
-//            for (int i = 1; i < (int)path.size(); i++) {
-//                float x1 = path[i - 1].x;
-//                float y1 = path[i - 1].y;
-//                float x2 = path[i].x;
-//                float y2 = path[i].y;
-//                debug.draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
-//            }
-//            action = acts[0];
-//            std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
-//        } else {
-//
-//        }
+        }
 
         //auto action = _jumpStrategy(unit, env, debug);
         //auto action = _ladderDownStrategy(unit, env, debug);

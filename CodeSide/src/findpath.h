@@ -41,7 +41,7 @@ bool isValid[SZ][SZ];
 
 class TPathFinder {
     const TSandbox* env;
-    TUnit start;
+    TUnit startUnit;
     TState startState;
     //std::vector<std::vector<double>> dist;
     //std::vector<std::vector<TCell>> prev;
@@ -64,6 +64,12 @@ public:
                         int jj = j*6 + dj;
                         isValid[ii][jj] = unit.approxIdValid();
                         isStand[ii][jj] = isValid[ii][jj] && unit.approxIsStand();
+                        if (di == 0 && dj == 0 && getTile(i, j - 1) == ETile::WALL && getTile(i - 1, j - 1) != ETile::WALL) {
+                            isStand[ii][jj] = isValid[ii][jj] = false;
+                        }
+                        if (di == 0 && dj == 0 && getTile(i - 1, j - 1) == ETile::WALL && getTile(i, j - 1) != ETile::WALL) {
+                            isStand[ii][jj] = isValid[ii][jj] = false;
+                        }
                     }
                 }
             }
@@ -72,7 +78,8 @@ public:
 
     explicit TPathFinder(const TSandbox* env, const TUnit& start) {
         this->env = env;
-        this->start = start;
+        this->startUnit = start;
+        this->startState = _getUnitState(this->startUnit);
         _bfs();
     }
 
@@ -90,11 +97,22 @@ public:
         if (minDist >= INF) {
             return false;
         }
+
         while (selectedTargetState != startState) {
             res.push_back(selectedTargetState.getPoint());
             resAct.push_back(prevAct[selectedTargetState.x][selectedTargetState.y][selectedTargetState.timeLeft]);
             selectedTargetState = prev[selectedTargetState.x][selectedTargetState.y][selectedTargetState.timeLeft];
         }
+
+        auto startStatePoint = startState.getPoint();
+        TAction firstAction;
+        auto dx = startStatePoint.x - startUnit.position().x;
+        firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
+        bool fall = isStand[startState.x][startState.y] && !startUnit.approxIsStand();
+        if (std::abs(dx) > 1e-10 || fall) {
+            resAct.push_back(firstAction);
+        }
+
         res.push_back(startState.getPoint());
         std::reverse(res.begin(), res.end());
         std::reverse(resAct.begin(), resAct.end());
@@ -163,7 +181,6 @@ private:
         //dist = std::vector<std::vector<double>>(TLevel::width, std::vector<double>(TLevel::height, 100000.0));
         //prev = std::vector<std::vector<TCell>>(TLevel::width, std::vector<TCell>(TLevel::height, {-1, -1}));
         memset(dist, 63, sizeof(dist));
-        this->startState = _getUnitState(this->start);
 
         dist[this->startState.x][this->startState.y][this->startState.timeLeft] = 0;
         std::queue<TState> q;

@@ -3,9 +3,9 @@
 
 #define M_NO_SPREAD
 
-constexpr const int MAX_TICK_COUNT = 1000000;
-constexpr const double TICKS_PER_SECOND = 6000;
-constexpr const int UPDATES_PER_TICK = 1;
+constexpr const int MAX_TICK_COUNT = 10000;
+constexpr const double TICKS_PER_SECOND = 60;
+constexpr const int UPDATES_PER_TICK = 100;
 constexpr const double LOOT_BOX_SIZE = 0.5;
 constexpr const double UNIT_SIZE_X = 0.9;
 constexpr const double UNIT_SIZE_Y = 1.8;

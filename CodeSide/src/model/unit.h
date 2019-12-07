@@ -108,7 +108,7 @@ public:
         const double px = 1 / 6.0;
         for (int i = int(x1 - px); i <= int(x2 + px); i++) {
             for (int j = int(y1); j <= int(y2 + px); j++) {
-                if (getTile(i, j) == ETile::WALL) {
+                if (getTile(i, j) == ETile::WALL || getTile(i, j) == ETile::JUMP_PAD) {//TODO
                     return false;
                 }
             }
@@ -126,6 +126,10 @@ public:
 
     TPoint center() const {
         return TPoint(x1 + UNIT_HALF_WIDTH, y1 + UNIT_HALF_HEIGHT);
+    }
+
+    TPoint position() const {
+        return TPoint(x1 + UNIT_HALF_WIDTH, y1);
     }
 
     TBullet shot() {
