@@ -49,6 +49,7 @@ struct TState {
 bool isStand[SZ][SZ];
 bool isValid[SZ][SZ];
 bool isBound[SZ][SZ];
+bool isOnLadder[SZ][SZ];
 bool isBlockedMove[3][3][SZ][SZ];
 
 using TDfsGoesResult = std::vector<TState>;
@@ -162,6 +163,7 @@ public:
                             isStand[ii][jj] = false;
                         }
                         isBound[ii][jj] = (di == 3 || di == 2 || di == 4);
+                        isOnLadder[ii][jj] = isStand[ii][jj] && unit.isOnLadder();
 
                         if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(1 / 6.0)) {
                             isBlockedMove[D_RIGHT][D_CENTER][ii][jj] = true;
@@ -227,7 +229,6 @@ public:
             std::vector<TState> stts;
             _getCellGoesTrace(prev[s.x][s.y], s, s.samePos(startState), acts, stts);
             resAct.insert(resAct.end(), acts.rbegin(), acts.rend());
-            //std::reverse(stts.begin(), stts.end());
             for (auto& ss : stts) {
                 res.push_back(ss.getPoint());
             }
@@ -319,6 +320,12 @@ private:
             if (isValid[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
                 res.emplace_back(stx, 0.99);
             }
+
+            // лезть по лестнице вверх
+            stx.y = state.y + 1;
+            if (isOnLadder[state.x][state.y] && isOnLadder[stx.x][stx.y]) {
+                res.emplace_back(stx, 0.98);
+            }
         }
         // прыгать
         if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
@@ -348,6 +355,16 @@ private:
             // лететь вниз
             stx.y = state.y - 1;
             act.jumpDown = true;
+            if (stx.samePos(end)) {
+                resAct.emplace_back(act);
+                resState.emplace_back(stx);
+                return;
+            }
+
+            // лезть по лестнице вверх
+            stx.y = state.y + 1;
+            act.jumpDown = false;
+            act.jump = true;
             if (stx.samePos(end)) {
                 resAct.emplace_back(act);
                 resState.emplace_back(stx);

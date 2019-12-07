@@ -123,7 +123,7 @@ class Strategy {
         prevEnv2.doTick();
     }
 
-    std::optional<TAction> _strategyLoot(const TUnit& unit, bool isHealth) {
+    std::optional<TAction> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
         std::vector<TPoint> pathPoints;
         std::vector<TAction> actions;
 
@@ -134,9 +134,7 @@ class Strategy {
         pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit) {
             TLootBox* lb;
             if (dist < minDist && (lb = env.findLootBox(unit)) != nullptr) {
-                if (isHealth && lb->type == ELootType::HEALTH_PACK ||
-                    !isHealth && (lb->type == ELootType::PISTOL || lb->type == ELootType::ROCKET_LAUNCHER || lb->type == ELootType::ASSAULT_RIFLE)) {
-
+                if (lootTypes.count(lb->type)) {
                     minDist = dist;
                     selectedLb = lb;
                     selectedPos = unit.position();
@@ -157,13 +155,13 @@ class Strategy {
         std::vector<TAction> actions;
 
         if (unit.weapon.type == ELootType::NONE) {
-            auto maybeAct = _strategyLoot(unit, false);
+            auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ROCKET_LAUNCHER, ELootType::ASSAULT_RIFLE});
             if (maybeAct) {
                 return maybeAct.value();
             }
         }
         if (unit.health < 80) {
-            auto maybeAct = _strategyLoot(unit, true);
+            auto maybeAct = _strategyLoot(unit, {ELootType::HEALTH_PACK});
             if (maybeAct) {
                 return maybeAct.value();
             }
@@ -181,6 +179,26 @@ class Strategy {
                 return actions[0];
             }
         }
+
+        if (unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+            auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ASSAULT_RIFLE});
+            if (maybeAct) {
+                return maybeAct.value();
+            }
+        }
+        if (unit.weapon.type == ELootType::PISTOL) {
+            auto maybeAct = _strategyLoot(unit, {ELootType::ASSAULT_RIFLE});
+            if (maybeAct) {
+                return maybeAct.value();
+            }
+        }
+
+        {
+            auto maybeAct = _strategyLoot(unit, {ELootType::MINE});
+            if (maybeAct) {
+                return maybeAct.value();
+            }
+        }
         return TAction();
     }
 
@@ -194,7 +212,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 93) {
+        if (env.currentTick == 74) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -222,14 +240,6 @@ public:
                     testEnv.doTick(3);
                     testNothingEnv.doTick(3);
                     testEnv.getUnit(unit.id)->action.shoot = false;
-                    if (env.currentTick == 93) {
-                        for (auto &b : testEnv.bullets) {
-                            TDrawUtil().debugPoint(b.center());
-                        }
-//                        for (auto &b : testNothingEnv.bullets) {
-//                            TDrawUtil().debugPoint(b.center());
-//                        }
-                    }
                 }
                 if (testEnv.score[0] > testNothingEnv.score[0]) {
                     action.shoot = true;
