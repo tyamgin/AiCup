@@ -39,8 +39,7 @@ struct TState {
     }
 };
 
-#define SZ (6 * 43)
-#define MAXZ 35
+#define SZ (6 * 45)
 #define INF 0x3f3f3f3f
 #define D_LEFT 0
 #define D_CENTER 1
@@ -66,7 +65,7 @@ class TPathFinder {
     const TSandbox* env;
     TUnit startUnit;
     TState startState;
-    std::vector<std::vector<double>> dist;
+    std::vector<std::vector<double>> dist, penalty;
     std::vector<std::vector<TState>> prev;
 
     static std::vector<TState> _getCellGoesDfs(const TState& state) {
@@ -385,9 +384,35 @@ private:
         resState = dfsTraceStateResult;
     }
 
+    double _getPenalty(const TState& state) {
+
+    }
+
     void _dijkstra() {
         dist = std::vector<std::vector<double>>(TLevel::width*6, std::vector<double>(TLevel::height*6, INF + 1.0));
+        penalty = std::vector<std::vector<double>>(TLevel::width*6, std::vector<double>(TLevel::height*6, 0));
         prev = std::vector<std::vector<TState>>(TLevel::width*6, std::vector<TState>(TLevel::height*6, {-1, -1}));
+
+        for (auto& opp : env->units) {
+            if (opp.playerId == TLevel::myId) {
+                continue;
+            }
+            auto oppCenter = opp.center();
+            auto oppCenterState = _getPointState(oppCenter);
+            for (int di = -40; di <= 40; di++) {
+                for (int dj = -40; dj <= 40; dj++) {
+                    auto st = TState{oppCenterState.x + di, oppCenterState.y + dj, 0};
+                    auto pt = st.getPoint();
+                    if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
+                        const double mx = 10.0;
+                        penalty[st.x][st.y] = std::max(0.0, mx - pt.getDistanceTo(oppCenter));
+                        TDrawUtil().debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
+                                                                 Vec2Float{0.05, 0.05},
+                                                                 ColorFloat(1, 0, 0, penalty[st.x][st.y] / mx)));
+                    }
+                }
+            }
+        }
 
         std::priority_queue<std::pair<double, TState>> q;
         for (const auto& s : _getJumpGoes(startState, true)) {

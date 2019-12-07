@@ -99,6 +99,14 @@ struct TPoint {
     double getAngle() const {
         return atan2(y, x);
     }
+
+    double getDistanceTo(const TPoint& point) const {
+        return sqrt(SQR(x - point.x) + SQR(y - point.y));
+    }
+
+    double getDistanceTo2(const TPoint& point) const {
+        return SQR(x - point.x) + SQR(y - point.y);
+    }
 };
 
 struct TCell {
