@@ -5,6 +5,7 @@
 #include "sandbox.h"
 #include "draw.h"
 #include "findpath.h"
+#include "testing.h"
 
 #include <algorithm>
 
@@ -172,98 +173,6 @@ class Strategy {
         return action;
     }
 
-    TAction _ladderLeftStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
-        TAction action;
-        //auto action = _strategy(unit, game, debug);
-        if (env.currentTick < 100 / UPDATES_PER_TICK) {
-            action.velocity = 1;
-        } else if (env.currentTick < 1800 / UPDATES_PER_TICK) {
-            action.velocity = 10;
-        } else if (env.currentTick < 4000 / UPDATES_PER_TICK) {
-            action.jump = true;
-        } else if (env.currentTick < 4700 / UPDATES_PER_TICK) {
-            action.velocity = -10;
-        } else if (env.currentTick < 5400 / UPDATES_PER_TICK) {
-            action.velocity = 10;
-        } else if (env.currentTick < 6000 / UPDATES_PER_TICK) {
-            action.jump = true;
-        } else if (env.currentTick < 6200 / UPDATES_PER_TICK) {
-            action.jumpDown = true;
-        } else if (env.currentTick < 10000 / UPDATES_PER_TICK) {
-            action.jumpDown = true;
-            action.velocity = 1;
-        } else if (env.currentTick < 39800 / UPDATES_PER_TICK) {
-            action.velocity = 6;
-        } else if (env.currentTick < 59600 / UPDATES_PER_TICK) {
-            action.velocity = -10;
-        } else if (env.currentTick < 61900 / UPDATES_PER_TICK) {
-            action.velocity = 10;
-        } else if (env.currentTick < 70000 / UPDATES_PER_TICK) {
-            action.jump = true;
-        } else if (env.currentTick < 72400 / UPDATES_PER_TICK) {
-            action.velocity = 10;
-        } else if (env.currentTick < 76900 / UPDATES_PER_TICK) {
-            action.velocity = -10;
-            action.jump = true;
-        } else if (env.currentTick < 80000 / UPDATES_PER_TICK) {
-            action.velocity = 10;
-            action.jump = true;
-        } else if (env.currentTick < 80900 / UPDATES_PER_TICK) {
-            action.velocity = -10;
-            action.jump = true;
-        } else if (env.currentTick < 81300 / UPDATES_PER_TICK) {
-            action.jump = true;
-        } else {
-            action.velocity = 10;
-            action.jump = true;
-        }
-        return action;
-    }
-
-    TAction _rifleTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
-        // requires seed=12
-        TAction action;
-        //auto action = _strategy(unit, game, debug);
-        if (env.currentTick < 100 / UPDATES_PER_TICK) {
-            action.velocity = 1;
-        } else if (env.currentTick < 1000 / UPDATES_PER_TICK) {
-            action.velocity = 10;
-            action.aim = TPoint(15, 1);
-        } else {
-            action.shoot = true;
-            action.aim = TPoint(1, 0.0);
-        }
-        return action;
-    }
-
-    TAction _jumpStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
-        TAction action;
-        //auto action = _strategy(unit, game, debug);
-        if (env.currentTick < 100) {
-            // do nothing
-        } else {
-            action.jump = true;
-        }
-        return action;
-    }
-
-    TAction _ladderDownStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
-        TAction action;
-        //auto action = _strategy(unit, game, debug);
-        if (env.currentTick < 100) {
-            // do nothing
-        } else if (env.currentTick < 1800) {
-            action.velocity = 10;
-        } else {
-            action.jump = true;
-        }
-        return action;
-    }
-
-    void _jumpTest() {
-
-    }
-
 public:
     UnitAction getAction(const Unit& _unit, const Game& game, Debug& debug) {
         TDrawUtil().drawGrid();
@@ -278,9 +187,7 @@ public:
             prevEnv.doTick();
             _compareState(prevEnv, env);
         }
-
-        //auto action = _strategy(unit, game, debug);
-        //auto action = _rifleTestStrategy(unit, env, debug);
+        
         auto action = _ladderLeftStrategy(unit, env, debug);
         if (env.currentTick == 0) {
             TPathFinder::initMap();
@@ -290,12 +197,6 @@ public:
         std::vector<TPoint> path;
         std::vector<TAction> acts;
         TPoint tar(10.1, 24.1);
-//        TPoint tar;
-//        for (auto& u : env.units) {
-//            if (u.playerId != unit.playerId) {
-//                tar = u.center();
-//            }
-//        }
 
         debug.draw(CustomData::Rect({float(tar.x), float(tar.y)}, {0.1, 0.1}, ColorFloat(0, 0, 1, 1)));
         auto reachable = pathFinder.getReachableForDraw();
@@ -310,26 +211,13 @@ public:
                 float y2 = path[i].y;
                 debug.draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
             }
-            action = acts[0];
+            if (acts.size() > 0) {
+                action = acts[0];
+            }
             std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
         } else {
 
         }
-
-        //auto action = _jumpStrategy(unit, env, debug);
-        //auto action = _ladderDownStrategy(unit, env, debug);
-//        TPathFinder2 pathFinder(&env, TCell(TPoint(unit.x1, unit.y1)));
-//        std::vector<TCell> path;
-//        if (pathFinder.findPathTo({10, 5}, path)) {
-//            for (int i = 1; i < (int)path.size(); i++) {
-//                float x1 = path[i - 1].x + 0.5;
-//                float y1 = path[i - 1].y + 0.5;
-//                float x2 = path[i].x + 0.5;
-//                float y2 = path[i].y + 0.5;
-//                debug.draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
-//            }
-//        }
-
 
         for (auto& u : env.units) {
             if (u.id == unit.id) {
