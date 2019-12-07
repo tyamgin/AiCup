@@ -96,7 +96,8 @@ public:
                         std::pair<int, int> cand(dist[targetState.x + dx][targetState.y + dy][z], std::abs(dx) + std::abs(dy));
                         if (cand < minDist) {
                             minDist = cand;
-                            selectedTargetState = targetState;
+                            selectedTargetState.x = targetState.x + dx;
+                            selectedTargetState.y = targetState.y + dy;
                             selectedTargetState.timeLeft = z;
                         }
                     }

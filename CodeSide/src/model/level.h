@@ -2,6 +2,7 @@
 #define CODESIDE_LEVEL_H
 
 #include <climits>
+#include <string>
 
 constexpr const double TILE_EPS = 0.0;//1e-8;
 
@@ -10,7 +11,7 @@ enum class ETile : uint32_t {
     WALL = 1,
     PLATFORM = 2,
     LADDER = 4,
-    JUMP_PAD = 8
+    JUMP_PAD = 8,
 };
 
 class TLevel {
@@ -53,6 +54,34 @@ public:
                     }
                 }
             }
+        }
+    }
+
+    static std::string toString() {
+        std::string res;
+        for (int j = TLevel::height - 1; j >= 0; j--) {
+            for (int i = 0; i < TLevel::width; i++) {
+                res += tileChar(tiles[i][j]);
+            }
+            res += '\n';
+        }
+        return res;
+    }
+
+    static char tileChar(ETile tile) {
+        switch(tile) {
+            case ETile::EMPTY:
+                return '.';
+            case ETile::WALL:
+                return '#';
+            case ETile::PLATFORM:
+                return '^';
+            case ETile::LADDER:
+                return 'H';
+            case ETile::JUMP_PAD:
+                return 'T';
+            default:
+                return 0;
         }
     }
 };

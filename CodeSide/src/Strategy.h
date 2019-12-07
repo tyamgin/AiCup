@@ -287,7 +287,13 @@ public:
         std::vector<TPoint> path;
         std::vector<TAction> acts;
         //TPoint tar(10.1, 24.1);
-        TPoint tar(30.1, 14.1);
+        TPoint tar;
+        for (auto& u : env.units) {
+            if (u.playerId != unit.playerId) {
+                tar = u.center();
+            }
+        }
+
         debug.draw(CustomData::Rect({float(tar.x), float(tar.y)}, {0.1, 0.1}, ColorFloat(0, 0, 1, 1)));
         auto reachable = pathFinder.getReachable();
         for (auto& p : reachable) {
