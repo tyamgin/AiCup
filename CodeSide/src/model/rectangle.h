@@ -39,6 +39,10 @@ public:
         return (isIn(x1, x2, rx1) || isIn(x1, x2, rx2)) &&
                (isIn(y1, y2, ry1) || isIn(y1, y2, ry2));
     }
+
+    TPoint center() const {
+        return TPoint((x1 + x2) / 2, (y1 + y2) / 2);
+    }
 };
 
 #endif //CODESIDE_RECTANGLE_H

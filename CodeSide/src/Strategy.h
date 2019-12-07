@@ -14,7 +14,8 @@ double distanceSqr(Vec2Double a, Vec2Double b) {
 }
 
 class Strategy {
-    TSandbox prevEnv, prevEnv2;
+    TSandbox prevEnv, prevEnv2, env;
+    TPathFinder pathFinder;
 
     void _compareState(TSandbox& prevEnv, TSandbox& env) {
         const double eps = 1e-10;
@@ -122,64 +123,57 @@ class Strategy {
         prevEnv2.doTick();
     }
 
-    TAction _strategy(const Unit& unit, const Game& game, Debug& debug) {
-        const Unit *nearestEnemy = nullptr;
-        for (const Unit &other : game.units) {
-            if (other.playerId != unit.playerId) {
-                if (nearestEnemy == nullptr ||
-                    distanceSqr(unit.position, other.position) < distanceSqr(unit.position, nearestEnemy->position)) {
-                    nearestEnemy = &other;
-                }
-            }
-        }
-        const LootBox *nearestWeapon = nullptr;
-        for (const LootBox &lootBox : game.lootBoxes) {
-            if (std::dynamic_pointer_cast<Item::Weapon>(lootBox.item)) {
-                if (nearestWeapon == nullptr ||
-                    distanceSqr(unit.position, lootBox.position) < distanceSqr(unit.position, nearestWeapon->position)) {
-                    nearestWeapon = &lootBox;
-                }
-            }
-        }
+    TAction _strategy(const TUnit& unit) {
+        std::vector<TPoint> pathPoints;
+        std::vector<TAction> actions;
 
-        Vec2Double targetPos = unit.position;
-        if (unit.weapon == nullptr && nearestWeapon != nullptr) {
-            targetPos = nearestWeapon->position;
-        } else if (nearestEnemy != nullptr) {
-            targetPos = nearestEnemy->position;
+        if (unit.weapon.type == ELootType::NONE) {
+            double minDist = INF;
+            TLootBox* selectedLb = nullptr;
+            TPoint selectedPos;
+            pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit) {
+                TLootBox* lb;
+                if (dist < minDist && (lb = env.findLootBox(unit)) != nullptr) {
+                    if (lb->type == ELootType::PISTOL || lb->type == ELootType::ROCKET_LAUNCHER || lb->type == ELootType::ASSAULT_RIFLE) {
+                        minDist = dist;
+                        selectedLb = lb;
+                        selectedPos = unit.position();
+                    }
+                }
+            });
+            if (selectedLb != nullptr) {
+                if (pathFinder.findPath(selectedPos, pathPoints, actions) && actions.size() > 0) {
+                    TDrawUtil().drawPath(pathPoints);
+                    return actions[0];
+                }
+            }
         }
-        debug.draw(CustomData::Log(
-                std::string("Target pos: ") + targetPos.toString()));
-        TPoint aim;
-        if (nearestEnemy != nullptr) {
-            aim = TPoint(nearestEnemy->position.x - unit.position.x,
-                         nearestEnemy->position.y - unit.position.y);
+        TUnit* target = nullptr;
+        for (auto& u : env.units) {
+            if (u.playerId != unit.playerId) {
+                target = &u;
+            }
         }
-        bool jump = targetPos.y > unit.position.y;
-        if (targetPos.x > unit.position.x && game.level.tiles[size_t(unit.position.x + 1)][size_t(unit.position.y)] == Tile::WALL) {
-            jump = true;
+        if (target != nullptr) {
+            if (pathFinder.findPath(target->position(), pathPoints, actions) && actions.size() > 0) {
+                TDrawUtil().drawPath(pathPoints);
+                return actions[0];
+            }
         }
-        if (targetPos.x < unit.position.x && game.level.tiles[size_t(unit.position.x - 1)][size_t(unit.position.y)] == Tile::WALL) {
-            jump = true;
-        }
-        TAction action;
-        action.velocity = targetPos.x - unit.position.x;
-        action.jump = jump;
-        action.jumpDown = !action.jump;
-        action.aim = aim;
-        action.shoot = true;
-        action.swapWeapon = false;
-        action.plantMine = false;
-        return action;
+        return TAction();
     }
 
 public:
     UnitAction getAction(const Unit& _unit, const Game& game, Debug& debug) {
         TDrawUtil().drawGrid();
-
         TUnit unit(_unit);
-        TSandbox env(unit, game);
-        if (env.currentTick == 154) {
+        env = TSandbox(unit, game);
+        if (env.currentTick == 0) {
+            TPathFinder::initMap();
+        }
+        pathFinder = TPathFinder(&env, unit);
+
+        if (env.currentTick == 93) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -187,37 +181,45 @@ public:
             prevEnv.doTick();
             _compareState(prevEnv, env);
         }
-        
-        auto action = _ladderLeftStrategy(unit, env, debug);
-        if (env.currentTick == 0) {
-            TPathFinder::initMap();
-        }
 
-        TPathFinder pathFinder(&env, unit);
-        std::vector<TPoint> path;
-        std::vector<TAction> acts;
-        TPoint tar(10.1, 24.1);
-
-        debug.draw(CustomData::Rect({float(tar.x), float(tar.y)}, {0.1, 0.1}, ColorFloat(0, 0, 1, 1)));
-        auto reachable = pathFinder.getReachableForDraw();
-        for (auto& p : reachable) {
-            debug.draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
-        }
-        if (pathFinder.findPath(tar, path, acts)) {
-            for (int i = 1; i < (int)path.size(); i++) {
-                float x1 = path[i - 1].x;
-                float y1 = path[i - 1].y;
-                float x2 = path[i].x;
-                float y2 = path[i].y;
-                debug.draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
+        //auto action = _ladderLeftStrategy(unit, env, debug);
+        auto action = _strategy(unit);
+        TUnit* target = nullptr;
+        for (auto& u : env.units) {
+            if (u.playerId != unit.playerId) {
+                target = &u;
             }
-            if (acts.size() > 0) {
-                action = acts[0];
-            }
-            std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
-        } else {
-
         }
+        if (target != nullptr) {
+            action.aim = target->center() - unit.center();
+            if (unit.weapon.fireTimer < -0.5) {
+                auto testEnv = env;
+                auto testNothingEnv = env;
+                testEnv.getUnit(unit.id)->action = action;
+                testEnv.getUnit(unit.id)->action.shoot = true;
+                for (int i = 0; i < 50; i++) {
+                    testEnv.doTick(3);
+                    testNothingEnv.doTick(3);
+                    testEnv.getUnit(unit.id)->action.shoot = false;
+                    if (env.currentTick == 93) {
+                        for (auto &b : testEnv.bullets) {
+                            TDrawUtil().debugPoint(b.center());
+                        }
+//                        for (auto &b : testNothingEnv.bullets) {
+//                            TDrawUtil().debugPoint(b.center());
+//                        }
+                    }
+                }
+                if (testEnv.score[0] > testNothingEnv.score[0]) {
+                    action.shoot = true;
+                }
+            }
+        }
+
+//        auto reachable = pathFinder.getReachableForDraw();
+//        for (auto& p : reachable) {
+//            debug.draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+//        }
 
         for (auto& u : env.units) {
             if (u.id == unit.id) {

@@ -31,6 +31,16 @@ public:
                                      Vec2Float{0.05, 0.05},
                                      ColorFloat(1, 0, 0, 1)));
     }
+
+    void drawPath(const std::vector<TPoint>& path) {
+        for (int i = 1; i < (int) path.size(); i++) {
+            auto x1 = (float) path[i - 1].x;
+            auto y1 = (float) path[i - 1].y;
+            auto x2 = (float) path[i].x;
+            auto y2 = (float) path[i].y;
+            debug->draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
+        }
+    }
 };
 
 #endif //CODESIDE_DRAW_H

@@ -187,21 +187,25 @@ public:
         }
     }
 
+    TPathFinder() {
+    }
+
     explicit TPathFinder(const TSandbox* env, const TUnit& start) {
         this->env = env;
         this->startUnit = start;
         this->startState = _getUnitState(this->startUnit);
-        _dijkstra();
     }
 
     bool findPath(const TPoint& target, std::vector<TPoint>& res, std::vector<TAction>& resAct) {
+        _run();
+
         TState targetState = _getPointState(target);
         TState selectedTargetState;
-        std::pair<double, int> minDist(INF, INF);
+        std::pair<int, double> minDist(INF, INF);
         for (int dx = -7; dx <= 7; dx++) {
             for (int dy = -7; dy <= 7; dy++) {
                 if (targetState.x + dx > 0 && targetState.x + dx < SZ && targetState.y + dy > 0 && targetState.y + dy < SZ) {
-                    std::pair<double, int> cand(dist[targetState.x + dx][targetState.y + dy], std::abs(dx) + std::abs(dy));
+                    std::pair<int, double> cand(std::abs(dx) + std::abs(dy), dist[targetState.x + dx][targetState.y + dy]);
                     if (cand < minDist) {
                         minDist = cand;
                         selectedTargetState.x = targetState.x + dx;
@@ -236,7 +240,7 @@ public:
         firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
         bool fall = isStand[startState.x][startState.y] && !startUnit.approxIsStand();
         if (std::abs(dx) > 1e-10 || fall) {
-            firstAction.jump = fall;
+            firstAction.jump = (startUnit.y1 - (int)startUnit.y1 > 0.5);
             resAct.push_back(firstAction);
         }
 
@@ -247,6 +251,8 @@ public:
     }
 
     std::vector<TPoint> getReachableForDraw() {
+        _run();
+
         std::vector<TPoint> res;
 #if M_DRAW_REACHABILITY_X > 0 && M_DRAW_REACHABILITY_Y > 0
         for (int i = 0; i < (int) dist.size(); i += M_DRAW_REACHABILITY_X) {
@@ -260,8 +266,30 @@ public:
         return res;
     }
 
+    template<typename TVisitor>
+    void traverseReachable(TUnit unit, TVisitor visitor) {
+        _run();
+        for (int i = 0; i < (int) dist.size(); i++) {
+            for (int j = 0; j < (int) dist[0].size(); j++) {
+                if (dist[i][j] < INF) {
+                    TState state{i, j, 0};
+                    unit.x1 = i * (1 / 6.0);
+                    unit.x2 = unit.x1 + UNIT_SIZE_X;
+                    unit.y1 = j * (1 / 6.0);
+                    unit.y2 = unit.y1 + UNIT_SIZE_Y;
+                    visitor(dist[i][j], unit);
+                }
+            }
+        }
+    }
 
 private:
+    void _run() {
+        if (dist.empty()) {
+            _dijkstra();
+        }
+    }
+
     TState _getPointState(const TPoint& point) {
         TState res;
         res.x = int(point.x / (1.0 / 6) + 1e-8);

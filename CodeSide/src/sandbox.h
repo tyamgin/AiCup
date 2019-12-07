@@ -14,7 +14,7 @@
 class TSandbox {
 public:
     int currentTick;
-    Player players[2];
+    int score[2];
     std::vector<TUnit> units;
     std::vector<TBullet> bullets;
     std::vector<TMine> mines;
@@ -23,12 +23,11 @@ public:
 
     TSandbox() {
         currentTick = -1;
+        score[0] = score[1] = 0;
     }
 
     TSandbox(const TUnit& unit, const Game& game) {
         currentTick = game.currentTick;
-        players[0] = game.players[0];
-        players[1] = game.players[1];
         for (const Unit& u : game.units) {
             units.emplace_back(u);
         }
@@ -51,8 +50,8 @@ public:
 
     TSandbox(const TSandbox& sandbox) {
         currentTick = sandbox.currentTick;
-        players[0] = sandbox.players[0];
-        players[1] = sandbox.players[1];
+        score[0] = sandbox.score[0];
+        score[1] = sandbox.score[1];
         units = sandbox.units;
         bullets = sandbox.bullets;
         mines = sandbox.mines;
@@ -66,6 +65,27 @@ public:
             _doMicroTick(updatesPerTick);
         }
         currentTick++;
+    }
+
+    TLootBox* findLootBox(const TUnit& unit) {
+        for (int i = int(unit.x1); i <= int(unit.x2); i++) {
+            for (int j = int(unit.y1 + 1e-8); j <= int(unit.y2 + 1e-8); j++) {
+                unsigned idx = (*lootBoxIndex)[i][j];
+                if (idx != UINT32_MAX && lootBoxes[idx].type != ELootType::NONE && lootBoxes[idx].intersectsWith(unit)) {
+                    return &lootBoxes[idx];
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    TUnit* getUnit(int id) {
+        for (auto& unit : units) {
+            if (unit.id == id) {
+                return &unit;
+            }
+        }
+        return nullptr;
     }
 
 private:
@@ -264,6 +284,7 @@ private:
             for (auto& unit : units) {
                 if (unit.intersectsWith(bullet.x1, bullet.y1, bullet.x2, bullet.y2)) {
                     unit.health -= bullet.damage();
+                    score[unit.playerId == TLevel::myId] += bullet.damage();
                 }
             }
         }
@@ -276,6 +297,7 @@ private:
                 if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
                     if (bullet.weaponType != ELootType::ROCKET_LAUNCHER) {
                         unit.health -= bullet.damage();
+                        score[unit.playerId == TLevel::myId] += bullet.damage();
                     }
                     return true;
                 }
@@ -291,6 +313,8 @@ private:
         }
         return false;
     }
+
+
 };
 
 #endif //CODESIDE_SANDBOX_H
