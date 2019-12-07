@@ -286,7 +286,14 @@ public:
         TPathFinder pathFinder(&env, unit);
         std::vector<TPoint> path;
         std::vector<TAction> acts;
-        if (pathFinder.findPath(TPoint(10.1, 24.1), path, acts)) {
+        //TPoint tar(10.1, 24.1);
+        TPoint tar(30.1, 14.1);
+        debug.draw(CustomData::Rect({float(tar.x), float(tar.y)}, {0.1, 0.1}, ColorFloat(0, 0, 1, 1)));
+        auto reachable = pathFinder.getReachable();
+        for (auto& p : reachable) {
+            debug.draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+        }
+        if (pathFinder.findPath(tar, path, acts)) {
             for (int i = 1; i < (int)path.size(); i++) {
                 float x1 = path[i - 1].x;
                 float y1 = path[i - 1].y;

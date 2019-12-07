@@ -64,10 +64,12 @@ public:
                         int jj = j*6 + dj;
                         isValid[ii][jj] = unit.approxIdValid();
                         isStand[ii][jj] = isValid[ii][jj] && unit.approxIsStand();
-                        if (di == 0 && dj == 0 && getTile(i, j - 1) == ETile::WALL && getTile(i - 1, j - 1) != ETile::WALL) {
+                        auto r = getTile(i, j - 1);
+                        auto l = getTile(i - 1, j - 1);
+                        if (di == 0 && dj == 0 && tileMatch(r, ETile::WALL) && !tileMatch(l, ETile::WALL)) {
                             isStand[ii][jj] = isValid[ii][jj] = false;
                         }
-                        if (di == 0 && dj == 0 && getTile(i - 1, j - 1) == ETile::WALL && getTile(i, j - 1) != ETile::WALL) {
+                        if (di == 0 && dj == 0 && tileMatch(l, ETile::WALL) && !tileMatch(r, ETile::WALL)) {
                             isStand[ii][jj] = isValid[ii][jj] = false;
                         }
                     }
@@ -86,15 +88,22 @@ public:
     bool findPath(const TPoint& target, std::vector<TPoint>& res, std::vector<TAction>& resAct) {
         TState targetState = _getPointState(target);
         TState selectedTargetState;
-        int minDist = INF;
-        for (int z = 0; z < MAXZ; z++) {
-            if (dist[targetState.x][targetState.y][z] < minDist) {
-                minDist = dist[targetState.x][targetState.y][z];
-                selectedTargetState = targetState;
-                selectedTargetState.timeLeft = z;
+        std::pair<int, int> minDist(INF, INF);
+        for (int dx = -5; dx <= 5; dx++) {
+            for (int dy = -1; dy <= 5; dy++) {
+                for (int z = 0; z < MAXZ; z++) {
+                    if (targetState.x + dx > 0 && targetState.x + dx < SZ && targetState.y + dy > 0 && targetState.y + dy < SZ) {
+                        std::pair<int, int> cand(dist[targetState.x + dx][targetState.y + dy][z], std::abs(dx) + std::abs(dy));
+                        if (cand < minDist) {
+                            minDist = cand;
+                            selectedTargetState = targetState;
+                            selectedTargetState.timeLeft = z;
+                        }
+                    }
+                }
             }
         }
-        if (minDist >= INF) {
+        if (minDist.first >= INF) {
             return false;
         }
 
@@ -117,6 +126,21 @@ public:
         std::reverse(res.begin(), res.end());
         std::reverse(resAct.begin(), resAct.end());
         return true;
+    }
+
+    std::vector<TPoint> getReachable() {
+        std::vector<TPoint> res;
+        for (int i = 0; i < SZ; i += 3) {
+            for (int j = 0; j < SZ; j += 3) {
+                for (int z = 0; z < MAXZ; z++) {
+                    if (dist[i][j][z] < INF) {
+                        res.push_back(TState{i, j, z}.getPoint());
+                        break;
+                    }
+                }
+            }
+        }
+        return res;
     }
 
 

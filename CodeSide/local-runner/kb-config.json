@@ -1,0 +1,18 @@
+{
+  "options_preset": {
+    "Custom": {
+      "level": {
+        "LoadFrom": {
+          "path": "levels/level.txt"
+        }
+      },
+      "properties": null
+    }
+  },
+  "players": [
+    "Keyboard",
+    {
+      "Empty": null
+    }
+  ]
+}

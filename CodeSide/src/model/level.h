@@ -61,6 +61,14 @@ inline ETile getTile(int i, int j) {
     return TLevel::tiles[i][j];
 }
 
+inline bool tileMatch(ETile tile, ETile v1) {
+    return tile == v1;
+}
+
+inline bool tileMatch(ETile tile, ETile v1, ETile v2) {
+    return tile == v1 || tile == v2;
+}
+
 inline bool isStayableTile(int i, int j) {
     if (getTile(i, j + 1) == ETile::WALL) {
         return false;
