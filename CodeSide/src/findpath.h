@@ -402,9 +402,9 @@ private:
                     if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
                         const double mx = 10.0;
                         penalty[st.x][st.y] = std::max(0.0, mx - pt.getDistanceTo(oppCenter));
-                        TDrawUtil().debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
-                                                                 Vec2Float{0.05, 0.05},
-                                                                 ColorFloat(1, 0, 0, penalty[st.x][st.y] / mx)));
+//                        TDrawUtil().debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
+//                                                                 Vec2Float{0.05, 0.05},
+//                                                                 ColorFloat(1, 0, 0, penalty[st.x][st.y] / mx)));
                     }
                 }
             }
