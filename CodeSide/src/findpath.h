@@ -142,8 +142,6 @@ class TPathFinder {
 
 public:
     static void initMap() {
-//        memset(isValid, 0, sizeof(isValid));
-//        memset(isStand, 0, sizeof(isStand));
         TUnit unit;
         const double d = 1 / 6.0;
         for (int i = 1; i < TLevel::width - 1; i++) {

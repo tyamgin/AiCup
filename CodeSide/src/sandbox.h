@@ -15,7 +15,7 @@
 class TSandbox {
 public:
     int currentTick;
-    int score[2];
+    int score[2] = {0, 0};
     std::vector<TUnit> units;
     std::vector<TBullet> bullets;
     std::vector<TMine> mines;
@@ -24,7 +24,6 @@ public:
 
     TSandbox() {
         currentTick = -1;
-        score[0] = score[1] = 0;
     }
 
     TSandbox(const TUnit& unit, const Game& game) {
@@ -46,6 +45,9 @@ public:
             TLootBox lb(l);
             (*lootBoxIndex)[lb.getRow()][lb.getCol()] = (unsigned) lootBoxes.size();
             lootBoxes.emplace_back(lb);
+        }
+        for (const auto& player : game.players) {
+            score[player.id != TLevel::myId] = player.score;
         }
     }
 
