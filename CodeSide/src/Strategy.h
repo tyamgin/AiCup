@@ -121,6 +121,13 @@ class Strategy {
         prevEnv2.doTick();
     }
 
+    std::unordered_map<ELootType, int> weaponPriority = {
+            {ELootType::ASSAULT_RIFLE, 0},
+            {ELootType::ROCKET_LAUNCHER, 1},
+            {ELootType::PISTOL, 2},
+            {ELootType::NONE, 3},
+    };
+
     std::optional<std::vector<TAction>> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
         std::vector<TPoint> pathPoints;
         std::vector<TAction> actions;
@@ -181,14 +188,15 @@ class Strategy {
             }
         }
 
-        if (unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
-            auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ASSAULT_RIFLE});
-            if (maybeAct) {
-                return maybeAct.value();
+        std::set<ELootType> weapons;
+        for (const auto &[type, priority] : weaponPriority) {
+            if (priority < weaponPriority[unit.weapon.type]) {
+                weapons.insert(type);
             }
         }
-        if (unit.weapon.type == ELootType::PISTOL) {
-            auto maybeAct = _strategyLoot(unit, {ELootType::ASSAULT_RIFLE});
+
+        if (weapons.size()) {
+            auto maybeAct = _strategyLoot(unit, weapons);
             if (maybeAct) {
                 return maybeAct.value();
             }
@@ -213,7 +221,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 245) {
+        if (env.currentTick == 19) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -221,7 +229,7 @@ public:
             prevEnv.doTick();
             _compareState(prevEnv, env);
         }
-
+//4*6+3 16*6
         //auto action = _ladderLeftStrategy(unit, env, debug);
 
 
@@ -260,6 +268,13 @@ public:
             }
         }
         TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
+
+        auto lb = env.findLootBox(unit);
+        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
+            if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
+                action.swapWeapon = true;
+            }
+        }
 
 
         TUnit* target = nullptr;

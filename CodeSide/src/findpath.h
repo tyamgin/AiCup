@@ -313,19 +313,19 @@ private:
 
             // идти по платформе
             if (isStand[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER][state.x][state.y]) {
-                res.emplace_back(stx, 0.99);
+                res.emplace_back(stx, 0.9999);
             }
 
             // лететь вниз
             stx.y = state.y - 1;
             if (isValid[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
-                res.emplace_back(stx, 0.99);
+                res.emplace_back(stx, 0.9999);
             }
 
             // лезть по лестнице вверх
             stx.y = state.y + 1;
             if (isOnLadder[state.x][state.y] && isOnLadder[stx.x][stx.y]) {
-                res.emplace_back(stx, 0.98);
+                res.emplace_back(stx, 0.9998);
             }
         }
         // прыгать
@@ -355,7 +355,7 @@ private:
 
             // лететь вниз
             stx.y = state.y - 1;
-            act.jumpDown = true;
+            act.jumpDown = isStand[state.x][state.y];
             if (stx.samePos(end)) {
                 resAct.emplace_back(act);
                 resState.emplace_back(stx);
@@ -429,7 +429,7 @@ private:
 
             for (const auto& t : _getCellGoes(v)) {
                 auto& to = t.first;
-                auto dst = t.second;
+                auto dst = t.second + penalty[to.x][to.y];
                 if (dist[v.x][v.y] + dst < dist[to.x][to.y]) {
                     dist[to.x][to.y] = dist[v.x][v.y] + dst;
                     prev[to.x][to.y] = v;
