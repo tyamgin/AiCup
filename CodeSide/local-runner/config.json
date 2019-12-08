@@ -1,16 +1,12 @@
 {
   "options_preset": {
     "Custom": {
-      "level": {
-        "LoadFrom": {
-          "path": "levels/level.txt"
-        }
-      },
+      "level": "Simple",
       "properties": {
-        "max_tick_count": 1000000,
+        "max_tick_count": 10000,
         "team_size": 1,
-        "ticks_per_second": 6000,
-        "updates_per_tick": 1,
+        "ticks_per_second": 60,
+        "updates_per_tick": 100,
         "loot_box_size": {
           "x": 0.5,
           "y": 0.5
@@ -101,7 +97,7 @@
       }
     },
     {
-      "Empty": null
+      "Quickstart": null
     }
   ],
   "seed": 12
