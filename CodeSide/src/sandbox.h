@@ -28,6 +28,7 @@ public:
 
     TSandbox(const TUnit& unit, const Game& game) {
         currentTick = game.currentTick;
+        int maxUnitId = 0;
         for (const Unit& u : game.units) {
             units.emplace_back(u);
         }
@@ -64,7 +65,12 @@ public:
 
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
+        std::vector<bool> swapWeaponBackup;
         for (auto& unit : units) {
+            while (swapWeaponBackup.size() <= unit.id) {
+                swapWeaponBackup.push_back(false);
+            }
+            swapWeaponBackup[unit.id] = unit.action.swapWeapon;
             if (unit.mines > 0 && unit.action.plantMine && unit.canJump && unit.isStandOnGround()) { // TODO: check is stand
                 mines.emplace_back(unit.plantMine());
             }
@@ -72,6 +78,9 @@ public:
         for (int microTick = 0; microTick < updatesPerTick; microTick++) {
             _doMicroTick(updatesPerTick);
             _doMinesTick(updatesPerTick);
+        }
+        for (auto& unit : units) {
+            unit.action.swapWeapon = swapWeaponBackup[unit.id];
         }
         currentTick++;
     }
@@ -303,15 +312,10 @@ private:
                 unit.jumpCanCancel = true;
             }
 
-            for (int i = int(unit.x1); i <= int(unit.x2); i++) {
-                for (int j = int(unit.y1); j <= int(unit.y2); j++) {
-                    if (TLevel::tiles[i][j] == ETile::JUMP_PAD) {
-                        unit.jumpCanCancel = false;
-                        unit.canJump = true;
-                        unit.jumpMaxTime = JUMP_PAD_JUMP_TIME;
-                        goto endPadLoop;
-                    }
-                }
+            if (unit.isTouchJumpPad()) {
+                unit.jumpCanCancel = false;
+                unit.canJump = true;
+                unit.jumpMaxTime = JUMP_PAD_JUMP_TIME;
             }
             endPadLoop:;
         }

@@ -187,6 +187,19 @@ class Strategy {
     }
 
     std::optional<std::vector<TAction>> _strategy(const TUnit& unit) {
+        std::vector<TPoint> pathPoints;
+        std::vector<TAction> actions;
+
+        auto reachable = pathFinder.getReachableForDraw();
+        for (auto& p : reachable) {
+            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+        }
+
+        if (pathFinder.findPath(TPoint(30, 1), pathPoints, actions) && actions.size() > 0) {
+            TDrawUtil().drawPath(pathPoints);
+            return actions;
+        }
+
         if (unit.weapon.type == ELootType::NONE) {
             auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ROCKET_LAUNCHER, ELootType::ASSAULT_RIFLE});
             if (maybeAct) {
@@ -206,9 +219,6 @@ class Strategy {
                 target = &u;
             }
         }
-
-        std::vector<TPoint> pathPoints;
-        std::vector<TAction> actions;
 
         if (target != nullptr) {
             if (pathFinder.findPath(target->position(), pathPoints, actions) && actions.size() > 0) {
@@ -251,7 +261,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 202) {
+        if (env.currentTick == 96) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -331,14 +341,10 @@ public:
             }
         }
 
-        auto reachable = pathFinder.getReachableForDraw();
-        for (auto& p : reachable) {
-            debug.draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
-        }
-
         for (auto& u : env.units) {
             if (u.id == unit.id) {
                 u.action = action;
+                std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
             }
         }
         prevEnv = env;

@@ -1,7 +1,11 @@
 {
   "options_preset": {
     "Custom": {
-      "level": "Simple",
+      "level": {
+        "LoadFrom": {
+          "path": "levels/pad.txt"
+        }
+      },
       "properties": null
     }
   },
@@ -19,5 +23,5 @@
       "Empty": null
     }
   ],
-  "seed": 27
+  "seed": 34
 }

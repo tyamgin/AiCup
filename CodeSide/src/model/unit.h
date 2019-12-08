@@ -105,6 +105,7 @@ public:
                     auto oldType = weapon.type;
                     weapon = TWeapon(loot.type);
                     loot.type = oldType;
+                    action.swapWeapon = false;
                 }
                 return;
         }
@@ -207,6 +208,21 @@ public:
             weapon.spread = WEAPON_MAX_SPREAD;
         }
         return res;
+    }
+
+    bool isTouchJumpPad() const {
+        for (int i = int(x1); i <= int(x2); i++) {
+            for (int j = int(y1); j <= int(y2); j++) {
+                if (TLevel::tiles[i][j] == ETile::JUMP_PAD) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    bool isPadFly() const {
+        return canJump && !jumpCanCancel;
     }
 };
 
