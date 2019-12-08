@@ -8,10 +8,8 @@
 #include "testing.h"
 
 #include <algorithm>
+#include <cassert>
 
-double distanceSqr(Vec2Double a, Vec2Double b) {
-    return (a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y);
-}
 
 class Strategy {
     TSandbox prevEnv, prevEnv2, env;

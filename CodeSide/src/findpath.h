@@ -6,6 +6,7 @@
 #include <map>
 #include <queue>
 #include <memory.h>
+#include <algorithm>
 
 struct TState {
     int x;

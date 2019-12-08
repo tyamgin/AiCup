@@ -8,6 +8,7 @@
 #include "model/lootbox.h"
 #include "model/bullet.h"
 
+#include <algorithm>
 #include <iostream>
 #include <tuple>
 
