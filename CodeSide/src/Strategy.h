@@ -260,81 +260,81 @@ public:
             _compareState(prevEnv, env);
         }
 
-        auto action = _mineTestStrategy2(unit, env, debug);
+        //auto action = _mineTestStrategy2(unit, env, debug);
 
 
-//        auto maybeActions = _strategy(unit);
-//        auto actions = maybeActions ? maybeActions.value() : std::vector<TAction>();
-//        TAction action = actions.size() > 0 ? actions[0] : TAction();
-//
-//        TSandbox notDodgeEnv = env;
-//        for (int i = 0; i < 40; i++) {
-//            notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
-//            notDodgeEnv.doTick();
-//        }
-//        int bestScore = notDodgeEnv.getUnit(unit.id)->health;
-//        std::vector<TPoint> bestPath;
-//
-//        for (int dirX = -1; dirX <= 1; dirX++) {
-//            for (int dirY = -1; dirY <= 1; dirY += 2) {
-//                TSandbox dodgeEnv = env;
-//                std::vector<TPoint> path;
-//                TAction act;
-//                if (dirY > 0)
-//                    act.jump = true;
-//                else
-//                    act.jumpDown = true;
-//                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
-//                for (int i = 0; i < 40; i++) {
-//                    dodgeEnv.getUnit(unit.id)->action = act;
-//                    dodgeEnv.doTick();
-//                    path.push_back(dodgeEnv.getUnit(unit.id)->position());
-//                }
-//                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
-//                    bestScore = dodgeEnv.getUnit(unit.id)->health;
-//                    bestPath = path;
-//                    action = act;
-//                }
-//            }
-//        }
-//        TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
-//
-//        auto lb = env.findLootBox(unit);
-//        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
-//            if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
-//                action.swapWeapon = true;
-//            }
-//        }
-//
-//
-//        TUnit* target = nullptr;
-//        for (auto& u : env.units) {
-//            if (u.playerId != unit.playerId) {
-//                target = &u;
-//            }
-//        }
-//        if (target != nullptr) {
-//            action.aim = target->center() - unit.center();
-//            if (unit.weapon.fireTimer < -0.5) {
-//                auto testEnv = env;
-//                auto testNothingEnv = env;
-//                testEnv.getUnit(unit.id)->action = action;
-//                testEnv.getUnit(unit.id)->action.shoot = true;
-//                for (int i = 0; i < 40; i++) {
-//                    testEnv.doTick(3);
-//                    testNothingEnv.doTick(3);
-//                    testEnv.getUnit(unit.id)->action.shoot = false;
-//                }
-//                if (testEnv.score[0] > testNothingEnv.score[0]) {
-//                    action.shoot = true;
-//                }
-//            }
-//        }
+        auto maybeActions = _strategy(unit);
+        auto actions = maybeActions ? maybeActions.value() : std::vector<TAction>();
+        TAction action = actions.size() > 0 ? actions[0] : TAction();
 
-//        auto reachable = pathFinder.getReachableForDraw();
-//        for (auto& p : reachable) {
-//            debug.draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
-//        }
+        TSandbox notDodgeEnv = env;
+        for (int i = 0; i < 40; i++) {
+            notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
+            notDodgeEnv.doTick();
+        }
+        int bestScore = notDodgeEnv.getUnit(unit.id)->health;
+        std::vector<TPoint> bestPath;
+
+        for (int dirX = -1; dirX <= 1; dirX++) {
+            for (int dirY = -1; dirY <= 1; dirY += 2) {
+                TSandbox dodgeEnv = env;
+                std::vector<TPoint> path;
+                TAction act;
+                if (dirY > 0)
+                    act.jump = true;
+                else
+                    act.jumpDown = true;
+                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
+                for (int i = 0; i < 40; i++) {
+                    dodgeEnv.getUnit(unit.id)->action = act;
+                    dodgeEnv.doTick();
+                    path.push_back(dodgeEnv.getUnit(unit.id)->position());
+                }
+                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
+                    bestScore = dodgeEnv.getUnit(unit.id)->health;
+                    bestPath = path;
+                    action = act;
+                }
+            }
+        }
+        TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
+
+        auto lb = env.findLootBox(unit);
+        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
+            if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
+                action.swapWeapon = true;
+            }
+        }
+
+
+        TUnit* target = nullptr;
+        for (auto& u : env.units) {
+            if (u.playerId != unit.playerId) {
+                target = &u;
+            }
+        }
+        if (target != nullptr) {
+            action.aim = target->center() - unit.center();
+            if (unit.weapon.fireTimer < -0.5) {
+                auto testEnv = env;
+                auto testNothingEnv = env;
+                testEnv.getUnit(unit.id)->action = action;
+                testEnv.getUnit(unit.id)->action.shoot = true;
+                for (int i = 0; i < 40; i++) {
+                    testEnv.doTick(3);
+                    testNothingEnv.doTick(3);
+                    testEnv.getUnit(unit.id)->action.shoot = false;
+                }
+                if (testEnv.score[0] > testNothingEnv.score[0]) {
+                    action.shoot = true;
+                }
+            }
+        }
+
+        auto reachable = pathFinder.getReachableForDraw();
+        for (auto& p : reachable) {
+            debug.draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+        }
 
         for (auto& u : env.units) {
             if (u.id == unit.id) {
