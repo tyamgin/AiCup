@@ -230,6 +230,7 @@ public:
             return false;
         }
 
+        bool qwe = false;
         for (auto s = selectedTargetState; !s.samePos(startState); s = prev[s.x][s.y]) {
             if (env->currentTick == 96) std::cout << s.x << " " << s.y << std::endl;
             if (prev[s.x][s.y].x == -1) {
@@ -238,7 +239,10 @@ public:
             }
             std::vector<TAction> acts;
             std::vector<TState> stts;
-            _getCellGoesTrace(prev[s.x][s.y], s, prev[s.x][s.y].samePos(startState), startUnit.isPadFly(), acts, stts);
+            if (!_getCellGoesTrace(prev[s.x][s.y], s, prev[s.x][s.y].samePos(startState), startUnit.isPadFly(), acts, stts)) {
+                qwe = true;
+                //break;
+            }
             resAct.insert(resAct.end(), acts.rbegin(), acts.rend());
             for (auto& ss : stts) {
                 res.push_back(ss.getPoint());
@@ -251,6 +255,9 @@ public:
         auto dx = startStatePoint.x - startUnit.position().x;
         firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
         bool fall = isStand[startState.x][startState.y] && !startUnit.approxIsStand();
+        if (resAct.size()) {
+            fall |= isStand[startState.x][startState.y] && !startUnit.canJump && resAct.back().jump;
+        }
         if (std::abs(dx) > 1e-10 || fall) {
             firstAction.jump = (startUnit.y1 - (int)startUnit.y1 > 0.5);
             resAct.push_back(firstAction);
@@ -352,7 +359,7 @@ private:
         return res;
     }
 
-    void _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
+    bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
         if (!isTouchPad[state.x][state.y]) {
             for (int xDirection = -1; xDirection <= 1; xDirection++) {
                 auto stx = state;
@@ -364,7 +371,7 @@ private:
                 if (stx.samePos(end)) {
                     resAct.emplace_back(act);
                     resState.emplace_back(stx);
-                    return;
+                    return true;
                 }
 
                 // лететь вниз
@@ -373,7 +380,7 @@ private:
                 if (stx.samePos(end)) {
                     resAct.emplace_back(act);
                     resState.emplace_back(stx);
-                    return;
+                    return true;
                 }
 
                 // лезть по лестнице вверх
@@ -383,7 +390,7 @@ private:
                 if (stx.samePos(end)) {
                     resAct.emplace_back(act);
                     resState.emplace_back(stx);
-                    return;
+                    return true;
                 }
             }
         }
@@ -395,10 +402,11 @@ private:
         dfsTraceTarget = end;
         if (!_dfsTrace({state.x, state.y, beg ? state.timeLeft : 33, isTouchPad[state.x][state.y] || (pad && beg)})) {
             std::cerr << "Error trace dfs\n";
-            return;
+            return false;
         }
         resAct = dfsTraceActResult;
         resState = dfsTraceStateResult;
+        return true;
     }
 
     void _dijkstra() {
