@@ -58,7 +58,7 @@ void debugCheckGameParams(const Game& game, bool print) {
             auto val = game.properties.weaponParams.find((WeaponType)weapon_idx)->second. p;\
             if (print) cout << "constexpr const " << #type << " " << #weapon_type << "_" << #const_str << " = " << val << ";\n";\
             if (std::abs(CAT(weapon_type, CAT(_, const_str)) - val) > 1e-9) {\
-                cerr << #const_str << " wrong constant value " << val << " (right is " << CAT(weapon_type, CAT(_, const_str)) << ")\n";\
+                cerr << #const_str << " wrong constant value " << CAT(weapon_type, CAT(_, const_str)) << " (right is " << val << ")\n";\
                 exit(1);\
             }\
         } while(0)

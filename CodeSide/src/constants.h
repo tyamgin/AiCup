@@ -1,9 +1,9 @@
 #ifndef CODESIDE_CONSTANTS_H
 #define CODESIDE_CONSTANTS_H
 
-#define M_NO_SPREAD
+#define M_NO_SPREAD 0
 
-constexpr const int MAX_TICK_COUNT = 10000;
+constexpr const int MAX_TICK_COUNT = 3600;
 constexpr const double TICKS_PER_SECOND = 60;
 constexpr const int UPDATES_PER_TICK = 100;
 constexpr const double LOOT_BOX_SIZE = 0.5;
@@ -46,7 +46,7 @@ constexpr const int ROCKET_LAUNCHER_MAGAZINE_SIZE = 1;
 constexpr const double ROCKET_LAUNCHER_FIRE_RATE = 1;
 constexpr const double ROCKET_LAUNCHER_RELOAD_TIME = 1;
 constexpr const double ROCKET_LAUNCHER_RECOIL = 1;
-constexpr const double ROCKET_LAUNCHER_AIM_SPEED = 0.5;
+constexpr const double ROCKET_LAUNCHER_AIM_SPEED = 1;
 constexpr const double ROCKET_LAUNCHER_BULLET_SPEED = 20;
 constexpr const double ROCKET_LAUNCHER_BULLET_SIZE = 0.4;
 constexpr const int ROCKET_LAUNCHER_BULLET_DAMAGE = 30;
@@ -54,7 +54,7 @@ constexpr const double ROCKET_LAUNCHER_EXPLOSION_DAMAGE = 50;
 constexpr const int ROCKET_LAUNCHER_EXPLOSION_RADIUS = 3;
 
 
-#ifdef M_NO_SPREAD
+#if M_NO_SPREAD
 constexpr const double PISTOL_MIN_SPREAD = 0;
 constexpr const double PISTOL_MAX_SPREAD = 0;
 constexpr const double ASSAULT_RIFLE_MIN_SPREAD = 0;
@@ -64,12 +64,12 @@ constexpr const double ROCKET_LAUNCHER_MAX_SPREAD = 0;
 constexpr const double WEAPON_MAX_SPREAD = 0;
 #else
 constexpr const double PISTOL_MIN_SPREAD = 0.05;
-constexpr const double PISTOL_MAX_SPREAD = 0.7;
+constexpr const double PISTOL_MAX_SPREAD = 0.5;
 constexpr const double ASSAULT_RIFLE_MIN_SPREAD = 0.1;
-constexpr const double ASSAULT_RIFLE_MAX_SPREAD = 0.7;
+constexpr const double ASSAULT_RIFLE_MAX_SPREAD = 0.5;
 constexpr const double ROCKET_LAUNCHER_MIN_SPREAD = 0.1;
-constexpr const double ROCKET_LAUNCHER_MAX_SPREAD = 0.7;
-constexpr const double WEAPON_MAX_SPREAD = 0.7;
+constexpr const double ROCKET_LAUNCHER_MAX_SPREAD = 0.5;
+constexpr const double WEAPON_MAX_SPREAD = 0.5;
 #endif
 
 constexpr const int WEAPON_DAMAGE[6] = {
