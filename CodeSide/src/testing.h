@@ -126,7 +126,7 @@ TAction _mineTestStrategy2(const TUnit& unit, const TSandbox& env, Debug& debug)
         action.velocity = 10;
     } else if (env.currentTick < 31900 / UPDATES_PER_TICK) {
 
-    } else if (env.currentTick < 32900 / UPDATES_PER_TICK) {
+    } else if (env.currentTick < 33100 / UPDATES_PER_TICK) {
         action.velocity = 10;
     }
     return action;

@@ -71,8 +71,8 @@ public:
         }
         for (int microTick = 0; microTick < updatesPerTick; microTick++) {
             _doMicroTick(updatesPerTick);
+            _doMinesTick(updatesPerTick);
         }
-        _doMinesTick(updatesPerTick);
         currentTick++;
     }
 
