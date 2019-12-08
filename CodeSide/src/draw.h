@@ -7,6 +7,7 @@
 #define M_DRAW_REACHABILITY_X 3
 #define M_DRAW_REACHABILITY_Y 6
 
+
 class TDrawUtil {
 public:
     static std::shared_ptr<Debug> debug;
@@ -32,13 +33,13 @@ public:
                                      ColorFloat(1, 0, 0, 1)));
     }
 
-    void drawPath(const std::vector<TPoint>& path) {
+    void drawPath(const std::vector<TPoint>& path, ColorFloat color = ColorFloat(0, 1, 0, 1)) {
         for (int i = 1; i < (int) path.size(); i++) {
             auto x1 = (float) path[i - 1].x;
             auto y1 = (float) path[i - 1].y;
             auto x2 = (float) path[i].x;
             auto y2 = (float) path[i].y;
-            debug->draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, ColorFloat(1, 0, 0, 1)));
+            debug->draw(CustomData::Line({x1, y1}, {x2, y2}, 0.1, color));
         }
     }
 };

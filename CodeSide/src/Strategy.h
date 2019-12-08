@@ -37,14 +37,12 @@ class Strategy {
             }
             if (std::abs(prevUnit.x1 - curUnit.x1) > eps) {
                 std::cerr << "Prev state unit.x1 mismatch " << prevUnit.x1 << " vs " << curUnit.x1 << std::endl;
-            }
-            if (std::abs(prevUnit.x2 - curUnit.x2) > eps) {
+            } else if (std::abs(prevUnit.x2 - curUnit.x2) > eps) {
                 std::cerr << "Prev state unit.x2 mismatch " << prevUnit.x2 << " vs " << curUnit.x2 << std::endl;
             }
             if (std::abs(prevUnit.y1 - curUnit.y1) > eps) {
                 std::cerr << "Prev state unit.y1 mismatch " << prevUnit.y1 << " vs " << curUnit.y1 << std::endl;
-            }
-            if (std::abs(prevUnit.y2 - curUnit.y2) > eps) {
+            } else if (std::abs(prevUnit.y2 - curUnit.y2) > eps) {
                 std::cerr << "Prev state unit.y2 mismatch " << prevUnit.y2 << " vs " << curUnit.y2 << std::endl;
             }
             if (prevUnit.canJump != curUnit.canJump) {
@@ -123,7 +121,7 @@ class Strategy {
         prevEnv2.doTick();
     }
 
-    std::optional<TAction> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
+    std::optional<std::vector<TAction>> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
         std::vector<TPoint> pathPoints;
         std::vector<TAction> actions;
 
@@ -131,39 +129,38 @@ class Strategy {
         double minDist = INF;
         TLootBox* selectedLb = nullptr;
         TPoint selectedPos;
-        pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit) {
+        TState selectedState;
+        pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
             TLootBox* lb;
             if (dist < minDist && (lb = env.findLootBox(unit)) != nullptr) {
                 if (lootTypes.count(lb->type)) {
                     minDist = dist;
                     selectedLb = lb;
                     selectedPos = unit.position();
+                    selectedState = state;
                 }
             }
         });
         if (selectedLb != nullptr) {
             if (pathFinder.findPath(selectedPos, pathPoints, actions) && actions.size() > 0) {
                 TDrawUtil().drawPath(pathPoints);
-                return actions[0];
+                return actions;
             }
         }
         return {};
     }
 
-    TAction _strategy(const TUnit& unit) {
-        std::vector<TPoint> pathPoints;
-        std::vector<TAction> actions;
-
+    std::optional<std::vector<TAction>> _strategy(const TUnit& unit) {
         if (unit.weapon.type == ELootType::NONE) {
             auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ROCKET_LAUNCHER, ELootType::ASSAULT_RIFLE});
             if (maybeAct) {
-                return maybeAct.value();
+                return maybeAct;
             }
         }
         if (unit.health < 80) {
             auto maybeAct = _strategyLoot(unit, {ELootType::HEALTH_PACK});
             if (maybeAct) {
-                return maybeAct.value();
+                return maybeAct;
             }
         }
 
@@ -173,10 +170,14 @@ class Strategy {
                 target = &u;
             }
         }
+
+        std::vector<TPoint> pathPoints;
+        std::vector<TAction> actions;
+
         if (target != nullptr) {
             if (pathFinder.findPath(target->position(), pathPoints, actions) && actions.size() > 0) {
                 TDrawUtil().drawPath(pathPoints);
-                return actions[0];
+                return actions;
             }
         }
 
@@ -199,7 +200,7 @@ class Strategy {
                 return maybeAct.value();
             }
         }
-        return TAction();
+        return {};
     }
 
 public:
@@ -212,7 +213,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 74) {
+        if (env.currentTick == 245) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -222,7 +223,45 @@ public:
         }
 
         //auto action = _ladderLeftStrategy(unit, env, debug);
-        auto action = _strategy(unit);
+
+
+        auto maybeActions = _strategy(unit);
+        auto actions = maybeActions ? maybeActions.value() : std::vector<TAction>();
+        TAction action = actions.size() > 0 ? actions[0] : TAction();
+
+        TSandbox notDodgeEnv = env;
+        for (int i = 0; i < 40; i++) {
+            notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
+            notDodgeEnv.doTick();
+        }
+        int bestScore = notDodgeEnv.score[1];
+        std::vector<TPoint> bestPath;
+
+        for (int dirX = -1; dirX <= 1; dirX++) {
+            for (int dirY = -1; dirY <= 1; dirY += 2) {
+                TSandbox dodgeEnv = env;
+                std::vector<TPoint> path;
+                TAction act;
+                if (dirY > 0)
+                    act.jump = true;
+                else
+                    act.jumpDown = true;
+                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
+                for (int i = 0; i < 40; i++) {
+                    dodgeEnv.getUnit(unit.id)->action = act;
+                    dodgeEnv.doTick();
+                    path.push_back(dodgeEnv.getUnit(unit.id)->position());
+                }
+                if (dodgeEnv.score[1] < bestScore) {
+                    bestScore = dodgeEnv.score[1];
+                    bestPath = path;
+                    action = act;
+                }
+            }
+        }
+        TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
+
+
         TUnit* target = nullptr;
         for (auto& u : env.units) {
             if (u.playerId != unit.playerId) {
@@ -236,7 +275,7 @@ public:
                 auto testNothingEnv = env;
                 testEnv.getUnit(unit.id)->action = action;
                 testEnv.getUnit(unit.id)->action.shoot = true;
-                for (int i = 0; i < 50; i++) {
+                for (int i = 0; i < 40; i++) {
                     testEnv.doTick(3);
                     testNothingEnv.doTick(3);
                     testEnv.getUnit(unit.id)->action.shoot = false;

@@ -198,6 +198,8 @@ public:
     }
 
     bool findPath(const TPoint& target, std::vector<TPoint>& res, std::vector<TAction>& resAct) {
+        res.clear();
+        resAct.clear();
         _run();
 
         TState targetState = _getPointState(target);
@@ -273,11 +275,11 @@ public:
             for (int j = 0; j < (int) dist[0].size(); j++) {
                 if (dist[i][j] < INF) {
                     TState state{i, j, 0};
-                    unit.x1 = i * (1 / 6.0);
+                    unit.x1 = i * (1 / 6.0) - UNIT_HALF_WIDTH;
                     unit.x2 = unit.x1 + UNIT_SIZE_X;
                     unit.y1 = j * (1 / 6.0);
                     unit.y2 = unit.y1 + UNIT_SIZE_Y;
-                    visitor(dist[i][j], unit);
+                    visitor(dist[i][j], unit, state);
                 }
             }
         }
