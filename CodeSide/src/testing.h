@@ -90,4 +90,46 @@ TAction _ladderDownStrategy(const Unit& unit, const TSandbox& env, Debug& debug)
 }
 
 
+TAction _mineTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
+    // requires seed=27
+    TAction action;
+    if (env.currentTick < 3000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    } else if (env.currentTick < 7000 / UPDATES_PER_TICK) {
+        action.jump = true;
+        action.velocity = 10;
+    } else {
+        action.velocity = 10;
+        action.plantMine = true;
+    }
+    return action;
+}
+
+TAction _mineTestStrategy2(const TUnit& unit, const TSandbox& env, Debug& debug) {
+    // requires seed=27
+    TAction action;
+    if (env.currentTick < 3000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    } else if (env.currentTick < 7000 / UPDATES_PER_TICK) {
+        action.jump = true;
+        action.velocity = 10;
+    } else if (env.currentTick < 16000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    } else if (env.currentTick < 25600 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+        action.jump = true;
+        action.plantMine = true;
+    } else if (env.currentTick < 25900 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    } else if (env.currentTick < 26800 / UPDATES_PER_TICK) {
+        action.plantMine = true;
+        action.velocity = 10;
+    } else if (env.currentTick < 31900 / UPDATES_PER_TICK) {
+
+    } else if (env.currentTick < 32900 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    }
+    return action;
+}
+
 #endif //CODESIDE_TESTING_H

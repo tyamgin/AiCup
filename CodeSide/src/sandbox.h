@@ -64,9 +64,15 @@ public:
 
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
+        for (auto& unit : units) {
+            if (unit.mines > 0 && unit.action.plantMine && unit.canJump && unit.isStandOnGround()) { // TODO: check is stand
+                mines.emplace_back(unit.plantMine());
+            }
+        }
         for (int microTick = 0; microTick < updatesPerTick; microTick++) {
             _doMicroTick(updatesPerTick);
         }
+        _doMinesTick(updatesPerTick);
         currentTick++;
     }
 
@@ -92,6 +98,59 @@ public:
     }
 
 private:
+    void _blowUpMine(const TMine& mine) {
+        for (auto& unit : units) {
+            if (mine.isTouch(unit)) {
+                unit.health -= MINE_EXPLOSION_DAMAGE;
+                if (mine.playerId != unit.playerId) {
+                    score[mine.playerId != TLevel::myId] += MINE_EXPLOSION_DAMAGE;
+                }
+            }
+        }
+        for (auto& otherMine : mines) {
+            if (otherMine.state != EXPLODED && mine.isTouch(otherMine)) {
+                otherMine.state = EXPLODED;
+                otherMine.timer = -1;
+            }
+        }
+    }
+
+    void _doMinesTick(int updatesPerTick) {
+        for (int i = 0; i < (int) mines.size(); i++) {
+            auto& mine = mines[i];
+            if (mine.state == PREPARING) {
+                mine.timer -= 1.0 / (updatesPerTick * TICKS_PER_SECOND);
+                if (mine.timer < -1e-10) {
+                    mine.timer = -1;
+                    mine.state = IDLE;
+                }
+            } else if (mine.state == IDLE) {
+                bool trigger = false;
+                for (auto& unit : units) {
+                    if (mine.isTriggerOn(unit)) {
+                        trigger = true;
+                        break;
+                    }
+                }
+                if (trigger) {
+                    mine.state = TRIGGERED;
+                    mine.timer = MINE_TRIGGER_TIME;
+                }
+            } else if (mine.state == TRIGGERED) {
+                mine.timer -= 1.0 / (updatesPerTick * TICKS_PER_SECOND);
+                if (mine.timer < -1e-10) {
+                    mine.state = EXPLODED;
+                }
+            }
+
+            if (mine.state == EXPLODED) {
+                _blowUpMine(mine);
+                mines.erase(mines.begin() + i);
+                i--;
+            }
+        }
+    }
+
     void _doMicrotickWeapon(TUnit& unit, double updatesPerSecond) {
         auto& weapon = unit.weapon;
         if (weapon.type == ELootType::NONE) {
@@ -145,7 +204,7 @@ private:
                     TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
 
                     unit.x2 = xcell - FUCKING_EPS;
-                    unit.x1 = unit.x2 - UNIT_SIZE_X;
+                    unit.x1 = unit.x2 - UNIT_WIDTH;
                 } else {
                     unit.x1 += dx;
                     unit.x2 += dx;
@@ -157,7 +216,7 @@ private:
                     TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
 
                     unit.x1 = xcell + 1 + FUCKING_EPS;
-                    unit.x2 = unit.x1 + UNIT_SIZE_X;
+                    unit.x2 = unit.x1 + UNIT_WIDTH;
                 } else {
                     unit.x1 += dx;
                     unit.x2 += dx;
@@ -173,7 +232,7 @@ private:
                     unit.canJump = false;
                     unit.jumpCanCancel = false;
                     unit.y2 = std::max(unit.y2, ycell - FUCKING_EPS);
-                    unit.y1 = unit.y2 - UNIT_SIZE_Y;
+                    unit.y1 = unit.y2 - UNIT_HEIGHT;
                 } else {
                     unit.y1 += dy;
                     unit.y2 += dy;
@@ -206,7 +265,7 @@ private:
                     unit.canJump = true;
                     unit.jumpCanCancel = true;
                     unit.y1 = std::min(unit.y1, ycell + (1 + FUCKING_EPS));
-                    unit.y2 = unit.y1 + UNIT_SIZE_Y;
+                    unit.y2 = unit.y1 + UNIT_HEIGHT;
                 } else {
                     unit.y1 += dy;
                     unit.y2 += dy;

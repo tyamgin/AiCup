@@ -147,11 +147,11 @@ public:
         for (int i = 1; i < TLevel::width - 1; i++) {
             for (int di = 0; di < 6; di++) {
                 unit.x1 = i + di * d - UNIT_HALF_WIDTH;
-                unit.x2 = unit.x1 + UNIT_SIZE_X;
+                unit.x2 = unit.x1 + UNIT_WIDTH;
                 for (int j = 1; j < TLevel::height - 1; j++) {
                     for (int dj = 0; dj < 6; dj++) {
                         unit.y1 = j + dj * d;
-                        unit.y2 = unit.y1 + UNIT_SIZE_Y;
+                        unit.y2 = unit.y1 + UNIT_HEIGHT;
 
                         int ii = i*6 + di;
                         int jj = j*6 + dj;
@@ -275,9 +275,9 @@ public:
                 if (dist[i][j] < INF) {
                     TState state{i, j, 0};
                     unit.x1 = i * (1 / 6.0) - UNIT_HALF_WIDTH;
-                    unit.x2 = unit.x1 + UNIT_SIZE_X;
+                    unit.x2 = unit.x1 + UNIT_WIDTH;
                     unit.y1 = j * (1 / 6.0);
-                    unit.y2 = unit.y1 + UNIT_SIZE_Y;
+                    unit.y2 = unit.y1 + UNIT_HEIGHT;
                     visitor(dist[i][j], unit, state);
                 }
             }

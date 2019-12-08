@@ -48,6 +48,34 @@ public:
         }
 #endif
     }
+
+    void drawMinesRadius(const TSandbox& env) {
+#ifdef DEBUG
+        for (const auto& mine : env.mines) {
+            double radius = 0;
+            ColorFloat color;
+            if (mine.state == IDLE) {
+                color = ColorFloat(0, 0, 1, 0.9);
+                radius = MINE_TRIGGER_RADIUS + MINE_SIZE / 2;
+            } else if (mine.state == TRIGGERED) {
+                color = ColorFloat(1, 0, 0, 1);
+                radius = MINE_EXPLOSION_RADIUS;
+            } else if (mine.state == PREPARING) {
+                color = ColorFloat(0, 1, 0, 0.2);
+                radius = MINE_TRIGGER_RADIUS + MINE_SIZE / 2;
+            }
+            if (radius > 0) {
+                auto r = float(radius);
+                float x = float(mine.x1 + mine.x2) / 2;
+                float y = float(mine.y1 + mine.y2) / 2;
+                debug->draw(CustomData::Line({x + r, y + r}, {x + r, y - r}, 0.05, color));
+                debug->draw(CustomData::Line({x + r, y - r}, {x - r, y - r}, 0.05, color));
+                debug->draw(CustomData::Line({x - r, y - r}, {x - r, y + r}, 0.05, color));
+                debug->draw(CustomData::Line({x - r, y + r}, {x + r, y + r}, 0.05, color));
+            }
+        }
+#endif
+    }
 };
 
 #endif //CODESIDE_DRAW_H

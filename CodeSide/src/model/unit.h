@@ -8,6 +8,7 @@
 #include "action.h"
 #include "lootbox.h"
 #include "weapon.h"
+#include "mine.h"
 
 class TUnit : public TRectangle {
 public:
@@ -34,7 +35,7 @@ public:
         mines = 0;
     }
 
-    explicit TUnit(const Unit& unit) : TRectangle(unit.position, UNIT_SIZE_X, UNIT_SIZE_Y) {
+    explicit TUnit(const Unit& unit) : TRectangle(unit.position, UNIT_WIDTH, UNIT_HEIGHT) {
         playerId = unit.playerId;
         id = unit.id;
         health = unit.health;
@@ -71,6 +72,11 @@ public:
                (TLevel::getTileType(x, y1 + dy) == ETile::LADDER || TLevel::getTileType(x, y1 + dy + UNIT_HALF_HEIGHT) == ETile::LADDER);
     }
 
+    bool isStandOnGround() const {
+        return (!tileMatch(TLevel::getTileType(x1, y1), ETile::WALL, ETile::PLATFORM) && tileMatch(TLevel::getTileType(x1, y1 - 1e-8), ETile::WALL, ETile::PLATFORM)) ||
+               (!tileMatch(TLevel::getTileType(x2, y1), ETile::WALL, ETile::PLATFORM) && tileMatch(TLevel::getTileType(x2, y1 - 1e-8), ETile::WALL, ETile::PLATFORM));
+    }
+
     void maybeApplyLoot(TLootBox& loot) {
         if (loot.type != ELootType::NONE && intersectsWith(loot)) {
             applyLoot(loot);
@@ -102,6 +108,17 @@ public:
                 }
                 return;
         }
+    }
+
+    TMine plantMine() {
+        mines--;
+        TMine mine;
+        mine.playerId = playerId;
+        mine.x1 = x1 + UNIT_HALF_WIDTH - MINE_SIZE / 2;
+        mine.x2 = mine.x1 + MINE_SIZE;
+        mine.y1 = y1;
+        mine.y2 = mine.y1 + MINE_SIZE;
+        return mine;
     }
 
     bool approxIdValid(double dx = 0, double dy = 0) const {

@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <cassert>
 
+// TODO: weapon priority
 
 class Strategy {
     TSandbox prevEnv, prevEnv2, env;
@@ -97,14 +98,12 @@ class Strategy {
                 auto& curBullet = env.bullets[i];
                 if (std::abs(prevBullet.x1 - curBullet.x1) > eps) {
                     std::cerr << "Prev state bullet.x1 mismatch " << prevBullet.x1 << " vs " << curBullet.x1 << std::endl;
-                }
-                if (std::abs(prevBullet.x2 - curBullet.x2) > eps) {
+                } else if (std::abs(prevBullet.x2 - curBullet.x2) > eps) {
                     std::cerr << "Prev state bullet.x2 mismatch " << prevBullet.x2 << " vs " << curBullet.x2 << std::endl;
                 }
                 if (std::abs(prevBullet.y1 - curBullet.y1) > eps) {
                     std::cerr << "Prev state bullet.y1 mismatch " << prevBullet.y1 << " vs " << curBullet.y1 << std::endl;
-                }
-                if (std::abs(prevBullet.y2 - curBullet.y2) > eps) {
+                } else if (std::abs(prevBullet.y2 - curBullet.y2) > eps) {
                     std::cerr << "Prev state bullet.y2 mismatch " << prevBullet.y2 << " vs " << curBullet.y2 << std::endl;
                 }
                 if (std::abs(prevBullet.velocity.x - curBullet.velocity.x) > eps) {
@@ -112,6 +111,40 @@ class Strategy {
                 }
                 if (std::abs(prevBullet.velocity.y - curBullet.velocity.y) > eps) {
                     std::cerr << "Prev state bullet.velocity.y mismatch " << prevBullet.velocity.y << " vs " << curBullet.velocity.y << std::endl;
+                }
+            }
+        }
+
+        if (prevEnv.mines.size() != env.mines.size()) {
+            std::cerr << "Prev state mines.size mismatch " << prevEnv.mines.size() << " vs " << env.mines.size() << std::endl;
+        } else {
+            auto comp = [](const TMine& a, const TMine& b) {
+                if (std::abs(a.x1 - b.x1) > EPS) {
+                    return a.x1 < b.x1;
+                }
+                return a.y1 < b.y1;
+            };
+            std::sort(prevEnv.mines.begin(), prevEnv.mines.end(), comp);
+            std::sort(env.mines.begin(), env.mines.end(), comp);
+
+            for (int i = 0; i < (int) prevEnv.mines.size(); i++) {
+                auto &prevMine = prevEnv.mines[i];
+                auto &curMine = env.mines[i];
+                if (std::abs(prevMine.x1 - curMine.x1) > eps) {
+                    std::cerr << "Prev state mine.x1 mismatch " << prevMine.x1 << " vs " << curMine.x1 << std::endl;
+                } else if (std::abs(prevMine.x2 - curMine.x2) > eps) {
+                    std::cerr << "Prev state mine.x2 mismatch " << prevMine.x2 << " vs " << curMine.x2 << std::endl;
+                }
+                if (std::abs(prevMine.y1 - curMine.y1) > eps) {
+                    std::cerr << "Prev state mine.y1 mismatch " << prevMine.y1 << " vs " << curMine.y1 << std::endl;
+                } else if (std::abs(prevMine.y2 - curMine.y2) > eps) {
+                    std::cerr << "Prev state mine.y2 mismatch " << prevMine.y2 << " vs " << curMine.y2 << std::endl;
+                }
+                if (prevMine.state != curMine.state) {
+                    std::cerr << "Prev state mine.state mismatch " << prevMine.state << " vs " << curMine.state << std::endl;
+                }
+                if (std::abs(prevMine.timer - curMine.timer) > eps) {
+                    std::cerr << "Prev state mine.timer mismatch " << prevMine.timer << " vs " << curMine.timer << std::endl;
                 }
             }
         }
@@ -214,6 +247,7 @@ public:
         TDrawUtil().drawGrid();
         TUnit unit(_unit);
         env = TSandbox(unit, game);
+        TDrawUtil().drawMinesRadius(env);
         if (env.currentTick == 0) {
             TPathFinder::initMap();
         }
@@ -227,77 +261,77 @@ public:
             prevEnv.doTick();
             _compareState(prevEnv, env);
         }
-//4*6+3 16*6
-        //auto action = _ladderLeftStrategy(unit, env, debug);
+
+        auto action = _mineTestStrategy2(unit, env, debug);
 
 
-        auto maybeActions = _strategy(unit);
-        auto actions = maybeActions ? maybeActions.value() : std::vector<TAction>();
-        TAction action = actions.size() > 0 ? actions[0] : TAction();
-
-        TSandbox notDodgeEnv = env;
-        for (int i = 0; i < 40; i++) {
-            notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
-            notDodgeEnv.doTick();
-        }
-        int bestScore = notDodgeEnv.getUnit(unit.id)->health;
-        std::vector<TPoint> bestPath;
-
-        for (int dirX = -1; dirX <= 1; dirX++) {
-            for (int dirY = -1; dirY <= 1; dirY += 2) {
-                TSandbox dodgeEnv = env;
-                std::vector<TPoint> path;
-                TAction act;
-                if (dirY > 0)
-                    act.jump = true;
-                else
-                    act.jumpDown = true;
-                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
-                for (int i = 0; i < 40; i++) {
-                    dodgeEnv.getUnit(unit.id)->action = act;
-                    dodgeEnv.doTick();
-                    path.push_back(dodgeEnv.getUnit(unit.id)->position());
-                }
-                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
-                    bestScore = dodgeEnv.getUnit(unit.id)->health;
-                    bestPath = path;
-                    action = act;
-                }
-            }
-        }
-        TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
-
-        auto lb = env.findLootBox(unit);
-        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
-            if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
-                action.swapWeapon = true;
-            }
-        }
-
-
-        TUnit* target = nullptr;
-        for (auto& u : env.units) {
-            if (u.playerId != unit.playerId) {
-                target = &u;
-            }
-        }
-        if (target != nullptr) {
-            action.aim = target->center() - unit.center();
-            if (unit.weapon.fireTimer < -0.5) {
-                auto testEnv = env;
-                auto testNothingEnv = env;
-                testEnv.getUnit(unit.id)->action = action;
-                testEnv.getUnit(unit.id)->action.shoot = true;
-                for (int i = 0; i < 40; i++) {
-                    testEnv.doTick(3);
-                    testNothingEnv.doTick(3);
-                    testEnv.getUnit(unit.id)->action.shoot = false;
-                }
-                if (testEnv.score[0] > testNothingEnv.score[0]) {
-                    action.shoot = true;
-                }
-            }
-        }
+//        auto maybeActions = _strategy(unit);
+//        auto actions = maybeActions ? maybeActions.value() : std::vector<TAction>();
+//        TAction action = actions.size() > 0 ? actions[0] : TAction();
+//
+//        TSandbox notDodgeEnv = env;
+//        for (int i = 0; i < 40; i++) {
+//            notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
+//            notDodgeEnv.doTick();
+//        }
+//        int bestScore = notDodgeEnv.getUnit(unit.id)->health;
+//        std::vector<TPoint> bestPath;
+//
+//        for (int dirX = -1; dirX <= 1; dirX++) {
+//            for (int dirY = -1; dirY <= 1; dirY += 2) {
+//                TSandbox dodgeEnv = env;
+//                std::vector<TPoint> path;
+//                TAction act;
+//                if (dirY > 0)
+//                    act.jump = true;
+//                else
+//                    act.jumpDown = true;
+//                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
+//                for (int i = 0; i < 40; i++) {
+//                    dodgeEnv.getUnit(unit.id)->action = act;
+//                    dodgeEnv.doTick();
+//                    path.push_back(dodgeEnv.getUnit(unit.id)->position());
+//                }
+//                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
+//                    bestScore = dodgeEnv.getUnit(unit.id)->health;
+//                    bestPath = path;
+//                    action = act;
+//                }
+//            }
+//        }
+//        TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
+//
+//        auto lb = env.findLootBox(unit);
+//        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
+//            if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
+//                action.swapWeapon = true;
+//            }
+//        }
+//
+//
+//        TUnit* target = nullptr;
+//        for (auto& u : env.units) {
+//            if (u.playerId != unit.playerId) {
+//                target = &u;
+//            }
+//        }
+//        if (target != nullptr) {
+//            action.aim = target->center() - unit.center();
+//            if (unit.weapon.fireTimer < -0.5) {
+//                auto testEnv = env;
+//                auto testNothingEnv = env;
+//                testEnv.getUnit(unit.id)->action = action;
+//                testEnv.getUnit(unit.id)->action.shoot = true;
+//                for (int i = 0; i < 40; i++) {
+//                    testEnv.doTick(3);
+//                    testNothingEnv.doTick(3);
+//                    testEnv.getUnit(unit.id)->action.shoot = false;
+//                }
+//                if (testEnv.score[0] > testNothingEnv.score[0]) {
+//                    action.shoot = true;
+//                }
+//            }
+//        }
 
 //        auto reachable = pathFinder.getReachableForDraw();
 //        for (auto& p : reachable) {

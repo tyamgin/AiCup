@@ -1,14 +1,21 @@
 #ifndef CODESIDE_CONSTANTS_H
 #define CODESIDE_CONSTANTS_H
 
+#define M_MICROTICK_IS_TICK 1
 #define M_NO_SPREAD 0
 
+#if M_MICROTICK_IS_TICK
+constexpr const int MAX_TICK_COUNT = 360000;
+constexpr const double TICKS_PER_SECOND = 6000;
+constexpr const int UPDATES_PER_TICK = 1;
+#else
 constexpr const int MAX_TICK_COUNT = 3600;
 constexpr const double TICKS_PER_SECOND = 60;
 constexpr const int UPDATES_PER_TICK = 100;
+#endif
 constexpr const double LOOT_BOX_SIZE = 0.5;
-constexpr const double UNIT_SIZE_X = 0.9;
-constexpr const double UNIT_SIZE_Y = 1.8;
+constexpr const double UNIT_WIDTH = 0.9;
+constexpr const double UNIT_HEIGHT = 1.8;
 constexpr const double UNIT_MAX_HORIZONTAL_SPEED = 10;
 constexpr const double UNIT_FALL_SPEED = 10;
 constexpr const double UNIT_JUMP_TIME = 0.55;
@@ -91,8 +98,8 @@ constexpr const double WEAPON_MIN_SPREAD[6] = {
         0, 0, 0
 };
 
-constexpr const double UNIT_HALF_WIDTH = UNIT_SIZE_X / 2;
-constexpr const double UNIT_HALF_HEIGHT = UNIT_SIZE_Y / 2;
+constexpr const double UNIT_HALF_WIDTH = UNIT_WIDTH / 2;
+constexpr const double UNIT_HALF_HEIGHT = UNIT_HEIGHT / 2;
 
 
 constexpr const double WEAPON_RELOAD_TIME = 1;

@@ -33,8 +33,8 @@ void debugCheckGameParams(const Game& game, bool print) {
     PRINT_GAME_PROP(int, UPDATES_PER_TICK, updatesPerTick);
     PRINT_GAME_PROP(double, LOOT_BOX_SIZE, lootBoxSize.x);
     PRINT_GAME_PROP(double, LOOT_BOX_SIZE, lootBoxSize.y);
-    PRINT_GAME_PROP(double, UNIT_SIZE_X, unitSize.x);
-    PRINT_GAME_PROP(double, UNIT_SIZE_Y, unitSize.y);
+    PRINT_GAME_PROP(double, UNIT_WIDTH, unitSize.x);
+    PRINT_GAME_PROP(double, UNIT_HEIGHT, unitSize.y);
     PRINT_GAME_PROP(double, UNIT_MAX_HORIZONTAL_SPEED, unitMaxHorizontalSpeed);
     PRINT_GAME_PROP(double, UNIT_FALL_SPEED, unitFallSpeed);
     PRINT_GAME_PROP(double, UNIT_JUMP_TIME, unitJumpTime);
