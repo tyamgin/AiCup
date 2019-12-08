@@ -34,6 +34,10 @@ public:
     int damage() const {
         return WEAPON_DAMAGE[(int) weaponType];
     }
+
+    int playerId() const {
+        return TLevel::unitIdToPlayerId[unitId];
+    }
 };
 
 #endif //CODESIDE_BULLET_H

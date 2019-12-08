@@ -282,9 +282,12 @@ private:
         }
         if (bullet.weaponType == ELootType::ROCKET_LAUNCHER) {
             for (auto& unit : units) {
-                if (unit.intersectsWith(bullet.x1, bullet.y1, bullet.x2, bullet.y2)) {
+                double d = ROCKET_LAUNCHER_EXPLOSION_RADIUS - ROCKET_LAUNCHER_BULLET_SIZE/2;
+                if (unit.intersectsWith(bullet.x1 - d, bullet.y1 - d, bullet.x2 + d, bullet.y2 + d)) {
                     unit.health -= bullet.damage();
-                    score[unit.playerId == TLevel::myId] += bullet.damage();
+                    if (bullet.playerId() != unit.playerId) {
+                        score[unit.playerId == TLevel::myId] += bullet.damage();
+                    }
                 }
             }
         }

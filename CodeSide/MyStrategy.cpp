@@ -106,5 +106,6 @@ int TLevel::width = 0;
 int TLevel::height = 0;
 std::vector<std::vector<ETile>> TLevel::tiles;
 int TLevel::myId = 0;
+std::vector<int> TLevel::unitIdToPlayerId;
 
 std::shared_ptr<Debug> TDrawUtil::debug;

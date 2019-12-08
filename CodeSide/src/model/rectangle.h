@@ -36,8 +36,8 @@ public:
     }
 
     bool intersectsWith(double rx1, double ry1, double rx2, double ry2) const {
-        return (isIn(x1, x2, rx1) || isIn(x1, x2, rx2)) &&
-               (isIn(y1, y2, ry1) || isIn(y1, y2, ry2));
+        return (isIn(x1, x2, rx1) || isIn(x1, x2, rx2) || isIn(rx1, rx2, x1)) &&
+               (isIn(y1, y2, ry1) || isIn(y1, y2, ry2) || isIn(ry1, ry2, y1));
     }
 
     TPoint center() const {

@@ -221,7 +221,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 19) {
+        if (env.currentTick == 202) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -242,7 +242,7 @@ public:
             notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
             notDodgeEnv.doTick();
         }
-        int bestScore = notDodgeEnv.score[1];
+        int bestScore = notDodgeEnv.getUnit(unit.id)->health;
         std::vector<TPoint> bestPath;
 
         for (int dirX = -1; dirX <= 1; dirX++) {
@@ -260,8 +260,8 @@ public:
                     dodgeEnv.doTick();
                     path.push_back(dodgeEnv.getUnit(unit.id)->position());
                 }
-                if (dodgeEnv.score[1] < bestScore) {
-                    bestScore = dodgeEnv.score[1];
+                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
+                    bestScore = dodgeEnv.getUnit(unit.id)->health;
                     bestPath = path;
                     action = act;
                 }
