@@ -10,8 +10,6 @@
 #include <algorithm>
 #include <cassert>
 
-// TODO: weapon priority
-
 class Strategy {
     TSandbox prevEnv, prevEnv2, env;
     TPathFinder pathFinder;
@@ -153,9 +151,9 @@ class Strategy {
     }
 
     std::unordered_map<ELootType, int> weaponPriority = {
-            {ELootType::ASSAULT_RIFLE, 0},
-            {ELootType::ROCKET_LAUNCHER, 1},
-            {ELootType::PISTOL, 2},
+            {ELootType::PISTOL, 0},
+            {ELootType::ASSAULT_RIFLE, 1},
+            {ELootType::ROCKET_LAUNCHER, 2},
             {ELootType::NONE, 3},
     };
 
