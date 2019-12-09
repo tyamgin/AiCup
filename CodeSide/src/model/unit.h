@@ -123,9 +123,8 @@ public:
     }
 
     bool approxIdValid(double dx = 0, double dy = 0) const {
-        const double px = 0;//1 / 6.0;
-        for (int i = int(x1 + dx - px); i <= int(x2 + dx + px); i++) {
-            for (int j = int(y1 + dy); j <= int(y2 + dy + px); j++) {
+        for (int i = int(x1 + dx); i <= int(x2 + dx); i++) {
+            for (int j = int(y1 + dy); j <= int(y2 + dy); j++) {
                 if (getTile(i, j) == ETile::WALL) {
                     return false;
                 }
@@ -134,12 +133,23 @@ public:
         return true;
     }
 
+    bool isTouchJumpPad(double dx = 0, double dy = 0) const {
+        for (int i = int(x1 + dx); i <= int(x2 + dx); i++) {
+            for (int j = int(y1 + dy); j <= int(y2 + dy); j++) {
+                if (TLevel::tiles[i][j] == ETile::JUMP_PAD) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     bool approxIsStand() const {
         if (isOnLadder()) {
             return true;
         }
-        return (TLevel::getTileType(x1 + 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x1 + 1e-8, y1 - 1e-8) != ETile::EMPTY) ||
-               (TLevel::getTileType(x2 - 1e-8, y1) == ETile::EMPTY && TLevel::getTileType(x2 - 1e-8, y1 - 1e-8) != ETile::EMPTY);
+        return (TLevel::getTileType(x1 + 1e-8, y1) == ETile::EMPTY && tileMatch(TLevel::getTileType(x1 + 1e-8, y1 - 1e-8), ETile::WALL, ETile::PLATFORM)) ||
+               (TLevel::getTileType(x2 - 1e-8, y1) == ETile::EMPTY && tileMatch(TLevel::getTileType(x2 - 1e-8, y1 - 1e-8), ETile::WALL, ETile::PLATFORM));
     }
 
     bool approxIsStandGround(double dx = 0) const {
@@ -208,17 +218,6 @@ public:
             weapon.spread = WEAPON_MAX_SPREAD;
         }
         return res;
-    }
-
-    bool isTouchJumpPad() const {
-        for (int i = int(x1); i <= int(x2); i++) {
-            for (int j = int(y1); j <= int(y2); j++) {
-                if (TLevel::tiles[i][j] == ETile::JUMP_PAD) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     bool isPadFly() const {

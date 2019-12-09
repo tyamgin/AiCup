@@ -180,16 +180,16 @@ public:
                         if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(-1 / 6.0)) {
                             isBlockedMove[D_LEFT][D_CENTER][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(d/2, d/2)) {
+                        if (!unit.approxIdValid(d/2, d/2) || unit.isTouchJumpPad(d/2, d/2)) {
                             isBlockedMove[D_RIGHT][D_RIGHT][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(d/2, -d/2)) {
+                        if (!unit.approxIdValid(d/2, -d/2) || unit.isTouchJumpPad(d/2, -d/2)) {
                             isBlockedMove[D_RIGHT][D_LEFT][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(-d/2, d/2)) {
+                        if (!unit.approxIdValid(-d/2, d/2) || unit.isTouchJumpPad(-d/2, d/2)) {
                             isBlockedMove[D_LEFT][D_RIGHT][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(-d/2, -d/2)) {
+                        if (!unit.approxIdValid(-d/2, -d/2) || unit.isTouchJumpPad(-d/2, -d/2)) {
                             isBlockedMove[D_LEFT][D_LEFT][ii][jj] = true;
                         }
                     }
@@ -235,6 +235,7 @@ public:
         }
 
         bool qwe = false;
+        auto standFix = isStand[startState.x][startState.y] && !startUnit.isStand();
         for (auto s = selectedTargetState; !s.samePos(startState); s = prev[s.x][s.y]) {
             if (prev[s.x][s.y].x == -1) {
                 std::cerr << "Error state\n";
@@ -243,7 +244,7 @@ public:
             std::vector<TAction> acts;
             std::vector<TState> stts;
             auto beg = prev[s.x][s.y].samePos(startState);
-            if (!_getCellGoesTrace(prev[s.x][s.y], s, beg, startUnit.isStand(), startUnit.isPadFly(), acts, stts)) {
+            if (!_getCellGoesTrace(prev[s.x][s.y], s, beg, standFix, startUnit.isPadFly(), acts, stts)) {
                 qwe = true;
                 //break;
             }
@@ -261,7 +262,7 @@ public:
         bool fall = isStand[startState.x][startState.y] && !startUnit.approxIsStand();
         if (resAct.size()) {
             fall |= isStand[startState.x][startState.y] && !startUnit.canJump && resAct.back().jump;
-            fall |= isStand[startState.x][startState.y] && !startUnit.isStand() && resAct.back().jump;
+            fall |= standFix && resAct.back().jump;
         }
 
 
@@ -367,7 +368,7 @@ private:
         return res;
     }
 
-    bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool stand, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
+    bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool standFix, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
         if (!isTouchPad[state.x][state.y]) {
             for (int xDirection = -1; xDirection <= 1; xDirection++) {
                 auto stx = state;
@@ -409,7 +410,7 @@ private:
         dfsTraceStateResult.clear();
         dfsTraceTarget = end;
         auto pd = isTouchPad[state.x][state.y] || (pad && beg);
-        if (!_dfsTrace({state.x, state.y, beg && stand ? state.timeLeft : (pd ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT), pd})) {
+        if (!_dfsTrace({state.x, state.y, beg && !standFix ? state.timeLeft : (pd ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT), pd})) {
             std::cerr << "Error trace dfs\n";
             return false;
         }
