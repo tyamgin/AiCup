@@ -256,12 +256,13 @@ public:
         TUnit unit(_unit);
         env = TSandbox(unit, game);
         TDrawUtil().drawMinesRadius(env);
+        TDrawUtil().drawUnits(env);
         if (env.currentTick == 0) {
             TPathFinder::initMap();
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 140) {
+        if (env.currentTick == 42) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {

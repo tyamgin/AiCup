@@ -35,7 +35,6 @@ constexpr const int MINE_EXPLOSION_DAMAGE = 50;
 constexpr const int PISTOL_MAGAZINE_SIZE = 8;
 constexpr const double PISTOL_FIRE_RATE = 0.4;
 constexpr const double PISTOL_RELOAD_TIME = 1;
-
 constexpr const double PISTOL_RECOIL = 0.5;
 constexpr const double PISTOL_AIM_SPEED = 1;
 constexpr const double PISTOL_BULLET_SPEED = 50;

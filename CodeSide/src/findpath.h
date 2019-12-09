@@ -242,7 +242,8 @@ public:
             }
             std::vector<TAction> acts;
             std::vector<TState> stts;
-            if (!_getCellGoesTrace(prev[s.x][s.y], s, prev[s.x][s.y].samePos(startState), startUnit.isPadFly(), acts, stts)) {
+            auto beg = prev[s.x][s.y].samePos(startState);
+            if (!_getCellGoesTrace(prev[s.x][s.y], s, beg, startUnit.isStand(), startUnit.isPadFly(), acts, stts)) {
                 qwe = true;
                 //break;
             }
@@ -260,7 +261,10 @@ public:
         bool fall = isStand[startState.x][startState.y] && !startUnit.approxIsStand();
         if (resAct.size()) {
             fall |= isStand[startState.x][startState.y] && !startUnit.canJump && resAct.back().jump;
+            fall |= isStand[startState.x][startState.y] && !startUnit.isStand() && resAct.back().jump;
         }
+
+
         if (std::abs(dx) > 1e-10 || fall) {
             firstAction.jump = (startUnit.y1 - (int)startUnit.y1 > 0.5);
             resAct.push_back(firstAction);
@@ -363,7 +367,7 @@ private:
         return res;
     }
 
-    bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
+    bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool stand, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
         if (!isTouchPad[state.x][state.y]) {
             for (int xDirection = -1; xDirection <= 1; xDirection++) {
                 auto stx = state;
@@ -405,7 +409,7 @@ private:
         dfsTraceStateResult.clear();
         dfsTraceTarget = end;
         auto pd = isTouchPad[state.x][state.y] || (pad && beg);
-        if (!_dfsTrace({state.x, state.y, beg ? state.timeLeft : (pd ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT), pd})) {
+        if (!_dfsTrace({state.x, state.y, beg && stand ? state.timeLeft : (pd ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT), pd})) {
             std::cerr << "Error trace dfs\n";
             return false;
         }

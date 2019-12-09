@@ -224,6 +224,10 @@ public:
     bool isPadFly() const {
         return canJump && !jumpCanCancel;
     }
+
+    bool isStand() const {
+        return canJump && jumpMaxTime >= UNIT_JUMP_TIME - 1e-10;
+    }
 };
 
 

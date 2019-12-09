@@ -76,6 +76,26 @@ public:
         }
 #endif
     }
+
+    void drawUnits(const TSandbox& env) {
+#ifdef DEBUG
+        for (const auto& unit : env.units) {
+            if (unit.weapon.type == ELootType::NONE) {
+                continue;
+            }
+            auto center = unit.center();
+            auto x = float(center.x);
+            debug->draw(CustomData::PlacedText(std::to_string(unit.weapon.magazine),
+                                               Vec2Float{x, float(center.y + 0.4)}, TextAlignment::CENTER, 24,
+                                               ColorFloat(0, 0, 1, 1)));
+            if (unit.weapon.fireTimer > -0.5) {
+                debug->draw(CustomData::PlacedText(std::to_string(unit.weapon.fireTimer * TICKS_PER_SECOND).substr(0, 3),
+                                                   Vec2Float{x, float(center.y - 0.4)}, TextAlignment::CENTER, 24,
+                                                   ColorFloat(1, 0, 0, 1)));
+            }
+        }
+#endif
+    }
 };
 
 #endif //CODESIDE_DRAW_H
