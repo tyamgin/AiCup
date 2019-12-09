@@ -1,11 +1,7 @@
 {
   "options_preset": {
     "Custom": {
-      "level": {
-        "LoadFrom": {
-          "path": "levels/pad.txt"
-        }
-      },
+      "level": "Simple",
       "properties": null
     }
   },
@@ -20,8 +16,14 @@
       }
     },
     {
-      "Quickstart": null
+      "Tcp": {
+        "host": null,
+        "port": 31002,
+        "accept_timeout": null,
+        "timeout": null,
+        "token": null
+      }
     }
   ],
-  "seed": 38
+  "seed": 7
 }

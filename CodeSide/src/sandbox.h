@@ -28,7 +28,6 @@ public:
 
     TSandbox(const TUnit& unit, const Game& game) {
         currentTick = game.currentTick;
-        int maxUnitId = 0;
         for (const Unit& u : game.units) {
             units.emplace_back(u);
         }
@@ -317,7 +316,6 @@ private:
                 unit.canJump = true;
                 unit.jumpMaxTime = JUMP_PAD_JUMP_TIME;
             }
-            endPadLoop:;
         }
 
         _updateBullets(updatesPerSecond, true);

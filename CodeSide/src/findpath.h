@@ -218,23 +218,24 @@ public:
         for (int dx = -7; dx <= 7; dx++) {
             for (int dy = -7; dy <= 7; dy++) {
                 if (targetState.x + dx > 0 && targetState.x + dx < SZ && targetState.y + dy > 0 && targetState.y + dy < SZ) {
-                    std::pair<int, double> cand(std::abs(dx) + std::abs(dy), dist[targetState.x + dx][targetState.y + dy]);
-                    if (cand < minDist) {
-                        minDist = cand;
-                        selectedTargetState.x = targetState.x + dx;
-                        selectedTargetState.y = targetState.y + dy;
+                    auto d = dist[targetState.x + dx][targetState.y + dy];
+                    if (d < INF/2) {
+                        std::pair<int, double> cand(std::abs(dx) + std::abs(dy), d);
+                        if (cand < minDist) {
+                            minDist = cand;
+                            selectedTargetState.x = targetState.x + dx;
+                            selectedTargetState.y = targetState.y + dy;
+                        }
                     }
                 }
             }
         }
-        std::cout << minDist.first << " " << minDist.second << std::endl;
         if (minDist.second >= INF) {
             return false;
         }
 
         bool qwe = false;
         for (auto s = selectedTargetState; !s.samePos(startState); s = prev[s.x][s.y]) {
-            if (env->currentTick == 96) std::cout << s.x << " " << s.y << std::endl;
             if (prev[s.x][s.y].x == -1) {
                 std::cerr << "Error state\n";
                 break;
@@ -313,7 +314,7 @@ private:
 
     TState _getPointState(const TPoint& point) {
         TState res;
-        res.x = int(point.x / (1.0 / 6) + 1e-8);
+        res.x = int((point.x + (0.5 / 6)) / (1.0 / 6));
         res.y = int((point.y + 1 / 60.0) / (1.0 / 6) + 1e-8);
         return res;
     }

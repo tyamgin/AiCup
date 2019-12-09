@@ -49,12 +49,12 @@ int main(int argc, char *argv[]) {
   std::cerr << "Starting local runner" << std::endl;
 
   std::string runStr = "/Users/tyamgin/Projects/AiCup/CodeSide/local-runner/aicup2019";
-  std::string prevBin = "m65";
+  std::string prevBin = "v2.1";
   system((runStr + " --config config.json &").c_str());
   std::cerr << "local runner started" << std::endl;
 
   usleep(2000 * 1000);
-  //system(("/Users/tyamgin/Projects/AiCup/CodeBall/release/" + prevBin + " 127.0.0.1 31002 0000000000000000 &").c_str());
+  system(("/Users/tyamgin/Projects/AiCup/CodeSide/release/" + prevBin + " 127.0.0.1 31002 0000000000000000 > /dev/null 2>&1 &").c_str());
 #endif
 
   std::string host = argc < 2 ? "127.0.0.1" : argv[1];

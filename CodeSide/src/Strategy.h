@@ -190,10 +190,10 @@ class Strategy {
         std::vector<TPoint> pathPoints;
         std::vector<TAction> actions;
 
-//        auto reachable = pathFinder.getReachableForDraw();
-//        for (auto& p : reachable) {
-//            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
-//        }
+        auto reachable = pathFinder.getReachableForDraw();
+        for (auto& p : reachable) {
+            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+        }
 //
 //        if (pathFinder.findPath(TPoint(30, 1), pathPoints, actions) && actions.size() > 0) {
 //            TDrawUtil().drawPath(pathPoints);
@@ -261,7 +261,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 97) {
+        if (env.currentTick == 140) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
