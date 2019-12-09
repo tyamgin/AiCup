@@ -190,15 +190,15 @@ class Strategy {
         std::vector<TPoint> pathPoints;
         std::vector<TAction> actions;
 
-        auto reachable = pathFinder.getReachableForDraw();
-        for (auto& p : reachable) {
-            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
-        }
-
-        if (pathFinder.findPath(TPoint(30, 1), pathPoints, actions) && actions.size() > 0) {
-            TDrawUtil().drawPath(pathPoints);
-            return actions;
-        }
+//        auto reachable = pathFinder.getReachableForDraw();
+//        for (auto& p : reachable) {
+//            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+//        }
+//
+//        if (pathFinder.findPath(TPoint(30, 1), pathPoints, actions) && actions.size() > 0) {
+//            TDrawUtil().drawPath(pathPoints);
+//            return actions;
+//        }
 
         if (unit.weapon.type == ELootType::NONE) {
             auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ROCKET_LAUNCHER, ELootType::ASSAULT_RIFLE});
