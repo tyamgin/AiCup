@@ -98,7 +98,7 @@ UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debu
     if (game.currentTick <= 1) {
         debugCheckGameParams(game, false);
     }
-    printf("t=%d y1=%.13f loots=%d\n", game.currentTick, unit.position.y, (int)game.lootBoxes.size());
+    printf("t=%d y1=%.13f j=%.13f", game.currentTick, unit.position.y, unit.jumpState.maxTime);
     return strategy.getAction(unit, game, debug);
 }
 

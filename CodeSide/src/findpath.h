@@ -42,6 +42,9 @@ struct TState {
 #define D_CENTER 1
 #define D_RIGHT 2
 
+const int JUMP_TICKS_COUNT = 33;
+const int JUMP_PAD_TICKS_COUNT = 31; // 31.5 actually
+
 bool isStand[SZ][SZ];
 bool isValid[SZ][SZ];
 bool isBound[SZ][SZ];
@@ -49,7 +52,7 @@ bool isOnLadder[SZ][SZ];
 bool isBlockedMove[3][3][SZ][SZ];
 bool isTouchPad[SZ][SZ];
 
-using TDfsGoesResult = std::vector<TState>;
+using TDfsGoesResult = std::vector<std::pair<TState, double>>;
 std::map<TState, TDfsGoesResult> dfsGoesCache;
 static bool _drawMode;
 std::set<TState> dfsVisitedStates;
@@ -66,33 +69,30 @@ class TPathFinder {
     std::vector<std::vector<double>> dist, penalty;
     std::vector<std::vector<TState>> prev;
 
-    static std::vector<TState> _getCellGoesDfs(const TState& state) {
-        std::vector<TState> res;
-//        if (!state.pad && isTouchPad[state.x][state.y]) {
-//            res.push_back({state.x, state.y, 33, true});
-//            return res;
-//        }
+    static TDfsGoesResult _getCellGoesDfs(const TState& state) {
+        TDfsGoesResult res;
+        const auto dy = 1 + state.pad;
         for (int xDirection = -1; xDirection <= 1; xDirection++) {
-            if (isValid[state.x + xDirection][state.y + 1]) {
+            if (isValid[state.x + xDirection][state.y + dy]) {
                 if (isBlockedMove[xDirection + D_CENTER][D_CENTER + 1][state.x][state.y]) {
                     continue;
                 }
-                TState next = {state.x + xDirection, state.y + 1 + state.pad, state.timeLeft - 1, state.pad};
+                TState next = {state.x + xDirection, state.y + dy, state.timeLeft - 1, state.pad};
                 if (isTouchPad[next.x][next.y]) {
-                    next.timeLeft = 33;
+                    next.timeLeft = JUMP_PAD_TICKS_COUNT;
                     next.pad = true;
                 }
-                res.push_back(next);
+                res.emplace_back(next, dy);
             }
         }
         return res;
     }
 
-    static void _dfs(TState state) {
+    static void _dfs(TState state, double dist) {
         dfsVisitedStates.insert(state);
         if (dfsStartMode || isBound[state.x][state.y] || state.pad) {
             if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y]) {
-                dfsResultBorderPoints.emplace_back(state);
+                dfsResultBorderPoints.emplace_back(state, dist);
                 if (_drawMode) {
                     TDrawUtil().debugPoint(state.getPoint());
                 }
@@ -101,9 +101,9 @@ class TPathFinder {
         if (state.timeLeft == 0 || (state.pad && isOnLadder[state.x][state.y])) {
             return;
         }
-        for (const auto& to : _getCellGoesDfs(state)) {
+        for (const auto& [to, w] : _getCellGoesDfs(state)) {
             if (!dfsVisitedStates.count(to)) {
-                _dfs(to);
+                _dfs(to, dist + w);
             }
         }
     }
@@ -111,12 +111,14 @@ class TPathFinder {
     static bool _dfsTrace(TState state) {
         dfsVisitedStates.insert(state);
         if (dfsTraceTarget.samePos(state)) {
-            return true;
+            if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y]) {
+                return true;
+            }
         }
         if (state.timeLeft == 0) {
             return false;
         }
-        for (const auto& to : _getCellGoesDfs(state)) {
+        for (const auto& [to, w] : _getCellGoesDfs(state)) {
             if (!dfsVisitedStates.count(to) && _dfsTrace(to)) {
                 TAction action;
                 action.velocity = (to.x - state.x) * UNIT_MAX_HORIZONTAL_SPEED;
@@ -141,7 +143,7 @@ class TPathFinder {
 
         dfsVisitedStates.clear();
         dfsResultBorderPoints.clear();
-        _dfs(state);
+        _dfs(state, 0);
         if (!startMode) {
             dfsGoesCache[state] = dfsResultBorderPoints;
         }
@@ -318,7 +320,7 @@ private:
 
     TState _getUnitState(const TUnit& unit) {
         TState res = _getPointState(TPoint(unit.x1 + UNIT_HALF_WIDTH, unit.y1));
-        res.timeLeft = int(unit.jumpMaxTime * 60);
+        res.timeLeft = int(unit.jumpMaxTime * 60 + 1e-10);
         res.pad = unit.isPadFly();
         return res;
     }
@@ -350,9 +352,10 @@ private:
         }
         // прыгать
         if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
-            auto jumpGoes = _getJumpGoes({state.x, state.y, 33, isTouchPad[state.x][state.y]}, false);
-            for (auto& j : jumpGoes) {
-                res.emplace_back(TState{j.x, j.y, 0}, j.y - state.y + 0.0);
+            auto pad = isTouchPad[state.x][state.y];
+            auto jumpGoes = _getJumpGoes({state.x, state.y, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, false);
+            for (auto& [j, dist] : jumpGoes) {
+                res.emplace_back(TState{j.x, j.y, 0}, dist);
             }
         }
 
@@ -400,7 +403,8 @@ private:
         dfsTraceActResult.clear();
         dfsTraceStateResult.clear();
         dfsTraceTarget = end;
-        if (!_dfsTrace({state.x, state.y, beg ? state.timeLeft : 33, isTouchPad[state.x][state.y] || (pad && beg)})) {
+        auto pd = isTouchPad[state.x][state.y] || (pad && beg);
+        if (!_dfsTrace({state.x, state.y, beg ? state.timeLeft : (pd ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT), pd})) {
             std::cerr << "Error trace dfs\n";
             return false;
         }
@@ -437,8 +441,7 @@ private:
 
         std::priority_queue<std::pair<double, TState>> q;
         _drawMode = env->currentTick == 96;
-        for (const auto& s : _getJumpGoes(startState, true)) {
-            double dst = std::abs(s.y - startState.y);
+        for (const auto& [s, dst] : _getJumpGoes(startState, true)) {
             q.push(std::make_pair(-dst, s));
             dist[s.x][s.y] = dst;
             prev[s.x][s.y] = startState;
@@ -460,6 +463,7 @@ private:
                     q.push(std::make_pair(-dist[to.x][to.y], to));
                 }
             }
+            continue;
         }
     }
 };
