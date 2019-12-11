@@ -21,6 +21,7 @@ public:
     std::vector<TMine> mines;
     std::vector<TLootBox> lootBoxes;
     std::shared_ptr<std::vector<std::vector<unsigned>>> lootBoxIndex;
+    bool oppShotSimpleStrategy = false;
 
     TSandbox() {
         currentTick = -1;
@@ -60,10 +61,17 @@ public:
         mines = sandbox.mines;
         lootBoxes = sandbox.lootBoxes;
         lootBoxIndex = sandbox.lootBoxIndex;
+        oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
     }
 
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
+        for (auto& unit : units) {
+            if (unit.playerId != TLevel::myId) {
+                _applyOppStrategy(unit);
+            }
+        }
+
         std::vector<bool> swapWeaponBackup;
         for (auto& unit : units) {
             while (swapWeaponBackup.size() <= unit.id) {
@@ -106,6 +114,26 @@ public:
     }
 
 private:
+    void _applyOppStrategy(TUnit& opp) {
+        if (oppShotSimpleStrategy) {
+            TUnit* target = nullptr;
+            double minDist2 = INT_MAX;
+            for (auto &my : units) {
+                if (my.playerId != TLevel::myId) {
+                    continue;
+                }
+                if (target == nullptr || opp.center().getDistanceTo2(my.center()) < minDist2) {
+                    minDist2 = opp.center().getDistanceTo2(my.center());
+                    target = &my;
+                }
+            }
+            if (target != nullptr) {
+                opp.action.shoot = true;
+                opp.action.aim = target->center() - opp.center();
+            }
+        }
+    }
+
     void _blowUpMine(const TMine& mine) {
         for (auto& unit : units) {
             if (mine.isTouch(unit)) {

@@ -446,7 +446,6 @@ private:
         }
 
         std::priority_queue<std::pair<double, TState>> q;
-        _drawMode = env->currentTick == 96;
         for (const auto& [s, dst] : _getJumpGoes(startState, true)) {
             q.push(std::make_pair(-dst, s));
             dist[s.x][s.y] = dst;

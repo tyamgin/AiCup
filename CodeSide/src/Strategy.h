@@ -10,6 +10,18 @@
 #include <algorithm>
 #include <cassert>
 
+/**
+ * - пошел за аптечкой напролом через противника, не прошел, проиграл
+ * - поменял оружие в бою, проиграл из-за перезарядки
+ * - собрал все аптечки, не осталось аптечки соперницу, выиграл
+ * - собрал аптечку с минимумом урона, проиграл, т.к. у соперника аптечка осталась
+ * - не перезаряжаюсь, когда возможно
+ * - не учитывается падение соперника при прицеливании
+ * - пп от соперника и отклонения с учетом этого
+ * - урон от ракеты суммируется => вплотную против неё лучше не становиться
+ *
+ */
+
 class Strategy {
     TSandbox prevEnv, prevEnv2, env;
     TPathFinder pathFinder;
@@ -190,10 +202,10 @@ class Strategy {
         std::vector<TPoint> pathPoints;
         std::vector<TAction> actions;
 
-        auto reachable = pathFinder.getReachableForDraw();
-        for (auto& p : reachable) {
-            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
-        }
+//        auto reachable = pathFinder.getReachableForDraw();
+//        for (auto& p : reachable) {
+//            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+//        }
 //
 //        if (pathFinder.findPath(TPoint(30, 1), pathPoints, actions) && actions.size() > 0) {
 //            TDrawUtil().drawPath(pathPoints);
@@ -252,6 +264,7 @@ class Strategy {
 
 public:
     UnitAction getAction(const Unit& _unit, const Game& game, Debug& debug) {
+        //return TAction().toUnitAction();
         TDrawUtil().drawGrid();
         TUnit unit(_unit);
         env = TSandbox(unit, game);
@@ -276,39 +289,50 @@ public:
 
         auto maybeActions = _strategy(unit);
         auto actions = maybeActions ? maybeActions.value() : std::vector<TAction>();
-        TAction action = actions.size() > 0 ? actions[0] : TAction();
 
         TSandbox notDodgeEnv = env;
+        //notDodgeEnv.oppShotSimpleStrategy = true;
         for (int i = 0; i < 40; i++) {
             notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
             notDodgeEnv.doTick();
         }
         int bestScore = notDodgeEnv.getUnit(unit.id)->health;
-        std::vector<TPoint> bestPath;
+        if (isUnitsCollides(notDodgeEnv)) {
+            bestScore -= 200;
+        }
+        std::optional<std::vector<TPoint>> bestPath;
 
         for (int dirX = -1; dirX <= 1; dirX++) {
             for (int dirY = -1; dirY <= 1; dirY += 2) {
                 TSandbox dodgeEnv = env;
+                //dodgeEnv.oppShotSimpleStrategy = true;
                 std::vector<TPoint> path;
                 TAction act;
                 if (dirY > 0)
                     act.jump = true;
-                else
+                else if (dirY < 0)
                     act.jumpDown = true;
                 act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
-                for (int i = 0; i < 40; i++) {
+                const int simulateTicks = 40;
+                bool ok = true;
+                for (int i = 0; i < simulateTicks; i++) {
                     dodgeEnv.getUnit(unit.id)->action = act;
                     dodgeEnv.doTick();
                     path.push_back(dodgeEnv.getUnit(unit.id)->position());
+                    ok &= !isUnitsCollides(dodgeEnv);
                 }
-                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
+                if (ok && dodgeEnv.getUnit(unit.id)->health > bestScore) {
                     bestScore = dodgeEnv.getUnit(unit.id)->health;
                     bestPath = path;
-                    action = act;
+                    actions = std::vector<TAction>(simulateTicks, act);
                 }
             }
         }
-        TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
+        if (bestPath) {
+            TDrawUtil().drawPath(bestPath.value(), ColorFloat(1, 0, 0, 1));
+        }
+
+        TAction action = actions.size() > 0 ? actions[0] : TAction();
 
         auto lb = env.findLootBox(unit);
         if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
@@ -317,23 +341,22 @@ public:
             }
         }
 
-
         TUnit* target = nullptr;
         for (auto& u : env.units) {
             if (u.playerId != unit.playerId) {
                 target = &u;
             }
         }
-        if (target != nullptr) {
-            action.aim = target->center() - unit.center();
+        if (target != nullptr && unit.weapon.type != ELootType::NONE) {
+            action.aim = calcAim(unit, *target, actions);
             if (unit.weapon.fireTimer < -0.5) {
                 auto testEnv = env;
                 auto testNothingEnv = env;
                 testEnv.getUnit(unit.id)->action = action;
                 testEnv.getUnit(unit.id)->action.shoot = true;
                 for (int i = 0; i < 40; i++) {
-                    testEnv.doTick(3);
-                    testNothingEnv.doTick(3);
+                    testEnv.doTick(4);
+                    testNothingEnv.doTick(4);
                     testEnv.getUnit(unit.id)->action.shoot = false;
                 }
                 if (testEnv.score[0] > testNothingEnv.score[0]) {
@@ -350,6 +373,72 @@ public:
         }
         prevEnv = env;
         return action.toUnitAction();
+    }
+
+    TPoint calcAim(const TUnit& unit, const TUnit& target, const std::vector<TAction>& actions) {
+        return target.center() - unit.center(); // TODO
+
+        auto midAngle = unit.center().getAngleTo(target.center());
+        double L = -M_PI / 4, R = M_PI / 4;
+        for (int it = 0; it < 50; it++) {
+            double m1 = L + (R - L) / 3, m2 = R - (R - L) / 3;
+            if (_calcAimDist(unit, target, midAngle + m1, actions) < _calcAimDist(unit, target, midAngle + m2, actions)) {
+                R = m2;
+            } else {
+                L = m1;
+            }
+        }
+        double aimAngle = (L + R) / 2 + midAngle;
+        return TPoint::byAngle(aimAngle);
+    }
+
+    double _calcAimDist(const TUnit& unit, const TUnit& target, double aimAngle, const std::vector<TAction>& actions) {
+        TSandbox snd = env;
+        snd.bullets.clear();
+        auto aim = TPoint::byAngle(aimAngle);
+        double minDist2 = unit.center().getDistanceTo2(target.center());
+        bool shot = true;
+        for (int i = 0; i < 60; i++) {
+            auto u = snd.getUnit(unit.id);
+            u->action = i < actions.size() ? actions[i] : TAction();
+            u->action.aim = aim;
+            u->action.shoot = shot;
+            snd.doTick(4);
+            auto tar = snd.getUnit(target.id)->center();
+            for (const auto& b : snd.bullets) {
+                if (b.unitId == unit.id) {
+                    minDist2 = std::min(minDist2, b.center().getDistanceTo2(tar));
+                    //if (env.currentTick == 172) {
+                    //    TDrawUtil().debugPoint(b.center());
+                    //}
+                    shot = false;
+                }
+            }
+            for (const auto& t : snd.units) {
+                //if (env.currentTick == 172) {
+                //    TDrawUtil().debugPoint(t.center(), ColorFloat(0, 0, 1, 1));
+                //}
+            }
+        }
+        return sqrt(minDist2);
+    }
+
+    bool isUnitsCollides(const TSandbox& env) {
+        return false;
+
+        for (int i = 0; i < (int) env.units.size(); i++) {
+            for (int j = 0; j < i; j++) {
+                const auto& a = env.units[i];
+                const auto& b = env.units[j];
+                if (a.playerId == b.playerId) {
+                    continue;
+                }
+                if (a.intersectsWith(b)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 };
 
