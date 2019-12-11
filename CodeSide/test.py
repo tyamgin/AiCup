@@ -47,6 +47,8 @@ def worker(args):
     else:
         level_config = {"LoadFrom": {"path": level}}
 
+    swap = idx % 2
+
     config = {
         "options_preset": {
             "Custom": {
@@ -72,12 +74,12 @@ def worker(args):
     try:
         with subprocess.Popen(f"{lr_bin} --config {config_path} --save-results {result_path} --batch-mode --log-level warn".split(" ")) as process:
             time.sleep(0.5)
-            subprocess.Popen([p1, "127.0.0.1", str(port1), "0000000000000000"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.Popen([p2, "127.0.0.1", str(port2), "0000000000000000"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen([p2 if swap else p1, "127.0.0.1", str(port1), "0000000000000000"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.Popen([p1 if swap else p2, "127.0.0.1", str(port2), "0000000000000000"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             process.wait()
             with open(result_path) as result_inp:
                 result = json.load(result_inp)
-                log.info("game with seed=%d results: %d - %d", seed, result["results"][0], result["results"][1])
+                log.info("game with seed=%d results: %d - %d", seed, result["results"][swap], result["results"][1 - swap])
                 #print(" - ".join([("CRASHERD " if result["players"][i]["crashed"] else "") + str(result["results"][i]) for i in range(2)]))
     except Exception:
         log.error(traceback.format_exc())

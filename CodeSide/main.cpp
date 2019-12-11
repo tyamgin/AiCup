@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   std::cerr << "Starting local runner" << std::endl;
 
   std::string runStr = "/Users/tyamgin/Projects/AiCup/CodeSide/local-runner/aicup2019";
-  std::string prevBin = "v2.1";
+  std::string prevBin = "v4";
   system((runStr + " --config config.json &").c_str());
   std::cerr << "local runner started" << std::endl;
 
