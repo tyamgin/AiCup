@@ -232,6 +232,32 @@ class Strategy {
             }
         }
 
+        if (target != nullptr && unit.weapon.fireTimer > 0.5) {
+//            if (unit.health < UNIT_MAX_HEALTH) {
+//                auto maybeAct = _strategyLoot(unit, {ELootType::HEALTH_PACK});
+//                if (maybeAct) {
+//                    return maybeAct;
+//                }
+//            }
+
+            double minDist = INF;
+            TPoint selectedPoint;
+            pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
+                auto dist2ToTarget = unit.center().getDistanceTo2(target->center());
+                if (dist < minDist && isIn(SQR(10), SQR(14), dist2ToTarget)) {
+                    minDist = dist;
+                    selectedPoint = unit.position();
+                }
+            });
+            if (minDist < 1e-9) {
+                return std::vector<TAction>(1, TAction());
+            }
+            if (minDist < INF && pathFinder.findPath(selectedPoint, pathPoints, actions) && actions.size() > 0) {
+                TDrawUtil().drawPath(pathPoints);
+                return actions;
+            }
+        }
+
         if (target != nullptr) {
             if (pathFinder.findPath(target->position(), pathPoints, actions) && actions.size() > 0) {
                 TDrawUtil().drawPath(pathPoints);
@@ -408,16 +434,8 @@ public:
             for (const auto& b : snd.bullets) {
                 if (b.unitId == unit.id) {
                     minDist2 = std::min(minDist2, b.center().getDistanceTo2(tar));
-                    //if (env.currentTick == 172) {
-                    //    TDrawUtil().debugPoint(b.center());
-                    //}
                     shot = false;
                 }
-            }
-            for (const auto& t : snd.units) {
-                //if (env.currentTick == 172) {
-                //    TDrawUtil().debugPoint(t.center(), ColorFloat(0, 0, 1, 1));
-                //}
             }
         }
         return sqrt(minDist2);
