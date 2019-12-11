@@ -107,6 +107,10 @@ struct TPoint {
     double getDistanceTo2(const TPoint& point) const {
         return SQR(x - point.x) + SQR(y - point.y);
     }
+
+    static TPoint byAngle(double angle) {
+        return TPoint(cos(angle), sin(angle));
+    }
 };
 
 struct TCell {

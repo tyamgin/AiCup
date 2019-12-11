@@ -29,11 +29,11 @@ public:
 #endif
     }
 
-    void debugPoint(const TPoint& point) {
+    void debugPoint(const TPoint& point, ColorFloat color = ColorFloat(1, 0, 0, 1)) {
 #ifdef DEBUG
         debug->draw(CustomData::Rect(Vec2Float{float(point.x), float(point.y)},
                                      Vec2Float{0.05, 0.05},
-                                     ColorFloat(1, 0, 0, 1)));
+                                     color));
 #endif
     }
 
