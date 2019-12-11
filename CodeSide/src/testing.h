@@ -132,4 +132,21 @@ TAction _mineTestStrategy2(const TUnit& unit, const TSandbox& env, Debug& debug)
     return action;
 }
 
+TAction _rocketTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
+    // requires seed=8140, empty map
+    TAction action;
+    if (env.currentTick < 7700 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+        action.swapWeapon = true;
+    } else if (env.currentTick < 20000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+        action.aim = TPoint(1, 0);
+    } else {
+        action.aim = TPoint(1, 0);
+        action.shoot = true;
+    }
+    return action;
+}
+
+
 #endif //CODESIDE_TESTING_H

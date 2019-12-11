@@ -56,8 +56,8 @@ constexpr const double ROCKET_LAUNCHER_AIM_SPEED = 1;
 constexpr const double ROCKET_LAUNCHER_BULLET_SPEED = 20;
 constexpr const double ROCKET_LAUNCHER_BULLET_SIZE = 0.4;
 constexpr const int ROCKET_LAUNCHER_BULLET_DAMAGE = 30;
-constexpr const double ROCKET_LAUNCHER_EXPLOSION_DAMAGE = 50;
-constexpr const int ROCKET_LAUNCHER_EXPLOSION_RADIUS = 3;
+constexpr const int ROCKET_LAUNCHER_EXPLOSION_DAMAGE = 50;
+constexpr const double ROCKET_LAUNCHER_EXPLOSION_RADIUS = 3;
 
 
 #if M_NO_SPREAD

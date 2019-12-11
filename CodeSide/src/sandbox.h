@@ -346,70 +346,56 @@ private:
             }
         }
 
-        _updateBullets(updatesPerSecond, true);
-        _updateBullets(updatesPerSecond, false);
-    }
-
-    void _updateBullets(double updatesPerSecond, bool checkUnitCollisionsOnly) {
         for (int i = 0; i < (int) bullets.size(); i++) {
             auto& bullet = bullets[i];
-            if (!checkUnitCollisionsOnly) {
-                auto dx = bullet.velocity.x / updatesPerSecond;
-                auto dy = bullet.velocity.y / updatesPerSecond;
-                bullet.x1 += dx;
-                bullet.x2 += dx;
-                bullet.y1 += dy;
-                bullet.y2 += dy;
+            if (_collideBulletAndUnits(bullet)) {
+                _applyRocketExplosionDamage(bullet);
+                bullets.erase(bullets.begin() + i);
+                i--;
             }
-            if (_bulletOut(bullet, checkUnitCollisionsOnly)) {
+        }
+
+        for (int i = 0; i < (int) bullets.size(); i++) {
+            auto& bullet = bullets[i];
+            auto dx = bullet.velocity.x / updatesPerSecond;
+            auto dy = bullet.velocity.y / updatesPerSecond;
+            bullet.x1 += dx;
+            bullet.x2 += dx;
+            bullet.y1 += dy;
+            bullet.y2 += dy;
+
+            if (bullet.isInWall()) {
+                _applyRocketExplosionDamage(bullet);
                 bullets.erase(bullets.begin() + i);
                 i--;
             }
         }
     }
 
-    bool _bulletOut(const TBullet& bullet, bool checkUnitCollisionsOnly) {
-        if (!_bulletOutIn(bullet, checkUnitCollisionsOnly)) {
-            return false;
-        }
+    void _applyRocketExplosionDamage(const TBullet& bullet) {
         if (bullet.weaponType == ELootType::ROCKET_LAUNCHER) {
             for (auto& unit : units) {
                 double d = ROCKET_LAUNCHER_EXPLOSION_RADIUS - ROCKET_LAUNCHER_BULLET_SIZE/2;
                 if (unit.intersectsWith(bullet.x1 - d, bullet.y1 - d, bullet.x2 + d, bullet.y2 + d)) {
-                    unit.health -= bullet.damage();
+                    unit.health -= ROCKET_LAUNCHER_EXPLOSION_DAMAGE;
                     if (bullet.playerId() != unit.playerId) {
                         score[unit.playerId == TLevel::myId] += bullet.damage();
                     }
                 }
             }
         }
-        return true;
     }
 
-    bool _bulletOutIn(const TBullet& bullet, bool checkUnitCollisionsOnly) {
-        if (checkUnitCollisionsOnly) {
-            for (auto& unit : units) {
-                if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
-                    if (bullet.weaponType != ELootType::ROCKET_LAUNCHER) {
-                        unit.health -= bullet.damage();
-                        score[unit.playerId == TLevel::myId] += bullet.damage();
-                    }
-                    return true;
-                }
-            }
-        } else {
-            for (int i = int(bullet.x1); i <= int(bullet.x2); i++) {
-                for (int j = int(bullet.y1); j <= int(bullet.y2); j++) {
-                    if (getTile(i, j) == ETile::WALL) {
-                        return true;
-                    }
-                }
+    bool _collideBulletAndUnits(const TBullet& bullet) {
+        for (auto& unit : units) {
+            if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
+                unit.health -= bullet.damage();
+                score[unit.playerId == TLevel::myId] += bullet.damage();
+                return true;
             }
         }
         return false;
     }
-
-
 };
 
 #endif //CODESIDE_SANDBOX_H

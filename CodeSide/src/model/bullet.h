@@ -38,6 +38,17 @@ public:
     int playerId() const {
         return TLevel::unitIdToPlayerId[unitId];
     }
+
+    bool isInWall() const {
+        for (int i = int(x1); i <= int(x2); i++) {
+            for (int j = int(y1); j <= int(y2); j++) {
+                if (getTile(i, j) == ETile::WALL) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 };
 
 #endif //CODESIDE_BULLET_H

@@ -52,7 +52,7 @@ void debugCheckGameParams(const Game& game, bool print) {
     PRINT_GAME_PROP(double, MINE_EXPLOSION_RADIUS, mineExplosionParams.radius);
     PRINT_GAME_PROP(int, MINE_EXPLOSION_DAMAGE, mineExplosionParams.damage);
     PRINT_GAME_PROP(int, ROCKET_LAUNCHER_EXPLOSION_DAMAGE, weaponParams.find(ROCKET_LAUNCHER)->second.explosion->damage);
-    PRINT_GAME_PROP(int, ROCKET_LAUNCHER_EXPLOSION_RADIUS, weaponParams.find(ROCKET_LAUNCHER)->second.explosion->radius);
+    PRINT_GAME_PROP(double, ROCKET_LAUNCHER_EXPLOSION_RADIUS, weaponParams.find(ROCKET_LAUNCHER)->second.explosion->radius);
 
 #define PRINT_WEAPON_PROP(type, weapon_idx, weapon_type, p, const_str) do {\
             auto val = game.properties.weaponParams.find((WeaponType)weapon_idx)->second. p;\
