@@ -91,7 +91,7 @@ class TPathFinder {
     static void _dfs(TState state, double dist) {
         dfsVisitedStates.insert(state);
         if (dfsStartMode || isBound[state.x][state.y] || state.pad) {
-            if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y]) {
+            if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y] || !isValid[state.x][state.y + 2]) {
                 dfsResultBorderPoints.emplace_back(state, dist);
                 if (_drawMode) {
                     TDrawUtil().debugPoint(state.getPoint());
@@ -111,7 +111,7 @@ class TPathFinder {
     static bool _dfsTrace(TState state) {
         dfsVisitedStates.insert(state);
         if (dfsTraceTarget.samePos(state)) {
-            if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y]) {
+            if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y] || !isValid[state.x][state.y + 2]) {
                 return true;
             }
         }
