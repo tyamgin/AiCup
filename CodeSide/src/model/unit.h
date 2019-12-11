@@ -60,10 +60,10 @@ public:
         action = unit.action;
     }
 
-    bool isOnLadder() const {
+    bool isOnLadder(double dy = 0) const {
         double x = x1 + UNIT_HALF_WIDTH;
-        return TLevel::getTileType(x, y1) == ETile::LADDER ||
-               TLevel::getTileType(x, y1 + UNIT_HALF_HEIGHT) == ETile::LADDER;
+        return TLevel::getTileType(x, y1 + dy) == ETile::LADDER ||
+               TLevel::getTileType(x, y1 + dy + UNIT_HALF_HEIGHT) == ETile::LADDER;
     }
 
     bool isStandOnLadder(double dy) const {
@@ -145,7 +145,7 @@ public:
     }
 
     bool approxIsStand() const {
-        if (isOnLadder()) {
+        if (isOnLadder() || isOnLadder(-1e-8)) {
             return true;
         }
         return (TLevel::getTileType(x1 + 1e-8, y1) == ETile::EMPTY && tileMatch(TLevel::getTileType(x1 + 1e-8, y1 - 1e-8), ETile::WALL, ETile::PLATFORM)) ||

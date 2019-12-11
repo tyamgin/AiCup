@@ -301,7 +301,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 46) {
+        if (env.currentTick == 347) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
