@@ -22,6 +22,7 @@ public:
     std::vector<TLootBox> lootBoxes;
     std::shared_ptr<std::vector<std::vector<unsigned>>> lootBoxIndex;
     bool oppShotSimpleStrategy = false;
+    std::vector<const TUnit*> _nearestUnitCache;
 
     TSandbox() {
         currentTick = -1;
@@ -66,14 +67,15 @@ public:
 
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
-        for (auto& unit : units) {
+        std::vector<bool> swapWeaponBackup;
+        _nearestUnitCache.resize(units.size());
+        for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
+            auto& unit = units[unitIdx];
+
             if (unit.playerId != TLevel::myId) {
                 _applyOppStrategy(unit);
             }
-        }
 
-        std::vector<bool> swapWeaponBackup;
-        for (auto& unit : units) {
             while (swapWeaponBackup.size() <= unit.id) {
                 swapWeaponBackup.push_back(false);
             }
@@ -81,7 +83,24 @@ public:
             if (unit.mines > 0 && unit.action.plantMine && unit.canJump && unit.isStandOnGround()) { // TODO: check is stand
                 mines.emplace_back(unit.plantMine());
             }
+
+            const TUnit* nearest = nullptr;
+            double nearestDist = INT_MAX;
+            for (const auto& other : units) {
+                if (other.id == unit.id) {
+                    continue;
+                }
+                auto dist = unit.getManhattanDistTo(other);
+                if (dist < nearestDist) {
+                    nearestDist = dist;
+                    nearest = &other;
+                }
+            }
+            _nearestUnitCache[unitIdx] = nearest;
         }
+
+
+
         for (int microTick = 0; microTick < updatesPerTick; microTick++) {
             _doMicroTick(updatesPerTick);
             _doMinesTick(updatesPerTick);
@@ -217,7 +236,9 @@ private:
     void _doMicroTick(int updatesPerTick) {
         auto updatesPerSecond = updatesPerTick * TICKS_PER_SECOND;
 
-        for (auto& unit : units) {
+        for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
+            auto& unit = units[unitIdx];
+            auto nearest = _nearestUnitCache[unitIdx];
             _doMicrotickWeapon(unit, updatesPerSecond);
 
             for (int i = int(unit.x1); i <= int(unit.x2); i++) {
@@ -234,40 +255,67 @@ private:
             double dx = action.velocity / updatesPerSecond;
 
             if (action.velocity > 0) {
-                int xcell = int(unit.x2 + dx);
-                if (TLevel::tiles[xcell][int(unit.y1)] == ETile::WALL ||
-                    TLevel::tiles[xcell][int(unit.y2)] == ETile::WALL ||
-                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
+                double xMin = unit.x2 + dx;
+                auto xCell = int(xMin);
+                bool stopped = false;
+                if (xCell < xMin) {
+                    if (TLevel::tiles[xCell][int(unit.y1)] == ETile::WALL ||
+                        TLevel::tiles[xCell][int(unit.y2)] == ETile::WALL ||
+                        TLevel::tiles[xCell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
 
-                    unit.x2 = xcell - FUCKING_EPS;
-                    unit.x1 = unit.x2 - UNIT_WIDTH;
-                } else {
-                    unit.x1 += dx;
-                    unit.x2 += dx;
+                        xMin = xCell;
+                        stopped = true;
+                    }
                 }
+                if (nearest != nullptr && nearest->x1 < xMin && unit.x2 <= nearest->x1 && unit.x2 + dx > nearest->x1 && unit.intersectsWithByY(*nearest)) {
+                    xMin = nearest->x1;
+                    stopped = true;
+                }
+                unit.x2 = xMin - stopped * FUCKING_EPS;
+                unit.x1 = unit.x2 - UNIT_WIDTH;
             } else if (action.velocity < 0) {
-                int xcell = int(unit.x1 + dx);
-                if (TLevel::tiles[xcell][int(unit.y1)] == ETile::WALL ||
-                    TLevel::tiles[xcell][int(unit.y2)] == ETile::WALL ||
-                    TLevel::tiles[xcell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
+                double xMax = unit.x1 + dx;
+                int xCell = int(xMax);
+                bool stopped = false;
+                if (xCell + 1 > xMax) {
+                    if (TLevel::tiles[xCell][int(unit.y1)] == ETile::WALL ||
+                        TLevel::tiles[xCell][int(unit.y2)] == ETile::WALL ||
+                        TLevel::tiles[xCell][int(unit.y1 + UNIT_HALF_HEIGHT)] == ETile::WALL) {
 
-                    unit.x1 = xcell + 1 + FUCKING_EPS;
-                    unit.x2 = unit.x1 + UNIT_WIDTH;
-                } else {
-                    unit.x1 += dx;
-                    unit.x2 += dx;
+                        xMax = xCell + 1;
+                        stopped = true;
+                    }
                 }
+                if (nearest != nullptr && nearest->x2 > xMax && unit.x1 >= nearest->x2 && unit.x1 + dx < nearest->x2 && unit.intersectsWithByY(*nearest)) {
+                    xMax = nearest->x2;
+                    stopped = true;
+                }
+                unit.x1 = xMax + stopped * FUCKING_EPS;
+                unit.x2 = unit.x1 + UNIT_WIDTH;
             }
 
             if (unit.canJump && (action.jump || !unit.jumpCanCancel)) {
                 double dy = (unit.jumpCanCancel ? UNIT_JUMP_SPEED : JUMP_PAD_JUMP_SPEED) / updatesPerSecond;
 
-                int ycell = int(unit.y2 + dy);
-                if (TLevel::tiles[int(unit.x1)][ycell] == ETile::WALL || TLevel::tiles[int(unit.x2)][ycell] == ETile::WALL) {
+                double yMin = unit.y2 + dy;
+                int yCell = int(yMin);
+                bool stopped = false;
+                if (yCell < yMin) {
+                    if (TLevel::tiles[int(unit.x1)][yCell] == ETile::WALL || TLevel::tiles[int(unit.x2)][yCell] == ETile::WALL) {
+                        yMin = yCell;
+                        stopped = true;
+                    }
+                }
+                if (nearest != nullptr && nearest->y1 < yMin && unit.y2 <= nearest->y1 && unit.y2 + dy > nearest->y1 && unit.intersectsWithByX(*nearest)) {
+                    yMin = nearest->y1;
+                    stopped = true;
+                }
+
+                if (stopped) {
                     unit.jumpMaxTime = 0;
                     unit.canJump = false;
                     unit.jumpCanCancel = false;
-                    unit.y2 = std::max(unit.y2, ycell - FUCKING_EPS);
+                    unit.y2 = std::max(unit.y2, yMin - FUCKING_EPS);
                     unit.y1 = unit.y2 - UNIT_HEIGHT;
                 } else {
                     unit.y1 += dy;
@@ -294,13 +342,27 @@ private:
                 }
 
                 int ycell = int(unit.y1 + dy);
-                if (((uint32_t)TLevel::tiles[int(unit.x1)][ycell] & wallMask) ||
-                    ((uint32_t)TLevel::tiles[int(unit.x2)][ycell] & wallMask)) {
+                double yMax = unit.y1 + dy;
+                bool stopped = false;
+                if (ycell + 1 > yMax) {
+                    if (((uint32_t)TLevel::tiles[int(unit.x1)][ycell] & wallMask) ||
+                        ((uint32_t)TLevel::tiles[int(unit.x2)][ycell] & wallMask)) {
 
+                        stopped = true;
+                        yMax = ycell + 1;
+                    }
+                }
+                if (nearest != nullptr && nearest->y2 > yMax && unit.y1 >= nearest->y2 && unit.y1 + dy < nearest->y2 && unit.intersectsWithByX(*nearest)) {
+                    stopped = true;
+                    yMax = nearest->y2;
+                }
+
+
+                if (stopped) {
                     unit.jumpMaxTime = UNIT_JUMP_TIME;
                     unit.canJump = true;
                     unit.jumpCanCancel = true;
-                    unit.y1 = std::min(unit.y1, ycell + (1 + FUCKING_EPS));
+                    unit.y1 = std::min(unit.y1, yMax + FUCKING_EPS);
                     unit.y2 = unit.y1 + UNIT_HEIGHT;
                 } else {
                     unit.y1 += dy;

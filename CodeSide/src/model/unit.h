@@ -227,6 +227,18 @@ public:
     bool isStand() const {
         return canJump && jumpMaxTime >= UNIT_JUMP_TIME - 1e-10;
     }
+
+    bool intersectsWithByY(const TUnit& other) const {
+        return other.y1 < y2 && other.y2 > y1;
+    }
+
+    bool intersectsWithByX(const TUnit& other) const {
+        return other.x1 < x2 && other.x2 > x1;
+    }
+
+    double getManhattanDistTo(const TUnit& other) const {
+        return std::abs(x1 - other.x1) + std::abs(y1 - other.y1);
+    }
 };
 
 

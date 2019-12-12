@@ -49,6 +49,30 @@ TAction _ladderLeftStrategy(const TUnit& unit, const TSandbox& env, Debug& debug
     return action;
 }
 
+TAction _ladderLeftStrategy2(const TUnit& unit, const TSandbox& env, Debug& debug) {
+    TAction action;
+    //auto action = _strategy(unit, game, debug);
+    if (env.currentTick < 100 / UPDATES_PER_TICK) {
+        action.velocity = 1;
+    } else if (env.currentTick < 24800 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    } else if (env.currentTick < 28800 / UPDATES_PER_TICK) {
+        action.velocity = 3;
+        action.jump = true;
+    } else if (env.currentTick < 35700 / UPDATES_PER_TICK) {
+        action.velocity = -2;
+    } else if (env.currentTick < 38000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+        action.jump = true;
+    } else if (env.currentTick < 40000 / UPDATES_PER_TICK) {
+    } else {
+        action.velocity = -4;
+    }
+    return action;
+}
+
+
+
 TAction _rifleTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
     // requires seed=12
     TAction action;

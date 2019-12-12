@@ -310,7 +310,7 @@ public:
             _compareState(prevEnv, env);
         }
 
-        //auto action = _mineTestStrategy2(unit, env, debug);
+        //auto action = _ladderLeftStrategy(unit, env, debug);
 
 
         auto maybeActions = _strategy(unit);
@@ -323,9 +323,6 @@ public:
             notDodgeEnv.doTick();
         }
         int bestScore = notDodgeEnv.getUnit(unit.id)->health;
-        if (isUnitsCollides(notDodgeEnv)) {
-            bestScore -= 200;
-        }
         std::optional<std::vector<TPoint>> bestPath;
 
         for (int dirX = -1; dirX <= 1; dirX++) {
@@ -340,14 +337,12 @@ public:
                     act.jumpDown = true;
                 act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
                 const int simulateTicks = 40;
-                bool ok = true;
                 for (int i = 0; i < simulateTicks; i++) {
                     dodgeEnv.getUnit(unit.id)->action = act;
                     dodgeEnv.doTick();
                     path.push_back(dodgeEnv.getUnit(unit.id)->position());
-                    ok &= !isUnitsCollides(dodgeEnv);
                 }
-                if (ok && dodgeEnv.getUnit(unit.id)->health > bestScore) {
+                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
                     bestScore = dodgeEnv.getUnit(unit.id)->health;
                     bestPath = path;
                     actions = std::vector<TAction>(simulateTicks, act);
@@ -439,24 +434,6 @@ public:
             }
         }
         return sqrt(minDist2);
-    }
-
-    bool isUnitsCollides(const TSandbox& env) {
-        return false;
-
-        for (int i = 0; i < (int) env.units.size(); i++) {
-            for (int j = 0; j < i; j++) {
-                const auto& a = env.units[i];
-                const auto& b = env.units[j];
-                if (a.playerId == b.playerId) {
-                    continue;
-                }
-                if (a.intersectsWith(b)) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 };
 
