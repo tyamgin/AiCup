@@ -165,11 +165,13 @@ public:
         return TPoint(x1 + UNIT_HALF_WIDTH, y1);
     }
 
-    TBullet shot() {
+    TBullet shot(double shotSpreadToss) {
         TBullet res;
         res.weaponType = weapon.type;
         res.unitId = id;
         weapon.magazine -= 1;
+        TPoint aim = shotSpreadToss == 0 ? action.aim : action.aim.rotatedClockwise(shotSpreadToss * weapon.spread);
+        aim.normalize();
         switch (weapon.type) {
             case ELootType::PISTOL:
                 if (weapon.magazine == 0) {
@@ -183,7 +185,7 @@ public:
                 res.x2 = res.x1 + PISTOL_BULLET_SIZE;
                 res.y1 = y1 + (UNIT_HALF_HEIGHT - PISTOL_BULLET_SIZE / 2);
                 res.y2 = res.y1 + PISTOL_BULLET_SIZE;
-                res.velocity = action.aim.normalized() * PISTOL_BULLET_SPEED;
+                res.velocity = aim * PISTOL_BULLET_SPEED;
                 break;
             case ELootType::ASSAULT_RIFLE:
                 if (weapon.magazine == 0) {
@@ -197,7 +199,7 @@ public:
                 res.x2 = res.x1 + ASSAULT_RIFLE_BULLET_SIZE;
                 res.y1 = y1 + (UNIT_HALF_HEIGHT - ASSAULT_RIFLE_BULLET_SIZE / 2);
                 res.y2 = res.y1 + ASSAULT_RIFLE_BULLET_SIZE;
-                res.velocity = action.aim.normalized() * ASSAULT_RIFLE_BULLET_SPEED;
+                res.velocity = aim * ASSAULT_RIFLE_BULLET_SPEED;
                 break;
             default:
                 if (weapon.magazine == 0) {
@@ -211,7 +213,7 @@ public:
                 res.x2 = res.x1 + ROCKET_LAUNCHER_BULLET_SIZE;
                 res.y1 = y1 + (UNIT_HALF_HEIGHT - ROCKET_LAUNCHER_BULLET_SIZE / 2);
                 res.y2 = res.y1 + ROCKET_LAUNCHER_BULLET_SIZE;
-                res.velocity = action.aim.normalized() * ROCKET_LAUNCHER_BULLET_SPEED;
+                res.velocity = aim * ROCKET_LAUNCHER_BULLET_SPEED;
                 break;
         }
         if (weapon.spread > WEAPON_MAX_SPREAD) {

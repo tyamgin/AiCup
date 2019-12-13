@@ -111,6 +111,12 @@ struct TPoint {
     static TPoint byAngle(double angle) {
         return TPoint(cos(angle), sin(angle));
     }
+
+    [[nodiscard]] TPoint rotatedClockwise(double angle) {
+        auto cos = std::cos(angle);
+        auto sin = std::sin(angle);
+        return TPoint(cos * x + sin * y, -sin * x + cos * y);
+    }
 };
 
 struct TCell {

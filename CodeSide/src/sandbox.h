@@ -23,6 +23,7 @@ public:
     std::shared_ptr<std::vector<std::vector<unsigned>>> lootBoxIndex;
     bool oppShotSimpleStrategy = false;
     std::vector<const TUnit*> _nearestUnitCache;
+    double shotSpreadToss = 0;
 
     TSandbox() {
         currentTick = -1;
@@ -220,7 +221,7 @@ private:
             }
             weapon.lastAngle = newAngle;
             if (unit.action.shoot && weapon.magazine > 0 && weapon.fireTimer < -0.5) {
-                bullets.emplace_back(unit.shot());
+                bullets.emplace_back(unit.shot(shotSpreadToss));
                 weapon.lastFireTick = currentTick;
             }
         }

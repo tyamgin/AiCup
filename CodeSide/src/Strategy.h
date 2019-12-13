@@ -366,28 +366,10 @@ public:
             }
         }
 
-        TUnit* target = nullptr;
-        for (auto& u : env.units) {
-            if (u.playerId != unit.playerId) {
-                target = &u;
-            }
-        }
-        if (target != nullptr && unit.weapon.type != ELootType::NONE) {
-            action.aim = calcAim(unit, *target, actions);
-            if (unit.weapon.fireTimer < -0.5) {
-                auto testEnv = env;
-                auto testNothingEnv = env;
-                testEnv.getUnit(unit.id)->action = action;
-                testEnv.getUnit(unit.id)->action.shoot = true;
-                for (int i = 0; i < 40; i++) {
-                    testEnv.doTick(4);
-                    testNothingEnv.doTick(4);
-                    testEnv.getUnit(unit.id)->action.shoot = false;
-                }
-                if (testEnv.score[0] > testNothingEnv.score[0]) {
-                    action.shoot = true;
-                }
-            }
+        auto maybeShot = shotStrategy(unit, actions);
+        if (maybeShot) {
+            action.shoot = maybeShot.value().shoot;
+            action.aim = maybeShot.value().aim;
         }
 
         for (auto& u : env.units) {
@@ -398,6 +380,86 @@ public:
         }
         prevEnv = env;
         return action.toUnitAction();
+    }
+
+    std::optional<TAction> shotStrategy(const TUnit& unit, const std::vector<TAction>& actions) {
+        if (unit.weapon.type == ELootType::NONE) {
+            return {};
+        }
+
+        TUnit* target = nullptr;
+        for (auto& u : env.units) {
+            if (u.playerId != unit.playerId) {
+                target = &u;
+            }
+        }
+        if (target == nullptr) {
+            return {};
+        }
+
+        auto oppDodgeStrategy = [](const TSandbox& afterShotEnv, int unitId, int simulateTicks) {
+            int maxHealth = 0;
+            TAction bestAction;
+            for (int dirX = -1; dirX <= 1; dirX++) {
+                for (int dirY = -1; dirY <= 1; dirY += 1) {
+                    TSandbox dodgeEnv = afterShotEnv;
+                    auto opp = dodgeEnv.getUnit(unitId);
+                    TAction act;
+                    if (dirY > 0) {
+                        act.jump = true;
+                    } else if (dirY < 0) {
+                        act.jumpDown = true;
+                    }
+                    act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
+                    for (int i = 0; i < simulateTicks; i++) {
+                        opp->action = act;
+                        dodgeEnv.doTick();
+                    }
+                    if (opp->health > maxHealth) {
+                        maxHealth = opp->health;
+                        bestAction = act;
+                    }
+                }
+            }
+            return bestAction;
+        };
+
+        TAction action;
+        action.aim = calcAim(unit, *target, actions);
+        if (unit.weapon.fireTimer < -0.5) {
+            const int itersCount = 6;
+            int successCount = 0;
+            for (int it = -itersCount; it <= itersCount; it++) {
+                auto testEnv = env;
+                auto testNothingEnv = env;
+                testEnv.getUnit(unit.id)->action = action;
+                testEnv.getUnit(unit.id)->action.shoot = true;
+                testEnv.shotSpreadToss = 1.0 * it / itersCount;
+                const int simulateTicks = 20;
+                for (int i = 0; i < simulateTicks; i++) {
+                    testEnv.doTick();
+                    testNothingEnv.doTick();
+                    testEnv.getUnit(unit.id)->action.shoot = false;
+                    if (i == 0) {
+                        auto oppAction = oppDodgeStrategy(testEnv, target->id, simulateTicks - 1);
+                        testEnv.getUnit(target->id)->action = oppAction;
+                    }
+                }
+                if (testEnv.score[0] > testNothingEnv.score[0]) {
+                    successCount++;
+                }
+            }
+            double probability = successCount / (itersCount*2 + 1.0);
+            TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
+                                                           Vec2Float{float(unit.x1), float(unit.y2 + 3)},
+                                                           TextAlignment::LEFT,
+                                                           30,
+                                                           ColorFloat(0, 0, 1, 1)));
+            if (probability >= 0.5) {
+                action.shoot = true;
+            }
+        }
+        return action;
     }
 
     TPoint calcAim(const TUnit& unit, const TUnit& target, const std::vector<TAction>& actions) {
