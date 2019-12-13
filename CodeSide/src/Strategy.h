@@ -218,7 +218,7 @@ class Strategy {
                 return maybeAct;
             }
         }
-        if (unit.health < 80) {
+        if (unit.health <= 80) {
             auto maybeAct = _strategyLoot(unit, {ELootType::HEALTH_PACK});
             if (maybeAct) {
                 return maybeAct;
@@ -301,7 +301,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 347) {
+        if (env.currentTick == 81) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -322,7 +322,11 @@ public:
             notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
             notDodgeEnv.doTick();
         }
-        int bestScore = notDodgeEnv.getUnit(unit.id)->health;
+        auto startOppScore = env.score[1];
+        auto scorer = [&](TSandbox& env) {
+            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2;
+        };
+        auto bestScore = scorer(notDodgeEnv);
         std::optional<std::vector<TPoint>> bestPath;
 
         for (int dirX = -1; dirX <= 1; dirX++) {
@@ -342,8 +346,8 @@ public:
                     dodgeEnv.doTick();
                     path.push_back(dodgeEnv.getUnit(unit.id)->position());
                 }
-                if (dodgeEnv.getUnit(unit.id)->health > bestScore) {
-                    bestScore = dodgeEnv.getUnit(unit.id)->health;
+                if (scorer(dodgeEnv) > bestScore || scorer(dodgeEnv) == bestScore && dodgeEnv.getUnit(unit.id)->health > env.getUnit(unit.id)->health) {
+                    bestScore = scorer(dodgeEnv);
                     bestPath = path;
                     actions = std::vector<TAction>(simulateTicks, act);
                 }
