@@ -41,9 +41,11 @@ struct TState {
 #define D_LEFT 0
 #define D_CENTER 1
 #define D_RIGHT 2
+#define DIRECTION_ORDER {0, -1, 1}
 
 const int JUMP_TICKS_COUNT = 33;
 const int JUMP_PAD_TICKS_COUNT = 31; // 31.5 actually
+
 
 bool isStand[SZ][SZ];
 bool isValid[SZ][SZ];
@@ -72,7 +74,7 @@ class TPathFinder {
     static TDfsGoesResult _getCellGoesDfs(const TState& state) {
         TDfsGoesResult res;
         const auto dy = 1 + state.pad;
-        for (int xDirection = -1; xDirection <= 1; xDirection++) {
+        for (int xDirection : DIRECTION_ORDER) {
             if (isValid[state.x + xDirection][state.y + dy]) {
                 if (isBlockedMove[xDirection + D_CENTER][D_CENTER + 1][state.x][state.y]) {
                     continue;
@@ -334,7 +336,7 @@ private:
     std::vector<std::pair<TState, double>> _getCellGoes(const TState& state) {
         std::vector<std::pair<TState, double>> res;
         if (!isTouchPad[state.x][state.y]) {
-            for (int xDirection = -1; xDirection <= 1; xDirection++) {
+            for (int xDirection : DIRECTION_ORDER) {
                 auto stx = state;
                 stx.x += xDirection;
 
@@ -370,7 +372,7 @@ private:
 
     bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool standFix, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
         if (!isTouchPad[state.x][state.y]) {
-            for (int xDirection = -1; xDirection <= 1; xDirection++) {
+            for (int xDirection : DIRECTION_ORDER) {
                 auto stx = state;
                 stx.x += xDirection;
                 TAction act;

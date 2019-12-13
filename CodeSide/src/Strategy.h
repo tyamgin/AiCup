@@ -19,7 +19,7 @@
  * - не учитывается падение соперника при прицеливании
  * - пп от соперника и отклонения с учетом этого
  * - урон от ракеты суммируется => вплотную против неё лучше не становиться
- *
+ * - пп от стен, если соперник с базукой
  */
 
 class Strategy {
@@ -233,18 +233,18 @@ class Strategy {
         }
 
         if (target != nullptr && unit.weapon.fireTimer > 0.5) {
-//            if (unit.health < UNIT_MAX_HEALTH) {
-//                auto maybeAct = _strategyLoot(unit, {ELootType::HEALTH_PACK});
-//                if (maybeAct) {
-//                    return maybeAct;
-//                }
+            double rangeMin = 5, rangeMax = 7;
+//            if (unit.weapon.fireTimer > 0.5) {
+                rangeMin = 10;
+                rangeMax = 14;
 //            }
+
 
             double minDist = INF;
             TPoint selectedPoint;
             pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
                 auto dist2ToTarget = unit.center().getDistanceTo2(target->center());
-                if (dist < minDist && isIn(SQR(10), SQR(14), dist2ToTarget)) {
+                if (dist < minDist && isIn(SQR(rangeMin), SQR(rangeMax), dist2ToTarget)) {
                     minDist = dist;
                     selectedPoint = unit.position();
                 }
@@ -326,7 +326,7 @@ public:
         std::optional<std::vector<TPoint>> bestPath;
 
         for (int dirX = -1; dirX <= 1; dirX++) {
-            for (int dirY = -1; dirY <= 1; dirY += 2) {
+            for (int dirY = -1; dirY <= 1; dirY += 1) {
                 TSandbox dodgeEnv = env;
                 //dodgeEnv.oppShotSimpleStrategy = true;
                 std::vector<TPoint> path;
