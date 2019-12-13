@@ -36,6 +36,14 @@ struct TState {
     }
 };
 
+std::vector<TPoint> statesToPoints(const std::vector<TState>& states) {
+    std::vector<TPoint> res;
+    for (const auto& s : states) {
+        res.push_back(s.getPoint());
+    }
+    return res;
+}
+
 #define SZ (6 * 45)
 #define INF 0x3f3f3f3f
 #define D_LEFT 0
@@ -65,10 +73,12 @@ std::vector<TAction> dfsTraceActResult;
 std::vector<TState> dfsTraceStateResult;
 
 class TPathFinder {
+public:
+    std::vector<std::vector<double>> dist, penalty;
+private:
     const TSandbox* env;
     TUnit startUnit;
     TState startState;
-    std::vector<std::vector<double>> dist, penalty;
     std::vector<std::vector<TState>> prev;
 
     static TDfsGoesResult _getCellGoesDfs(const TState& state) {
@@ -209,7 +219,7 @@ public:
         this->startState = _getUnitState(this->startUnit);
     }
 
-    bool findPath(const TPoint& target, std::vector<TPoint>& res, std::vector<TAction>& resAct) {
+    bool findPath(const TPoint& target, std::vector<TState>& res, std::vector<TAction>& resAct) {
         res.clear();
         resAct.clear();
         _run();
@@ -250,9 +260,9 @@ public:
                 qwe = true;
                 //break;
             }
-            resAct.insert(resAct.end(), acts.rbegin(), acts.rend());
+            //resAct.insert(resAct.end(), acts.rbegin(), acts.rend());
             for (auto& ss : stts) {
-                res.push_back(ss.getPoint());
+                res.push_back(ss);
             }
             resAct.insert(resAct.end(), acts.begin(), acts.end());
         }
@@ -270,10 +280,21 @@ public:
 
         if (std::abs(dx) > 1e-10 || fall) {
             firstAction.jump = (startUnit.y1 - (int)startUnit.y1 > 0.5);
+            if (std::abs(dx) > 1e-10) {
+                auto testEnv = *env;
+                testEnv.getUnit(startUnit.id)->action = firstAction;
+                testEnv.doTick();
+                if (std::abs(testEnv.getUnit(startUnit.id)->x1 - startUnit.x1) < 1e-10) {
+                    auto tmp = startState;
+                    tmp.x += dx < 0 ? 1 : -1;
+                    dx = tmp.getPoint().x - startUnit.position().x;
+                    firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
+                }
+            }
             resAct.push_back(firstAction);
         }
 
-        res.push_back(startState.getPoint());
+        res.push_back(startState);
         std::reverse(res.begin(), res.end());
         std::reverse(resAct.begin(), resAct.end());
         return true;

@@ -20,6 +20,8 @@
  * - пп от соперника и отклонения с учетом этого
  * - урон от ракеты суммируется => вплотную против неё лучше не становиться
  * - пп от стен, если соперник с базукой
+ * - перезарядка, если далеко от противника
+ * - пп в пользу стояния на лестнице (легко уклоняться)
  */
 
 class Strategy {
@@ -170,28 +172,56 @@ class Strategy {
     };
 
     std::optional<std::vector<TAction>> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
-        std::vector<TPoint> pathPoints;
-        std::vector<TAction> actions;
+//        std::map<std::pair<int, int>, double> lbPathPenalty;
+//        pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
+//            TLootBox* lb;
+//            if ((lb = env.findLootBox(unit)) != nullptr) {
+//                if (lootTypes.count(lb->type)) {
+//                    if (!lbPathPenalty.count({lb->getRow(), lb->getCol()})) {
+//                        std::vector<TState> pts;
+//                        std::vector<TAction> acts;
+//                        double penalty = 0;
+//                        if (pathFinder.findPath(unit.position(), pts, acts) && !acts.empty()) {
+//                            for (const auto& s : pts) {
+//                                penalty += pathFinder.penalty[s.x][s.y];
+//                            }
+//                        }
+//                        TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(penalty + dist),
+//                                                                      Vec2Float{float(lb->x1), float(lb->y2 + 1)},
+//                                                                      TextAlignment::LEFT,
+//                                                                      30,
+//                                                                      ColorFloat(0, 1, 0, 0.75)));
+//                        lbPathPenalty[{lb->getRow(), lb->getCol()}] = penalty;
+//                    }
+//                }
+//            }
+//        });
 
+        std::vector<TState> pathPoints;
+        std::vector<TAction> actions;
 
         double minDist = INF;
         TLootBox* selectedLb = nullptr;
         TPoint selectedPos;
         TState selectedState;
+
         pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
             TLootBox* lb;
-            if (dist < minDist && (lb = env.findLootBox(unit)) != nullptr) {
+            if ((lb = env.findLootBox(unit)) != nullptr) {
                 if (lootTypes.count(lb->type)) {
-                    minDist = dist;
-                    selectedLb = lb;
-                    selectedPos = unit.position();
-                    selectedState = state;
+                    //dist += lbPathPenalty[{lb->getRow(), lb->getCol()}];
+                    if (dist < minDist) {
+                        minDist = dist;
+                        selectedLb = lb;
+                        selectedPos = unit.position();
+                        selectedState = state;
+                    }
                 }
             }
         });
         if (selectedLb != nullptr) {
             if (pathFinder.findPath(selectedPos, pathPoints, actions) && actions.size() > 0) {
-                TDrawUtil().drawPath(pathPoints);
+                TDrawUtil().drawPath(statesToPoints(pathPoints));
                 return actions;
             }
         }
@@ -199,7 +229,7 @@ class Strategy {
     }
 
     std::optional<std::vector<TAction>> _strategy(const TUnit& unit) {
-        std::vector<TPoint> pathPoints;
+        std::vector<TState> pathPoints;
         std::vector<TAction> actions;
 
 //        auto reachable = pathFinder.getReachableForDraw();
@@ -253,38 +283,38 @@ class Strategy {
                 return std::vector<TAction>(1, TAction());
             }
             if (minDist < INF && pathFinder.findPath(selectedPoint, pathPoints, actions) && actions.size() > 0) {
-                TDrawUtil().drawPath(pathPoints);
+                TDrawUtil().drawPath(statesToPoints(pathPoints));
                 return actions;
             }
         }
 
         if (target != nullptr) {
             if (pathFinder.findPath(target->position(), pathPoints, actions) && actions.size() > 0) {
-                TDrawUtil().drawPath(pathPoints);
+                TDrawUtil().drawPath(statesToPoints(pathPoints));
                 return actions;
             }
         }
-
-        std::set<ELootType> weapons;
-        for (const auto &[type, priority] : weaponPriority) {
-            if (priority < weaponPriority[unit.weapon.type]) {
-                weapons.insert(type);
-            }
-        }
-
-        if (weapons.size()) {
-            auto maybeAct = _strategyLoot(unit, weapons);
-            if (maybeAct) {
-                return maybeAct.value();
-            }
-        }
-
-        {
-            auto maybeAct = _strategyLoot(unit, {ELootType::MINE});
-            if (maybeAct) {
-                return maybeAct.value();
-            }
-        }
+//
+//        std::set<ELootType> weapons;
+//        for (const auto &[type, priority] : weaponPriority) {
+//            if (priority < weaponPriority[unit.weapon.type]) {
+//                weapons.insert(type);
+//            }
+//        }
+//
+//        if (weapons.size()) {
+//            auto maybeAct = _strategyLoot(unit, weapons);
+//            if (maybeAct) {
+//                return maybeAct.value();
+//            }
+//        }
+//
+//        {
+//            auto maybeAct = _strategyLoot(unit, {ELootType::MINE});
+//            if (maybeAct) {
+//                return maybeAct.value();
+//            }
+//        }
         return {};
     }
 
@@ -346,7 +376,7 @@ public:
                     dodgeEnv.doTick();
                     path.push_back(dodgeEnv.getUnit(unit.id)->position());
                 }
-                if (scorer(dodgeEnv) > bestScore || scorer(dodgeEnv) == bestScore && dodgeEnv.getUnit(unit.id)->health > env.getUnit(unit.id)->health) {
+                if (scorer(dodgeEnv) > bestScore || (scorer(dodgeEnv) == bestScore && dodgeEnv.getUnit(unit.id)->health > env.getUnit(unit.id)->health)) {
                     bestScore = scorer(dodgeEnv);
                     bestPath = path;
                     actions = std::vector<TAction>(simulateTicks, act);
