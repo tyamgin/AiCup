@@ -75,9 +75,6 @@ class Strategy {
             if (prevUnit.weapon.magazine != curUnit.weapon.magazine) {
                 std::cerr << "Prev state unit.weapon.magazine mismatch " << (int)prevUnit.weapon.magazine << " vs " << (int)curUnit.weapon.magazine << std::endl;
             }
-//            if (prevUnit.weapon.wasShooting != curUnit.weapon.wasShooting) {
-//                std::cerr << "Prev state unit.weapon.wasShooting mismatch " << prevUnit.weapon.wasShooting << " vs " << curUnit.weapon.wasShooting << std::endl;
-//            }
             if (prevUnit.weapon.lastFireTick != curUnit.weapon.lastFireTick) {
                 std::cerr << "Prev state unit.weapon.lastFireTick mismatch " << (int)prevUnit.weapon.lastFireTick << " vs " << (int)curUnit.weapon.lastFireTick << std::endl;
             }
@@ -294,27 +291,6 @@ class Strategy {
                 return actions;
             }
         }
-//
-//        std::set<ELootType> weapons;
-//        for (const auto &[type, priority] : weaponPriority) {
-//            if (priority < weaponPriority[unit.weapon.type]) {
-//                weapons.insert(type);
-//            }
-//        }
-//
-//        if (weapons.size()) {
-//            auto maybeAct = _strategyLoot(unit, weapons);
-//            if (maybeAct) {
-//                return maybeAct.value();
-//            }
-//        }
-//
-//        {
-//            auto maybeAct = _strategyLoot(unit, {ELootType::MINE});
-//            if (maybeAct) {
-//                return maybeAct.value();
-//            }
-//        }
         return {};
     }
 
