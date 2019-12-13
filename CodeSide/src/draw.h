@@ -6,6 +6,7 @@
 #define M_DRAW_GRID 1
 #define M_DRAW_REACHABILITY_X 3
 #define M_DRAW_REACHABILITY_Y 6
+#define M_DRAW_PENALTY 0
 
 
 class TDrawUtil {

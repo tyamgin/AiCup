@@ -44,27 +44,33 @@ std::vector<TPoint> statesToPoints(const std::vector<TState>& states) {
     return res;
 }
 
-#define SZ (6 * 45)
+#define STEPS_PER_CELL 6
+
+const int JUMP_TICKS_COUNT = 33;
+const int JUMP_PAD_TICKS_COUNT = 31; // 31.5 actually
+
+const int MAX_MAP_SIZE = 45;
+const double STEP_LENGTH = 1.0 / STEPS_PER_CELL;
+
+const int MICROMAP_SIZE = STEPS_PER_CELL * MAX_MAP_SIZE;
+
 #define INF 0x3f3f3f3f
 #define D_LEFT 0
 #define D_CENTER 1
 #define D_RIGHT 2
 #define DIRECTION_ORDER {0, -1, 1}
 
-const int JUMP_TICKS_COUNT = 33;
-const int JUMP_PAD_TICKS_COUNT = 31; // 31.5 actually
-
-
-bool isStand[SZ][SZ];
-bool isValid[SZ][SZ];
-bool isBound[SZ][SZ];
-bool isOnLadder[SZ][SZ];
-bool isBlockedMove[3][3][SZ][SZ];
-bool isTouchPad[SZ][SZ];
+bool isStand[MICROMAP_SIZE][MICROMAP_SIZE];
+bool isValid[MICROMAP_SIZE][MICROMAP_SIZE];
+bool isBound[MICROMAP_SIZE][MICROMAP_SIZE];
+bool isOnLadder[MICROMAP_SIZE][MICROMAP_SIZE];
+bool isBlockedMove[3][3][MICROMAP_SIZE][MICROMAP_SIZE];
+bool isTouchPad[MICROMAP_SIZE][MICROMAP_SIZE];
 
 using TDfsGoesResult = std::vector<std::pair<TState, double>>;
+
 std::map<TState, TDfsGoesResult> dfsGoesCache;
-static bool _drawMode;
+bool _drawMode;
 std::set<TState> dfsVisitedStates;
 TDfsGoesResult dfsResultBorderPoints;
 bool dfsStartMode;
@@ -165,18 +171,17 @@ private:
 public:
     static void initMap() {
         TUnit unit;
-        const double d = 1 / 6.0;
         for (int i = 1; i < TLevel::width - 1; i++) {
-            for (int di = 0; di < 6; di++) {
-                unit.x1 = i + di * d - UNIT_HALF_WIDTH;
+            for (int di = 0; di < STEPS_PER_CELL; di++) {
+                unit.x1 = i + di * STEP_LENGTH - UNIT_HALF_WIDTH;
                 unit.x2 = unit.x1 + UNIT_WIDTH;
                 for (int j = 1; j < TLevel::height - 1; j++) {
-                    for (int dj = 0; dj < 6; dj++) {
-                        unit.y1 = j + dj * d;
+                    for (int dj = 0; dj < STEPS_PER_CELL; dj++) {
+                        unit.y1 = j + dj * STEP_LENGTH;
                         unit.y2 = unit.y1 + UNIT_HEIGHT;
 
-                        int ii = i*6 + di;
-                        int jj = j*6 + dj;
+                        int ii = i*STEPS_PER_CELL + di;
+                        int jj = j*STEPS_PER_CELL + dj;
                         isValid[ii][jj] = unit.approxIdValid();
                         isStand[ii][jj] = isValid[ii][jj] && unit.approxIsStand();
                         if (di == 0 && unit.isOnLadder()) {
@@ -186,22 +191,23 @@ public:
                         isOnLadder[ii][jj] = isStand[ii][jj] && unit.isOnLadder();
                         isTouchPad[ii][jj] = unit.isTouchJumpPad();
 
-                        if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(1 / 6.0)) {
+                        if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(STEP_LENGTH)) {
                             isBlockedMove[D_RIGHT][D_CENTER][ii][jj] = true;
                         }
-                        if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(-1 / 6.0)) {
+                        if (di == 3 && !unit.approxIsStandGround() && unit.approxIsStandGround(-STEP_LENGTH)) {
                             isBlockedMove[D_LEFT][D_CENTER][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(d/2, d/2) || unit.isTouchJumpPad(d/2, d/2)) {
+                        const auto halfStep = STEP_LENGTH / 2;
+                        if (!unit.approxIdValid(halfStep, halfStep) || unit.isTouchJumpPad(halfStep, halfStep)) {
                             isBlockedMove[D_RIGHT][D_RIGHT][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(d/2, -d/2) || unit.isTouchJumpPad(d/2, -d/2)) {
+                        if (!unit.approxIdValid(halfStep, -halfStep) || unit.isTouchJumpPad(halfStep, -halfStep)) {
                             isBlockedMove[D_RIGHT][D_LEFT][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(-d/2, d/2) || unit.isTouchJumpPad(-d/2, d/2)) {
+                        if (!unit.approxIdValid(-halfStep, halfStep) || unit.isTouchJumpPad(-halfStep, halfStep)) {
                             isBlockedMove[D_LEFT][D_RIGHT][ii][jj] = true;
                         }
-                        if (!unit.approxIdValid(-d/2, -d/2) || unit.isTouchJumpPad(-d/2, -d/2)) {
+                        if (!unit.approxIdValid(-halfStep, -halfStep) || unit.isTouchJumpPad(-halfStep, -halfStep)) {
                             isBlockedMove[D_LEFT][D_LEFT][ii][jj] = true;
                         }
                     }
@@ -219,9 +225,9 @@ public:
         this->startState = _getUnitState(this->startUnit);
     }
 
-    bool findPath(const TPoint& target, std::vector<TState>& res, std::vector<TAction>& resAct) {
-        res.clear();
-        resAct.clear();
+    bool findPath(const TPoint& target, std::vector<TState>& resultStates, std::vector<TAction>& resultActions) {
+        resultStates.clear();
+        resultActions.clear();
         _run();
 
         TState targetState = _getPointState(target);
@@ -229,7 +235,7 @@ public:
         std::pair<int, double> minDist(INF, INF);
         for (int dx = -7; dx <= 7; dx++) {
             for (int dy = -7; dy <= 7; dy++) {
-                if (targetState.x + dx > 0 && targetState.x + dx < SZ && targetState.y + dy > 0 && targetState.y + dy < SZ) {
+                if (targetState.x + dx > 0 && targetState.x + dx < dist.size() && targetState.y + dy > 0 && targetState.y + dy < dist[0].size()) {
                     auto d = dist[targetState.x + dx][targetState.y + dy];
                     if (d < INF/2) {
                         std::pair<int, double> cand(std::abs(dx) + std::abs(dy), d);
@@ -260,27 +266,25 @@ public:
                 qwe = true;
                 //break;
             }
-            //resAct.insert(resAct.end(), acts.rbegin(), acts.rend());
-            for (auto& ss : stts) {
-                res.push_back(ss);
-            }
-            resAct.insert(resAct.end(), acts.begin(), acts.end());
+            resultStates.insert(resultStates.end(), stts.begin(), stts.end());
+            resultActions.insert(resultActions.end(), acts.begin(), acts.end());
         }
 
         auto startStatePoint = startState.getPoint();
-        TAction firstAction;
-        auto dx = startStatePoint.x - startUnit.position().x;
-        firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
         bool fall = isStand[startState.x][startState.y] && !startUnit.approxIsStand();
-        if (resAct.size()) {
-            fall |= isStand[startState.x][startState.y] && !startUnit.canJump && resAct.back().jump;
-            fall |= standFix && resAct.back().jump;
+        if (resultActions.size()) {
+            fall |= isStand[startState.x][startState.y] && !startUnit.canJump && resultActions.back().jump;
+            fall |= standFix && resultActions.back().jump;
         }
 
+        auto dx = startStatePoint.x - startUnit.position().x;
 
         if (std::abs(dx) > 1e-10 || fall) {
+            TAction firstAction;
+            firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
             firstAction.jump = (startUnit.y1 - (int)startUnit.y1 > 0.5);
             if (std::abs(dx) > 1e-10) {
+                // проверяем, что нужно округлить в другую сторону, если заблокировали
                 auto testEnv = *env;
                 testEnv.getUnit(startUnit.id)->action = firstAction;
                 testEnv.doTick();
@@ -291,29 +295,13 @@ public:
                     firstAction.velocity = std::min(UNIT_MAX_HORIZONTAL_SPEED, dx * TICKS_PER_SECOND);
                 }
             }
-            resAct.push_back(firstAction);
+            resultActions.push_back(firstAction);
         }
 
-        res.push_back(startState);
-        std::reverse(res.begin(), res.end());
-        std::reverse(resAct.begin(), resAct.end());
+        resultStates.push_back(startState);
+        std::reverse(resultStates.begin(), resultStates.end());
+        std::reverse(resultActions.begin(), resultActions.end());
         return true;
-    }
-
-    std::vector<TPoint> getReachableForDraw() {
-        _run();
-
-        std::vector<TPoint> res;
-#if M_DRAW_REACHABILITY_X > 0 && M_DRAW_REACHABILITY_Y > 0
-        for (int i = 0; i < (int) dist.size(); i += M_DRAW_REACHABILITY_X) {
-            for (int j = 0; j < (int) dist[0].size(); j += M_DRAW_REACHABILITY_Y) {
-                if (dist[i][j] < INF) {
-                    res.push_back(TState{i, j, 0}.getPoint());
-                }
-            }
-        }
-#endif
-        return res;
     }
 
     template<typename TVisitor>
@@ -323,9 +311,9 @@ public:
             for (int j = 0; j < (int) dist[0].size(); j++) {
                 if (dist[i][j] < INF) {
                     TState state{i, j, 0};
-                    unit.x1 = i * (1 / 6.0) - UNIT_HALF_WIDTH;
+                    unit.x1 = i * STEP_LENGTH - UNIT_HALF_WIDTH;
                     unit.x2 = unit.x1 + UNIT_WIDTH;
-                    unit.y1 = j * (1 / 6.0);
+                    unit.y1 = j * STEP_LENGTH;
                     unit.y2 = unit.y1 + UNIT_HEIGHT;
                     visitor(dist[i][j], unit, state);
                 }
@@ -342,14 +330,14 @@ private:
 
     TState _getPointState(const TPoint& point) {
         TState res;
-        res.x = int((point.x + (0.5 / 6)) / (1.0 / 6));
-        res.y = int((point.y + 1 / 60.0) / (1.0 / 6) + 1e-8);
+        res.x = int((point.x + STEP_LENGTH/2) / STEP_LENGTH); // round to nearest
+        res.y = int((point.y + 1 / 60.0) / STEP_LENGTH + 1e-8);
         return res;
     }
 
     TState _getUnitState(const TUnit& unit) {
         TState res = _getPointState(TPoint(unit.x1 + UNIT_HALF_WIDTH, unit.y1));
-        res.timeLeft = int(unit.jumpMaxTime * 60 + 1e-10);
+        res.timeLeft = int(unit.jumpMaxTime * TICKS_PER_SECOND + 1e-10);
         res.pad = unit.isPadFly();
         return res;
     }
@@ -443,9 +431,9 @@ private:
     }
 
     void _dijkstra() {
-        dist = std::vector<std::vector<double>>(TLevel::width*6, std::vector<double>(TLevel::height*6, INF + 1.0));
-        penalty = std::vector<std::vector<double>>(TLevel::width*6, std::vector<double>(TLevel::height*6, 0));
-        prev = std::vector<std::vector<TState>>(TLevel::width*6, std::vector<TState>(TLevel::height*6, {-1, -1}));
+        dist = std::vector<std::vector<double>>((size_t)TLevel::width * STEPS_PER_CELL, std::vector<double>((size_t)TLevel::height * STEPS_PER_CELL, INF + 1.0));
+        penalty = std::vector<std::vector<double>>(TLevel::width * STEPS_PER_CELL, std::vector<double>(TLevel::height * STEPS_PER_CELL, 0));
+        prev = std::vector<std::vector<TState>>(TLevel::width * STEPS_PER_CELL, std::vector<TState>(TLevel::height * STEPS_PER_CELL, {-1, -1}));
 
         for (auto& opp : env->units) {
             if (opp.playerId == TLevel::myId) {
@@ -460,9 +448,11 @@ private:
                     if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
                         const double mx = 10.0;
                         penalty[st.x][st.y] = std::max(0.0, mx - pt.getDistanceTo(oppCenter));
-//                        TDrawUtil().debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
-//                                                                 Vec2Float{0.05, 0.05},
-//                                                                 ColorFloat(1, 0, 0, penalty[st.x][st.y] / mx)));
+#if M_DRAW_PENALTY
+                        TDrawUtil().debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
+                                                                 Vec2Float{0.05, 0.05},
+                                                                 ColorFloat(1, 0, 0, penalty[st.x][st.y] / mx)));
+#endif
                     }
                 }
             }
@@ -491,7 +481,6 @@ private:
                     q.push(std::make_pair(-dist[to.x][to.y], to));
                 }
             }
-            continue;
         }
     }
 };

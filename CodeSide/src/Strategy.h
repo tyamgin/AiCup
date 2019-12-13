@@ -2,6 +2,7 @@
 #define CODESIDE_STRATEGY_H
 
 #include "constants.h"
+#include "logger.h"
 #include "sandbox.h"
 #include "draw.h"
 #include "findpath.h"
@@ -232,15 +233,14 @@ class Strategy {
         std::vector<TState> pathPoints;
         std::vector<TAction> actions;
 
-//        auto reachable = pathFinder.getReachableForDraw();
-//        for (auto& p : reachable) {
-//            TDrawUtil().debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
-//        }
-//
-//        if (pathFinder.findPath(TPoint(30, 1), pathPoints, actions) && actions.size() > 0) {
-//            TDrawUtil().drawPath(pathPoints);
-//            return actions;
-//        }
+#if M_DRAW_REACHABILITY_X > 0 && M_DRAW_REACHABILITY_Y > 0
+        pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
+            if (state.x % M_DRAW_REACHABILITY_X == 0 && state.y % M_DRAW_REACHABILITY_Y == 0) {
+                auto p = state.getPoint();
+                TDrawUtil::debug->draw(CustomData::Rect({float(p.x), float(p.y)}, {0.05, 0.05}, ColorFloat(0, 1, 0, 1)));
+            }
+        });
+#endif
 
         if (unit.weapon.type == ELootType::NONE) {
             auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ROCKET_LAUNCHER, ELootType::ASSAULT_RIFLE});
