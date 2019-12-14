@@ -5,7 +5,7 @@
 
 #define M_DRAW_GRID 1
 #define M_DRAW_REACHABILITY_X 3
-#define M_DRAW_REACHABILITY_Y 6
+#define M_DRAW_REACHABILITY_Y 0
 #define M_DRAW_PENALTY 0
 
 
@@ -95,6 +95,32 @@ public:
                                                    ColorFloat(1, 0, 0, 1)));
             }
         }
+#endif
+    }
+
+    void drawAim(const TUnit& unit, const TAction& action) {
+#ifdef DEBUG
+        if (action.reload) {
+            debug->draw(CustomData::PlacedText("RELOAD",
+                                               Vec2Float{float(unit.x1), float(unit.y2 + 1)}, TextAlignment::CENTER, 35,
+                                               ColorFloat(0, 0, 1, 0.8)));
+        }
+        if (action.swapWeapon) {
+            debug->draw(CustomData::PlacedText("SWAP",
+                                               Vec2Float{float(unit.x1), float(unit.y2 + 1)}, TextAlignment::CENTER, 35,
+                                               ColorFloat(0, 0, 1, 0.8)));
+        }
+        if (action.aim.length2() < SQR(0.5)) {
+            return;
+        }
+        auto aim = action.aim.normalized();
+        auto cen = unit.center();
+        float x1 = float(cen.x),
+              y1 = float(cen.y),
+              x2 = float(cen.x + aim.x * 20),
+              y2 = float(cen.y + aim.y * 20);
+        auto color = action.shoot ? ColorFloat(1, 0, 0, 0.9) : ColorFloat(0, 1, 0, 0.5);
+        debug->draw(CustomData::Line(Vec2Float{x1, y1}, Vec2Float{x2, y2}, 0.05, color));
 #endif
     }
 };

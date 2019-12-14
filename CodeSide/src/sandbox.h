@@ -24,6 +24,7 @@ public:
     bool oppShotSimpleStrategy = false;
     std::vector<const TUnit*> _nearestUnitCache;
     double shotSpreadToss = 0;
+    bool oppFallFreeze = false;
 
     TSandbox() {
         currentTick = -1;
@@ -72,6 +73,8 @@ public:
         lootBoxes = sandbox.lootBoxes;
         lootBoxIndex = sandbox.lootBoxIndex;
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
+        shotSpreadToss = sandbox.shotSpreadToss;
+        oppFallFreeze = sandbox.oppFallFreeze;
     }
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
@@ -336,7 +339,7 @@ private:
                         unit.jumpMaxTime -= 1.0 / updatesPerSecond;
                     }
                 }
-            } else if (action.jumpDown || !onLadder) {
+            } else if ((action.jumpDown || !onLadder) && (!oppFallFreeze || unit.playerId == TLevel::myId)) {
                 double dy = -UNIT_FALL_SPEED / updatesPerSecond;
 
                 auto wallMask = uint32_t(ETile::WALL);

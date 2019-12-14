@@ -241,6 +241,31 @@ public:
     double getManhattanDistTo(const TUnit& other) const {
         return std::abs(x1 - other.x1) + std::abs(y1 - other.y1);
     }
+
+    double getDistanceTo(const TUnit& unit) const {
+        return sqrt(SQR(x1 - unit.x1) + SQR(y1 - unit.y1));
+    }
+
+    bool canShot() const {
+        return weapon.fireTimer < -0.5;
+    }
+
+    bool isMagazineFull() const {
+        if (weapon.type == ELootType::PISTOL) {
+            return weapon.magazine == PISTOL_MAGAZINE_SIZE;
+        }
+        if (weapon.type == ELootType::ASSAULT_RIFLE) {
+            return weapon.magazine == ASSAULT_RIFLE_MAGAZINE_SIZE;
+        }
+        if (weapon.type == ELootType::ROCKET_LAUNCHER) {
+            return weapon.magazine == ROCKET_LAUNCHER_MAGAZINE_SIZE;
+        }
+        return true;
+    }
+
+    bool isMy() const {
+        return playerId == TLevel::myId;
+    }
 };
 
 

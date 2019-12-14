@@ -117,6 +117,26 @@ struct TPoint {
         auto sin = std::sin(angle);
         return TPoint(cos * x + sin * y, -sin * x + cos * y);
     }
+
+    static double getAngleBetween(TPoint vec1, TPoint vec2) {
+        return acos(vec1 * vec2 / vec1.length() / vec2.length());
+    }
+
+    static double getAngleBetween(double alpha, double beta) {
+        alpha = angleNormalize(alpha);
+        beta = angleNormalize(beta);
+        return std::abs(angleNormalize(alpha - beta));
+    }
+
+    static double angleNormalize(double angle) {
+        while (angle > M_PI) {
+            angle -= 2 * M_PI;
+        }
+        while (angle < -M_PI) {
+            angle += 2 * M_PI;
+        }
+        return angle;
+    }
 };
 
 struct TCell {

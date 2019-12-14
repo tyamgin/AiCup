@@ -31,8 +31,8 @@ public:
     }
 
     bool intersectsWith(const TRectangle& rect) const {
-        return (isIn(x1, x2, rect.x1) || isIn(x1, x2, rect.x2)) &&
-               (isIn(y1, y2, rect.y1) || isIn(y1, y2, rect.y2));
+        return (isIn(x1, x2, rect.x1) || isIn(x1, x2, rect.x2) || isIn(rect.x1, rect.x2, x1)) &&
+               (isIn(y1, y2, rect.y1) || isIn(y1, y2, rect.y2) || isIn(rect.y1, rect.y2, y1));
     }
 
     bool intersectsWith(double rx1, double ry1, double rx2, double ry2) const {
