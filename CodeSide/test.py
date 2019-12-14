@@ -35,7 +35,7 @@ def get_player_config(port):
 
 
 def worker(args):
-    idx, p1, p2, lr_bin, start_seed, level, nthreads, count = args
+    idx, p1, p2, lr_bin, start_seed, level, nthreads, count, profile_mode = args
     port1 = 32003 + idx * 2
     port2 = port1 + 1
     seed = start_seed + idx
@@ -74,7 +74,10 @@ def worker(args):
     try:
         with subprocess.Popen(f"{lr_bin} --config {config_path} --save-results {result_path} --batch-mode --log-level warn".split(" ")) as process:
             time.sleep(0.5)
-            subprocess.Popen([p2 if swap else p1, "127.0.0.1", str(port1), "0000000000000000"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            stream = subprocess.DEVNULL
+            if profile_mode:
+                stream = None
+            subprocess.Popen([p2 if swap else p1, "127.0.0.1", str(port1), "0000000000000000"], stdout=stream, stderr=stream)
             subprocess.Popen([p1 if swap else p2, "127.0.0.1", str(port2), "0000000000000000"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             process.wait()
             with open(result_path) as result_inp:
@@ -99,14 +102,15 @@ def start_process():
 @click.option('--level', type=str, default="Simple")
 @click.option('--nthreads', type=int, default=4)
 @click.option('--count', type=int, default=12)
-def run(p1, p2, lr_bin, start_seed, level, nthreads, count):
+@click.option('--profile-mode', is_flag=True)
+def run(p1, p2, lr_bin, start_seed, level, nthreads, count, profile_mode):
     if not os.path.exists("tmp"):
         os.makedirs("tmp")
 
     pool = multiprocessing.Pool(processes=nthreads, initializer=start_process)
     pool.map(worker, [(
             i,
-            p1, p2, lr_bin, start_seed, level, nthreads, count
+            p1, p2, lr_bin, start_seed, level, nthreads, count, profile_mode
     ) for i in range(count)])
 
 

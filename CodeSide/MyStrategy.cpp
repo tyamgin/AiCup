@@ -12,8 +12,6 @@ Strategy strategy;
 
 #define CAT_(a, b) a##b
 #define CAT(a, b) CAT_(a, b)
-#define QUOTE_(...) #__VA_ARGS__
-#define QUOTE(...) QUOTE_(__VA_ARGS__)
 
 void debugCheckGameParams(const Game& game, bool print) {
 #define PRINT_GAME_PROP(type, const_str, p) do {                                                                \
@@ -28,7 +26,6 @@ void debugCheckGameParams(const Game& game, bool print) {
     } while(0)
 
     PRINT_GAME_PROP(int, MAX_TICK_COUNT, maxTickCount);
-    //PRINT_GAME_PROP(int, TEAM_SIZE, teamSize);
     PRINT_GAME_PROP(double, TICKS_PER_SECOND, ticksPerSecond);
     PRINT_GAME_PROP(int, UPDATES_PER_TICK, updatesPerTick);
     PRINT_GAME_PROP(double, LOOT_BOX_SIZE, lootBoxSize.x);
@@ -83,23 +80,30 @@ void debugCheckGameParams(const Game& game, bool print) {
 #undef PRINT_GAME_PROP
 #undef PRINT_WEAPON_PROP
 #undef PRINT_WEAPON_PROPS
-
-
-    //std::shared_ptr<ExplosionParams> explosion;
 }
 
 UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
+    OP_START(ALL);
+    TIMER_START();
     TLevel::init(unit, game);
     TDrawUtil::debug = std::make_shared<Debug>(debug);
     if (game.currentTick == 0) {
-        cout << TLevel::toString() << endl;
+        LOG(TLevel::toString());
     }
 
     if (game.currentTick <= 1) {
         debugCheckGameParams(game, false);
     }
-    printf("t=%d y1=%.13f j=%.13f", game.currentTick, unit.position.y, unit.jumpState.maxTime);
-    return strategy.getAction(unit, game, debug);
+    auto ret = strategy.getAction(unit, game, debug);
+    TIMER_ENG_LOG("Tick");
+    OP_END(ALL);
+
+#if M_TIME_LOGS
+    if (game.currentTick % 100 == 0) {
+        std::cout << Logger::instance()->getSummary() << std::endl;
+    }
+#endif
+    return ret;
 }
 
 int TLevel::width = 0;

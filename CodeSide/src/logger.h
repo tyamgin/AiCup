@@ -15,6 +15,10 @@
 enum ELoggerAction {
     LA_ALL,
     LA_DO_TICK,
+    LA_DIJKSTRA,
+    LA_FINDPATH,
+    LA_SHOT_STRAT,
+    LA_DODGE,
 
     LA_ACTIONS_COUNT
 };
@@ -53,7 +57,7 @@ struct Logger {
     }
 
     void timerEndLog(const std::string& caption, int limit) {
-        auto time = timerEnd() / 500;
+        auto time = timerEnd() / 1000;
         if (time > limit) {
             log(std::to_string(tick) + "> " + std::string(_timers.size() * 2, '-') + " " + caption + ": " + std::to_string(time) + "ms");
         }
@@ -72,6 +76,10 @@ struct Logger {
         out << "[Summary]" << std::endl;
         out << "] ALL                         " << _cumulativeDuration[LA_ALL]                         / 1000 << "ms" << std::endl;
         out << "] DO_TICK                     " << _cumulativeDuration[LA_DO_TICK]                     / 1000 << "ms" << std::endl;
+        out << "] DIJKSTRA                    " << _cumulativeDuration[LA_DIJKSTRA]                    / 1000 << "ms" << std::endl;
+        out << "] FINDPATH                    " << _cumulativeDuration[LA_FINDPATH]                    / 1000 << "ms" << std::endl;
+        out << "] SHOT_STRAT                  " << _cumulativeDuration[LA_SHOT_STRAT]                  / 1000 << "ms" << std::endl;
+        out << "] DODGE                       " << _cumulativeDuration[LA_DODGE]                       / 1000 << "ms" << std::endl;
         return out.str();
     }
 

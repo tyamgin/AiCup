@@ -335,6 +335,7 @@ public:
         auto bestScore = scorer(notDodgeEnv);
         std::optional<std::vector<TPoint>> bestPath;
 
+        OP_START(DODGE);
         for (int dirX = -1; dirX <= 1; dirX++) {
             for (int dirY = -1; dirY <= 1; dirY += 1) {
                 TSandbox dodgeEnv = env;
@@ -359,6 +360,7 @@ public:
                 }
             }
         }
+        OP_END(DODGE);
         if (bestPath) {
             TDrawUtil().drawPath(bestPath.value(), ColorFloat(1, 0, 0, 1));
         }
@@ -381,7 +383,6 @@ public:
         for (auto& u : env.units) {
             if (u.id == unit.id) {
                 u.action = action;
-                std::cout << action.velocity << " " << action.jump << " " << action.jumpDown << std::endl;
             }
         }
         prevEnv = env;
@@ -402,6 +403,8 @@ public:
         if (target == nullptr) {
             return {};
         }
+
+        OP_START(SHOT_STRAT);
 
         auto oppDodgeStrategy = [](const TSandbox& afterShotEnv, int unitId, int simulateTicks) {
             int maxHealth = 0;
@@ -465,6 +468,8 @@ public:
                 action.shoot = true;
             }
         }
+
+        OP_END(SHOT_STRAT);
         return action;
     }
 

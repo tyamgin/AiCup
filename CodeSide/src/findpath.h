@@ -229,6 +229,16 @@ public:
         resultStates.clear();
         resultActions.clear();
         _run();
+        OP_START(FINDPATH);
+        auto ret = _findPath(target, resultStates, resultActions);
+        OP_END(FINDPATH);
+        return ret;
+    }
+
+    bool _findPath(const TPoint& target, std::vector<TState>& resultStates, std::vector<TAction>& resultActions) {
+        resultStates.clear();
+        resultActions.clear();
+        _run();
 
         TState targetState = _getPointState(target);
         TState selectedTargetState;
@@ -324,7 +334,9 @@ public:
 private:
     void _run() {
         if (dist.empty()) {
+            OP_START(DIJKSTRA);
             _dijkstra();
+            OP_END(DIJKSTRA);
         }
     }
 
