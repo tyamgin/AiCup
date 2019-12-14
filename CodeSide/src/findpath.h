@@ -296,9 +296,10 @@ public:
             if (std::abs(dx) > 1e-10) {
                 // проверяем, что нужно округлить в другую сторону, если заблокировали
                 auto testEnv = *env;
-                testEnv.getUnit(startUnit.id)->action = firstAction;
+                auto newUnit = testEnv.getUnit(startUnit.id);
+                newUnit->action = firstAction;
                 testEnv.doTick();
-                if (std::abs(testEnv.getUnit(startUnit.id)->x1 - startUnit.x1) < 1e-10) {
+                if (std::abs(_getUnitState(*newUnit).getPoint().x - newUnit->center().x) > 1e-10) {
                     auto tmp = startState;
                     tmp.x += dx < 0 ? 1 : -1;
                     dx = tmp.getPoint().x - startUnit.position().x;

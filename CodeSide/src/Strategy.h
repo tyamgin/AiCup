@@ -13,16 +13,19 @@
 
 /**
  * - пошел за аптечкой напролом через противника, не прошел, проиграл
- * - поменял оружие в бою, проиграл из-за перезарядки
+ * - (v) поменял оружие в бою, проиграл из-за перезарядки
  * - собрал все аптечки, не осталось аптечки соперницу, выиграл
  * - собрал аптечку с минимумом урона, проиграл, т.к. у соперника аптечка осталась
- * - не перезаряжаюсь, когда возможно
+ * - (v) не перезаряжаюсь, когда возможно
  * - не учитывается падение соперника при прицеливании
  * - пп от соперника и отклонения с учетом этого
  * - урон от ракеты суммируется => вплотную против неё лучше не становиться
  * - пп от стен, если соперник с базукой
- * - перезарядка, если далеко от противника
+ * - (v) перезарядка, если далеко от противника
  * - пп в пользу стояния на лестнице (легко уклоняться)
+ * - стрелдять можно посреди тика, даже если unit.canShot() изначально false
+ * - в findpath поощрять за бонусы
+ * - предсказывать dx противника
  */
 
 class Strategy {
@@ -259,6 +262,20 @@ class Strategy {
             }
         }
 
+        if (unit.weapon.type != ELootType::ROCKET_LAUNCHER) {
+            for (const auto &opp : env.units) {
+                if (!opp.isMy()) {
+                    if (opp.health <= 80 && unit.health <= opp.health) {
+                        auto maybeAct = _strategyLoot(unit, {ELootType::ROCKET_LAUNCHER});
+                        if (maybeAct) {
+                            return maybeAct;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
         if (target != nullptr && unit.weapon.fireTimer > 0.5) {
             double rangeMin = 5, rangeMax = 7;
 //            if (unit.weapon.fireTimer > 0.5) {
@@ -284,6 +301,8 @@ class Strategy {
                 return actions;
             }
         }
+
+
 
         if (target != nullptr) {
             if (pathFinder.findPath(target->position(), pathPoints, actions) && actions.size() > 0) {
@@ -367,18 +386,20 @@ public:
 
         TAction action = actions.size() > 0 ? actions[0] : TAction();
 
-        auto lb = env.findLootBox(unit);
-        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
-            if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
-                action.swapWeapon = true;
-            }
-        }
-
         auto maybeShot = shotStrategy(unit, actions);
         if (maybeShot) {
             action.shoot = maybeShot.value().shoot;
             action.aim = maybeShot.value().aim;
         }
+
+        auto reloadSwapAction = _reloadSwap(unit);
+        if (!action.shoot && reloadSwapAction.reload) {
+            action.reload = true;
+        }
+        if (!action.shoot && reloadSwapAction.swapWeapon) {
+            action.swapWeapon = true;
+        }
+        TDrawUtil().drawAim(unit, action);
 
         for (auto& u : env.units) {
             if (u.id == unit.id) {
@@ -433,9 +454,9 @@ public:
             return bestAction;
         };
 
-        TAction action;
+        TAction action = actions.empty() ? TAction() : actions[0];
         action.aim = calcAim(unit, *target, actions);
-        if (unit.weapon.fireTimer < -0.5) {
+        if (unit.canShot()) {
             const int itersCount = 6;
             int successCount = 0;
             for (int it = -itersCount; it <= itersCount; it++) {
@@ -449,6 +470,11 @@ public:
                     testEnv.doTick();
                     testNothingEnv.doTick();
                     testEnv.getUnit(unit.id)->action.shoot = false;
+                    if (env.currentTick == 128) {
+                        for (auto& bullet : testEnv.bullets) {
+                            TDrawUtil().debugPoint(bullet.center(), ColorFloat(1, 0, 0, 0.6));
+                        }
+                    }
                     if (i == 0) {
                         auto oppAction = oppDodgeStrategy(testEnv, target->id, simulateTicks - 1);
                         testEnv.getUnit(target->id)->action = oppAction;
@@ -459,11 +485,13 @@ public:
                 }
             }
             double probability = successCount / (itersCount*2 + 1.0);
+#ifdef DEBUG
             TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
                                                            Vec2Float{float(unit.x1), float(unit.y2 + 3)},
                                                            TextAlignment::LEFT,
                                                            30,
                                                            ColorFloat(0, 0, 1, 1)));
+#endif
             if (probability >= 0.5) {
                 action.shoot = true;
             }
@@ -490,27 +518,69 @@ public:
         return TPoint::byAngle(aimAngle);
     }
 
-    double _calcAimDist(const TUnit& unit, const TUnit& target, double aimAngle, const std::vector<TAction>& actions) {
+    double _calcAimDist(const TUnit& startUnit, const TUnit& target, double aimAngle, const std::vector<TAction>& actions) {
         TSandbox snd = env;
+        snd.oppFallFreeze = true;
         snd.bullets.clear();
         auto aim = TPoint::byAngle(aimAngle);
-        double minDist2 = unit.center().getDistanceTo2(target.center());
-        bool shot = true;
         for (int i = 0; i < 60; i++) {
-            auto u = snd.getUnit(unit.id);
+            auto u = snd.getUnit(startUnit.id);
             u->action = i < actions.size() ? actions[i] : TAction();
-            u->action.aim = aim;
-            u->action.shoot = shot;
+            if (u->canShot()) {
+                auto tar = snd.getUnit(target.id)->center();
+                return std::abs(TPoint::getAngleBetween(aim, tar - u->center()));
+            }
             snd.doTick(4);
-            auto tar = snd.getUnit(target.id)->center();
-            for (const auto& b : snd.bullets) {
-                if (b.unitId == unit.id) {
-                    minDist2 = std::min(minDist2, b.center().getDistanceTo2(tar));
-                    shot = false;
+        }
+        return M_PI;
+    }
+
+    TAction _reloadSwap(const TUnit& unit) {
+        TAction act;
+
+        auto lb = env.findLootBox(unit);
+        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
+            if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
+                bool free = true;
+                for (const auto &opp : env.units) {
+                    if (!opp.isMy()) {
+                        if (unit.getManhattanDistTo(opp) >= 11) {
+                            continue;
+                        }
+                        if (unit.getManhattanDistTo(opp) < 7 && opp.weapon.fireTimer > 0.5) {
+                            continue;
+                        }
+                        if (opp.weapon.fireTimer > 0.8) {
+                            continue;
+                        }
+                        free = false;
+                    }
+                }
+                act.swapWeapon = free;
+            }
+            if (unit.weapon.type != ELootType::ROCKET_LAUNCHER && lb->type == ELootType::ROCKET_LAUNCHER) {
+                for (const auto &opp : env.units) {
+                    if (!opp.isMy() && opp.getManhattanDistTo(unit) <= 4) {
+                        if (unit.health > 20 && opp.health <= 80) {
+                            act.swapWeapon = true;
+                        }
+                    }
                 }
             }
         }
-        return sqrt(minDist2);
+
+        if (!unit.isMagazineFull()) {
+            double minDist = INF;
+            for (const auto &opp : env.units) {
+                if (opp.isMy()) {
+                    continue;
+                }
+                minDist = std::min(minDist, unit.getManhattanDistTo(opp));
+                // TODO: проверять через traverseReachable, когда не будет штрафа
+            }
+            act.reload = minDist > 17;
+        }
+        return act;
     }
 };
 
