@@ -84,7 +84,7 @@ void debugCheckGameParams(const Game& game, bool print) {
 
 UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
     if (game.properties.teamSize > 1) {
-        return UnitAction();
+        return TAction().toUnitAction();
     }
 
     OP_START(ALL);
