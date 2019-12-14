@@ -5,24 +5,24 @@
 
 class TMine : public TRectangle {
 public:
-    int playerId;
+    int playerIdx;
     double timer; // -1
     MineState state;
 
     TMine() : TRectangle(0, 0, 0, 0) {
-        playerId = -1;
+        playerIdx = 0;
         timer = MINE_PREPARE_TIME;
         state = MineState::PREPARING;
     }
 
     explicit TMine(const Mine& mine) : TRectangle(mine.position, MINE_SIZE, MINE_SIZE) {
-        playerId = mine.playerId;
+        playerIdx = mine.playerId == TLevel::myId ? 0 : 1;
         timer = mine.timer ? *mine.timer : -1;
         state = mine.state;
     }
 
     TMine(const TMine& mine) : TRectangle(mine) {
-        playerId = mine.playerId;
+        playerIdx = mine.playerIdx;
         timer = mine.timer;
         state = mine.state;
     }

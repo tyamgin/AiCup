@@ -35,8 +35,8 @@ public:
         return WEAPON_DAMAGE[(int) weaponType];
     }
 
-    int playerId() const {
-        return TLevel::unitIdToPlayerId[unitId];
+    int playerIdx() const {
+        return TLevel::unitIdToPlayerIdx[unitId];
     }
 
     bool isInWall() const {
@@ -48,6 +48,11 @@ public:
             }
         }
         return false;
+    }
+
+    bool isRocketLauncherExplosionTouch(const TRectangle& unit) const {
+        double d = ROCKET_LAUNCHER_EXPLOSION_RADIUS - ROCKET_LAUNCHER_BULLET_SIZE / 2;
+        return unit.intersectsWith(x1 - d, y1 - d, x2 + d, y2 + d);
     }
 };
 

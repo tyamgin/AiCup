@@ -47,7 +47,7 @@ class Strategy {
                 LOG_ERROR("Prev state unit.health mismatch " << prevUnit.health << " vs " << curUnit.health);
             }
 
-            if (prevUnit.playerId != TLevel::myId) {
+            if (!prevUnit.isMy()) {
                 continue;
             }
             if (std::abs(prevUnit.x1 - curUnit.x1) > eps) {
@@ -257,7 +257,7 @@ class Strategy {
 
         TUnit* target = nullptr;
         for (auto& u : env.units) {
-            if (u.playerId != unit.playerId) {
+            if (u.playerIdx != unit.playerIdx) {
                 target = &u;
             }
         }
@@ -417,7 +417,7 @@ public:
 
         TUnit* target = nullptr;
         for (auto& u : env.units) {
-            if (u.playerId != unit.playerId) {
+            if (u.playerIdx != unit.playerIdx) {
                 target = &u;
             }
         }
@@ -427,8 +427,9 @@ public:
 
         OP_START(SHOT_STRAT);
 
-        auto oppDodgeStrategy = [](const TSandbox& afterShotEnv, int unitId, int simulateTicks) {
+        auto oppDodgeStrategy = [](TSandbox& afterShotEnv, int unitId, int simulateTicks) {
             int maxHealth = 0;
+            int initialHealth = afterShotEnv.getUnit(unitId)->health;
             TAction bestAction;
             for (int dirX = -1; dirX <= 1; dirX++) {
                 for (int dirY = -1; dirY <= 1; dirY += 1) {
@@ -441,13 +442,16 @@ public:
                         act.jumpDown = true;
                     }
                     act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
-                    for (int i = 0; i < simulateTicks; i++) {
-                        opp->action = act;
+                    opp->action = act;
+                    for (int i = 0; i < simulateTicks && opp->health > maxHealth; i++) {
                         dodgeEnv.doTick(10);
                     }
                     if (opp->health > maxHealth) {
                         maxHealth = opp->health;
                         bestAction = act;
+                        if (opp->health == initialHealth) {
+                            return bestAction;
+                        }
                     }
                 }
             }
@@ -459,6 +463,7 @@ public:
         if (unit.canShot()) {
             const int itersCount = 6;
             int successCount = 0;
+            int friendlyFails = 0;
             for (int it = -itersCount; it <= itersCount; it++) {
                 auto testEnv = env;
                 auto testNothingEnv = env;
@@ -470,29 +475,38 @@ public:
                     testEnv.doTick();
                     testNothingEnv.doTick();
                     testEnv.getUnit(unit.id)->action.shoot = false;
-                    if (env.currentTick == 128) {
-                        for (auto& bullet : testEnv.bullets) {
-                            TDrawUtil().debugPoint(bullet.center(), ColorFloat(1, 0, 0, 0.6));
+                    if (i == 0) {
+                        for (auto& u : testEnv.units) {
+                            if (u.id != unit.id || unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+                                u.action = oppDodgeStrategy(testEnv, u.id, simulateTicks - 1);
+                            }
                         }
                     }
-                    if (i == 0) {
-                        auto oppAction = oppDodgeStrategy(testEnv, target->id, simulateTicks - 1);
-                        testEnv.getUnit(target->id)->action = oppAction;
-                    }
                 }
-                if (testEnv.score[0] > testNothingEnv.score[0]) {
+                auto score = (testEnv.score[0] - testNothingEnv.score[0]) - (testEnv.friendlyLoss[0] - testNothingEnv.friendlyLoss[0])*3/2;
+                if (score > 0 || (testEnv.score[0] - testNothingEnv.score[0] > KILL_SCORE && testEnv.score[0] > testEnv.score[1])) {
                     successCount++;
+                } else if (score < 0) {
+                    friendlyFails++;
                 }
             }
             double probability = successCount / (itersCount*2 + 1.0);
+            double failProbability = friendlyFails / (itersCount*2 + 1.0);
 #ifdef DEBUG
             TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
-                                                           Vec2Float{float(unit.x1), float(unit.y2 + 3)},
+                                                           Vec2Float{float(unit.x1), float(unit.y2 + 2)},
                                                            TextAlignment::LEFT,
                                                            30,
                                                            ColorFloat(0, 0, 1, 1)));
+            if (failProbability > 0.01) {
+                TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(failProbability),
+                                                              Vec2Float{float(unit.x1), float(unit.y2 + 2.5)},
+                                                              TextAlignment::LEFT,
+                                                              30,
+                                                              ColorFloat(1, 0, 0, 1)));
+            }
 #endif
-            if (probability >= 0.5) {
+            if (probability >= 0.5 && failProbability < 0.01) {
                 action.shoot = true;
             }
         }

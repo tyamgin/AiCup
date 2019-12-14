@@ -16,6 +16,7 @@ class TSandbox {
 public:
     int currentTick;
     int score[2] = {0, 0};
+    int friendlyLoss[2] = {0, 0};
     std::vector<TUnit> units;
     std::vector<TBullet> bullets;
     std::vector<TMine> mines;
@@ -53,12 +54,15 @@ public:
         for (const auto& player : game.players) {
             score[player.id != TLevel::myId] = player.score;
         }
+        friendlyLoss[0] = friendlyLoss[1] = 0;
     }
 
     TSandbox(const TSandbox& sandbox, int onlyUnitId = -1) {
         currentTick = sandbox.currentTick;
         score[0] = sandbox.score[0];
         score[1] = sandbox.score[1];
+        friendlyLoss[0] = sandbox.friendlyLoss[0];
+        friendlyLoss[1] = sandbox.friendlyLoss[1];
         if (onlyUnitId == -1) {
             units = sandbox.units;
         } else {
@@ -83,7 +87,7 @@ public:
         for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
             auto& unit = units[unitIdx];
 
-            if (unit.playerId != TLevel::myId) {
+            if (!unit.isMy()) {
                 _applyOppStrategy(unit);
             }
 
@@ -149,7 +153,7 @@ private:
             TUnit* target = nullptr;
             double minDist2 = INT_MAX;
             for (auto &my : units) {
-                if (my.playerId != TLevel::myId) {
+                if (!my.isMy()) {
                     continue;
                 }
                 if (target == nullptr || opp.center().getDistanceTo2(my.center()) < minDist2) {
@@ -167,9 +171,18 @@ private:
     void _blowUpMine(const TMine& mine) {
         for (auto& unit : units) {
             if (mine.isTouch(unit)) {
-                unit.health -= MINE_EXPLOSION_DAMAGE;
-                if (mine.playerId != unit.playerId) {
-                    score[mine.playerId != TLevel::myId] += MINE_EXPLOSION_DAMAGE;
+                auto damage = std::min(unit.health, MINE_EXPLOSION_DAMAGE);
+                unit.health -= damage;
+                if (unit.health <= 0) {
+                    score[unit.playerIdx ^ 1] += KILL_SCORE;
+                }
+                if (mine.playerIdx != unit.playerIdx) {
+                    score[mine.playerIdx] += damage;
+                } else {
+                    friendlyLoss[mine.playerIdx] += damage;
+                    if (unit.health <= 0) {
+                        friendlyLoss[mine.playerIdx] += KILL_SCORE;
+                    }
                 }
             }
         }
@@ -339,7 +352,7 @@ private:
                         unit.jumpMaxTime -= 1.0 / updatesPerSecond;
                     }
                 }
-            } else if ((action.jumpDown || !onLadder) && (!oppFallFreeze || unit.playerId == TLevel::myId)) {
+            } else if ((action.jumpDown || !onLadder) && (!oppFallFreeze || unit.isMy())) {
                 double dy = -UNIT_FALL_SPEED / updatesPerSecond;
 
                 auto wallMask = uint32_t(ETile::WALL);
@@ -448,11 +461,19 @@ private:
     void _applyRocketExplosionDamage(const TBullet& bullet) {
         if (bullet.weaponType == ELootType::ROCKET_LAUNCHER) {
             for (auto& unit : units) {
-                double d = ROCKET_LAUNCHER_EXPLOSION_RADIUS - ROCKET_LAUNCHER_BULLET_SIZE/2;
-                if (unit.intersectsWith(bullet.x1 - d, bullet.y1 - d, bullet.x2 + d, bullet.y2 + d)) {
-                    unit.health -= ROCKET_LAUNCHER_EXPLOSION_DAMAGE;
-                    if (bullet.playerId() != unit.playerId) {
-                        score[unit.playerId == TLevel::myId] += bullet.damage();
+                if (bullet.isRocketLauncherExplosionTouch(unit)) {
+                    auto damage = std::min(unit.health, ROCKET_LAUNCHER_EXPLOSION_DAMAGE);
+                    unit.health -= damage;
+                    if (unit.health <= 0) {
+                        score[unit.playerIdx ^ 1] += KILL_SCORE;
+                    }
+                    if (bullet.playerIdx() != unit.playerIdx) {
+                        score[bullet.playerIdx()] += damage;
+                    } else {
+                        friendlyLoss[bullet.playerIdx()] += damage;
+                        if (unit.health <= 0) {
+                            friendlyLoss[unit.playerIdx] += KILL_SCORE;
+                        }
                     }
                 }
             }
@@ -462,8 +483,19 @@ private:
     bool _collideBulletAndUnits(const TBullet& bullet) {
         for (auto& unit : units) {
             if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
-                unit.health -= bullet.damage();
-                score[unit.playerId == TLevel::myId] += bullet.damage();
+                auto damage = std::min(unit.health, bullet.damage());
+                unit.health -= damage;
+                if (unit.health <= 0) {
+                    score[unit.playerIdx ^ 1] += KILL_SCORE;
+                }
+                if (unit.playerIdx != bullet.playerIdx()) {
+                    score[bullet.playerIdx()] += damage;
+                } else {
+                    friendlyLoss[bullet.playerIdx()] += damage;
+                    if (unit.health <= 0) {
+                        friendlyLoss[unit.playerIdx] += KILL_SCORE;
+                    }
+                }
                 return true;
             }
         }

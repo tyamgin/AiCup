@@ -12,7 +12,7 @@
 
 class TUnit : public TRectangle {
 public:
-    int playerId;
+    int playerIdx;
     int id;
     int health;
 
@@ -25,18 +25,18 @@ public:
     TAction action;
 
     TUnit() : TRectangle(0, 0, 0, 0) {
-        playerId = -1;
+        playerIdx = 0;
         id = -1;
         health = 0;
         canJump = false;
         canJump = false;
         jumpMaxTime = 0;
-        jumpCanCancel = 0;
+        jumpCanCancel = false;
         mines = 0;
     }
 
     explicit TUnit(const Unit& unit) : TRectangle(unit.position, UNIT_WIDTH, UNIT_HEIGHT) {
-        playerId = unit.playerId;
+        playerIdx = unit.playerId == TLevel::myId ? 0 : 1;
         id = unit.id;
         health = unit.health;
         canJump = unit.jumpState.canJump;
@@ -49,7 +49,7 @@ public:
     }
 
     TUnit(const TUnit& unit) : TRectangle(unit) {
-        playerId = unit.playerId;
+        playerIdx = unit.playerIdx;
         id = unit.id;
         health = unit.health;
         canJump = unit.canJump;
@@ -114,7 +114,7 @@ public:
     TMine plantMine() {
         mines--;
         TMine mine;
-        mine.playerId = playerId;
+        mine.playerIdx = playerIdx;
         mine.x1 = x1 + UNIT_HALF_WIDTH - MINE_SIZE / 2;
         mine.x2 = mine.x1 + MINE_SIZE;
         mine.y1 = y1;
@@ -264,7 +264,7 @@ public:
     }
 
     bool isMy() const {
-        return playerId == TLevel::myId;
+        return playerIdx == 0;
     }
 };
 

@@ -20,7 +20,7 @@ public:
     static int height;
     static std::vector<std::vector<ETile>> tiles;
     static int myId;
-    static std::vector<int> unitIdToPlayerId;
+    static std::vector<int> unitIdToPlayerIdx;
 
     static ETile getTileType(double x, double y) {
         return tiles[(int) x][(int) y];
@@ -57,10 +57,10 @@ public:
             }
         }
         for (const auto& u : game.units) {
-            while (unitIdToPlayerId.size() <= u.id) {
-                unitIdToPlayerId.push_back(0);
+            while (unitIdToPlayerIdx.size() <= u.id) {
+                unitIdToPlayerIdx.push_back(0);
             }
-            unitIdToPlayerId[unit.id] = unit.playerId;
+            unitIdToPlayerIdx[unit.id] = unit.playerId == myId ? 0 : 1;
         }
     }
 

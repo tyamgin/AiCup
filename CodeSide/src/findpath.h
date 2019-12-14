@@ -412,7 +412,7 @@ private:
         prev = std::vector<std::vector<TState>>(TLevel::width * STEPS_PER_CELL, std::vector<TState>(TLevel::height * STEPS_PER_CELL, {-1, -1}));
 
         for (auto& opp : env->units) {
-            if (opp.playerId == TLevel::myId) {
+            if (opp.isMy()) {
                 continue;
             }
             auto oppCenter = opp.center();

@@ -15,18 +15,6 @@ public:
     double lastAngle; // DEFAULT_LAST_ANGLE
     int lastFireTick; // -1
 
-    // WeaponParams
-//    int magazineSize;
-//    double fireRate;
-//    double reloadTime;
-//    double minSpread;
-//    double maxSpread;
-//    double recoil;
-//    double aimSpeed;
-
-//    BulletParams bullet;
-//    std::shared_ptr<ExplosionParams> explosion;
-
     TWeapon() {
         type = ELootType::NONE;
         magazine = 0;
