@@ -104,7 +104,7 @@ UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debu
 
 #if M_TIME_LOGS
     if (game.currentTick % 100 == 0) {
-        std::cout << Logger::instance()->getSummary() << std::endl;
+        std::cout << TLogger::instance()->getSummary() << std::endl;
     }
 #endif
     return ret;

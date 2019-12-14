@@ -24,20 +24,20 @@ enum ELoggerAction {
     LA_ACTIONS_COUNT
 };
 
-struct Logger {
+struct TLogger {
     std::vector<std::chrono::system_clock::time_point> _timers;
     int64_t _cumulativeDuration[LA_ACTIONS_COUNT];
     int tick;
 
-    Logger() {
+    TLogger() {
         memset(_cumulativeDuration, 0, sizeof(_cumulativeDuration));
         tick = 0;
     }
 
-    static Logger* instance() {
-        static Logger *_instance = nullptr;
+    static TLogger* instance() {
+        static TLogger *_instance = nullptr;
         if (_instance == nullptr) {
-            _instance = new Logger();
+            _instance = new TLogger();
         }
         return _instance;
     }
@@ -60,7 +60,7 @@ struct Logger {
     void timerEndLog(const std::string& caption, int limit) {
         auto time = timerEnd() / 1000;
         if (time > limit) {
-            log(std::to_string(tick) + "> " + std::string(_timers.size() * 2, '-') + " " + caption + ": " + std::to_string(time) + "ms");
+            log() << tick << "> " << std::string(_timers.size() * 2, '-') << " " << caption << ": " << time << "ms";
         }
     }
 
@@ -84,30 +84,30 @@ struct Logger {
         return out.str();
     }
 
-    template <typename T>
-    void log(T msg) {
-        std::cout << msg << std::endl;
+    std::ostream& log() {
+        return std::cout;
     }
 
-    template <typename T>
-    void error(T msg) {
-        std::cerr << msg << std::endl;
+    std::ostream& error() {
+        return std::cerr;
     }
 };
 
+const std::string EMPTY_STRING;
+
 #if M_LOGS
-#define LOG(msg) Logger::instance()->log(msg)
-#define LOG_ERROR(msg) Logger::instance()->error(msg)
+#define LOG(msg) TLogger::instance()->log() << EMPTY_STRING << msg << std::endl;
+#define LOG_ERROR(msg) TLogger::instance()->error() << EMPTY_STRING << msg << std::endl;
 #else
 #define LOG(msg)
 #define LOG_ERROR(msg)
 #endif
 
 #if M_TIME_LOGS
-#define TIMER_START() Logger::instance()->timerStart()
-#define TIMER_ENG_LOG(caption) Logger::instance()->timerEndLog((caption), 200)
-#define OP_START(action) Logger::instance()->cumulativeTimerStart(LA_ ## action)
-#define OP_END(action) Logger::instance()->cumulativeTimerEnd(LA_ ## action)
+#define TIMER_START() TLogger::instance()->timerStart()
+#define TIMER_ENG_LOG(caption) TLogger::instance()->timerEndLog((caption), 200)
+#define OP_START(action) TLogger::instance()->cumulativeTimerStart(LA_ ## action)
+#define OP_END(action) TLogger::instance()->cumulativeTimerEnd(LA_ ## action)
 #else
 #define TIMER_START()
 #define TIMER_ENG_LOG(caption)
