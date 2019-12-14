@@ -5,7 +5,7 @@
 #include <map>
 #include <sstream>
 #include <iostream>
-#include <memory>
+#include <cstring>
 
 #define M_TIME_LOGS 1
 
