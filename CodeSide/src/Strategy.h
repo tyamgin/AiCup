@@ -422,7 +422,7 @@ public:
                     act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
                     for (int i = 0; i < simulateTicks; i++) {
                         opp->action = act;
-                        dodgeEnv.doTick();
+                        dodgeEnv.doTick(10);
                     }
                     if (opp->health > maxHealth) {
                         maxHealth = opp->health;

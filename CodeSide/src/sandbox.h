@@ -54,18 +54,25 @@ public:
         }
     }
 
-    TSandbox(const TSandbox& sandbox) {
+    TSandbox(const TSandbox& sandbox, int onlyUnitId = -1) {
         currentTick = sandbox.currentTick;
         score[0] = sandbox.score[0];
         score[1] = sandbox.score[1];
-        units = sandbox.units;
+        if (onlyUnitId == -1) {
+            units = sandbox.units;
+        } else {
+            for (auto& unit : sandbox.units) {
+                if (unit.id == onlyUnitId) {
+                    units.emplace_back(unit);
+                }
+            }
+        }
         bullets = sandbox.bullets;
         mines = sandbox.mines;
         lootBoxes = sandbox.lootBoxes;
         lootBoxIndex = sandbox.lootBoxIndex;
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
     }
-
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
         std::vector<bool> swapWeaponBackup;

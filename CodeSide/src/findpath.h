@@ -69,7 +69,7 @@ bool isTouchPad[MICROMAP_SIZE][MICROMAP_SIZE];
 
 using TDfsGoesResult = std::vector<std::pair<TState, double>>;
 
-std::map<TState, TDfsGoesResult> dfsGoesCache;
+TDfsGoesResult* dfsGoesCache[MICROMAP_SIZE][MICROMAP_SIZE];
 bool _drawMode;
 std::set<TState> dfsVisitedStates;
 TDfsGoesResult dfsResultBorderPoints;
@@ -149,23 +149,23 @@ private:
         return false;
     }
 
-    static TDfsGoesResult _getJumpGoes(const TState& state, bool startMode) {
-        dfsStartMode = startMode;
+    static TDfsGoesResult* _getJumpGoes(const TState& state, TDfsGoesResult* startModeResult) {
+        dfsStartMode = startModeResult != nullptr;
 
-        if (!startMode) {
-            auto it = dfsGoesCache.find(state);
-            if (it != dfsGoesCache.end()) {
-                return it->second;
-            }
+        if (!dfsStartMode && dfsGoesCache[state.x][state.y] != nullptr) {
+            return dfsGoesCache[state.x][state.y];
         }
 
         dfsVisitedStates.clear();
         dfsResultBorderPoints.clear();
         _dfs(state, 0);
-        if (!startMode) {
-            dfsGoesCache[state] = dfsResultBorderPoints;
+        if (!dfsStartMode) {
+            dfsGoesCache[state.x][state.y] = new TDfsGoesResult();
+            dfsGoesCache[state.x][state.y]->swap(dfsResultBorderPoints);
+            return dfsGoesCache[state.x][state.y];
         }
-        return dfsResultBorderPoints;
+        startModeResult->swap(dfsResultBorderPoints);
+        return startModeResult;
     }
 
 public:
@@ -354,43 +354,6 @@ private:
         return res;
     }
 
-    std::vector<std::pair<TState, double>> _getCellGoes(const TState& state) {
-        std::vector<std::pair<TState, double>> res;
-        if (!isTouchPad[state.x][state.y]) {
-            for (int xDirection : DIRECTION_ORDER) {
-                auto stx = state;
-                stx.x += xDirection;
-
-                // идти по платформе
-                if (isStand[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER][state.x][state.y]) {
-                    res.emplace_back(stx, 0.9999);
-                }
-
-                // лететь вниз
-                stx.y = state.y - 1;
-                if (isValid[stx.x][stx.y] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
-                    res.emplace_back(stx, 0.9999);
-                }
-
-                // лезть по лестнице вверх
-                stx.y = state.y + 1;
-                if (isOnLadder[state.x][state.y] && isOnLadder[stx.x][stx.y]) {
-                    res.emplace_back(stx, 0.9998);
-                }
-            }
-        }
-        // прыгать
-        if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
-            auto pad = isTouchPad[state.x][state.y];
-            auto jumpGoes = _getJumpGoes({state.x, state.y, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, false);
-            for (auto& [j, dist] : jumpGoes) {
-                res.emplace_back(TState{j.x, j.y, 0}, dist);
-            }
-        }
-
-        return res;
-    }
-
     bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool standFix, bool pad, std::vector<TAction>& resAct, std::vector<TState>& resState) {
         if (!isTouchPad[state.x][state.y]) {
             for (int xDirection : DIRECTION_ORDER) {
@@ -471,26 +434,58 @@ private:
         }
 
         std::priority_queue<std::pair<double, TState>> q;
-        for (const auto& [s, dst] : _getJumpGoes(startState, true)) {
+        TDfsGoesResult startGoes;
+        for (const auto& [s, dst] : *_getJumpGoes(startState, &startGoes)) {
             q.push(std::make_pair(-dst, s));
             dist[s.x][s.y] = dst;
             prev[s.x][s.y] = startState;
         }
         while (!q.empty()) {
-            auto v = q.top().second;
+            auto state = q.top().second;
             auto curDist = -q.top().first;
             q.pop();
-            if (curDist > dist[v.x][v.y]) {
+            if (curDist > dist[state.x][state.y]) {
                 continue;
             }
 
-            for (const auto& t : _getCellGoes(v)) {
-                auto& to = t.first;
-                auto dst = t.second + penalty[to.x][to.y];
-                if (dist[v.x][v.y] + dst < dist[to.x][to.y]) {
-                    dist[to.x][to.y] = dist[v.x][v.y] + dst;
-                    prev[to.x][to.y] = v;
-                    q.push(std::make_pair(-dist[to.x][to.y], to));
+#define DJ_PUSH(to_x, to_y, to_dist) do {                                           \
+                auto dst = to_dist + penalty[to_x][to_y];                           \
+                if (dist[state.x][state.y] + dst < dist[to_x][to_y]) {              \
+                    dist[to_x][to_y] = dist[state.x][state.y] + dst;                \
+                    prev[to_x][to_y] = state;                                       \
+                    q.push(std::make_pair(-dist[to_x][to_y], TState{to_x, to_y}));  \
+                }                                                                   \
+            } while(0)
+
+            if (!isTouchPad[state.x][state.y]) {
+                for (int xDirection : DIRECTION_ORDER) {
+                    auto stx = state.x + xDirection;
+                    auto sty = state.y;
+
+                    // идти по платформе
+                    if (isStand[stx][sty] && !isBlockedMove[xDirection + D_CENTER][D_CENTER][state.x][state.y]) {
+                        DJ_PUSH(stx, sty, 0.9999);
+                    }
+
+                    // лететь вниз
+                    sty = state.y - 1;
+                    if (isValid[stx][sty] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
+                        DJ_PUSH(stx, sty, 0.9999);
+                    }
+
+                    // лезть по лестнице вверх
+                    sty = state.y + 1;
+                    if (isOnLadder[state.x][state.y] && isOnLadder[stx][sty]) {
+                        DJ_PUSH(stx, sty, 0.9998);
+                    }
+                }
+            }
+            // прыгать
+            if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
+                auto pad = isTouchPad[state.x][state.y];
+                auto jumpGoes = _getJumpGoes({state.x, state.y, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, nullptr);
+                for (auto& [to, to_d] : *jumpGoes) {
+                    DJ_PUSH(to.x, to.y, to_d);
                 }
             }
         }
