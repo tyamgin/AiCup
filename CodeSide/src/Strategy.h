@@ -326,7 +326,7 @@ public:
         }
         pathFinder = TPathFinder(&env, unit);
 
-        if (env.currentTick == 81) {
+        if (env.currentTick == 667) {
             env.currentTick += 0;
         }
         if (env.currentTick > 1) {
@@ -574,8 +574,15 @@ public:
             }
             if (unit.weapon.type != ELootType::ROCKET_LAUNCHER && lb->type == ELootType::ROCKET_LAUNCHER) {
                 for (const auto &opp : env.units) {
-                    if (!opp.isMy() && opp.getManhattanDistTo(unit) <= 4) {
-                        if (unit.health > 20 && opp.health <= 80) {
+                    if (!opp.isMy()) {
+                        if (opp.getManhattanDistTo(unit) <= 4 && unit.health > 20 && opp.health <= 80) {
+                            act.swapWeapon = true;
+                        }
+                        int cnt = 0;
+                        for (auto& b : env.lootBoxes) {
+                            cnt += b.type == ELootType::HEALTH_PACK;
+                        }
+                        if (cnt == 0 && opp.health <= 80 && unit.health <= opp.health) {
                             act.swapWeapon = true;
                         }
                     }
