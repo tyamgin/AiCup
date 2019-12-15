@@ -17,7 +17,6 @@ public:
     TWeapon() {
         type = ELootType::NONE;
         magazine = 0;
-        //wasShooting = false;
         spread = 0;
         fireTimer = -1;
         lastAngle = DEFAULT_LAST_ANGLE;
