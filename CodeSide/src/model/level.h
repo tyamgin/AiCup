@@ -4,8 +4,6 @@
 #include <climits>
 #include <string>
 
-constexpr const double TILE_EPS = 0.0;//1e-8;
-
 enum class ETile : uint32_t {
     EMPTY = 0,
     WALL = 1,
