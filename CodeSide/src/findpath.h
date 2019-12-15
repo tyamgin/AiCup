@@ -228,7 +228,7 @@ public:
     bool findPath(const TPoint& target, std::vector<TState>& resultStates, std::vector<TAction>& resultActions) {
         resultStates.clear();
         resultActions.clear();
-        _run();
+        run();
         OP_START(FINDPATH);
         auto ret = _findPath(target, resultStates, resultActions);
         OP_END(FINDPATH);
@@ -238,9 +238,9 @@ public:
     bool _findPath(const TPoint& target, std::vector<TState>& resultStates, std::vector<TAction>& resultActions) {
         resultStates.clear();
         resultActions.clear();
-        _run();
+        run();
 
-        TState targetState = _getPointState(target);
+        TState targetState = getPointState(target);
         TState selectedTargetState;
         std::pair<int, double> minDist(INF, INF);
         for (int dx = -7; dx <= 7; dx++) {
@@ -317,7 +317,7 @@ public:
 
     template<typename TVisitor>
     void traverseReachable(TUnit unit, TVisitor visitor) {
-        _run();
+        run();
         for (int i = 0; i < (int) dist.size(); i++) {
             for (int j = 0; j < (int) dist[0].size(); j++) {
                 if (dist[i][j] < INF) {
@@ -332,24 +332,25 @@ public:
         }
     }
 
-private:
-    void _run() {
-        if (dist.empty()) {
-            OP_START(DIJKSTRA);
-            _dijkstra();
-            OP_END(DIJKSTRA);
-        }
-    }
-
-    TState _getPointState(const TPoint& point) {
+    TState getPointState(const TPoint& point) {
         TState res;
         res.x = int((point.x + STEP_LENGTH/2) / STEP_LENGTH); // round to nearest
         res.y = int((point.y + 1 / 60.0) / STEP_LENGTH + 1e-8);
         return res;
     }
 
+    void run() {
+        if (dist.empty()) {
+            OP_START(DIJKSTRA);
+            _dijkstra();
+            OP_END(DIJKSTRA);
+        }
+    }
+    
+private:
+
     TState _getUnitState(const TUnit& unit) {
-        TState res = _getPointState(TPoint(unit.x1 + UNIT_HALF_WIDTH, unit.y1));
+        TState res = getPointState(TPoint(unit.x1 + UNIT_HALF_WIDTH, unit.y1));
         res.timeLeft = int(unit.jumpMaxTime * TICKS_PER_SECOND + 1e-10);
         res.pad = unit.isPadFly();
         return res;
@@ -416,7 +417,7 @@ private:
                 continue;
             }
             auto oppCenter = opp.center();
-            auto oppCenterState = _getPointState(oppCenter);
+            auto oppCenterState = getPointState(oppCenter);
             for (int di = -40; di <= 40; di++) {
                 for (int dj = -40; dj <= 40; dj++) {
                     auto st = TState{oppCenterState.x + di, oppCenterState.y + dj, 0};

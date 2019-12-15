@@ -42,6 +42,18 @@ public:
     int getCol() const {
         return int(y2);
     }
+
+    TPoint position() const {
+        return TPoint(x1 + LOOT_BOX_SIZE / 2, y1);
+    }
+
+    bool isWeapon() const {
+        return type == ELootType::PISTOL || type == ELootType::ROCKET_LAUNCHER || type == ELootType::ASSAULT_RIFLE;
+    }
+
+    bool isLeft() const {
+        return x1 + LOOT_BOX_SIZE / 2 < TLevel::width / 2.0;
+    }
 };
 
 #endif //CODESIDE_LOOTBOX_H

@@ -20,13 +20,17 @@ public:
     static int myId;
     static int teamSize;
     static std::vector<int> unitIdToPlayerIdx;
+    static bool isMyLeft;
 
     static ETile getTileType(double x, double y) {
         return tiles[(int) x][(int) y];
     }
 
-    static void init(const Unit& unit, const Game& game) {
-        myId = unit.playerId;
+    static void init(int myId, const Game& game) {
+        if (game.currentTick > 0) {
+            return;
+        }
+        TLevel::myId = myId;
         teamSize = game.properties.teamSize;
         const auto& inpTiles = game.level.tiles;
         width = (int) inpTiles.size();
@@ -60,7 +64,11 @@ public:
             while (unitIdToPlayerIdx.size() <= u.id) {
                 unitIdToPlayerIdx.push_back(0);
             }
-            unitIdToPlayerIdx[unit.id] = unit.playerId == myId ? 0 : 1;
+            unitIdToPlayerIdx[u.id] = u.playerId == myId ? 0 : 1;
+
+            if (u.position.x < width / 2.0) {
+                isMyLeft = true;
+            }
         }
     }
 

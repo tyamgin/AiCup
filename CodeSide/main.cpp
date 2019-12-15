@@ -26,14 +26,7 @@ public:
       if (!playerView) {
         break;
       }
-      std::unordered_map<int, UnitAction> actions;
-      for (const Unit &unit : playerView->game.units) {
-        if (unit.playerId == playerView->myId) {
-          actions.emplace(std::make_pair(
-              unit.id,
-              myStrategy.getAction(unit, playerView->game, debug)));
-        }
-      }
+      std::unordered_map<int, UnitAction> actions = myStrategy.getActions(playerView->myId, playerView->game, debug);
       PlayerMessageGame::ActionMessage(Versioned(actions)).writeTo(*outputStream);
       outputStream->flush();
     }

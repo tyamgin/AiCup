@@ -27,7 +27,8 @@
 
 class Strategy {
     TSandbox prevEnv, prevEnv2, env;
-    TPathFinder pathFinder;
+    std::unordered_map<int, TPathFinder> pathFinders;
+    std::unordered_map<int, TLootBox*> _selLootbox;
 
     std::unordered_map<ELootType, int> weaponPriority = {
             {ELootType::PISTOL, 0},
@@ -37,6 +38,7 @@ class Strategy {
     };
 
     std::optional<std::vector<TAction>> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
+        auto& pathFinder = pathFinders[unit.id];
         std::map<std::pair<int, int>, double> lbPathPenalty;
         pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
             TLootBox* lb;
@@ -94,6 +96,7 @@ class Strategy {
     }
 
     std::optional<std::vector<TAction>> _strategy(const TUnit& unit) {
+        auto& pathFinder = pathFinders[unit.id];
         std::vector<TState> pathPoints;
         std::vector<TAction> actions;
 
@@ -106,12 +109,14 @@ class Strategy {
         });
 #endif
 
-        if (unit.weapon.type == ELootType::NONE) {
-            auto maybeAct = _strategyLoot(unit, {ELootType::PISTOL, ELootType::ROCKET_LAUNCHER, ELootType::ASSAULT_RIFLE});
-            if (maybeAct) {
-                return maybeAct;
+        if (unit.noWeapon() && _selLootbox.count(unit.id)) {
+            TPoint pos = _selLootbox[unit.id]->position();
+            if (pathFinder.findPath(pos, pathPoints, actions) && !actions.empty()) {
+                TDrawUtil().drawPath(statesToPoints(pathPoints));
+                return actions;
             }
         }
+
         if (unit.health <= 80) {
             auto maybeAct = _strategyLoot(unit, {ELootType::HEALTH_PACK});
             if (maybeAct) {
@@ -126,17 +131,10 @@ class Strategy {
             }
         }
 
-        if (unit.weapon.type != ELootType::ROCKET_LAUNCHER) {
-            for (const auto &opp : env.units) {
-                if (!opp.isMy()) {
-                    if (opp.health <= 80 && unit.health <= opp.health) {
-                        auto maybeAct = _strategyLoot(unit, {ELootType::ROCKET_LAUNCHER});
-                        if (maybeAct) {
-                            return maybeAct;
-                        }
-                        break;
-                    }
-                }
+        if (_needTakeRocketLauncher(unit) && unit.weapon.type != ELootType::ROCKET_LAUNCHER) {
+            auto maybeAct = _strategyLoot(unit, {ELootType::ROCKET_LAUNCHER});
+            if (maybeAct) {
+                return maybeAct;
             }
         }
 
@@ -177,18 +175,33 @@ class Strategy {
         return {};
     }
 
+    bool _needTakeRocketLauncher(const TUnit& unit) {
+        if (env.myCount == 1) {
+            for (const auto &opp : env.units) {
+                if (!opp.isMy()) {
+                    if (opp.health <= 80 && unit.health <= opp.health) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 public:
-    UnitAction getAction(const Unit& _unit, const Game& game, Debug& debug) {
-        //return TAction().toUnitAction();
+    std::unordered_map<int, TAction> getActions(const Game& game) {
         TDrawUtil().drawGrid();
-        TUnit unit(_unit);
-        env = TSandbox(unit, game);
+        env = TSandbox(game);
         TDrawUtil().drawMinesRadius(env);
         TDrawUtil().drawUnits(env);
         if (env.currentTick == 0) {
             TPathFinder::initMap();
         }
-        pathFinder = TPathFinder(&env, unit);
+        for (auto &unit : env.units) {
+            if (unit.isMy()) {
+                pathFinders[unit.id] = TPathFinder(&env, unit);
+            }
+        }
 
         if (env.currentTick == 667) {
             env.currentTick += 0;
@@ -199,6 +212,25 @@ public:
             _compareState(prevEnv, env, prevEnv2);
         }
 
+        _initialWeaponDistribute();
+
+        std::unordered_map<int, TAction> result;
+        for (const auto& unit : env.units) {
+            if (unit.isMy()) {
+                result[unit.id] = getAction(unit);
+                // TODO: может заполнять, чтобы следующий учитывал ход?
+            }
+        }
+        for (auto& unit : env.units) {
+            if (unit.isMy()) {
+                unit.action = result[unit.id];
+            }
+        }
+        prevEnv = env;
+        return result;
+    }
+
+    TAction getAction(const TUnit& unit) {
         //auto action = _ladderLeftStrategy(unit, env, debug);
 
 
@@ -265,17 +297,11 @@ public:
         }
         TDrawUtil().drawAim(unit, action);
 
-        for (auto& u : env.units) {
-            if (u.id == unit.id) {
-                u.action = action;
-            }
-        }
-        prevEnv = env;
-        return action.toUnitAction();
+        return action;
     }
 
     std::optional<TAction> shotStrategy(const TUnit& unit, const std::vector<TAction>& actions) {
-        if (unit.weapon.type == ELootType::NONE) {
+        if (unit.noWeapon()) {
             return {};
         }
 
@@ -417,7 +443,7 @@ public:
         TAction act;
 
         auto lb = env.findLootBox(unit);
-        if (lb != nullptr && (lb->type == ELootType::PISTOL || lb->type == ELootType::ASSAULT_RIFLE || lb->type == ELootType::ROCKET_LAUNCHER)) {
+        if (lb != nullptr && lb->isWeapon()) {
             if (weaponPriority[lb->type] < weaponPriority[unit.weapon.type]) {
                 bool free = true;
                 for (const auto &opp : env.units) {
@@ -435,8 +461,11 @@ public:
                     }
                 }
                 act.swapWeapon = free;
+                if (_needTakeRocketLauncher(unit) && unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+                    act.swapWeapon = false;
+                }
             }
-            if (unit.weapon.type != ELootType::ROCKET_LAUNCHER && lb->type == ELootType::ROCKET_LAUNCHER) {
+            if (unit.weapon.type != ELootType::ROCKET_LAUNCHER && lb->type == ELootType::ROCKET_LAUNCHER && env.myCount == 1) {
                 for (const auto &opp : env.units) {
                     if (!opp.isMy()) {
                         if (opp.getManhattanDistTo(unit) <= 4 && unit.health > 20 && opp.health <= 80) {
@@ -466,6 +495,72 @@ public:
             act.reload = minDist > 17;
         }
         return act;
+    }
+
+    void _initialWeaponDistribute() {
+        std::vector<TUnit> units;
+        for (auto& unit : env.units) {
+            if (unit.isMy() && unit.noWeapon()) {
+                units.push_back(unit);
+            }
+        }
+        _selLootbox.clear();
+        if (units.empty()) {
+            return;
+        }
+
+        std::vector<int> takeWeapon;
+        std::vector<TLootBox*> weapons;
+        for (auto& lb : env.lootBoxes) {
+            if (lb.isWeapon()) {
+                takeWeapon.push_back(-1);
+                weapons.push_back(&lb);
+            }
+        }
+        for (int i = 0; i < (int) units.size(); i++) {
+            if (i < weapons.size()) {
+                takeWeapon[i] = i;
+            }
+        }
+        for (auto& [unitId, pathFinder] : pathFinders) {
+            pathFinder.run();
+        }
+        std::sort(takeWeapon.begin(), takeWeapon.end());
+        std::pair<int, double> best(INF, INF);
+        std::vector<TLootBox*> res;
+        do {
+            int sumPriority = 0;
+            int cnt = 0;
+            double maxDist = 0;
+            std::vector<TLootBox*> r(units.size());
+            for (int i = 0; i < (int) takeWeapon.size(); i++) {
+                auto& weapon = weapons[i];
+                auto unitIdx = takeWeapon[i];
+                if (unitIdx == -1) {
+                    continue;
+                }
+                auto& pathFinder = pathFinders[units[unitIdx].id];
+                auto state = pathFinder.getPointState(weapons[i]->position());
+
+                if (pathFinder.dist[state.x][state.y] < INF) {
+                    sumPriority += weaponPriority[weapon->type] + (TLevel::isMyLeft != weapon->isLeft()) * 10;
+                    cnt++;
+                    maxDist = std::max(maxDist, pathFinder.dist[state.x][state.y]);
+                    r[unitIdx] = weapon;
+                }
+            }
+            std::pair<int, double> d(sumPriority, maxDist);
+            if (d < best) {
+                best = d;
+                res = r;
+            }
+        } while (std::next_permutation(takeWeapon.begin(), takeWeapon.end()));
+
+        for (int i = 0; i < (int) res.size(); i++) {
+            if (res[i] != nullptr) {
+                _selLootbox[units[i].id] = res[i];
+            }
+        }
     }
 };
 

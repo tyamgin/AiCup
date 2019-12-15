@@ -82,14 +82,20 @@ void debugCheckGameParams(const Game& game, bool print) {
 #undef PRINT_WEAPON_PROPS
 }
 
-UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
+std::unordered_map<int, UnitAction> MyStrategy::getActions(int myId, const Game& game, Debug& debug) {
+    std::unordered_map<int, UnitAction> result;
     if (game.properties.teamSize > 2) {
-        return TAction().toUnitAction();
+        for (auto& unit : game.units) {
+            if (unit.playerId == myId) {
+                result[unit.id] = TAction().toUnitAction();
+            }
+        }
+        return result;
     }
 
     OP_START(ALL);
     TIMER_START();
-    TLevel::init(unit, game);
+    TLevel::init(myId, game);
     TDrawUtil::debug = std::make_shared<Debug>(debug);
     if (game.currentTick == 0) {
         LOG(TLevel::toString());
@@ -98,7 +104,10 @@ UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debu
     if (game.currentTick <= 1) {
         debugCheckGameParams(game, false);
     }
-    auto ret = strategy.getAction(unit, game, debug);
+    auto ret = strategy.getActions(game);
+    for (auto& [unitId, action] : ret) {
+        result[unitId] = action.toUnitAction();
+    }
     TIMER_ENG_LOG("Tick");
     OP_END(ALL);
 
@@ -107,7 +116,7 @@ UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debu
         std::cout << TLogger::instance()->getSummary() << std::endl;
     }
 #endif
-    return ret;
+    return result;
 }
 
 int TLevel::width = 0;
@@ -116,5 +125,6 @@ std::vector<std::vector<ETile>> TLevel::tiles;
 int TLevel::myId = 0;
 std::vector<int> TLevel::unitIdToPlayerIdx;
 int TLevel::teamSize = 0;
+bool TLevel::isMyLeft = false;
 
 std::shared_ptr<Debug> TDrawUtil::debug;

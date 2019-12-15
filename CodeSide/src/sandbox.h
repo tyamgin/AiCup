@@ -22,6 +22,7 @@ public:
     std::vector<TMine> mines;
     std::vector<TLootBox> lootBoxes;
     std::shared_ptr<std::vector<std::vector<unsigned>>> lootBoxIndex;
+    int myCount;
     bool oppShotSimpleStrategy = false;
     std::vector<const TUnit*> _nearestUnitCache;
     double shotSpreadToss = 0;
@@ -31,10 +32,12 @@ public:
         currentTick = -1;
     }
 
-    TSandbox(const TUnit& unit, const Game& game) {
+    explicit TSandbox(const Game& game) {
         currentTick = game.currentTick;
+        myCount = 0;
         for (const Unit& u : game.units) {
             units.emplace_back(u);
+            myCount += units.back().isMy();
         }
         for (const Bullet& b : game.bullets) {
             bullets.emplace_back(b);
@@ -79,6 +82,7 @@ public:
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
         shotSpreadToss = sandbox.shotSpreadToss;
         oppFallFreeze = sandbox.oppFallFreeze;
+        myCount = sandbox.myCount;
     }
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {

@@ -266,6 +266,10 @@ public:
     bool isMy() const {
         return playerIdx == 0;
     }
+
+    bool noWeapon() const {
+        return weapon.type == ELootType::NONE;
+    }
 };
 
 
