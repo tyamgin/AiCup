@@ -434,28 +434,34 @@ private:
             }
         }
 
-        std::priority_queue<std::pair<double, TState>> q;
+#define DJ_COMPACT(x, y) uint32_t(((x) << 16) ^ (y))
+#define DJ_X(mask) int((mask) >> 16)
+#define DJ_Y(mask) int((mask) & 0xFFFF)
+
+        std::priority_queue<std::pair<double, uint32_t>> q;
         TDfsGoesResult startGoes;
         for (const auto& [s, dst] : *_getJumpGoes(startState, &startGoes)) {
-            q.push(std::make_pair(-dst, s));
+            q.push(std::make_pair(-dst, DJ_COMPACT(s.x, s.y)));
             dist[s.x][s.y] = dst;
             prev[s.x][s.y] = startState;
         }
         while (!q.empty()) {
-            auto state = q.top().second;
-            auto curDist = -q.top().first;
+            auto top = q.top();
+            auto state = TState{DJ_X(top.second), DJ_Y(top.second)};
+            auto curDist = -top.first;
             q.pop();
-            if (curDist > dist[state.x][state.y]) {
+            auto stateDist = dist[state.x][state.y];
+            if (curDist > stateDist) {
                 continue;
             }
 
-#define DJ_PUSH(to_x, to_y, to_dist) do {                                           \
-                auto dst = to_dist;                                                 \
-                if (dist[state.x][state.y] + dst < dist[to_x][to_y]) {              \
-                    dist[to_x][to_y] = dist[state.x][state.y] + dst;                \
-                    prev[to_x][to_y] = state;                                       \
-                    q.push(std::make_pair(-dist[to_x][to_y], TState{to_x, to_y}));  \
-                }                                                                   \
+#define DJ_PUSH(to_x, to_y, to_dist) do {                                               \
+                auto dst = to_dist;                                                     \
+                if (stateDist + dst < dist[to_x][to_y]) {                               \
+                    dist[to_x][to_y] = dist[state.x][state.y] + dst;                    \
+                    prev[to_x][to_y] = state;                                           \
+                    q.push(std::make_pair(-dist[to_x][to_y], DJ_COMPACT(to_x, to_y)));  \
+                }                                                                       \
             } while(0)
 
             if (!isTouchPad[state.x][state.y]) {
@@ -490,6 +496,9 @@ private:
                 }
             }
         }
+#undef DJ_COMPACT
+#undef DJ_X
+#undef DJ_Y
     }
 };
 
