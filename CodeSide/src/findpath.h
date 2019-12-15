@@ -450,7 +450,7 @@ private:
             }
 
 #define DJ_PUSH(to_x, to_y, to_dist) do {                                           \
-                auto dst = to_dist + penalty[to_x][to_y];                           \
+                auto dst = to_dist;                                                 \
                 if (dist[state.x][state.y] + dst < dist[to_x][to_y]) {              \
                     dist[to_x][to_y] = dist[state.x][state.y] + dst;                \
                     prev[to_x][to_y] = state;                                       \

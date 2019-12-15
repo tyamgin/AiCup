@@ -171,30 +171,30 @@ class Strategy {
     };
 
     std::optional<std::vector<TAction>> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
-//        std::map<std::pair<int, int>, double> lbPathPenalty;
-//        pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
-//            TLootBox* lb;
-//            if ((lb = env.findLootBox(unit)) != nullptr) {
-//                if (lootTypes.count(lb->type)) {
-//                    if (!lbPathPenalty.count({lb->getRow(), lb->getCol()})) {
-//                        std::vector<TState> pts;
-//                        std::vector<TAction> acts;
-//                        double penalty = 0;
-//                        if (pathFinder.findPath(unit.position(), pts, acts) && !acts.empty()) {
-//                            for (const auto& s : pts) {
-//                                penalty += pathFinder.penalty[s.x][s.y];
-//                            }
-//                        }
-//                        TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(penalty + dist),
-//                                                                      Vec2Float{float(lb->x1), float(lb->y2 + 1)},
-//                                                                      TextAlignment::LEFT,
-//                                                                      30,
-//                                                                      ColorFloat(0, 1, 0, 0.75)));
-//                        lbPathPenalty[{lb->getRow(), lb->getCol()}] = penalty;
-//                    }
-//                }
-//            }
-//        });
+        std::map<std::pair<int, int>, double> lbPathPenalty;
+        pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
+            TLootBox* lb;
+            if ((lb = env.findLootBox(unit)) != nullptr) {
+                if (lootTypes.count(lb->type)) {
+                    if (!lbPathPenalty.count({lb->getRow(), lb->getCol()})) {
+                        std::vector<TState> pts;
+                        std::vector<TAction> acts;
+                        double penalty = 0;
+                        if (pathFinder.findPath(unit.position(), pts, acts) && !acts.empty()) {
+                            for (const auto& s : pts) {
+                                penalty += pathFinder.penalty[s.x][s.y];
+                            }
+                        }
+                        TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(penalty + dist),
+                                                                      Vec2Float{float(lb->x1), float(lb->y2 + 1)},
+                                                                      TextAlignment::LEFT,
+                                                                      30,
+                                                                      ColorFloat(0, 1, 0, 0.75)));
+                        lbPathPenalty[{lb->getRow(), lb->getCol()}] = penalty;
+                    }
+                }
+            }
+        });
 
         std::vector<TState> pathPoints;
         std::vector<TAction> actions;
@@ -208,7 +208,7 @@ class Strategy {
             TLootBox* lb;
             if ((lb = env.findLootBox(unit)) != nullptr) {
                 if (lootTypes.count(lb->type)) {
-                    //dist += lbPathPenalty[{lb->getRow(), lb->getCol()}];
+                    dist += lbPathPenalty[{lb->getRow(), lb->getCol()}];
                     if (dist < minDist) {
                         minDist = dist;
                         selectedLb = lb;
