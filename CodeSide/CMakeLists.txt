@@ -14,8 +14,7 @@ endif()
 
 if ((CMAKE_BUILD_TYPE MATCHES Release) OR (CMAKE_BUILD_TYPE MATCHES FastDebug))
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
-        -fno-optimize-sibling-calls -fno-strict-aliasing \
-        -O2 -Wall -Wtype-limits -Wno-unknown-pragmas")
+        -O3 -Wall -Wtype-limits -Wno-unknown-pragmas")
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
