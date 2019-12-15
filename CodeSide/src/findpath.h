@@ -9,8 +9,7 @@
 #include <algorithm>
 
 struct TState {
-    int x;
-    int y;
+    int x, y;
     int timeLeft = 0;
     bool pad = false;
 
@@ -434,57 +433,70 @@ private:
             }
         }
 
-        std::priority_queue<std::pair<double, TState>> q;
+#define DJ_COMPACT(x, y) uint32_t(((x) << 16) ^ (y))
+#define DJ_X(mask) ((mask) >> 16)
+#define DJ_Y(mask) ((mask) & 0xFFFF)
+        auto cmp = [this](uint32_t a, uint32_t b) {
+            auto da = dist[DJ_X(a)][DJ_Y(a)];
+            auto db = dist[DJ_X(b)][DJ_Y(b)];
+            if (da != db) {
+                return da < db;
+            }
+            return a < b;
+        };
+        std::set<uint32_t, decltype(cmp)> q(cmp);
+
         TDfsGoesResult startGoes;
         for (const auto& [s, dst] : *_getJumpGoes(startState, &startGoes)) {
-            q.push(std::make_pair(-dst, s));
+            q.erase(DJ_COMPACT(s.x, s.y));
             dist[s.x][s.y] = dst;
             prev[s.x][s.y] = startState;
+            q.insert(DJ_COMPACT(s.x, s.y));
         }
         while (!q.empty()) {
-            auto state = q.top().second;
-            auto curDist = -q.top().first;
-            q.pop();
-            if (curDist > dist[state.x][state.y]) {
-                continue;
-            }
+            auto first = q.begin();
+            int stateX = DJ_X(*first);
+            int stateY = DJ_Y(*first);
+            q.erase(first);
 
 #define DJ_PUSH(to_x, to_y, to_dist) do {                                           \
                 auto dst = to_dist;                                                 \
-                if (dist[state.x][state.y] + dst < dist[to_x][to_y]) {              \
-                    dist[to_x][to_y] = dist[state.x][state.y] + dst;                \
-                    prev[to_x][to_y] = state;                                       \
-                    q.push(std::make_pair(-dist[to_x][to_y], TState{to_x, to_y}));  \
+                if (dist[stateX][stateY] + dst < dist[to_x][to_y]) {              \
+                    auto to_mask = DJ_COMPACT(to_x, to_y); \
+                    q.erase(to_mask); \
+                    dist[to_x][to_y] = dist[stateX][stateY] + dst;                \
+                    prev[to_x][to_y] = TState{stateX, stateY}; \
+                    q.insert(to_mask);  \
                 }                                                                   \
             } while(0)
 
-            if (!isTouchPad[state.x][state.y]) {
+            if (!isTouchPad[stateX][stateY]) {
                 for (int xDirection : DIRECTION_ORDER) {
-                    auto stx = state.x + xDirection;
-                    auto sty = state.y;
+                    auto stx = stateX + xDirection;
+                    auto sty = stateY;
 
                     // идти по платформе
-                    if (isStand[stx][sty] && !isBlockedMove[xDirection + D_CENTER][D_CENTER][state.x][state.y]) {
+                    if (isStand[stx][sty] && !isBlockedMove[xDirection + D_CENTER][D_CENTER][stateX][stateY]) {
                         DJ_PUSH(stx, sty, 0.9999);
                     }
 
                     // лететь вниз
-                    sty = state.y - 1;
-                    if (isValid[stx][sty] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
+                    sty = stateY - 1;
+                    if (isValid[stx][sty] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][stateX][stateY]) {
                         DJ_PUSH(stx, sty, 0.9999);
                     }
 
                     // лезть по лестнице вверх
-                    sty = state.y + 1;
-                    if (isOnLadder[state.x][state.y] && isOnLadder[stx][sty]) {
+                    sty = stateY + 1;
+                    if (isOnLadder[stateX][stateY] && isOnLadder[stx][sty]) {
                         DJ_PUSH(stx, sty, 0.9998);
                     }
                 }
             }
             // прыгать
-            if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
-                auto pad = isTouchPad[state.x][state.y];
-                auto jumpGoes = _getJumpGoes({state.x, state.y, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, nullptr);
+            if (isStand[stateX][stateY] && isBound[stateX][stateY]) {
+                auto pad = isTouchPad[stateX][stateY];
+                auto jumpGoes = _getJumpGoes({stateX, stateY, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, nullptr);
                 for (auto& [to, to_d] : *jumpGoes) {
                     DJ_PUSH(to.x, to.y, to_d);
                 }
