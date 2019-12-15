@@ -4,7 +4,7 @@
       "level": "Simple",
       "properties": {
         "max_tick_count": 3600,
-        "team_size": 1,
+        "team_size": 2,
         "ticks_per_second": 60.0,
         "updates_per_tick": 100,
         "loot_box_size": {
@@ -108,5 +108,5 @@
       }
     }
   ],
-  "seed": 29026
+  "seed": 29027
 }

@@ -364,7 +364,7 @@ public:
                 else if (dirY < 0)
                     act.jumpDown = true;
                 act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
-                const int simulateTicks = 40;
+                const int simulateTicks = 27;
                 for (int i = 0; i < simulateTicks; i++) {
                     dodgeEnv.getUnit(unit.id)->action = act;
                     dodgeEnv.doTick();
@@ -442,7 +442,7 @@ public:
                     act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
                     opp->action = act;
                     for (int i = 0; i < simulateTicks && opp->health > maxHealth; i++) {
-                        dodgeEnv.doTick(10);
+                        dodgeEnv.doTick(5);
                     }
                     if (opp->health > maxHealth) {
                         maxHealth = opp->health;
@@ -468,7 +468,7 @@ public:
                 testEnv.getUnit(unit.id)->action = action;
                 testEnv.getUnit(unit.id)->action.shoot = true;
                 testEnv.shotSpreadToss = 1.0 * it / itersCount;
-                const int simulateTicks = 20;
+                const int simulateTicks = 15;
                 for (int i = 0; i < simulateTicks; i++) {
                     testEnv.doTick();
                     testNothingEnv.doTick();
