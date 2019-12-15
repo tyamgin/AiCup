@@ -56,7 +56,6 @@ public:
     TWeapon(const TWeapon& weapon) {
         type = weapon.type;
         magazine = weapon.magazine;
-        //wasShooting = weapon.wasShooting;
         spread = weapon.spread;
         fireTimer = weapon.fireTimer;
         lastAngle = weapon.lastAngle;
