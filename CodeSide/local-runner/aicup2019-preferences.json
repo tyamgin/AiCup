@@ -1,6 +1,6 @@
 (
     view_speed: 1,
-    volume: 0.0,
+    volume: 0,
     renderer: (
         mode: Schematic,
     ),

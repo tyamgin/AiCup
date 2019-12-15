@@ -9,7 +9,6 @@ class TWeapon {
 public:
     ELootType type;
     int magazine;
-    //bool wasShooting;
     double spread;
     double fireTimer; // -1
     double lastAngle; // DEFAULT_LAST_ANGLE
@@ -28,7 +27,6 @@ public:
     explicit TWeapon(const Weapon& weapon) {
         type = (ELootType) weapon.typ;
         magazine = weapon.magazine;
-        //wasShooting = weapon.wasShooting;
         spread = weapon.spread;
         fireTimer = weapon.fireTimer ? *weapon.fireTimer : -1;
         lastAngle = weapon.lastAngle ? *weapon.lastAngle : DEFAULT_LAST_ANGLE;
@@ -37,7 +35,6 @@ public:
 
     explicit TWeapon(ELootType lootType) {
         type = lootType;
-        //wasShooting = false; // TODO: точно?
         switch (lootType) {
             case ELootType::PISTOL:
                 spread = PISTOL_MIN_SPREAD;
