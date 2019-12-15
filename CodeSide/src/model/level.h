@@ -20,6 +20,7 @@ public:
     static int height;
     static std::vector<std::vector<ETile>> tiles;
     static int myId;
+    static int teamSize;
     static std::vector<int> unitIdToPlayerIdx;
 
     static ETile getTileType(double x, double y) {
@@ -28,6 +29,7 @@ public:
 
     static void init(const Unit& unit, const Game& game) {
         myId = unit.playerId;
+        teamSize = game.properties.teamSize;
         const auto& inpTiles = game.level.tiles;
         width = (int) inpTiles.size();
         height = (int) inpTiles[0].size();

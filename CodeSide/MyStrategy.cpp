@@ -83,7 +83,7 @@ void debugCheckGameParams(const Game& game, bool print) {
 }
 
 UnitAction MyStrategy::getAction(const Unit& unit, const Game& game, Debug& debug) {
-    if (game.properties.teamSize > 1) {
+    if (game.properties.teamSize > 2) {
         return TAction().toUnitAction();
     }
 
@@ -115,5 +115,6 @@ int TLevel::height = 0;
 std::vector<std::vector<ETile>> TLevel::tiles;
 int TLevel::myId = 0;
 std::vector<int> TLevel::unitIdToPlayerIdx;
+int TLevel::teamSize = 0;
 
 std::shared_ptr<Debug> TDrawUtil::debug;

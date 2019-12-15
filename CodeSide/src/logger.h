@@ -93,11 +93,9 @@ struct TLogger {
     }
 };
 
-const std::string EMPTY_STRING;
-
 #if M_LOGS
-#define LOG(msg) TLogger::instance()->log() << EMPTY_STRING << msg << std::endl;
-#define LOG_ERROR(msg) TLogger::instance()->error() << EMPTY_STRING << msg << std::endl;
+#define LOG(msg) TLogger::instance()->log() << msg << std::endl;
+#define LOG_ERROR(msg) TLogger::instance()->error() << msg << std::endl;
 #else
 #define LOG(msg)
 #define LOG_ERROR(msg)
