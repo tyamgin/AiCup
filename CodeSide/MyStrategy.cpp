@@ -128,3 +128,4 @@ int TLevel::teamSize = 0;
 bool TLevel::isMyLeft = false;
 
 std::shared_ptr<Debug> TDrawUtil::debug;
+std::shared_ptr<std::vector<std::vector<unsigned>>> TSandbox::_emptyBonusIndex = nullptr;

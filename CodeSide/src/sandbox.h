@@ -12,7 +12,17 @@
 #include <iostream>
 #include <tuple>
 
+struct TSandboxCloneOptions {
+    std::vector<int> unitIds = {-1};
+    bool needLootboxes = true;
+    bool needMines = true;
+    bool needBullets = true;
+};
+
 class TSandbox {
+private:
+    static std::shared_ptr<std::vector<std::vector<unsigned>>> _emptyBonusIndex;
+    std::vector<const TUnit*> _nearestUnitCache;
 public:
     int currentTick;
     int score[2] = {0, 0};
@@ -24,7 +34,6 @@ public:
     std::shared_ptr<std::vector<std::vector<unsigned>>> lootBoxIndex;
     int myCount;
     bool oppShotSimpleStrategy = false;
-    std::vector<const TUnit*> _nearestUnitCache;
     double shotSpreadToss = 0;
     bool oppFallFreeze = false;
 
@@ -60,25 +69,56 @@ public:
         friendlyLoss[0] = friendlyLoss[1] = 0;
     }
 
-    TSandbox(const TSandbox& sandbox, int onlyUnitId = -1) {
+    TSandbox(const TSandbox& sandbox) {
         currentTick = sandbox.currentTick;
         score[0] = sandbox.score[0];
         score[1] = sandbox.score[1];
         friendlyLoss[0] = sandbox.friendlyLoss[0];
         friendlyLoss[1] = sandbox.friendlyLoss[1];
-        if (onlyUnitId == -1) {
-            units = sandbox.units;
-        } else {
-            for (auto& unit : sandbox.units) {
-                if (unit.id == onlyUnitId) {
-                    units.emplace_back(unit);
-                }
-            }
-        }
+        units = sandbox.units;
         bullets = sandbox.bullets;
         mines = sandbox.mines;
         lootBoxes = sandbox.lootBoxes;
         lootBoxIndex = sandbox.lootBoxIndex;
+        oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
+        shotSpreadToss = sandbox.shotSpreadToss;
+        oppFallFreeze = sandbox.oppFallFreeze;
+        myCount = sandbox.myCount;
+    }
+
+    TSandbox(const TSandbox& sandbox, const TSandboxCloneOptions& options) {
+        currentTick = sandbox.currentTick;
+        score[0] = sandbox.score[0];
+        score[1] = sandbox.score[1];
+        friendlyLoss[0] = sandbox.friendlyLoss[0];
+        friendlyLoss[1] = sandbox.friendlyLoss[1];
+        if (options.unitIds.size() == 1 && options.unitIds[0] == -1) {
+            units = sandbox.units;
+        } else {
+            for (auto& unit : sandbox.units) {
+                for (auto id : options.unitIds) {
+                    if (unit.id == id) {
+                        units.emplace_back(unit);
+                        break;
+                    }
+                }
+            }
+        }
+        if (options.needBullets) {
+            bullets = sandbox.bullets;
+        }
+        if (options.needMines) {
+            mines = sandbox.mines;
+        }
+        if (options.needLootboxes) {
+            lootBoxes = sandbox.lootBoxes;
+            lootBoxIndex = sandbox.lootBoxIndex;
+        } else {
+            if (!_emptyBonusIndex) {
+                _emptyBonusIndex = std::make_shared<std::vector<std::vector<unsigned>>>(TLevel::width, std::vector<unsigned>(TLevel::height, UINT32_MAX));
+            }
+            lootBoxIndex = _emptyBonusIndex;
+        }
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
         shotSpreadToss = sandbox.shotSpreadToss;
         oppFallFreeze = sandbox.oppFallFreeze;
@@ -243,7 +283,7 @@ private:
         }
         if (unit.action.aim.length2() >= SQR(0.5)) {
             auto newAngle = unit.action.aim.getAngle();
-            if (weapon.lastAngle < 100) {
+            if (weapon.hasLastAngle()) {
                 weapon.spread = std::min(weapon.spread + std::abs(newAngle - weapon.lastAngle), WEAPON_MAX_SPREAD);
             }
             weapon.lastAngle = newAngle;
@@ -356,7 +396,7 @@ private:
                         unit.jumpMaxTime -= 1.0 / updatesPerSecond;
                     }
                 }
-            } else if ((action.jumpDown || !onLadder) && (!oppFallFreeze || unit.isMy())) {
+            } else if ((action.jumpDown || !onLadder) && (!oppFallFreeze || unit.isMy() || !unit.canJump)) {
                 double dy = -UNIT_FALL_SPEED / updatesPerSecond;
 
                 auto wallMask = uint32_t(ETile::WALL);
