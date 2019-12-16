@@ -61,6 +61,10 @@ public:
         lastAngle = weapon.lastAngle;
         lastFireTick = weapon.lastFireTick;
     }
+
+    bool hasLastAngle() const {
+        return lastAngle < DEFAULT_LAST_ANGLE - 1;
+    }
 };
 
 #endif //CODESIDE_WEAPON_H

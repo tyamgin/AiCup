@@ -8,7 +8,8 @@
 
 class Debug {
 public:
-  Debug(const std::shared_ptr<OutputStream> &outputStream) {}
+  Debug(const std::shared_ptr<OutputStream> &outputStream) : outputStream(outputStream) {
+  }
   void draw(const CustomData &customData) {
 #ifdef DEBUG
     outputStream->write(PlayerMessageGame::CustomDataMessage::TAG);
