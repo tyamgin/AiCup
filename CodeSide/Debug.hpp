@@ -3,12 +3,19 @@
 
 #include "Stream.hpp"
 #include "model/CustomData.hpp"
+#include "model/PlayerMessageGame.hpp"
 #include <memory>
 
 class Debug {
 public:
-  Debug(const std::shared_ptr<OutputStream> &outputStream);
-  void draw(const CustomData &customData);
+  Debug(const std::shared_ptr<OutputStream> &outputStream) {}
+  void draw(const CustomData &customData) {
+#ifdef DEBUG
+    outputStream->write(PlayerMessageGame::CustomDataMessage::TAG);
+    customData.writeTo(*outputStream);
+    outputStream->flush();
+#endif
+  }
 
 private:
   std::shared_ptr<OutputStream> outputStream;
