@@ -30,6 +30,9 @@ public:
         if (game.currentTick > 0) {
             return;
         }
+#ifndef LOCAL
+        std::cerr << "Сороктысячобезьянвжопусунулибанан\n";
+#endif
         TLevel::myId = myId;
         teamSize = game.properties.teamSize;
         const auto& inpTiles = game.level.tiles;
