@@ -66,7 +66,7 @@ public:
             }
             unitIdToPlayerIdx[u.id] = u.playerId == myId ? 0 : 1;
 
-            if (u.position.x < width / 2.0) {
+            if (u.playerId == myId && u.position.x < width / 2.0) {
                 isMyLeft = true;
             }
         }
