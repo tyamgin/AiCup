@@ -36,6 +36,12 @@ public:
         auto d = MINE_EXPLOSION_RADIUS - MINE_SIZE / 2;
         return unitOrMine.intersectsWith(x1 - d, y1 - d, x2 + d, y2 + d);
     }
+
+    bool isNearBullet(const TBullet& bullet) const {
+        const double d = 0.8;
+        return bullet.x1 < x2 + d && bullet.x2 > x1 - d &&
+               bullet.y1 < y2 + d && bullet.y2 > y1 - d;
+    }
 };
 
 #endif //CODESIDE_MINE_H

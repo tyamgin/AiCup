@@ -7,7 +7,8 @@ enum MineState {
     PREPARING = 0,
     IDLE = 1,
     TRIGGERED = 2,
-    EXPLODED = 3
+    EXPLODED = 3,
+    NONE = 4,
 };
 
 #endif

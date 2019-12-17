@@ -25,7 +25,8 @@ class TSandbox {
 private:
     static std::shared_ptr<std::vector<std::vector<unsigned>>> _emptyBonusIndex;
     const TUnit* _nearestUnitCache[MAX_UNITS_COUNT];
-    std::vector<int> _nearestBulletCache[MAX_UNITS_COUNT];
+    std::vector<int> _unitNearestBulletCache[MAX_UNITS_COUNT];
+    std::vector<std::vector<int>> _mineNearestBulletCache;
 public:
     int currentTick;
     int score[2] = {0, 0};
@@ -142,6 +143,7 @@ public:
             }
             swapWeaponBackup[unit.id] = unit.action.swapWeapon;
             if (unit.mines > 0 && unit.action.plantMine && unit.canJump && unit.isStandOnGround()) { // TODO: check is stand
+                // NOTE: _mineNearestBulletCache заполняется после
                 mines.emplace_back(unit.plantMine());
             }
 
@@ -159,11 +161,23 @@ public:
             }
             _nearestUnitCache[unitIdx] = nearest;
 
-            _nearestBulletCache[unitIdx].clear();
+            _unitNearestBulletCache[unitIdx].clear();
             for (int bulletIdx = 0; bulletIdx < (int) bullets.size(); bulletIdx++) {
                 const auto& bullet = bullets[bulletIdx];
-                if (bullet.unitId != unit.id && unit.getManhattanDistanceToBullet(bullet) < 1.5) {
-                    _nearestBulletCache[unitIdx].push_back(bulletIdx);
+                if (bullet.unitId != unit.id && unit.isNearBullet(bullet)) {
+                    _unitNearestBulletCache[unitIdx].push_back(bulletIdx);
+                }
+            }
+        }
+
+        _mineNearestBulletCache.resize(mines.size());
+        for (int mineIdx = 0; mineIdx < (int) mines.size(); mineIdx++) {
+            _mineNearestBulletCache[mineIdx].clear();
+            auto& mine = mines[mineIdx];
+            for (int bulletIdx = 0; bulletIdx < (int) bullets.size(); bulletIdx++) {
+                const auto& bullet = bullets[bulletIdx];
+                if (mine.isNearBullet(bullet)) {
+                    _mineNearestBulletCache[mineIdx].push_back(bulletIdx);
                 }
             }
         }
@@ -180,6 +194,11 @@ public:
         for (int bulletIdx = (int) bullets.size() - 1; bulletIdx >= 0; bulletIdx--) {
             if (bullets[bulletIdx].weaponType == ELootType::NONE) {
                 bullets.erase(bullets.begin() + bulletIdx);
+            }
+        }
+        for (int mineIdx = (int) mines.size() - 1; mineIdx >= 0; mineIdx--) {
+            if (mines[mineIdx].state == NONE) {
+                mines.erase(mines.begin() + mineIdx);
             }
         }
         currentTick++;
@@ -246,7 +265,7 @@ private:
             }
         }
         for (auto& otherMine : mines) {
-            if (otherMine.state != EXPLODED && mine.isTouch(otherMine)) {
+            if (otherMine.state != NONE && otherMine.state != EXPLODED && mine.isTouch(otherMine)) {
                 otherMine.state = EXPLODED;
                 otherMine.timer = -1;
             }
@@ -254,8 +273,11 @@ private:
     }
 
     void _doMinesTick(int updatesPerTick) {
-        for (int i = 0; i < (int) mines.size(); i++) {
-            auto& mine = mines[i];
+        for (auto& mine : mines) {
+            if (mine.state == NONE) {
+                continue;
+            }
+
             if (mine.state == PREPARING) {
                 mine.timer -= 1.0 / (updatesPerTick * TICKS_PER_SECOND);
                 if (mine.timer < -1e-10) {
@@ -283,8 +305,7 @@ private:
 
             if (mine.state == EXPLODED) {
                 _blowUpMine(mine);
-                mines.erase(mines.begin() + i);
-                i--;
+                mine.state = NONE;
             }
         }
     }
@@ -305,8 +326,13 @@ private:
             if (unit.action.shoot && weapon.magazine > 0 && weapon.fireTimer < -0.5) {
                 auto newBullet = unit.shot(shotSpreadToss);
                 for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
-                    if (newBullet.unitId != units[unitIdx].id && units[unitIdx].getManhattanDistanceToBullet(newBullet) < 1.5) {
-                        _nearestBulletCache[unitIdx].push_back((int) bullets.size());
+                    if (newBullet.unitId != units[unitIdx].id && units[unitIdx].isNearBullet(newBullet)) {
+                        _unitNearestBulletCache[unitIdx].push_back((int) bullets.size());
+                    }
+                }
+                for (int mineIdx = 0; mineIdx < (int) mines.size(); mineIdx++) {
+                    if (mines[mineIdx].isNearBullet(newBullet)) {
+                        _mineNearestBulletCache[mineIdx].push_back((int) bullets.size());
                     }
                 }
                 bullets.emplace_back(newBullet);
@@ -501,7 +527,7 @@ private:
     void _doBulletsDamageTick(int updatesPerTick) {
         for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
             auto& unit = units[unitIdx];
-            for (int bulletIdx : _nearestBulletCache[unitIdx]) {
+            for (int bulletIdx : _unitNearestBulletCache[unitIdx]) {
                 auto& bullet = bullets[bulletIdx];
                 if (bullet.weaponType != ELootType::NONE && _collideBulletAndUnit(unit, bullet)) {
                     _applyRocketExplosionDamage(bullet);
@@ -510,14 +536,19 @@ private:
             }
         }
 
-        // TODO
-        for (auto& bullet : bullets) {
-            if (bullet.weaponType == ELootType::NONE) {
+        for (int mineIdx = 0; mineIdx < (int) mines.size(); mineIdx++) {
+            auto& mine = mines[mineIdx];
+            if (mine.state == NONE) {
                 continue;
             }
-            if (_collideBulletAndMines(bullet)) {
-                _applyRocketExplosionDamage(bullet);
-                bullet.weaponType = ELootType::NONE;
+            for (int bulletIdx : _mineNearestBulletCache[mineIdx]) {
+                auto& bullet = bullets[bulletIdx];
+                if (bullet.weaponType != ELootType::NONE && mine.intersectsWith(bullet)) {
+                    mine.state = EXPLODED;
+                    _applyRocketExplosionDamage(bullet);
+                    bullet.weaponType = ELootType::NONE;
+                    break;
+                }
             }
         }
     }
@@ -562,9 +593,8 @@ private:
                 }
             }
             for (auto& mine : mines) {
-                if (bullet.isRocketLauncherExplosionTouch(mine)) {
+                if (mine.state != NONE && bullet.isRocketLauncherExplosionTouch(mine)) {
                     mine.state = EXPLODED;
-                    //mine.timer = -1;
                 }
             }
         }
@@ -586,16 +616,6 @@ private:
                 }
             }
             return true;
-        }
-        return false;
-    }
-
-    bool _collideBulletAndMines(const TBullet& bullet) {
-        for (auto& mine : mines) {
-            if (mine.intersectsWith(bullet)) {
-                mine.state = EXPLODED;
-                return true;
-            }
         }
         return false;
     }
