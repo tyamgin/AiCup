@@ -242,6 +242,23 @@ public:
         return std::abs(x1 - other.x1) + std::abs(y1 - other.y1);
     }
 
+    double getManhattanDistanceToBullet(const TBullet& bullet) const {
+        double dist = 10000;
+        if (bullet.x2 > x2) {
+            dist = std::min(dist, bullet.x2 - x2);
+        }
+        if (bullet.x1 < x1) {
+            dist = std::min(dist, x1 - bullet.x1);
+        }
+        if (bullet.y2 > y2) {
+            dist = std::min(dist, bullet.y2 - y2);
+        }
+        if (bullet.y1 < y1) {
+            dist = std::min(dist, y1 - bullet.y1);
+        }
+        return dist;
+    }
+
     double getDistanceTo(const TUnit& unit) const {
         return sqrt(SQR(x1 - unit.x1) + SQR(y1 - unit.y1));
     }

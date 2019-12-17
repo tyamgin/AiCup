@@ -212,9 +212,16 @@ public:
             _compareState(prevEnv, env, prevEnv2);
         }
 
+        std::unordered_map<int, TAction> result;
+
+//        for (auto& unit : env.units) {
+//            if (unit.isMy()) {
+//                result[unit.id] = _mineGunTestStrategy(unit, env);
+//            }
+//        }
+
         _initialWeaponDistribute();
 
-        std::unordered_map<int, TAction> result;
         for (const auto& unit : env.units) {
             if (unit.isMy()) {
                 result[unit.id] = getAction(unit);

@@ -12,6 +12,8 @@
 #include <iostream>
 #include <tuple>
 
+#define MAX_UNITS_COUNT 4
+
 struct TSandboxCloneOptions {
     std::vector<int> unitIds = {-1};
     bool needLootboxes = true;
@@ -22,7 +24,8 @@ struct TSandboxCloneOptions {
 class TSandbox {
 private:
     static std::shared_ptr<std::vector<std::vector<unsigned>>> _emptyBonusIndex;
-    std::vector<const TUnit*> _nearestUnitCache;
+    const TUnit* _nearestUnitCache[MAX_UNITS_COUNT];
+    std::vector<int> _nearestBulletCache[MAX_UNITS_COUNT];
 public:
     int currentTick;
     int score[2] = {0, 0};
@@ -127,7 +130,6 @@ public:
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
         std::vector<bool> swapWeaponBackup;
-        _nearestUnitCache.resize(units.size());
         for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
             auto& unit = units[unitIdx];
 
@@ -156,9 +158,15 @@ public:
                 }
             }
             _nearestUnitCache[unitIdx] = nearest;
+
+            _nearestBulletCache[unitIdx].clear();
+            for (int bulletIdx = 0; bulletIdx < (int) bullets.size(); bulletIdx++) {
+                const auto& bullet = bullets[bulletIdx];
+                if (bullet.unitId != unit.id && unit.getManhattanDistanceToBullet(bullet) < 1.5) {
+                    _nearestBulletCache[unitIdx].push_back(bulletIdx);
+                }
+            }
         }
-
-
 
         for (int microTick = 0; microTick < updatesPerTick; microTick++) {
             _doMicroTick(updatesPerTick);
@@ -168,6 +176,11 @@ public:
         }
         for (auto& unit : units) {
             unit.action.swapWeapon = swapWeaponBackup[unit.id];
+        }
+        for (int bulletIdx = (int) bullets.size() - 1; bulletIdx >= 0; bulletIdx--) {
+            if (bullets[bulletIdx].weaponType == ELootType::NONE) {
+                bullets.erase(bullets.begin() + bulletIdx);
+            }
         }
         currentTick++;
     }
@@ -290,7 +303,13 @@ private:
             }
             weapon.lastAngle = newAngle;
             if (unit.action.shoot && weapon.magazine > 0 && weapon.fireTimer < -0.5) {
-                bullets.emplace_back(unit.shot(shotSpreadToss));
+                auto newBullet = unit.shot(shotSpreadToss);
+                for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
+                    if (newBullet.unitId != units[unitIdx].id && units[unitIdx].getManhattanDistanceToBullet(newBullet) < 1.5) {
+                        _nearestBulletCache[unitIdx].push_back((int) bullets.size());
+                    }
+                }
+                bullets.emplace_back(newBullet);
                 weapon.lastFireTick = currentTick;
             }
         }
@@ -480,20 +499,35 @@ private:
     }
 
     void _doBulletsDamageTick(int updatesPerTick) {
-        for (int i = 0; i < (int) bullets.size(); i++) {
-            auto& bullet = bullets[i];
-            if (_collideBulletAndUnits(bullet) || _collideBulletAndMines(bullet)) {
+        for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
+            auto& unit = units[unitIdx];
+            for (int bulletIdx : _nearestBulletCache[unitIdx]) {
+                auto& bullet = bullets[bulletIdx];
+                if (bullet.weaponType != ELootType::NONE && _collideBulletAndUnit(unit, bullet)) {
+                    _applyRocketExplosionDamage(bullet);
+                    bullet.weaponType = ELootType::NONE;
+                }
+            }
+        }
+
+        // TODO
+        for (auto& bullet : bullets) {
+            if (bullet.weaponType == ELootType::NONE) {
+                continue;
+            }
+            if (_collideBulletAndMines(bullet)) {
                 _applyRocketExplosionDamage(bullet);
-                bullets.erase(bullets.begin() + i);
-                i--;
+                bullet.weaponType = ELootType::NONE;
             }
         }
     }
 
     void _doBulletsMoveTick(int updatesPerTick) {
         auto updatesPerSecond = updatesPerTick * TICKS_PER_SECOND;
-        for (int i = 0; i < (int) bullets.size(); i++) {
-            auto& bullet = bullets[i];
+        for (auto& bullet : bullets) {
+            if (bullet.weaponType == ELootType::NONE) {
+                continue;
+            }
             auto dx = bullet.velocity.x / updatesPerSecond;
             auto dy = bullet.velocity.y / updatesPerSecond;
             bullet.x1 += dx;
@@ -503,8 +537,7 @@ private:
 
             if (bullet.isInWall()) {
                 _applyRocketExplosionDamage(bullet);
-                bullets.erase(bullets.begin() + i);
-                i--;
+                bullet.weaponType = ELootType::NONE;
             }
         }
     }
@@ -537,24 +570,22 @@ private:
         }
     }
 
-    bool _collideBulletAndUnits(const TBullet& bullet) {
-        for (auto& unit : units) {
-            if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
-                auto damage = std::min(unit.health, bullet.damage());
-                unit.health -= damage;
-                if (unit.health <= 0) {
-                    score[unit.playerIdx ^ 1] += KILL_SCORE;
-                }
-                if (unit.playerIdx != bullet.playerIdx()) {
-                    score[bullet.playerIdx()] += damage;
-                } else {
-                    friendlyLoss[bullet.playerIdx()] += damage;
-                    if (unit.health <= 0) {
-                        friendlyLoss[unit.playerIdx] += KILL_SCORE;
-                    }
-                }
-                return true;
+    bool _collideBulletAndUnit(TUnit& unit, const TBullet& bullet) {
+        if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
+            auto damage = std::min(unit.health, bullet.damage());
+            unit.health -= damage;
+            if (unit.health <= 0) {
+                score[unit.playerIdx ^ 1] += KILL_SCORE;
             }
+            if (unit.playerIdx != bullet.playerIdx()) {
+                score[bullet.playerIdx()] += damage;
+            } else {
+                friendlyLoss[bullet.playerIdx()] += damage;
+                if (unit.health <= 0) {
+                    friendlyLoss[unit.playerIdx] += KILL_SCORE;
+                }
+            }
+            return true;
         }
         return false;
     }
