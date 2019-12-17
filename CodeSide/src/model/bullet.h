@@ -50,9 +50,9 @@ public:
         return false;
     }
 
-    bool isRocketLauncherExplosionTouch(const TRectangle& unit) const {
+    bool isRocketLauncherExplosionTouch(const TRectangle& rect) const {
         double d = ROCKET_LAUNCHER_EXPLOSION_RADIUS - ROCKET_LAUNCHER_BULLET_SIZE / 2;
-        return unit.intersectsWith(x1 - d, y1 - d, x2 + d, y2 + d);
+        return rect.intersectsWith(x1 - d, y1 - d, x2 + d, y2 + d);
     }
 };
 

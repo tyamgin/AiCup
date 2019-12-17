@@ -162,7 +162,9 @@ public:
 
         for (int microTick = 0; microTick < updatesPerTick; microTick++) {
             _doMicroTick(updatesPerTick);
+            _doBulletsDamageTick(updatesPerTick);
             _doMinesTick(updatesPerTick);
+            _doBulletsMoveTick(updatesPerTick);
         }
         for (auto& unit : units) {
             unit.action.swapWeapon = swapWeaponBackup[unit.id];
@@ -339,7 +341,7 @@ private:
                     xMin = nearest->x1;
                     stopped = true;
                 }
-                unit.x2 = xMin - stopped * FUCKING_EPS;
+                unit.x2 = std::max(unit.x2, xMin - stopped * FUCKING_EPS);
                 unit.x1 = unit.x2 - UNIT_WIDTH;
             } else if (action.velocity < 0) {
                 double xMax = unit.x1 + dx;
@@ -358,7 +360,7 @@ private:
                     xMax = nearest->x2;
                     stopped = true;
                 }
-                unit.x1 = xMax + stopped * FUCKING_EPS;
+                unit.x1 = std::min(unit.x1, xMax + stopped * FUCKING_EPS);
                 unit.x2 = unit.x1 + UNIT_WIDTH;
             }
 
@@ -475,16 +477,21 @@ private:
                 unit.jumpMaxTime = JUMP_PAD_JUMP_TIME;
             }
         }
+    }
 
+    void _doBulletsDamageTick(int updatesPerTick) {
         for (int i = 0; i < (int) bullets.size(); i++) {
             auto& bullet = bullets[i];
-            if (_collideBulletAndUnits(bullet)) {
+            if (_collideBulletAndUnits(bullet) || _collideBulletAndMines(bullet)) {
                 _applyRocketExplosionDamage(bullet);
                 bullets.erase(bullets.begin() + i);
                 i--;
             }
         }
+    }
 
+    void _doBulletsMoveTick(int updatesPerTick) {
+        auto updatesPerSecond = updatesPerTick * TICKS_PER_SECOND;
         for (int i = 0; i < (int) bullets.size(); i++) {
             auto& bullet = bullets[i];
             auto dx = bullet.velocity.x / updatesPerSecond;
@@ -521,6 +528,12 @@ private:
                     }
                 }
             }
+            for (auto& mine : mines) {
+                if (bullet.isRocketLauncherExplosionTouch(mine)) {
+                    mine.state = EXPLODED;
+                    //mine.timer = -1;
+                }
+            }
         }
     }
 
@@ -540,6 +553,16 @@ private:
                         friendlyLoss[unit.playerIdx] += KILL_SCORE;
                     }
                 }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool _collideBulletAndMines(const TBullet& bullet) {
+        for (auto& mine : mines) {
+            if (mine.intersectsWith(bullet)) {
+                mine.state = EXPLODED;
                 return true;
             }
         }

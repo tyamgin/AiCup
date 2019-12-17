@@ -135,7 +135,7 @@ void _compareState(TSandbox& prevEnv, TSandbox& env, TSandbox& prevEnv2) {
     prevEnv2.doTick();
 }
 
-TAction _ladderLeftStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
+TAction _ladderLeftStrategy(const TUnit& unit, const TSandbox& env) {
     TAction action;
     //auto action = _strategy(unit, game, debug);
     if (env.currentTick < 100 / UPDATES_PER_TICK) {
@@ -183,7 +183,7 @@ TAction _ladderLeftStrategy(const TUnit& unit, const TSandbox& env, Debug& debug
     return action;
 }
 
-TAction _ladderLeftStrategy2(const TUnit& unit, const TSandbox& env, Debug& debug) {
+TAction _ladderLeftStrategy2(const TUnit& unit, const TSandbox& env) {
     TAction action;
     //auto action = _strategy(unit, game, debug);
     if (env.currentTick < 100 / UPDATES_PER_TICK) {
@@ -207,7 +207,7 @@ TAction _ladderLeftStrategy2(const TUnit& unit, const TSandbox& env, Debug& debu
 
 
 
-TAction _rifleTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
+TAction _rifleTestStrategy(const TUnit& unit, const TSandbox& env) {
     // requires seed=12
     TAction action;
     //auto action = _strategy(unit, game, debug);
@@ -223,7 +223,7 @@ TAction _rifleTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug)
     return action;
 }
 
-TAction _jumpStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
+TAction _jumpStrategy(const Unit& unit, const TSandbox& env) {
     TAction action;
     //auto action = _strategy(unit, game, debug);
     if (env.currentTick < 100) {
@@ -234,7 +234,7 @@ TAction _jumpStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
     return action;
 }
 
-TAction _ladderDownStrategy(const Unit& unit, const TSandbox& env, Debug& debug) {
+TAction _ladderDownStrategy(const Unit& unit, const TSandbox& env) {
     TAction action;
     //auto action = _strategy(unit, game, debug);
     if (env.currentTick < 100) {
@@ -248,7 +248,7 @@ TAction _ladderDownStrategy(const Unit& unit, const TSandbox& env, Debug& debug)
 }
 
 
-TAction _mineTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
+TAction _mineTestStrategy(const TUnit& unit, const TSandbox& env) {
     // requires seed=27
     TAction action;
     if (env.currentTick < 3000 / UPDATES_PER_TICK) {
@@ -263,7 +263,7 @@ TAction _mineTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) 
     return action;
 }
 
-TAction _mineTestStrategy2(const TUnit& unit, const TSandbox& env, Debug& debug) {
+TAction _mineTestStrategy2(const TUnit& unit, const TSandbox& env) {
     // requires seed=27
     TAction action;
     if (env.currentTick < 3000 / UPDATES_PER_TICK) {
@@ -290,7 +290,47 @@ TAction _mineTestStrategy2(const TUnit& unit, const TSandbox& env, Debug& debug)
     return action;
 }
 
-TAction _rocketTestStrategy(const TUnit& unit, const TSandbox& env, Debug& debug) {
+TAction _mineGunTestStrategy(const TUnit& unit, const TSandbox& env) {
+    // requires seed=27
+    // взрыв ракетой
+    TAction action;
+    if (env.currentTick < 3000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    } else if (env.currentTick < 7000 / UPDATES_PER_TICK) {
+        action.jump = true;
+        action.velocity = 10;
+    } else if (env.currentTick < 11200 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+        action.plantMine = true;
+    } else {
+        action.aim = TPoint(7, 22) - unit.center();
+        action.shoot = true;
+        action.velocity = 10;
+    }
+    return action;
+}
+
+TAction _mineGunTestStrategy2(const TUnit& unit, const TSandbox& env) {
+    // requires seed=27
+    // прямым попаданием
+    TAction action;
+    if (env.currentTick < 3000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+    } else if (env.currentTick < 7000 / UPDATES_PER_TICK) {
+        action.jump = true;
+        action.velocity = 10;
+    } else if (env.currentTick < 11000 / UPDATES_PER_TICK) {
+        action.velocity = 10;
+        action.plantMine = true;
+    } else {
+        action.aim = TPoint(7, 22) - unit.center();
+        action.shoot = true;
+        action.velocity = 10;
+    }
+    return action;
+}
+
+TAction _rocketTestStrategy(const TUnit& unit, const TSandbox& env) {
     // requires seed=8140, empty map
     TAction action;
     if (env.currentTick < 7700 / UPDATES_PER_TICK) {
