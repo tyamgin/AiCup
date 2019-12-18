@@ -40,6 +40,7 @@ public:
     bool oppShotSimpleStrategy = false;
     double shotSpreadToss = 0;
     bool oppFallFreeze = false;
+    bool oppTotalFreeze = false;
 
     TSandbox() {
         currentTick = -1;
@@ -87,6 +88,7 @@ public:
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
         shotSpreadToss = sandbox.shotSpreadToss;
         oppFallFreeze = sandbox.oppFallFreeze;
+        oppTotalFreeze = sandbox.oppTotalFreeze;
         myCount = sandbox.myCount;
     }
 
@@ -126,6 +128,7 @@ public:
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
         shotSpreadToss = sandbox.shotSpreadToss;
         oppFallFreeze = sandbox.oppFallFreeze;
+        oppTotalFreeze = sandbox.oppTotalFreeze;
         myCount = sandbox.myCount;
     }
 
@@ -353,6 +356,10 @@ private:
 
         for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
             auto& unit = units[unitIdx];
+            if (oppTotalFreeze && !unit.isMy()) {
+                continue;
+            }
+
             auto nearest = _nearestUnitCache[unitIdx];
             _doMicrotickWeapon(unit, updatesPerSecond);
 
@@ -443,53 +450,55 @@ private:
                         unit.jumpMaxTime -= 1.0 / updatesPerSecond;
                     }
                 }
-            } else if ((action.jumpDown || !onLadder) && (!oppFallFreeze || unit.isMy() || !unit.canJump)) {
-                double dy = -UNIT_FALL_SPEED / updatesPerSecond;
+            } else if (action.jumpDown || !onLadder) {
+                if (!oppFallFreeze || unit.isMy() || !unit.canJump) {
+                    double dy = -UNIT_FALL_SPEED / updatesPerSecond;
 
-                auto wallMask = uint32_t(ETile::WALL);
-                if (!action.jumpDown) {
-                    if (TLevel::getTileType(unit.x1, unit.y1) != ETile::PLATFORM && TLevel::getTileType(unit.x2, unit.y1) != ETile::PLATFORM) {
-                        wallMask |= uint32_t(ETile::PLATFORM);
+                    auto wallMask = uint32_t(ETile::WALL);
+                    if (!action.jumpDown) {
+                        if (TLevel::getTileType(unit.x1, unit.y1) != ETile::PLATFORM && TLevel::getTileType(unit.x2, unit.y1) != ETile::PLATFORM) {
+                            wallMask |= uint32_t(ETile::PLATFORM);
+                        }
+                        if (unit.isStandOnLadder(dy)) {
+                            wallMask |= uint32_t(ETile::LADDER);
+                        }
                     }
-                    if (unit.isStandOnLadder(dy)) {
-                        wallMask |= uint32_t(ETile::LADDER);
+
+                    int ycell = int(unit.y1 + dy);
+                    double yMax = unit.y1 + dy;
+                    bool stopped = false;
+                    if (ycell + 1 > yMax) {
+                        if (((uint32_t)TLevel::tiles[int(unit.x1)][ycell] & wallMask) ||
+                            ((uint32_t)TLevel::tiles[int(unit.x2)][ycell] & wallMask)) {
+
+                            stopped = true;
+                            yMax = ycell + 1;
+                        }
                     }
-                }
-
-                int ycell = int(unit.y1 + dy);
-                double yMax = unit.y1 + dy;
-                bool stopped = false;
-                if (ycell + 1 > yMax) {
-                    if (((uint32_t)TLevel::tiles[int(unit.x1)][ycell] & wallMask) ||
-                        ((uint32_t)TLevel::tiles[int(unit.x2)][ycell] & wallMask)) {
-
+                    if (nearest != nullptr && nearest->y2 > yMax && unit.y1 >= nearest->y2 && unit.y1 + dy < nearest->y2 && unit.intersectsWithByX(*nearest)) {
                         stopped = true;
-                        yMax = ycell + 1;
+                        yMax = nearest->y2;
                     }
-                }
-                if (nearest != nullptr && nearest->y2 > yMax && unit.y1 >= nearest->y2 && unit.y1 + dy < nearest->y2 && unit.intersectsWithByX(*nearest)) {
-                    stopped = true;
-                    yMax = nearest->y2;
-                }
 
 
-                if (stopped) {
-                    unit.jumpMaxTime = UNIT_JUMP_TIME;
-                    unit.canJump = true;
-                    unit.jumpCanCancel = true;
-                    unit.y1 = std::min(unit.y1, yMax + FUCKING_EPS);
-                    unit.y2 = unit.y1 + UNIT_HEIGHT;
-                } else {
-                    unit.y1 += dy;
-                    unit.y2 += dy;
-                    if (unit.isOnLadder()) {
+                    if (stopped) {
                         unit.jumpMaxTime = UNIT_JUMP_TIME;
                         unit.canJump = true;
                         unit.jumpCanCancel = true;
+                        unit.y1 = std::min(unit.y1, yMax + FUCKING_EPS);
+                        unit.y2 = unit.y1 + UNIT_HEIGHT;
                     } else {
-                        unit.jumpMaxTime = 0;
-                        unit.canJump = false;
-                        unit.jumpCanCancel = false;
+                        unit.y1 += dy;
+                        unit.y2 += dy;
+                        if (unit.isOnLadder()) {
+                            unit.jumpMaxTime = UNIT_JUMP_TIME;
+                            unit.canJump = true;
+                            unit.jumpCanCancel = true;
+                        } else {
+                            unit.jumpMaxTime = 0;
+                            unit.canJump = false;
+                            unit.jumpCanCancel = false;
+                        }
                     }
                 }
             } else {

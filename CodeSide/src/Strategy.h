@@ -37,7 +37,39 @@ class Strategy {
             {ELootType::NONE, 3},
     };
 
-    std::optional<std::vector<TAction>> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
+    std::optional<TActionsVec> findPathWrapper(const TUnit& unit, const TPoint& target) {
+        auto& pathFinder = pathFinders[unit.id];
+        TStatesVec pathPoints;
+        TActionsVec actions;
+        if (pathFinder.findPath(target, pathPoints, actions) && actions.size() > 0) {
+            bool blocked = false;
+            for (auto& other : env.units) {
+                if (!other.isMy() || other.id == unit.id) {
+                    continue;
+                }
+                for (int i = 0; i < 5 && i < (int) pathPoints.size(); i++) {
+                    auto pt = pathPoints[i].getPoint();
+                    if (other.intersectsWith(pt.x - UNIT_HALF_WIDTH, pt.y, pt.x + UNIT_HALF_WIDTH, pt.y + UNIT_HEIGHT)) {
+                        blocked = true;
+                        break;
+                    }
+                }
+            }
+            if (blocked) {
+                actions[0].jump = true;
+                TDrawUtil::debug->draw(CustomData::PlacedText("JUMP",
+                                                              Vec2Float{float(unit.x1), float(unit.y2 + 0.2)},
+                                                              TextAlignment::LEFT,
+                                                              25,
+                                                              ColorFloat(0, 1, 0, 0.5)));
+            }
+            TDrawUtil().drawPath(statesToPoints(pathPoints));
+            return actions;
+        }
+        return {};
+    }
+
+    std::optional<TActionsVec> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
         auto& pathFinder = pathFinders[unit.id];
         std::map<std::pair<int, int>, double> lbPathPenalty;
         pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
@@ -45,8 +77,8 @@ class Strategy {
             if ((lb = env.findLootBox(unit)) != nullptr) {
                 if (lootTypes.count(lb->type)) {
                     if (!lbPathPenalty.count({lb->getRow(), lb->getCol()})) {
-                        std::vector<TState> pts;
-                        std::vector<TAction> acts;
+                        TStatesVec pts;
+                        TActionsVec acts;
                         double penalty = 0;
                         if (pathFinder.findPath(unit.position(), pts, acts) && !acts.empty()) {
                             for (const auto& s : pts) {
@@ -64,8 +96,6 @@ class Strategy {
             }
         });
 
-        std::vector<TState> pathPoints;
-        std::vector<TAction> actions;
 
         double minDist = INF;
         TLootBox* selectedLb = nullptr;
@@ -87,18 +117,15 @@ class Strategy {
             }
         });
         if (selectedLb != nullptr) {
-            if (pathFinder.findPath(selectedPos, pathPoints, actions) && actions.size() > 0) {
-                TDrawUtil().drawPath(statesToPoints(pathPoints));
+            if (auto actions = findPathWrapper(unit, selectedPos)) {
                 return actions;
             }
         }
         return {};
     }
 
-    std::optional<std::vector<TAction>> _strategy(const TUnit& unit) {
+    std::optional<TActionsVec> _strategy(const TUnit& unit) {
         auto& pathFinder = pathFinders[unit.id];
-        std::vector<TState> pathPoints;
-        std::vector<TAction> actions;
 
 #if M_DRAW_REACHABILITY_X > 0 && M_DRAW_REACHABILITY_Y > 0
         pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
@@ -111,8 +138,8 @@ class Strategy {
 
         if (unit.noWeapon() && _selLootbox.count(unit.id)) {
             TPoint pos = _selLootbox[unit.id]->position();
-            if (pathFinder.findPath(pos, pathPoints, actions) && !actions.empty()) {
-                TDrawUtil().drawPath(statesToPoints(pathPoints));
+
+            if (auto actions = findPathWrapper(unit, pos)) {
                 return actions;
             }
         }
@@ -156,19 +183,17 @@ class Strategy {
                 }
             });
             if (minDist < 1e-9) {
-                return std::vector<TAction>(1, TAction());
+                return TActionsVec(1, TAction());
             }
-            if (minDist < INF && pathFinder.findPath(selectedPoint, pathPoints, actions) && actions.size() > 0) {
-                TDrawUtil().drawPath(statesToPoints(pathPoints));
-                return actions;
+            if (minDist < INF) {
+                if (auto actions = findPathWrapper(unit, selectedPoint)) {
+                    return actions;
+                }
             }
         }
 
-
-
         if (target != nullptr) {
-            if (pathFinder.findPath(target->position(), pathPoints, actions) && actions.size() > 0) {
-                TDrawUtil().drawPath(statesToPoints(pathPoints));
+            if (auto actions = findPathWrapper(unit, target->position())) {
                 return actions;
             }
         }
@@ -242,7 +267,7 @@ public:
 
 
         auto maybeActions = _strategy(unit);
-        auto actions = maybeActions ? maybeActions.value() : std::vector<TAction>();
+        auto actions = maybeActions ? maybeActions.value() : TActionsVec();
 
         TSandbox notDodgeEnv = env;
         //notDodgeEnv.oppShotSimpleStrategy = true;
@@ -278,7 +303,7 @@ public:
                 if (scorer(dodgeEnv) > bestScore || (scorer(dodgeEnv) == bestScore && dodgeEnv.getUnit(unit.id)->health > env.getUnit(unit.id)->health)) {
                     bestScore = scorer(dodgeEnv);
                     bestPath = path;
-                    actions = std::vector<TAction>(simulateTicks, act);
+                    actions = TActionsVec(simulateTicks, act);
                 }
             }
         }
@@ -307,7 +332,7 @@ public:
         return action;
     }
 
-    std::optional<TAction> shotStrategy(const TUnit& unit, const std::vector<TAction>& actions) {
+    std::optional<TAction> shotStrategy(const TUnit& unit, const TActionsVec& actions) {
         if (unit.noWeapon()) {
             return {};
         }
@@ -428,8 +453,45 @@ public:
         return action;
     }
 
-    TPoint calcAim(const TUnit& unit, const TUnit& target, const std::vector<TAction>& actions) {
+    TPoint calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {
         return target.center() - unit.center(); // TODO
+
+        auto selAim = target.center() - unit.center();
+        int minTimeDiff = INT_MAX;
+
+        auto snd = env;
+        snd.oppFallFreeze = true;
+        for (int t = 0; t < 70; t++) {
+            snd.getUnit(unit.id)->action = t < actions.size() ? actions[t] : TAction();
+            auto aim = snd.getUnit(target.id)->center() - unit.center();
+            TSandboxCloneOptions copyOptions;
+            copyOptions.needLootboxes = false;
+            copyOptions.needMines = false;
+            copyOptions.needBullets = false;
+            copyOptions.unitIds = {unit.id, target.id};
+            TSandbox testSnd(env, copyOptions);
+            testSnd.oppTotalFreeze = true;
+            auto testUnit = testSnd.getUnit(unit.id);
+            testUnit->weapon.fireTimer = -1;
+            int timeToShot = -1;
+            for (int z = 0; z < 30; z++) {
+                testUnit->action = z < actions.size() ? actions[z] : TAction();
+                testUnit->action.shoot = z == 0;
+                testUnit->action.aim = aim;
+                testSnd.doTick(10);
+                if (testSnd.bullets.empty()) {
+                    timeToShot = z;
+                    break;
+                }
+            }
+            if (timeToShot != -1 && std::abs(t - timeToShot) < minTimeDiff) {
+                minTimeDiff = std::abs(t - timeToShot);
+                selAim = aim;
+            }
+            snd.doTick(10);
+        }
+        return selAim;
+
 
         auto midAngle = unit.center().getAngleTo(target.center());
         double L = -M_PI / 4, R = M_PI / 4;
@@ -445,7 +507,7 @@ public:
         return TPoint::byAngle(aimAngle);
     }
 
-    double _calcAimDist(const TUnit& startUnit, const TUnit& target, double aimAngle, int waitAdditional, const std::vector<TAction>& actions) {
+    double _calcAimDist(const TUnit& startUnit, const TUnit& target, double aimAngle, int waitAdditional, const TActionsVec& actions) {
         TSandboxCloneOptions copyOptions;
         copyOptions.needLootboxes = false;
         copyOptions.needMines = false;

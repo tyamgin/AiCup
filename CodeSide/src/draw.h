@@ -4,9 +4,16 @@
 #include <string>
 
 #define M_DRAW_GRID 1
+
+#ifdef DEBUG
 #define M_DRAW_REACHABILITY_X 3
 #define M_DRAW_REACHABILITY_Y 0
+#define M_DRAW_PENALTY 1
+#else
+#define M_DRAW_REACHABILITY_X 0
+#define M_DRAW_REACHABILITY_Y 0
 #define M_DRAW_PENALTY 0
+#endif
 
 
 class TDrawUtil {
