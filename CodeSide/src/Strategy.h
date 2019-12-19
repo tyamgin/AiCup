@@ -446,8 +446,16 @@ public:
                                                               ColorFloat(1, 0, 0, 1)));
             }
 #endif
-            if (probability >= 0.5 && failProbability < 0.01) {
-                action.shoot = true;
+            if (failProbability < 0.01) {
+                if (probability >= 0.5) {
+                    action.shoot = true;
+                }
+//                if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
+//                    action.shoot = true;
+//                }
+//                if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
+//                    action.shoot = true;
+//                }
             }
         }
 
@@ -465,17 +473,15 @@ public:
         }
 
         TPathFinder pf(&env, target);
-        double minDist = 100000;
-        TPoint targetEndPoint;
+        std::tuple<double, double, TPoint> minDist(INF, -INF, TPoint());
         pf.traverseReachable(target, [&](double dist, const TUnit& tg, const TState& state) {
-            if (dist < minDist && isStand[state.x][state.y]) {
-                minDist = dist;
-                targetEndPoint = tg.position();
+            if (isStand[state.x][state.y]) {
+                minDist = std::min(minDist, std::make_tuple(dist, -tg.getDistanceTo(unit), tg.position()));
             }
         });
         TStatesVec tarStates;
         TActionsVec tarActions;
-        if (minDist < 99999 && pf.findPath(targetEndPoint, tarStates, tarActions) && tarStates.size()) {
+        if (std::get<0>(minDist) < INF && pf.findPath(std::get<2>(minDist), tarStates, tarActions) && tarStates.size()) {
             TDrawUtil().drawPath(statesToPoints(tarStates), ColorFloat(0, 0, 1, 0.5));
         } else {
             return selAim;
