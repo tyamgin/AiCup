@@ -12,6 +12,7 @@
 #include <cassert>
 
 /**
+ * TODO:
  * - пошел за аптечкой напролом через противника, не прошел, проиграл
  * - собрал все аптечки, не осталось аптечки соперницу, выиграл
  * - собрал аптечку с минимумом урона, проиграл, т.к. у соперника аптечка осталась
@@ -23,6 +24,7 @@
  * - стрелдять можно посреди тика, даже если unit.canShot() изначально false
  * - в findpath поощрять за бонусы
  * - предсказывать dx противника
+ * - к базучнику близко не подходить
  */
 
 class Strategy {
@@ -454,16 +456,37 @@ public:
     }
 
     TPoint calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {
-        return target.center() - unit.center(); // TODO
+        //return target.center() - unit.center(); // TODO
 
         auto selAim = target.center() - unit.center();
         int minTimeDiff = INT_MAX;
+        if (target.canJump) {// || target.getDistanceTo(unit) > 11) {
+            return selAim;
+        }
 
-        auto snd = env;
-        snd.oppFallFreeze = true;
+        TPathFinder pf(&env, target);
+        double minDist = 100000;
+        TPoint targetEndPoint;
+        pf.traverseReachable(target, [&](double dist, const TUnit& tg, const TState& state) {
+            if (dist < minDist && isStand[state.x][state.y]) {
+                minDist = dist;
+                targetEndPoint = tg.position();
+            }
+        });
+        TStatesVec tarStates;
+        TActionsVec tarActions;
+        if (minDist < 99999 && pf.findPath(targetEndPoint, tarStates, tarActions) && tarStates.size()) {
+            TDrawUtil().drawPath(statesToPoints(tarStates), ColorFloat(0, 0, 1, 0.5));
+        } else {
+            return selAim;
+        }
+
+        //auto snd = env;
+        //snd.oppFallFreeze = true;
         for (int t = 0; t < 70; t++) {
-            snd.getUnit(unit.id)->action = t < actions.size() ? actions[t] : TAction();
-            auto aim = snd.getUnit(target.id)->center() - unit.center();
+            //snd.getUnit(unit.id)->action = t < actions.size() ? actions[t] : TAction();
+            //auto aim = snd.getUnit(target.id)->center() - unit.center();
+            auto aim = (t < tarStates.size() ? tarStates[t] : tarStates.back()).getPoint() + TPoint(0, UNIT_HALF_HEIGHT) - unit.center();
             TSandboxCloneOptions copyOptions;
             copyOptions.needLootboxes = false;
             copyOptions.needMines = false;
@@ -488,7 +511,7 @@ public:
                 minTimeDiff = std::abs(t - timeToShot);
                 selAim = aim;
             }
-            snd.doTick(10);
+            //snd.doTick(10);
         }
         return selAim;
 

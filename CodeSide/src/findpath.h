@@ -81,6 +81,7 @@ bool _drawMode;
 std::set<TState> dfsVisitedStates;
 TDfsGoesResult dfsResultBorderPoints;
 bool dfsStartMode;
+TState dfsStartState;
 TState dfsTraceTarget;
 TActionsVec dfsTraceActResult;
 TStatesVec dfsTraceStateResult;
@@ -115,7 +116,7 @@ private:
 
     static void _dfs(TState state, double dist) {
         dfsVisitedStates.insert(state);
-        if (dfsStartMode || isBound[state.x][state.y] || state.pad) {
+        if (dfsStartMode || (isBound[state.x][state.y]) || state.pad) {
             if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y] || !isValid[state.x][state.y + 2]) {
                 dfsResultBorderPoints.emplace_back(state, dist);
                 if (_drawMode) {
@@ -158,6 +159,7 @@ private:
 
     static TDfsGoesResult* _getJumpGoes(const TState& state, TDfsGoesResult* startModeResult) {
         dfsStartMode = startModeResult != nullptr;
+        dfsStartState = state;
 
         if (!dfsStartMode && dfsGoesCache[state.x][state.y] != nullptr) {
             return dfsGoesCache[state.x][state.y];
@@ -167,6 +169,7 @@ private:
         dfsResultBorderPoints.clear();
         _dfs(state, 0);
         if (!dfsStartMode) {
+            //std::sort(dfsResultBorderPoints.begin(), dfsResultBorderPoints.end());
             dfsGoesCache[state.x][state.y] = new TDfsGoesResult();
             dfsGoesCache[state.x][state.y]->swap(dfsResultBorderPoints);
             return dfsGoesCache[state.x][state.y];
@@ -229,7 +232,7 @@ public:
     explicit TPathFinder(const TSandbox* env, const TUnit& start) {
         this->env = env;
         this->startUnit = start;
-        this->startState = _getUnitState(this->startUnit);
+        this->startState = getUnitState(this->startUnit);
     }
 
     bool findPath(const TPoint& target, TStatesVec& resultStates, TActionsVec& resultActions) {
@@ -306,7 +309,7 @@ public:
                 auto newUnit = testEnv.getUnit(startUnit.id);
                 newUnit->action = firstAction;
                 testEnv.doTick();
-                if (std::abs(_getUnitState(*newUnit).getPoint().x - newUnit->center().x) > 1e-10) {
+                if (std::abs(getUnitState(*newUnit).getPoint().x - newUnit->center().x) > 1e-10) {
                     auto tmp = startState;
                     tmp.x += dx < 0 ? 1 : -1;
                     dx = tmp.getPoint().x - startUnit.position().x;
@@ -339,10 +342,17 @@ public:
         }
     }
 
-    TState getPointState(const TPoint& point) {
+    static TState getPointState(const TPoint& point) {
         TState res;
         res.x = int((point.x + STEP_LENGTH/2) / STEP_LENGTH); // round to nearest
         res.y = int((point.y + 1 / 60.0) / STEP_LENGTH + 1e-8);
+        return res;
+    }
+
+    static TState getUnitState(const TUnit& unit) {
+        TState res = getPointState(TPoint(unit.x1 + UNIT_HALF_WIDTH, unit.y1));
+        res.timeLeft = int(unit.jumpMaxTime * TICKS_PER_SECOND + 1e-10);
+        res.pad = unit.isPadFly();
         return res;
     }
 
@@ -355,13 +365,6 @@ public:
     }
     
 private:
-
-    TState _getUnitState(const TUnit& unit) {
-        TState res = getPointState(TPoint(unit.x1 + UNIT_HALF_WIDTH, unit.y1));
-        res.timeLeft = int(unit.jumpMaxTime * TICKS_PER_SECOND + 1e-10);
-        res.pad = unit.isPadFly();
-        return res;
-    }
 
     bool _getCellGoesTrace(const TState& state, const TState& end, bool beg, bool standFix, bool pad, TActionsVec& resAct, TStatesVec& resState) {
         if (!isTouchPad[state.x][state.y]) {
@@ -421,19 +424,20 @@ private:
 
         std::vector<std::vector<double>> pen(TLevel::width * STEPS_PER_CELL, std::vector<double>(TLevel::height * STEPS_PER_CELL, 0));
 
-        for (auto& opp : env->units) {
-            if (opp.isMy()) {
-                continue;
-            }
-            auto oppCenter = opp.center();
-            auto oppCenterState = getPointState(oppCenter);
-            for (int di = -40; di <= 40; di++) {
-                for (int dj = -40; dj <= 40; dj++) {
-                    auto st = TState{oppCenterState.x + di, oppCenterState.y + dj, 0};
-                    auto pt = st.getPoint();
-                    if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
-                        const double mx = 10.0;
-                        penalty[st.x][st.y] = std::max(0.0, mx - pt.getDistanceTo(oppCenter));
+        if (startUnit.isMy()) {
+            for (auto &opp : env->units) {
+                if (opp.isMy()) {
+                    continue;
+                }
+                auto oppCenter = opp.center();
+                auto oppCenterState = getPointState(oppCenter);
+                for (int di = -40; di <= 40; di++) {
+                    for (int dj = -40; dj <= 40; dj++) {
+                        auto st = TState{oppCenterState.x + di, oppCenterState.y + dj, 0};
+                        auto pt = st.getPoint();
+                        if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
+                            const double mx = 10.0;
+                            penalty[st.x][st.y] = std::max(0.0, mx - pt.getDistanceTo(oppCenter));
 #if M_DRAW_PENALTY
 //                        if (di % 3 == 0 && dj % 3 == 0) {
 //                            TDrawUtil().debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
@@ -441,44 +445,45 @@ private:
 //                                                                     ColorFloat(1, 0, 0, penalty[st.x][st.y] / mx)));
 //                        }
 #endif
-                    }
-                }
-            }
-        }
-
-
-        for (auto& other : env->units) {
-            if (other.id == startUnit.id) {
-                continue;
-            }
-            if (!other.isMy()) {
-                continue;
-            }
-
-            auto otherCenter = other.center();
-            auto otherCenterState = getPointState(otherCenter);
-            const int rad = 15;
-            for (int di = -rad; di <= rad; di++) {
-                for (int dj = -rad; dj <= rad; dj++) {
-                    auto st = TState{otherCenterState.x + di, otherCenterState.y + dj, 0};
-                    auto pt = st.getPoint();
-                    if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
-                        const double mx = 2.0;
-                        pen[st.x][st.y] = std::max(0.0, (mx - pt.getDistanceTo(otherCenter))*0.001);
-#if M_DRAW_PENALTY
-                        if (st.x % 3 == 0 && st.y % 3 == 0 && pen[st.x][st.y] > 0) {
-                            TDrawUtil::debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
-                                                                     Vec2Float{0.05, 0.05},
-                                                                     ColorFloat(1, 0, 0, pen[st.x][st.y] / mx)));
                         }
+                    }
+                }
+            }
+
+
+            for (auto &other : env->units) {
+                if (other.id == startUnit.id) {
+                    continue;
+                }
+                if (!other.isMy()) {
+                    continue;
+                }
+
+                auto otherCenter = other.center();
+                auto otherCenterState = getPointState(otherCenter);
+                const int rad = 15;
+                for (int di = -rad; di <= rad; di++) {
+                    for (int dj = -rad; dj <= rad; dj++) {
+                        auto st = TState{otherCenterState.x + di, otherCenterState.y + dj, 0};
+                        auto pt = st.getPoint();
+                        if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
+                            const double mx = 2.0;
+                            pen[st.x][st.y] = std::max(0.0, (mx - pt.getDistanceTo(otherCenter)) * 0.001);
+#if M_DRAW_PENALTY
+                            if (st.x % 3 == 0 && st.y % 3 == 0 && pen[st.x][st.y] > 0) {
+                                TDrawUtil::debug->draw(CustomData::Rect(Vec2Float{float(pt.x), float(pt.y)},
+                                                                        Vec2Float{0.05, 0.05},
+                                                                        ColorFloat(1, 0, 0, pen[st.x][st.y] / mx)));
+                            }
 #endif
+                        }
                     }
                 }
             }
         }
 
-#define DJ_COMPACT(x, y) uint32_t((uint32_t(x) << 16) ^ uint32_t(y))
-#define DJ_X(mask) int((mask) >> 16)
+#define DJ_COMPACT(x, y) uint32_t((uint32_t(x) << 16U) ^ uint32_t(y))
+#define DJ_X(mask) int((mask) >> 16U)
 #define DJ_Y(mask) int((mask) & 0xFFFF)
 
         std::priority_queue<std::pair<double, uint32_t>> q;
@@ -497,10 +502,15 @@ private:
             if (curDist > stateDist) {
                 continue;
             }
+            if (!startUnit.isMy() && isStand[state.x][state.y]) {
+                break;
+            }
 
 #define DJ_PUSH(to_x, to_y, to_dist) do {                                               \
                 auto dst = to_dist + pen[to_x][to_y];                                   \
+                djAll++; \
                 if (stateDist + dst < dist[to_x][to_y]) {                               \
+                    djIn++; \
                     dist[to_x][to_y] = dist[state.x][state.y] + dst;                    \
                     prev[to_x][to_y] = state;                                           \
                     q.push(std::make_pair(-dist[to_x][to_y], DJ_COMPACT(to_x, to_y)));  \
@@ -522,11 +532,15 @@ private:
                     if (isValid[stx][sty] && !isBlockedMove[xDirection + D_CENTER][D_CENTER - 1][state.x][state.y]) {
                         DJ_PUSH(stx, sty, isOnLadder[stx][sty] ? GO_LADDER_DIST : FALL_DOWN_DIST);
                     }
-
-                    // лезть по лестнице вверх
-                    sty = state.y + 1;
-                    if (isOnLadder[state.x][state.y] && isOnLadder[stx][sty]) {
-                        DJ_PUSH(stx, sty, GO_LADDER_DIST);
+                }
+                if (isOnLadder[state.x][state.y]) {
+                    for (int xDirection : DIRECTION_ORDER) {
+                        // лезть по лестнице вверх
+                        auto stx = state.x + xDirection;
+                        auto sty = state.y + 1;
+                        if (isOnLadder[stx][sty]) {
+                            DJ_PUSH(stx, sty, GO_LADDER_DIST);
+                        }
                     }
                 }
             }
@@ -535,6 +549,7 @@ private:
                 auto pad = isTouchPad[state.x][state.y];
                 auto jumpGoes = _getJumpGoes({state.x, state.y, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, nullptr);
                 for (auto& [to, to_d] : *jumpGoes) {
+                    djJumpAll++;
                     DJ_PUSH(to.x, to.y, to_d);
                 }
             }

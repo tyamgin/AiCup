@@ -24,6 +24,8 @@ enum ELoggerAction {
     LA_ACTIONS_COUNT
 };
 
+int djAll = 0, djIn = 0, djJumpAll = 0;
+
 struct TLogger {
     std::vector<std::chrono::system_clock::time_point> _timers;
     int64_t _cumulativeDuration[LA_ACTIONS_COUNT];
@@ -77,10 +79,13 @@ struct TLogger {
         out << "[Summary]" << std::endl;
         out << "] ALL                         " << _cumulativeDuration[LA_ALL]                         / 1000 << "ms" << std::endl;
         out << "] DO_TICK                     " << _cumulativeDuration[LA_DO_TICK]                     / 1000 << "ms" << std::endl;
-        out << "] DIJKSTRA                    " << _cumulativeDuration[LA_DIJKSTRA]                    / 1000 << "ms" << std::endl;
+        out << "] DJ                          " << _cumulativeDuration[LA_DIJKSTRA]                    / 1000 << "ms" << std::endl;
         out << "] FINDPATH                    " << _cumulativeDuration[LA_FINDPATH]                    / 1000 << "ms" << std::endl;
         out << "] SHOT_STRAT                  " << _cumulativeDuration[LA_SHOT_STRAT]                  / 1000 << "ms" << std::endl;
         out << "] DODGE                       " << _cumulativeDuration[LA_DODGE]                       / 1000 << "ms" << std::endl;
+        out << "] DJ_IN   " << djIn << std::endl;
+        out << "] DJ_ALL  " << djAll << std::endl;
+        out << "] DJ_JALL " << djJumpAll << std::endl;
         return out.str();
     }
 
