@@ -356,6 +356,12 @@ public:
         return res;
     }
 
+    double getDistanceTo(const TPoint& to) {
+        run();
+        auto state = getPointState(to);
+        return dist[state.x][state.y];
+    }
+
     void run() {
         if (dist.empty()) {
             OP_START(DIJKSTRA);

@@ -34,8 +34,8 @@ class Strategy {
 
     std::unordered_map<ELootType, int> weaponPriority = {
             {ELootType::PISTOL, 0},
-            {ELootType::ASSAULT_RIFLE, 1},
-            {ELootType::ROCKET_LAUNCHER, 2},
+            {ELootType::ROCKET_LAUNCHER, 1},
+            {ELootType::ASSAULT_RIFLE, 2},
             {ELootType::NONE, 3},
     };
 
@@ -159,6 +159,9 @@ class Strategy {
                 target = &u;
             }
         }
+        if (target == nullptr) { // it's impossible
+            return{};
+        }
 
         if (_needTakeRocketLauncher(unit) && unit.weapon.type != ELootType::ROCKET_LAUNCHER) {
             auto maybeAct = _strategyLoot(unit, {ELootType::ROCKET_LAUNCHER});
@@ -167,7 +170,41 @@ class Strategy {
             }
         }
 
-        if (target != nullptr && unit.weapon.fireTimer > 0.5) {
+        std::tuple<int, double, TPoint> bestChangeWeapon(weaponPriority[unit.weapon.type], 0.0, TPoint());
+        for (const auto& lb : env.lootBoxes) {
+            if (!lb.isWeapon()) {
+                continue;
+            }
+            bool skip = false;
+            for (auto& [unitId, slb] : _selLootbox) {
+                if (std::make_pair(slb->getRow(), slb->getCol()) == std::make_pair(lb.getRow(), lb.getCol())) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) {
+                continue;
+            }
+
+            double oppMinDist = INF;
+            for (auto& opp : env.units) {
+                if (!opp.isMy()) {
+                    oppMinDist = std::min(oppMinDist, opp.position().getDistanceTo(lb.position()));
+                }
+            }
+            double myDist = unit.position().getDistanceTo(lb.position());
+            if (myDist < oppMinDist) {
+                bestChangeWeapon = std::min(bestChangeWeapon, {weaponPriority[lb.type], myDist, lb.position()});
+            }
+        }
+        if (std::get<0>(bestChangeWeapon) < weaponPriority[unit.weapon.type]) {
+            if (auto actions = findPathWrapper(unit, std::get<2>(bestChangeWeapon))) {
+                return actions;
+            }
+        }
+
+
+        if (unit.weapon.fireTimer > 0.5) {
             double rangeMin = 5, rangeMax = 7;
 //            if (unit.weapon.fireTimer > 0.5) {
                 rangeMin = 10;
@@ -194,11 +231,11 @@ class Strategy {
             }
         }
 
-        if (target != nullptr) {
-            if (auto actions = findPathWrapper(unit, target->position())) {
-                return actions;
-            }
+
+        if (auto actions = findPathWrapper(unit, target->position())) {
+            return actions;
         }
+
         return {};
     }
 

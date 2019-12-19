@@ -35,7 +35,7 @@ def get_player_config(port):
 
 
 def worker(args):
-    idx, p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode = args
+    idx, p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir = args
     port1 = 32003 + idx * 2
     port2 = port1 + 1
     seed = start_seed + idx
@@ -147,8 +147,8 @@ def worker(args):
     }
     cwd = os.getcwd()
 
-    config_path = os.path.join(cwd, f"tmp/_config{idx}.json")
-    result_path = os.path.join(cwd, f"tmp/_result{idx}.txt")
+    config_path = os.path.join(cwd, f"{tmp_dir}/_config{idx}.json")
+    result_path = os.path.join(cwd, f"{tmp_dir}/_result{idx}.txt")
     with open(config_path, "w") as out:
         json.dump(config, out, indent=4)
     if os.path.exists(result_path):
@@ -187,14 +187,15 @@ def start_process():
 @click.option('--count', type=int, default=12)
 @click.option('--team-size', type=int, default=1)
 @click.option('--profile-mode', is_flag=True)
-def run(p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode):
-    if not os.path.exists("tmp"):
-        os.makedirs("tmp")
+@click.option('--tmp-dir', type=str, default="tmp")
+def run(p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir):
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
 
     pool = multiprocessing.Pool(processes=nthreads, initializer=start_process)
     pool.map(worker, [(
             i,
-            p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode
+            p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir
     ) for i in range(count)])
 
 
