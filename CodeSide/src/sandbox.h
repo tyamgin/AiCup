@@ -24,7 +24,7 @@ struct TSandboxCloneOptions {
 class TSandbox {
 private:
     static std::shared_ptr<std::vector<std::vector<unsigned>>> _emptyBonusIndex;
-    const TUnit* _nearestUnitCache[MAX_UNITS_COUNT];
+    const TUnit* _nearestUnitCache[MAX_UNITS_COUNT] = {nullptr};
     std::vector<int> _unitNearestBulletCache[MAX_UNITS_COUNT];
     std::vector<std::vector<int>> _mineNearestBulletCache;
 public:
@@ -44,6 +44,7 @@ public:
 
     TSandbox() {
         currentTick = -1;
+        myCount = 0;
     }
 
     explicit TSandbox(const Game& game) {
@@ -255,7 +256,7 @@ private:
                 auto damage = std::min(unit.health, MINE_EXPLOSION_DAMAGE);
                 unit.health -= damage;
                 if (unit.health <= 0) {
-                    score[unit.playerIdx ^ 1] += KILL_SCORE;
+                    score[1 - unit.playerIdx] += KILL_SCORE;
                 }
                 if (mine.playerIdx != unit.playerIdx) {
                     score[mine.playerIdx] += damage;
@@ -464,15 +465,15 @@ private:
                         }
                     }
 
-                    int ycell = int(unit.y1 + dy);
+                    int yCell = int(unit.y1 + dy);
                     double yMax = unit.y1 + dy;
                     bool stopped = false;
-                    if (ycell + 1 > yMax) {
-                        if (((uint32_t)TLevel::tiles[int(unit.x1)][ycell] & wallMask) ||
-                            ((uint32_t)TLevel::tiles[int(unit.x2)][ycell] & wallMask)) {
+                    if (yCell + 1 > yMax) {
+                        if (((uint32_t)TLevel::tiles[int(unit.x1)][yCell] & wallMask) ||
+                            ((uint32_t)TLevel::tiles[int(unit.x2)][yCell] & wallMask)) {
 
                             stopped = true;
-                            yMax = ycell + 1;
+                            yMax = yCell + 1;
                         }
                     }
                     if (nearest != nullptr && nearest->y2 > yMax && unit.y1 >= nearest->y2 && unit.y1 + dy < nearest->y2 && unit.intersectsWithByX(*nearest)) {
@@ -589,7 +590,7 @@ private:
                     auto damage = std::min(unit.health, ROCKET_LAUNCHER_EXPLOSION_DAMAGE);
                     unit.health -= damage;
                     if (unit.health <= 0) {
-                        score[unit.playerIdx ^ 1] += KILL_SCORE;
+                        score[1 - unit.playerIdx] += KILL_SCORE;
                     }
                     if (bullet.playerIdx() != unit.playerIdx) {
                         score[bullet.playerIdx()] += damage;
@@ -614,7 +615,7 @@ private:
             auto damage = std::min(unit.health, bullet.damage());
             unit.health -= damage;
             if (unit.health <= 0) {
-                score[unit.playerIdx ^ 1] += KILL_SCORE;
+                score[1 - unit.playerIdx] += KILL_SCORE;
             }
             if (unit.playerIdx != bullet.playerIdx()) {
                 score[bullet.playerIdx()] += damage;
