@@ -23,11 +23,11 @@ struct TPoint {
         this->y = y;
     }
 
-    double length() const {
+    [[nodiscard]] double length() const {
         return sqrt(x * x + y * y);
     }
 
-    double length2() const {
+    [[nodiscard]] double length2() const {
         return x * x + y * y;
     }
 
@@ -92,19 +92,19 @@ struct TPoint {
         return *this;
     }
 
-    double getAngleTo(const TPoint& to) const {
+    [[nodiscard]] double getAngleTo(const TPoint& to) const {
         return atan2(to.y - y, to.x - x);
     }
 
-    double getAngle() const {
+    [[nodiscard]] double getAngle() const {
         return atan2(y, x);
     }
 
-    double getDistanceTo(const TPoint& point) const {
+    [[nodiscard]] double getDistanceTo(const TPoint& point) const {
         return sqrt(SQR(x - point.x) + SQR(y - point.y));
     }
 
-    double getDistanceTo2(const TPoint& point) const {
+    [[nodiscard]] double getDistanceTo2(const TPoint& point) const {
         return SQR(x - point.x) + SQR(y - point.y);
     }
 
@@ -112,7 +112,7 @@ struct TPoint {
         return TPoint(cos(angle), sin(angle));
     }
 
-    [[nodiscard]] TPoint rotatedClockwise(double angle) {
+    [[nodiscard]] TPoint rotatedClockwise(double angle) const {
         auto cos = std::cos(angle);
         auto sin = std::sin(angle);
         return TPoint(cos * x + sin * y, -sin * x + cos * y);
@@ -137,35 +137,12 @@ struct TPoint {
         }
         return angle;
     }
-};
 
-struct TCell {
-    int x, y;
-
-    TCell() : x(0), y(0) {
-    }
-
-    TCell(int x, int y) : x(x), y(y) {
-    }
-
-    explicit TCell(const TPoint& point) {
-        x = int(point.x);
-        y = int(point.y);
-    }
-
-    bool operator ==(const TCell& cell) const {
-        return x == cell.x && y == cell.y;
-    }
-
-    bool operator !=(const TCell& cell) const {
-        return x != cell.x || y != cell.y;
-    }
-
-    bool operator <(const TCell& cell) const {
-        if (x != cell.x) {
-            return x < cell.x;
+    bool operator <(const TPoint& point) const {
+        if (x != point.x) {
+            return x < point.x;
         }
-        return y < cell.y;
+        return y < point.y;
     }
 };
 
