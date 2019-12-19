@@ -175,6 +175,10 @@ class Strategy {
             if (!lb.isWeapon()) {
                 continue;
             }
+//            if (lb.type != ELootType::ROCKET_LAUNCHER && _needTakeRocketLauncher(unit)) {
+//                continue;
+//            }
+
             bool skip = false;
             for (auto& [unitId, slb] : _selLootbox) {
                 if (std::make_pair(slb->getRow(), slb->getCol()) == std::make_pair(lb.getRow(), lb.getCol())) {
@@ -487,12 +491,15 @@ public:
                 if (probability >= 0.5) {
                     action.shoot = true;
                 }
-//                if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
-//                    action.shoot = true;
-//                }
-//                if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
-//                    action.shoot = true;
-//                }
+                if (probability >= 0.4 && unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+                    action.shoot = true;
+                }
+                if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
+                    action.shoot = true;
+                }
+                if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
+                    action.shoot = true;
+                }
             }
         }
 
@@ -630,10 +637,10 @@ public:
                 bool free = true;
                 for (const auto &opp : env.units) {
                     if (!opp.isMy()) {
-                        if (unit.getManhattanDistTo(opp) >= 11) {
+                        if (unit.getManhattanDistTo(opp) >= 6.9) {
                             continue;
                         }
-                        if (unit.getManhattanDistTo(opp) < 7 && opp.weapon.fireTimer > 0.5) {
+                        if (unit.getManhattanDistTo(opp) < 5 && opp.weapon.fireTimer > 0.5) {
                             continue;
                         }
                         if (opp.weapon.fireTimer > 0.8) {
