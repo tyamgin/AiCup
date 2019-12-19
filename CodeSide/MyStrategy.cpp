@@ -119,6 +119,12 @@ std::unordered_map<int, UnitAction> MyStrategy::getActions(int myId, const Game&
     return result;
 }
 
+MyStrategy::~MyStrategy() {
+#if M_TIME_LOGS
+    std::cout << TLogger::instance()->getSummary() << std::endl;
+#endif
+}
+
 int TLevel::width = 0;
 int TLevel::height = 0;
 std::vector<std::vector<ETile>> TLevel::tiles;

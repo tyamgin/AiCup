@@ -477,7 +477,7 @@ private:
             }
         }
 
-#define DJ_COMPACT(x, y) uint32_t(((x) << 16) ^ (y))
+#define DJ_COMPACT(x, y) uint32_t((uint32_t(x) << 16) ^ uint32_t(y))
 #define DJ_X(mask) int((mask) >> 16)
 #define DJ_Y(mask) int((mask) & 0xFFFF)
 

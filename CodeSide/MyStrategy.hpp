@@ -10,6 +10,7 @@
 class MyStrategy {
 public:
   MyStrategy();
+  ~MyStrategy();
   std::unordered_map<int, UnitAction> getActions(int myId, const Game &game, Debug &debug);
 };
 
