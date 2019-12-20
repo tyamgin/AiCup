@@ -175,9 +175,9 @@ class Strategy {
             if (!lb.isWeapon()) {
                 continue;
             }
-//            if (lb.type != ELootType::ROCKET_LAUNCHER && _needTakeRocketLauncher(unit)) {
-//                continue;
-//            }
+            if (lb.type != ELootType::ROCKET_LAUNCHER && _needTakeRocketLauncher(unit)) {
+                continue;
+            }
 
             bool skip = false;
             for (auto& [unitId, slb] : _selLootbox) {
@@ -207,8 +207,12 @@ class Strategy {
             }
         }
 
+        bool needGoOut = unit.weapon.fireTimer > 0.5;
+        if (unit.health - target->getPossibleShotDamage() <= 0 && unit.weapon.fireTimer > target->weapon.fireTimer) {
+            needGoOut = true;
+        }
 
-        if (unit.weapon.fireTimer > 0.5) {
+        if (needGoOut) {
             double rangeMin = 5, rangeMax = 7;
 //            if (unit.weapon.fireTimer > 0.5) {
                 rangeMin = 10;
@@ -322,29 +326,36 @@ public:
         auto scorer = [&](TSandbox& env) {
             return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2;
         };
-        auto bestScore = scorer(notDodgeEnv);
+        //         score health not_do dist_to_stand
+        std::tuple<int,  int,   bool,  int> bestScore(scorer(notDodgeEnv), unit.health, true, INF);
         std::optional<std::vector<TPoint>> bestPath;
 
         OP_START(DODGE);
         for (int dirX = -1; dirX <= 1; dirX++) {
             for (int dirY = -1; dirY <= 1; dirY += 1) {
                 TSandbox dodgeEnv = env;
-                //dodgeEnv.oppShotSimpleStrategy = true;
+                auto dodged = dodgeEnv.getUnit(unit.id);
                 std::vector<TPoint> path;
                 TAction act;
-                if (dirY > 0)
+                if (dirY > 0) {
                     act.jump = true;
-                else if (dirY < 0)
+                } else if (dirY < 0) {
                     act.jumpDown = true;
+                }
                 act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
                 const int simulateTicks = 27;
+                int distToStand = simulateTicks;
                 for (int i = 0; i < simulateTicks; i++) {
-                    dodgeEnv.getUnit(unit.id)->action = act;
+                    dodged->action = act;
                     dodgeEnv.doTick();
-                    path.push_back(dodgeEnv.getUnit(unit.id)->position());
+                    path.push_back(dodged->position());
+                    if (dodged->approxIsStand()) {
+                        distToStand = std::min(distToStand, i);
+                    }
                 }
-                if (scorer(dodgeEnv) > bestScore || (scorer(dodgeEnv) == bestScore && dodgeEnv.getUnit(unit.id)->health > env.getUnit(unit.id)->health)) {
-                    bestScore = scorer(dodgeEnv);
+                std::tuple<int,  int,   bool,  int> score(scorer(dodgeEnv), dodged->health, false, distToStand);
+                if (score > bestScore) {
+                    bestScore = score;
                     bestPath = path;
                     actions = TActionsVec(simulateTicks, act);
                 }
@@ -472,14 +483,14 @@ public:
                 }
             }
             double probability = successCount / (itersCount*2 + 1.0);
-            double failProbability = friendlyFails / (itersCount*2 + 1.0);
+            //double failProbability = friendlyFails / (itersCount*2 + 1.0);
 #ifdef DEBUG
             TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
                                                            Vec2Float{float(unit.x1), float(unit.y2 + 2)},
                                                            TextAlignment::LEFT,
                                                            30,
                                                            ColorFloat(0, 0, 1, 1)));
-            if (failProbability > 0.01) {
+            if (friendlyFails > 0) {
                 TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(failProbability),
                                                               Vec2Float{float(unit.x1), float(unit.y2 + 2.5)},
                                                               TextAlignment::LEFT,
@@ -487,18 +498,20 @@ public:
                                                               ColorFloat(1, 0, 0, 1)));
             }
 #endif
-            if (failProbability < 0.01) {
+            if (friendlyFails <= 2) {
                 if (probability >= 0.5) {
                     action.shoot = true;
                 }
-                if (probability >= 0.4 && unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+                if (friendlyFails <= 1 && probability >= 0.4 && unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
                     action.shoot = true;
                 }
-                if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
-                    action.shoot = true;
-                }
-                if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
-                    action.shoot = true;
+                if (friendlyFails == 0) {
+                    if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
+                        action.shoot = true;
+                    }
+                    if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
+                        action.shoot = true;
+                    }
                 }
             }
         }

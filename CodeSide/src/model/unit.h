@@ -276,6 +276,19 @@ public:
     bool noWeapon() const {
         return weapon.type == ELootType::NONE;
     }
+
+    int getPossibleShotDamage() const {
+        switch (weapon.type) {
+            case ELootType::ROCKET_LAUNCHER:
+                return ROCKET_LAUNCHER_EXPLOSION_DAMAGE + ROCKET_LAUNCHER_BULLET_DAMAGE;
+            case ELootType::PISTOL:
+                return PISTOL_BULLET_DAMAGE;
+            case ELootType::ASSAULT_RIFLE:
+                return ASSAULT_RIFLE_BULLET_DAMAGE;
+            default:
+                return 0;
+        }
+    }
 };
 
 
