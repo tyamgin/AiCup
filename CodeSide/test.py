@@ -35,12 +35,10 @@ def get_player_config(port):
 
 
 def worker(args):
-    idx, p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir = args
-    port1 = 32003 + idx * 2
+    idx, p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir, start_port = args
+    port1 = start_port + idx * 2
     port2 = port1 + 1
     seed = start_seed + idx
-    # print([port1, port2])
-    # return
 
     if level in ["Simple"]:
         level_config = level
@@ -188,14 +186,15 @@ def start_process():
 @click.option('--team-size', type=int, default=1)
 @click.option('--profile-mode', is_flag=True)
 @click.option('--tmp-dir', type=str, default="tmp")
-def run(p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir):
+@click.option('--start-port', type=int, default=32003)
+def run(p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir, start_port):
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
 
     pool = multiprocessing.Pool(processes=nthreads, initializer=start_process)
     pool.map(worker, [(
             i,
-            p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir
+            p1, p2, lr_bin, start_seed, level, nthreads, count, team_size, profile_mode, tmp_dir, start_port
     ) for i in range(count)])
 
 
