@@ -39,6 +39,8 @@ class Strategy {
             {ELootType::NONE, 3},
     };
 
+    std::set<int> blockedIds;
+
     std::optional<TActionsVec> findPathWrapper(const TUnit& unit, const TPoint& target) {
         auto& pathFinder = pathFinders[unit.id];
         TStatesVec pathPoints;
@@ -58,12 +60,21 @@ class Strategy {
                 }
             }
             if (blocked) {
-                actions[0].jump = true;
-                TDrawUtil::debug->draw(CustomData::PlacedText("JUMP",
-                                                              Vec2Float{float(unit.x1), float(unit.y2 + 0.2)},
-                                                              TextAlignment::LEFT,
-                                                              25,
-                                                              ColorFloat(0, 1, 0, 0.5)));
+                if (blockedIds.empty() || unit.id < *blockedIds.begin()) {
+                    actions[0].jump = true;
+                    TDrawUtil::debug->draw(CustomData::PlacedText("JUMP",
+                                                                  Vec2Float{float(unit.x1), float(unit.y2 + 0.2)},
+                                                                  TextAlignment::LEFT,
+                                                                  25,
+                                                                  ColorFloat(0, 1, 0, 0.5)));
+                } else {
+                    TDrawUtil::debug->draw(CustomData::PlacedText("SKIP",
+                                                                  Vec2Float{float(unit.x1), float(unit.y2 + 0.2)},
+                                                                  TextAlignment::LEFT,
+                                                                  25,
+                                                                  ColorFloat(0, 1, 0, 0.5)));
+                }
+                blockedIds.insert(unit.id);
             }
             TDrawUtil().drawPath(statesToPoints(pathPoints));
             return actions;
@@ -127,6 +138,7 @@ class Strategy {
     }
 
     std::optional<TActionsVec> _strategy(const TUnit& unit) {
+        blockedIds.erase(unit.id);
         auto& pathFinder = pathFinders[unit.id];
 
 #if M_DRAW_REACHABILITY_X > 0 && M_DRAW_REACHABILITY_Y > 0
@@ -704,10 +716,31 @@ public:
     }
 
     static TPoint getAimCenter(const TUnit& unit, const TUnit& target) {
-        // TODO
-//        if (unit.weapon.isRocketLauncher()) {
-//            return target.center() + TPoint(0, -0.6);
-//        }
+        if (unit.weapon.isRocketLauncher()) {
+            double dx = 0;
+            double dy = 0;
+            if (TLevel::getTileType(target.x2 + 1, (target.y1 + target.y2) / 2) == ETile::WALL) {
+                dx += (1 - (int(target.x2 + 1) - target.x2)) * UNIT_HALF_WIDTH;
+            }
+            if (TLevel::getTileType(target.x1 - 1, (target.y1 + target.y2) / 2) == ETile::WALL) {
+                dx -= (1 - (target.x1 - int(target.x1))) * UNIT_HALF_WIDTH;
+            }
+            if (TLevel::getTileType((target.x1 + target.x2) / 2, target.y2 + 1) == ETile::WALL) {
+                dy += (1 - (int(target.y2 + 1) - target.y2)) * UNIT_HALF_HEIGHT;
+            }
+            if (TLevel::getTileType((target.x1 + target.x2) / 2, target.y1 - 1) == ETile::WALL) {
+                dy -= (1 - (target.y1 - int(target.y1))) * UNIT_HALF_HEIGHT;
+            }
+            auto d = 2.0;
+            auto c = std::min(d, std::max(0.0, unit.getDistanceTo(target) - 2)) / d;
+            dx *= c;
+            dy *= c;
+            auto ret = target.center() + TPoint(dx, dy);
+            if (dx != 0 || dy != 0) {
+                TDrawUtil().debugPoint(ret, ColorFloat(0, 0, 1, 1), 0.1);
+            }
+            return ret;
+        }
         return target.center();
     }
 };

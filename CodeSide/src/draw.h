@@ -37,10 +37,10 @@ public:
 #endif
     }
 
-    void debugPoint(const TPoint& point, ColorFloat color = ColorFloat(1, 0, 0, 1)) {
+    void debugPoint(const TPoint& point, ColorFloat color = ColorFloat(1, 0, 0, 1), double width = 0.05) {
 #ifdef DEBUG
         debug->draw(CustomData::Rect(Vec2Float{float(point.x), float(point.y)},
-                                     Vec2Float{0.05, 0.05},
+                                     Vec2Float{float(width), float(width)},
                                      color));
 #endif
     }
