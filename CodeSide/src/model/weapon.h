@@ -65,6 +65,10 @@ public:
     bool hasLastAngle() const {
         return lastAngle < DEFAULT_LAST_ANGLE - 1;
     }
+
+    bool isRocketLauncher() const {
+        return type == ELootType::ROCKET_LAUNCHER;
+    }
 };
 
 #endif //CODESIDE_WEAPON_H

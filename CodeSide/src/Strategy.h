@@ -523,7 +523,7 @@ public:
     TPoint calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {
         //return target.center() - unit.center(); // TODO
 
-        auto selAim = target.center() - unit.center();
+        auto selAim = getAimCenter(unit, target) - unit.center();
         int minTimeDiff = INT_MAX;
         if (target.canJump) {// || target.getDistanceTo(unit) > 11) {
             return selAim;
@@ -577,68 +577,6 @@ public:
             //snd.doTick(10);
         }
         return selAim;
-
-
-        auto midAngle = unit.center().getAngleTo(target.center());
-        double L = -M_PI / 4, R = M_PI / 4;
-        for (int it = 0; it < 30; it++) {
-            double m1 = L + (R - L) / 3, m2 = R - (R - L) / 3;
-            if (_calcAimDist(unit, target, midAngle + m1, 0, actions) < _calcAimDist(unit, target, midAngle + m2, 0, actions)) {
-                R = m2;
-            } else {
-                L = m1;
-            }
-        }
-        double aimAngle = (L + R) / 2 + midAngle;
-        return TPoint::byAngle(aimAngle);
-    }
-
-    double _calcAimDist(const TUnit& startUnit, const TUnit& target, double aimAngle, int waitAdditional, const TActionsVec& actions) {
-        TSandboxCloneOptions copyOptions;
-        copyOptions.needLootboxes = false;
-        copyOptions.needMines = false;
-        copyOptions.needBullets = false;
-        copyOptions.unitIds = {startUnit.id, target.id};
-        TSandbox snd(env, copyOptions);
-        snd.oppFallFreeze = true;
-
-        auto u = snd.getUnit(startUnit.id);
-        auto aim = TPoint::byAngle(aimAngle);
-        for (int i = 0; i < 61 + waitAdditional; i++) {
-            u->action = i < actions.size() ? actions[i] : TAction();
-            u->action.aim = aim;
-            if (u->canShot()) {
-                if (waitAdditional == 0) {
-                    const int itersCount = 6;
-                    int successCount = 0;
-                    for (int it = -itersCount; it <= itersCount; it++) {
-                        auto testEnv = snd;
-                        testEnv.getUnit(startUnit.id)->action.shoot = true;
-                        testEnv.shotSpreadToss = 1.0 * it / itersCount;
-                        const int simulateTicks = 15;
-                        for (int j = 0; j < simulateTicks; j++) {
-                            testEnv.doTick(10);
-                            testEnv.getUnit(startUnit.id)->action.shoot = false;
-                        }
-                        auto score = testEnv.score[0] - env.score[0];
-                        if (score > 0) {
-                            successCount++;
-                        }
-                    }
-                    // угол в вомент выстрела
-                    auto tar = snd.getUnit(target.id)->center();
-                    auto my = u->center();
-                    auto angleTo = std::abs(TPoint::getAngleBetween(aim, tar - my));
-
-                    double probability = successCount / (itersCount*2 + 1.0);
-                    return (1 - probability) * 100 + angleTo;
-                } else {
-                    waitAdditional--;
-                }
-            }
-            snd.doTick(10);
-        }
-        return 100 + M_PI; // impossible state, but...
     }
 
     TAction _reloadSwap(const TUnit& unit) {
@@ -742,7 +680,7 @@ public:
                     continue;
                 }
                 auto& pathFinder = pathFinders[units[unitIdx].id];
-                auto state = pathFinder.getPointState(weapons[i]->position());
+                auto state = TPathFinder::getPointState(weapons[i]->position());
 
                 if (pathFinder.dist[state.x][state.y] < INF) {
                     sumPriority += weaponPriority[weapon->type] + (TLevel::isMyLeft != weapon->isLeft()) * 10;
@@ -763,6 +701,14 @@ public:
                 _selLootbox[units[i].id] = res[i];
             }
         }
+    }
+
+    static TPoint getAimCenter(const TUnit& unit, const TUnit& target) {
+        // TODO
+//        if (unit.weapon.isRocketLauncher()) {
+//            return target.center() + TPoint(0, -0.6);
+//        }
+        return target.center();
     }
 };
 
