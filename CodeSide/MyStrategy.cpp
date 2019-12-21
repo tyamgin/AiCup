@@ -84,14 +84,6 @@ void debugCheckGameParams(const Game& game, bool print) {
 
 std::unordered_map<int, UnitAction> MyStrategy::getActions(int myId, const Game& game, Debug& debug) {
     std::unordered_map<int, UnitAction> result;
-    if (game.properties.teamSize > 2) {
-        for (auto& unit : game.units) {
-            if (unit.playerId == myId) {
-                result[unit.id] = TAction().toUnitAction();
-            }
-        }
-        return result;
-    }
 
     OP_START(ALL);
     TIMER_START();
