@@ -561,7 +561,9 @@ public:
         for (int t = 0; t < 70; t++) {
             //snd.getUnit(unit.id)->action = t < actions.size() ? actions[t] : TAction();
             //auto aim = snd.getUnit(target.id)->center() - unit.center();
-            auto aim = (t < tarStates.size() ? tarStates[t] : tarStates.back()).getPoint() + TPoint(0, UNIT_HALF_HEIGHT) - unit.center();
+            TUnit tarClone = target;
+            tarClone.setPosition((t < tarStates.size() ? tarStates[t] : tarStates.back()).getPoint());
+            auto aim = getAimCenter(unit, tarClone) - unit.center();
             TSandboxCloneOptions copyOptions;
             copyOptions.needLootboxes = false;
             copyOptions.needMines = false;
@@ -736,9 +738,6 @@ public:
             dx *= c;
             dy *= c;
             auto ret = target.center() + TPoint(dx, dy);
-            if (dx != 0 || dy != 0) {
-                TDrawUtil().debugPoint(ret, ColorFloat(0, 0, 1, 1), 0.1);
-            }
             return ret;
         }
         return target.center();

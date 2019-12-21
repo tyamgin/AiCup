@@ -289,6 +289,13 @@ public:
                 return 0;
         }
     }
+
+    void setPosition(const TPoint& pos) {
+        x1 = pos.x - UNIT_HALF_WIDTH;
+        x2 = x1 + UNIT_WIDTH;
+        y1 = pos.y;
+        y2 = y1 + UNIT_HEIGHT;
+    }
 };
 
 
