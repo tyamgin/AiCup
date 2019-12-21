@@ -116,7 +116,7 @@ private:
 
     static void _dfs(TState state, double dist) {
         dfsVisitedStates.insert(state);
-        if (dfsStartMode || (isBound[state.x][state.y]) || state.pad) {
+        if (dfsStartMode || state.y % 6 == 1 || state.pad) {
             if (!state.pad || state.timeLeft == 0 || isOnLadder[state.x][state.y] || !isValid[state.x][state.y + 2]) {
                 dfsResultBorderPoints.emplace_back(state, dist);
                 if (_drawMode) {
@@ -125,6 +125,9 @@ private:
             }
         }
         if (state.timeLeft == 0 || (state.pad && isOnLadder[state.x][state.y])) {
+            return;
+        }
+        if (!dfsStartMode && !state.pad && std::abs(dfsStartState.x % 6 - 3) > 1 && state.y > dfsStartState.y) {
             return;
         }
         for (const auto& [to, w] : _getCellGoesDfs(state)) {
@@ -551,7 +554,7 @@ private:
                 }
             }
             // прыгать
-            if (isStand[state.x][state.y] && isBound[state.x][state.y]) {
+            if (isStand[state.x][state.y]/* && isBound[state.x][state.y]*/) {
                 auto pad = isTouchPad[state.x][state.y];
                 auto jumpGoes = _getJumpGoes({state.x, state.y, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, nullptr);
                 for (auto& [to, to_d] : *jumpGoes) {
