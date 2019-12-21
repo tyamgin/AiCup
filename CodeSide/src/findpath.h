@@ -49,6 +49,12 @@ std::vector<TPoint> statesToPoints(const TStatesVec& states) {
 
 #define STEPS_PER_CELL 6
 
+#define INF 0x3f3f3f3f
+#define D_LEFT 0
+#define D_CENTER 1
+#define D_RIGHT 2
+#define DIRECTION_ORDER {0, -1, 1}
+
 const double GO_DIST = 0.99;
 const double FALL_DOWN_DIST = 0.99;
 const double GO_LADDER_DIST = 0.98;
@@ -61,18 +67,12 @@ const double STEP_LENGTH = 1.0 / STEPS_PER_CELL;
 
 const int MICROMAP_SIZE = STEPS_PER_CELL * MAX_MAP_SIZE;
 
-#define INF 0x3f3f3f3f
-#define D_LEFT 0
-#define D_CENTER 1
-#define D_RIGHT 2
-#define DIRECTION_ORDER {0, -1, 1}
-
-bool isStand[MICROMAP_SIZE][MICROMAP_SIZE];
-bool isValid[MICROMAP_SIZE][MICROMAP_SIZE];
-bool isBound[MICROMAP_SIZE][MICROMAP_SIZE];
-bool isOnLadder[MICROMAP_SIZE][MICROMAP_SIZE];
-bool isBlockedMove[3][3][MICROMAP_SIZE][MICROMAP_SIZE];
-bool isTouchPad[MICROMAP_SIZE][MICROMAP_SIZE];
+bool isStand[MICROMAP_SIZE][MICROMAP_SIZE],
+     isValid[MICROMAP_SIZE][MICROMAP_SIZE],
+     isBound[MICROMAP_SIZE][MICROMAP_SIZE],
+     isOnLadder[MICROMAP_SIZE][MICROMAP_SIZE],
+     isBlockedMove[3][3][MICROMAP_SIZE][MICROMAP_SIZE],
+     isTouchPad[MICROMAP_SIZE][MICROMAP_SIZE];
 
 using TDfsGoesResult = std::vector<std::pair<TState, double>>;
 
@@ -554,8 +554,8 @@ private:
                 }
             }
             // прыгать
-            if (isStand[state.x][state.y]/* && isBound[state.x][state.y]*/) {
-                auto pad = isTouchPad[state.x][state.y];
+            if (isStand[state.x][state.y]) {
+                bool pad = isTouchPad[state.x][state.y];
                 auto jumpGoes = _getJumpGoes({state.x, state.y, pad ? JUMP_PAD_TICKS_COUNT : JUMP_TICKS_COUNT, pad}, nullptr);
                 for (auto& [to, to_d] : *jumpGoes) {
                     djJumpAll++;
