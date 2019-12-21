@@ -225,16 +225,14 @@ class Strategy {
         }
 
         if (needGoOut) {
-            double rangeMin = 5, rangeMax = 7;
-//            if (unit.weapon.fireTimer > 0.5) {
-                rangeMin = 10;
-                rangeMax = 14;
-//            }
-
+            double rangeMin = 10, rangeMax = 14;
 
             double minDist = INF;
             TPoint selectedPoint;
             pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
+                if (!unit.approxIsStand()) {
+                    dist += 10;
+                }
                 auto dist2ToTarget = unit.center().getDistanceTo2(target->center());
                 if (dist < minDist && isIn(SQR(rangeMin), SQR(rangeMax), dist2ToTarget)) {
                     minDist = dist;
@@ -522,6 +520,9 @@ public:
                         action.shoot = true;
                     }
                     if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
+                        action.shoot = true;
+                    }
+                    if (probability >= 0.3 && unit.weapon.type == ELootType::ASSAULT_RIFLE) {
                         action.shoot = true;
                     }
                 }
