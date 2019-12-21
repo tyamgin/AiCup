@@ -51,6 +51,10 @@ public:
         return type == ELootType::PISTOL || type == ELootType::ROCKET_LAUNCHER || type == ELootType::ASSAULT_RIFLE;
     }
 
+    bool isRocketLauncher() const {
+        return type == ELootType::ROCKET_LAUNCHER;
+    }
+
     bool isLeft() const {
         return x1 + LOOT_BOX_SIZE / 2 < TLevel::width / 2.0;
     }

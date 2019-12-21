@@ -163,7 +163,7 @@ class Strategy {
             return{};
         }
 
-        if (_needTakeRocketLauncher(unit) && unit.weapon.type != ELootType::ROCKET_LAUNCHER) {
+        if (_needTakeRocketLauncher(unit) && !unit.weapon.isRocketLauncher()) {
             auto maybeAct = _strategyLoot(unit, {ELootType::ROCKET_LAUNCHER});
             if (maybeAct) {
                 return maybeAct;
@@ -175,7 +175,7 @@ class Strategy {
             if (!lb.isWeapon()) {
                 continue;
             }
-            if (lb.type != ELootType::ROCKET_LAUNCHER && _needTakeRocketLauncher(unit)) {
+            if (!lb.isRocketLauncher() && _needTakeRocketLauncher(unit)) {
                 continue;
             }
 
@@ -468,7 +468,7 @@ public:
                     testEnv.getUnit(unit.id)->action.shoot = false;
                     if (i == 0) {
                         for (auto& u : testEnv.units) {
-                            if (u.id != unit.id || unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+                            if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
                                 u.action = oppDodgeStrategy(testEnv, u.id, simulateTicks - 1);
                             }
                         }
@@ -502,7 +502,7 @@ public:
                 if (probability >= 0.5) {
                     action.shoot = true;
                 }
-                if (friendlyFails <= 1 && probability >= 0.4 && unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+                if (friendlyFails <= 1 && probability >= 0.4 && unit.weapon.isRocketLauncher()) {
                     action.shoot = true;
                 }
                 if (friendlyFails == 0) {
@@ -601,11 +601,11 @@ public:
                     }
                 }
                 act.swapWeapon = free;
-                if (_needTakeRocketLauncher(unit) && unit.weapon.type == ELootType::ROCKET_LAUNCHER) {
+                if (_needTakeRocketLauncher(unit) && unit.weapon.isRocketLauncher()) {
                     act.swapWeapon = false;
                 }
             }
-            if (unit.weapon.type != ELootType::ROCKET_LAUNCHER && lb->type == ELootType::ROCKET_LAUNCHER && env.myCount == 1) {
+            if (!unit.weapon.isRocketLauncher() && lb->isRocketLauncher() && env.myCount == 1) {
                 for (const auto &opp : env.units) {
                     if (!opp.isMy()) {
                         if (opp.getManhattanDistTo(unit) <= 4 && unit.health > 20 && opp.health <= 80) {
