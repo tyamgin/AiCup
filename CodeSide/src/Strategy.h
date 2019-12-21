@@ -483,8 +483,8 @@ public:
                 }
             }
             double probability = successCount / (itersCount*2 + 1.0);
-            //double failProbability = friendlyFails / (itersCount*2 + 1.0);
 #ifdef DEBUG
+            double failProbability = friendlyFails / (itersCount*2 + 1.0);
             TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
                                                            Vec2Float{float(unit.x1), float(unit.y2 + 2)},
                                                            TextAlignment::LEFT,
