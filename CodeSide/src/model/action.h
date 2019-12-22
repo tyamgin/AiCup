@@ -1,6 +1,8 @@
 #ifndef CODESIDE_ACTION_H
 #define CODESIDE_ACTION_H
 
+#include <vector>
+
 class TAction {
 public:
     TPoint aim;
@@ -28,5 +30,7 @@ public:
         return UnitAction(velocity, jump, jumpDown, {aim.x, aim.y}, shoot, reload, swapWeapon, plantMine);
     }
 };
+
+typedef std::vector<TAction> TActionsVec;
 
 #endif //CODESIDE_ACTION_H

@@ -27,6 +27,8 @@ private:
     const TUnit* _nearestUnitCache[MAX_UNITS_COUNT] = {nullptr};
     std::vector<int> _unitNearestBulletCache[MAX_UNITS_COUNT];
     std::vector<std::vector<int>> _mineNearestBulletCache;
+    std::shared_ptr<TActionsVec> _unitActionsSuggests[MAX_UNITS_COUNT] = {nullptr};
+    int _unitActionsSuggestsOffset[MAX_UNITS_COUNT] = {0};
 public:
     int currentTick;
     int score[2] = {0, 0};
@@ -37,7 +39,7 @@ public:
     std::vector<TLootBox> lootBoxes;
     std::shared_ptr<std::vector<std::vector<unsigned>>> lootBoxIndex;
     int myCount;
-    bool oppShotSimpleStrategy = false;
+    std::pair<int, int> oppShotSimpleStrategy = {-1, -1};
     double shotSpreadToss = 0;
     bool oppFallFreeze = false;
     bool oppTotalFreeze = false;
@@ -73,6 +75,10 @@ public:
             score[player.id != TLevel::myId] = player.score;
         }
         friendlyLoss[0] = friendlyLoss[1] = 0;
+        for (int i = 0; i < (int) units.size(); i++) {
+            _unitActionsSuggests[i] = nullptr;
+            _unitActionsSuggestsOffset[i] = 0;
+        }
     }
 
     TSandbox(const TSandbox& sandbox) {
@@ -91,6 +97,10 @@ public:
         oppFallFreeze = sandbox.oppFallFreeze;
         oppTotalFreeze = sandbox.oppTotalFreeze;
         myCount = sandbox.myCount;
+        for (int i = 0; i < (int) units.size(); i++) {
+            _unitActionsSuggests[i] = sandbox._unitActionsSuggests[i];
+            _unitActionsSuggestsOffset[i] = sandbox._unitActionsSuggestsOffset[i];
+        }
     }
 
     TSandbox(const TSandbox& sandbox, const TSandboxCloneOptions& options) {
@@ -131,6 +141,10 @@ public:
         oppFallFreeze = sandbox.oppFallFreeze;
         oppTotalFreeze = sandbox.oppTotalFreeze;
         myCount = sandbox.myCount;
+        for (int i = 0; i < (int) units.size(); i++) {
+            _unitActionsSuggests[i] = sandbox._unitActionsSuggests[i];
+            _unitActionsSuggestsOffset[i] = sandbox._unitActionsSuggestsOffset[i];
+        }
     }
 
     void doTick(int updatesPerTick = UPDATES_PER_TICK) {
@@ -138,9 +152,8 @@ public:
         for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
             auto& unit = units[unitIdx];
 
-            if (!unit.isMy()) {
-                _applyOppStrategy(unit);
-            }
+            _applySuggestedStrategy(unitIdx);
+            _applyOppStrategy(unit);
 
             while (swapWeaponBackup.size() <= unit.id) {
                 swapWeaponBackup.push_back(false);
@@ -229,17 +242,54 @@ public:
         return nullptr;
     }
 
+    void setUnitActionsSuggest(int unitId, const std::shared_ptr<TActionsVec>& actions) {
+        for (int i = 0; i < (int) units.size(); i++) {
+            if (units[i].id == unitId) {
+                _unitActionsSuggests[i] = actions;
+                _unitActionsSuggestsOffset[i] = 0;
+                break;
+            }
+        }
+    }
+
+    void setUnitActionsSuggest(int unitId, const TAction& actions, int ticksCount) {
+        for (int i = 0; i < (int) units.size(); i++) {
+            if (units[i].id == unitId) {
+                _unitActionsSuggests[i] = std::make_shared<TActionsVec>(ticksCount, actions);
+                _unitActionsSuggestsOffset[i] = 0;
+                break;
+            }
+        }
+    }
+
 private:
+    void _applySuggestedStrategy(int unitIdx) {
+        if (_unitActionsSuggests[unitIdx] == nullptr) {
+            return;
+        }
+        auto& offset = _unitActionsSuggestsOffset[unitIdx];
+        if (offset < _unitActionsSuggests[unitIdx]->size()) {
+            units[unitIdx].action = (*_unitActionsSuggests[unitIdx])[offset];
+            offset++;
+        }
+    }
+
     void _applyOppStrategy(TUnit& opp) {
-        if (oppShotSimpleStrategy) {
+        if (oppShotSimpleStrategy.first == -1 || oppShotSimpleStrategy.first == opp.id ||
+            oppShotSimpleStrategy.second < currentTick) {
+            return;
+        }
+
+        if (opp.weapon.isRocketLauncher()) {
             TUnit* target = nullptr;
-            double minDist2 = INT_MAX;
+            double minDist2 = SQR(3.5);
             for (auto &my : units) {
-                if (!my.isMy()) {
+                if (my.playerIdx == opp.playerIdx) {
                     continue;
                 }
-                if (target == nullptr || opp.center().getDistanceTo2(my.center()) < minDist2) {
-                    minDist2 = opp.center().getDistanceTo2(my.center());
+                auto dst2 = opp.getDistanceTo2(my);
+                if (dst2 < minDist2) {
+                    minDist2 = dst2;
                     target = &my;
                 }
             }

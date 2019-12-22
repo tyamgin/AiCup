@@ -252,6 +252,10 @@ public:
         return sqrt(SQR(x1 - unit.x1) + SQR(y1 - unit.y1));
     }
 
+    double getDistanceTo2(const TUnit& unit) const {
+        return SQR(x1 - unit.x1) + SQR(y1 - unit.y1);
+    }
+
     bool canShot() const {
         return weapon.fireTimer < -0.5;
     }

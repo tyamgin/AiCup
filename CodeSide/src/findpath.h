@@ -36,7 +36,6 @@ struct TState {
     }
 };
 
-typedef std::vector<TAction> TActionsVec;
 typedef std::vector<TState> TStatesVec;
 typedef std::vector<TPoint> TPointsVec;
 

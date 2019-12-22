@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <unordered_set>
 
 /**
  * TODO:
@@ -25,6 +26,7 @@
  * - опережение на батуте
  * - держаться подальше от базуки, не мешать своему базучнику
  * - учитывать actions своего
+ * - расшатывать прицел как в https://russianaicup.ru/game/view/285088
  */
 
 class Strategy {
@@ -39,7 +41,8 @@ class Strategy {
             {ELootType::NONE, 3},
     };
 
-    std::set<int> blockedIds;
+    std::unordered_set<int> blockedIds;
+    std::unordered_map<int, std::shared_ptr<TActionsVec>> actionsWillBe;
 
     std::optional<TActionsVec> findPathWrapper(const TUnit& unit, const TPoint& target) {
         auto& pathFinder = pathFinders[unit.id];
@@ -51,6 +54,7 @@ class Strategy {
                 if (!other.isMy() || other.id == unit.id) {
                     continue;
                 }
+                //auto& otherActions = actionsWillBe[other.id]; // TODO
                 for (int i = 0; i < 5 && i < (int) pathPoints.size(); i++) {
                     auto pt = pathPoints[i].getPoint();
                     if (other.intersectsWith(pt.x - UNIT_HALF_WIDTH, pt.y, pt.x + UNIT_HALF_WIDTH, pt.y + UNIT_HEIGHT)) {
@@ -306,23 +310,31 @@ public:
 
         for (const auto& unit : env.units) {
             if (unit.isMy()) {
-                result[unit.id] = getAction(unit);
-                // TODO: может заполнять, чтобы следующий учитывал ход?
+                actionsWillBe.erase(unit.id);
+                auto actions = getAction(unit);
+                if (actions.empty()) {
+                    result[unit.id] = TAction();
+                } else {
+                    result[unit.id] = actions[0];
+                    actions[0].shoot = false; // TODO
+                }
+                actionsWillBe[unit.id] = std::make_shared<TActionsVec>(actions);
             }
         }
         for (auto& unit : env.units) {
             if (unit.isMy()) {
                 unit.action = result[unit.id];
+                auto& acts = actionsWillBe[unit.id];
+                if (!acts->empty()) {
+                    acts->erase(acts->begin());
+                }
             }
         }
         prevEnv = env;
         return result;
     }
 
-    TAction getAction(const TUnit& unit) {
-        //auto action = _ladderLeftStrategy(unit, env, debug);
-
-
+    TActionsVec getAction(const TUnit& unit) {
         auto maybeActions = _strategy(unit);
         auto actions = maybeActions ? maybeActions.value() : TActionsVec();
 
@@ -344,6 +356,9 @@ public:
                     }
 
                     TSandbox dodgeEnv = env;
+                    if (TLevel::teamSize > 1) {
+                        dodgeEnv.oppShotSimpleStrategy = {unit.id, env.currentTick + 5};
+                    }
                     auto dodged = dodgeEnv.getUnit(unit.id);
                     TPointsVec path;
                     const int simulateTicks = 27;
@@ -360,7 +375,12 @@ public:
 
                     for (auto& u : dodgeEnv.units) {
                         if (u.id != unit.id) {
-                            u.action = _dodgeSimpleStrategy(dodgeEnv, u.id, simulateTicks);
+                            if (actionsWillBe.count(u.id)) {
+                                dodgeEnv.setUnitActionsSuggest(u.id, actionsWillBe[u.id]);
+                            } else {
+                                auto dact = _dodgeSimpleStrategy(dodgeEnv, u.id, simulateTicks);
+                                dodgeEnv.setUnitActionsSuggest(u.id, dact, simulateTicks);
+                            }
                         }
                     }
 
@@ -404,7 +424,12 @@ public:
         }
         TDrawUtil().drawAim(unit, action);
 
-        return action;
+        if (actions.empty()) {
+            actions.emplace_back(action);
+        } else {
+            actions[0] = action;
+        }
+        return actions;
     }
 
     TAction _dodgeSimpleStrategy(TSandbox& afterShotEnv, int unitId, int simulateTicks) {
