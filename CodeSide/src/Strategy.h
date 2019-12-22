@@ -228,7 +228,7 @@ class Strategy {
         }
 
         if (needGoOut) {
-            double rangeMin = 10, rangeMax = 14;
+            double rangeMin = 7, rangeMax = 12;
 
             double minDist = INF;
             TPoint selectedPoint;
