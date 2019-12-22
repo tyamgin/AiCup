@@ -525,9 +525,14 @@ public:
                         }
                     }
                 }
-                auto score = std::max(0, testEnv.score[0] - testNothingEnv.score[0])
-                        - std::max(0, testEnv.friendlyLoss[0] - testNothingEnv.friendlyLoss[0])*3/2;
-                if (score > 0 || (testEnv.score[0] - testNothingEnv.score[0] > KILL_SCORE && testEnv.score[0] > testEnv.score[1])) {
+                auto add = std::max(0, testEnv.score[0] - testNothingEnv.score[0]);
+                auto loss = std::max(0, testEnv.friendlyLoss[0] - testNothingEnv.friendlyLoss[0]);
+                auto score = add - loss*3/2;
+                if ((score > 0 && loss <= 50)
+                    // победа
+                    || (testEnv.isWin() && !testNothingEnv.isWin())
+                    // убился только 1, и не задел партнера, при этом кого-то убив
+                    || (loss >= KILL_SCORE && loss <= KILL_SCORE + 50 && add >= KILL_SCORE && !testEnv.isLose())) {
                     successCount++;
                 } else if (score < 0) {
                     friendlyFails++;

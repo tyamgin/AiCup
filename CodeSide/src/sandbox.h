@@ -262,6 +262,26 @@ public:
         }
     }
 
+    bool _isWin(int playerIdx) const {
+        if (score[playerIdx] <= score[1 - playerIdx] || score[playerIdx] < TLevel::teamSize * KILL_SCORE) {
+            return false;
+        }
+        for (const auto& unit : units) {
+            if (unit.playerIdx != playerIdx && unit.health > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool isWin() const {
+        return _isWin(0);
+    }
+
+    bool isLose() const {
+        return _isWin(1);
+    }
+
 private:
     void _applySuggestedStrategy(int unitIdx) {
         if (_unitActionsSuggests[unitIdx] == nullptr) {
