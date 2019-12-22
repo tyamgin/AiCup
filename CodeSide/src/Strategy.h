@@ -13,11 +13,7 @@
 
 /**
  * TODO:
- * - пошел за аптечкой напролом через противника, не прошел, проиграл
- * - собрал все аптечки, не осталось аптечки соперницу, выиграл
- * - собрал аптечку с минимумом урона, проиграл, т.к. у соперника аптечка осталась
- * - не учитывается падение соперника при прицеливании
- * - пп от соперника и отклонения с учетом этого
+ * - пп от соперника и отклонения с учетом этог
  * - урон от ракеты суммируется => вплотную против неё лучше не становиться
  * - пп от стен, если соперник с базукой
  * - пп в пользу стояния на лестнице (легко уклоняться)
@@ -25,6 +21,10 @@
  * - в findpath поощрять за бонусы
  * - предсказывать dx противника
  * - к базучнику близко не подходить
+ *
+ * - опережение на батуте
+ * - держаться подальше от базуки, не мешать своему базучнику
+ * - учитывать actions своего
  */
 
 class Strategy {
@@ -326,55 +326,66 @@ public:
         auto maybeActions = _strategy(unit);
         auto actions = maybeActions ? maybeActions.value() : TActionsVec();
 
-        TSandbox notDodgeEnv = env;
-        //notDodgeEnv.oppShotSimpleStrategy = true;
-        for (int i = 0; i < 40; i++) {
-            notDodgeEnv.getUnit(unit.id)->action = i < actions.size() ? actions[i] : TAction();
-            notDodgeEnv.doTick();
-        }
         auto startOppScore = env.score[1];
         auto scorer = [&](TSandbox& env) {
             return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2;
         };
         //         score health not_do dist_to_stand
-        std::tuple<int,  int,   bool,  int> bestScore(scorer(notDodgeEnv), unit.health, true, INF);
-        std::optional<std::vector<TPoint>> bestPath;
+        std::tuple<int,  int,   bool,  int> bestScore(-INF, unit.health, true, INF);
+        std::vector<TPoint> bestPath;
+        TActionsVec bestActions;
 
         OP_START(DODGE);
-        for (int dirX = -1; dirX <= 1; dirX++) {
-            for (int dirY = -1; dirY <= 1; dirY += 1) {
-                TSandbox dodgeEnv = env;
-                auto dodged = dodgeEnv.getUnit(unit.id);
-                std::vector<TPoint> path;
-                TAction act;
-                if (dirY > 0) {
-                    act.jump = true;
-                } else if (dirY < 0) {
-                    act.jumpDown = true;
-                }
-                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
-                const int simulateTicks = 27;
-                int distToStand = simulateTicks;
-                for (int i = 0; i < simulateTicks; i++) {
-                    dodged->action = act;
-                    dodgeEnv.doTick();
-                    path.push_back(dodged->position());
-                    if (dodged->approxIsStand()) {
-                        distToStand = std::min(distToStand, i);
+        for (bool doSmth : {false, true}) {
+            for (int dirX = -1; dirX <= 1; dirX++) {
+                for (int dirY = -1; dirY <= 1; dirY += 1) {
+                    if (!doSmth && (dirX || dirY)) {
+                        continue;
                     }
-                }
-                std::tuple<int,  int,   bool,  int> score(scorer(dodgeEnv), dodged->health, false, distToStand);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestPath = path;
-                    actions = TActionsVec(simulateTicks, act);
+
+                    TSandbox dodgeEnv = env;
+                    auto dodged = dodgeEnv.getUnit(unit.id);
+                    std::vector<TPoint> path;
+                    const int simulateTicks = 27;
+                    int distToStand = simulateTicks;
+                    TAction act;
+                    if (doSmth) {
+                        if (dirY > 0) {
+                            act.jump = true;
+                        } else if (dirY < 0) {
+                            act.jumpDown = true;
+                        }
+                        act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
+                    }
+
+                    for (auto& u : dodgeEnv.units) {
+                        if (u.id != unit.id) {
+                            u.action = _dodgeSimpleStrategy(dodgeEnv, u.id, simulateTicks);
+                        }
+                    }
+
+                    for (int i = 0; i < simulateTicks; i++) {
+                        dodged->action = doSmth || i >= actions.size() ? act : actions[i];
+                        dodgeEnv.doTick();
+                        path.push_back(dodged->position());
+                        if (dodged->approxIsStand()) {
+                            distToStand = std::min(distToStand, i);
+                        }
+                    }
+                    std::tuple<int, int, bool, int> score(scorer(dodgeEnv), dodged->health, !doSmth, distToStand);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestPath = path;
+                        bestActions = doSmth ? TActionsVec(simulateTicks, act) : actions;
+                    }
                 }
             }
         }
-        OP_END(DODGE);
-        if (bestPath) {
-            TDrawUtil().drawPath(bestPath.value(), ColorFloat(1, 0, 0, 1));
+        actions = bestActions;
+        if (!std::get<2>(bestScore)) {
+            TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
         }
+        OP_END(DODGE);
 
         TAction action = actions.size() > 0 ? actions[0] : TAction();
 
@@ -394,6 +405,40 @@ public:
         TDrawUtil().drawAim(unit, action);
 
         return action;
+    }
+
+    TAction _dodgeSimpleStrategy(TSandbox& afterShotEnv, int unitId, int simulateTicks) {
+        int maxHealth = 0;
+        int minScore = INF;
+        int initialHealth = afterShotEnv.getUnit(unitId)->health;
+        TAction bestAction;
+        for (int dirX = -1; dirX <= 1; dirX++) {
+            for (int dirY = -1; dirY <= 1; dirY += 1) {
+                TSandbox dodgeEnv = afterShotEnv;
+                auto opp = dodgeEnv.getUnit(unitId);
+                TAction act;
+                if (dirY > 0) {
+                    act.jump = true;
+                } else if (dirY < 0) {
+                    act.jumpDown = true;
+                }
+                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
+                opp->action = act;
+                for (int i = 0; i < simulateTicks && opp->health > maxHealth; i++) {
+                    dodgeEnv.doTick(5);
+                }
+                auto sc = dodgeEnv.score[1 - TLevel::unitIdToPlayerIdx[unitId]];
+                if (opp->health > maxHealth || (opp->health == maxHealth && sc < minScore)) {
+                    maxHealth = opp->health;
+                    minScore = sc;
+                    bestAction = act;
+                    if (opp->health == initialHealth) {
+                        return bestAction;
+                    }
+                }
+            }
+        }
+        return bestAction;
     }
 
     std::optional<TAction> shotStrategy(const TUnit& unit, const TActionsVec& actions) {
@@ -428,37 +473,6 @@ public:
 
         OP_START(SHOT_STRAT);
 
-        auto oppDodgeStrategy = [](TSandbox& afterShotEnv, int unitId, int simulateTicks) {
-            int maxHealth = 0;
-            int initialHealth = afterShotEnv.getUnit(unitId)->health;
-            TAction bestAction;
-            for (int dirX = -1; dirX <= 1; dirX++) {
-                for (int dirY = -1; dirY <= 1; dirY += 1) {
-                    TSandbox dodgeEnv = afterShotEnv;
-                    auto opp = dodgeEnv.getUnit(unitId);
-                    TAction act;
-                    if (dirY > 0) {
-                        act.jump = true;
-                    } else if (dirY < 0) {
-                        act.jumpDown = true;
-                    }
-                    act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
-                    opp->action = act;
-                    for (int i = 0; i < simulateTicks && opp->health > maxHealth; i++) {
-                        dodgeEnv.doTick(5);
-                    }
-                    if (opp->health > maxHealth) {
-                        maxHealth = opp->health;
-                        bestAction = act;
-                        if (opp->health == initialHealth) {
-                            return bestAction;
-                        }
-                    }
-                }
-            }
-            return bestAction;
-        };
-
         TAction action = actions.empty() ? TAction() : actions[0];
         action.aim = calcAim(unit, *target, actions);
         if (unit.canShot()) {
@@ -479,7 +493,7 @@ public:
                     if (i == 0) {
                         for (auto& u : testEnv.units) {
                             if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
-                                u.action = oppDodgeStrategy(testEnv, u.id, simulateTicks - 1);
+                                u.action = _dodgeSimpleStrategy(testEnv, u.id, simulateTicks - 1);
                             }
                         }
                     }
