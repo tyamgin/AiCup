@@ -295,7 +295,9 @@ private:
             }
             if (target != nullptr) {
                 opp.action.shoot = true;
-                opp.action.aim = target->center() - opp.center();
+                if (!opp.isMy()) {
+                    opp.action.aim = target->center() - opp.center();
+                }
             }
         }
     }

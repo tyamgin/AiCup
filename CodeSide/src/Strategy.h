@@ -25,7 +25,6 @@
  *
  * - опережение на батуте
  * - держаться подальше от базуки, не мешать своему базучнику
- * - учитывать actions своего
  * - расшатывать прицел как в https://russianaicup.ru/game/view/285088
  */
 
@@ -54,10 +53,15 @@ class Strategy {
                 if (!other.isMy() || other.id == unit.id) {
                     continue;
                 }
-                //auto& otherActions = actionsWillBe[other.id]; // TODO
+                TSandbox blockTestSnd = env;
+                if (actionsWillBe.count(other.id)) {
+                    blockTestSnd.setUnitActionsSuggest(other.id, actionsWillBe[other.id]);
+                }
+
                 for (int i = 0; i < 5 && i < (int) pathPoints.size(); i++) {
                     auto pt = pathPoints[i].getPoint();
-                    if (other.intersectsWith(pt.x - UNIT_HALF_WIDTH, pt.y, pt.x + UNIT_HALF_WIDTH, pt.y + UNIT_HEIGHT)) {
+                    blockTestSnd.doTick();
+                    if (blockTestSnd.getUnit(other.id)->intersectsWith(pt.x - UNIT_HALF_WIDTH, pt.y, pt.x + UNIT_HALF_WIDTH, pt.y + UNIT_HEIGHT)) {
                         blocked = true;
                         break;
                     }
@@ -413,6 +417,9 @@ public:
         if (maybeShot) {
             action.shoot = maybeShot.value().shoot;
             action.aim = maybeShot.value().aim;
+            for (auto& a : actions) {
+                a.aim = action.aim;
+            }
         }
 
         auto reloadSwapAction = _reloadSwap(unit);
