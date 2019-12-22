@@ -38,9 +38,10 @@ struct TState {
 
 typedef std::vector<TAction> TActionsVec;
 typedef std::vector<TState> TStatesVec;
+typedef std::vector<TPoint> TPointsVec;
 
-std::vector<TPoint> statesToPoints(const TStatesVec& states) {
-    std::vector<TPoint> res;
+TPointsVec statesToPoints(const TStatesVec& states) {
+    TPointsVec res;
     for (const auto& s : states) {
         res.push_back(s.getPoint());
     }

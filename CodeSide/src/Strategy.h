@@ -332,7 +332,7 @@ public:
         };
         //         score health not_do dist_to_stand
         std::tuple<int,  int,   bool,  int> bestScore(-INF, unit.health, true, INF);
-        std::vector<TPoint> bestPath;
+        TPointsVec bestPath;
         TActionsVec bestActions;
 
         OP_START(DODGE);
@@ -345,7 +345,7 @@ public:
 
                     TSandbox dodgeEnv = env;
                     auto dodged = dodgeEnv.getUnit(unit.id);
-                    std::vector<TPoint> path;
+                    TPointsVec path;
                     const int simulateTicks = 27;
                     int distToStand = simulateTicks;
                     TAction act;
