@@ -21,6 +21,8 @@
  * - ?? предсказывать dx противника
  * - ?? к базучнику близко не подходить
  * - расшатывать прицел как в https://russianaicup.ru/game/view/285088
+ * - !!! anti needTakeRL https://russianaicup.ru/game/view/296676
+ * - не использовал батут https://russianaicup.ru/game/view/297786
  */
 
 class Strategy {
@@ -288,9 +290,6 @@ public:
             }
         }
 
-        if (env.currentTick == 667) {
-            env.currentTick += 0;
-        }
         if (env.currentTick > 1) {
             prevEnv2 = prevEnv;
             prevEnv.doTick();
@@ -501,7 +500,7 @@ public:
         OP_START(SHOT_STRAT);
 
         TAction action = actions.empty() ? TAction() : actions[0];
-        action.aim = calcAim(unit, *target, actions);
+        action.aim = roundAim(calcAim(unit, *target, actions), unit, *target);
         if (unit.canShot()) {
             const int itersCount = 6;
             int successCount = 0;
@@ -638,6 +637,17 @@ public:
             //snd.doTick(10);
         }
         return selAim;
+    }
+
+    TPoint roundAim(const TPoint& aim, const TUnit& unit, const TUnit& target) {
+        auto angle = aim.getAngle();
+        // 1 рад. = 57 град.
+        // при n=100 дискретизация будет по 0.57 градуса
+        const int n = unit.getDistanceTo(target) <= 3.5 ? 20 : (unit.getDistanceTo(target) <= 5.5 ? 35 : (unit.getDistanceTo(target) <= 9 ? 60 : 120));
+        auto floored = floor(angle * n) / n;
+        auto ceiled = ceil(angle * n) / n;
+        angle = std::abs(floored - angle) <= std::abs(ceiled - angle) ? floored : ceiled;
+        return TPoint::byAngle(angle);
     }
 
     TAction _reloadSwap(const TUnit& unit) {

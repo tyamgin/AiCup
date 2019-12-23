@@ -40,7 +40,7 @@ def worker(args):
     port2 = port1 + 1
     seed = start_seed + idx
 
-    if level in ["Simple"]:
+    if level in ["Simple", "Complex"]:
         level_config = level
     else:
         level_config = {"LoadFrom": {"path": level}}
