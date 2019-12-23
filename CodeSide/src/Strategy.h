@@ -502,19 +502,29 @@ public:
         TAction action = actions.empty() ? TAction() : actions[0];
         action.aim = roundAim(calcAim(unit, *target, actions), unit, *target);
         if (unit.canShot()) {
+            const int simulateTicks = 15;
             const int itersCount = 6;
+            auto testNothingEnv = env;
+            for (int i = 0; i < simulateTicks; i++) {
+                testNothingEnv.doTick();
+                if (i == 0) {
+                    for (auto& u : testNothingEnv.units) {
+                        if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
+                            u.action = _dodgeSimpleStrategy(testNothingEnv, u.id, simulateTicks - 1);
+                        }
+                    }
+                }
+            }
+
             int successCount = 0;
             int friendlyFails = 0;
             for (int it = -itersCount; it <= itersCount; it++) {
                 auto testEnv = env;
-                auto testNothingEnv = env;
                 testEnv.getUnit(unit.id)->action = action;
                 testEnv.getUnit(unit.id)->action.shoot = true;
                 testEnv.shotSpreadToss = 1.0 * it / itersCount;
-                const int simulateTicks = 15;
                 for (int i = 0; i < simulateTicks; i++) {
                     testEnv.doTick();
-                    testNothingEnv.doTick();
                     testEnv.getUnit(unit.id)->action.shoot = false;
                     if (i == 0) {
                         for (auto& u : testEnv.units) {
