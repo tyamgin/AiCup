@@ -62,7 +62,7 @@ struct TLogger {
     void timerEndLog(const std::string& caption, int limit) {
         auto time = timerEnd() / 1000;
         if (time > limit) {
-            log() << tick << "> " << std::string(_timers.size() * 2, '-') << " " << caption << ": " << time << "ms";
+            log() << tick << "> " << std::string(_timers.size() * 2, '-') << " " << caption << ": " << time << "ms" << std::endl;
         }
     }
 

@@ -1,7 +1,7 @@
 {
   "options_preset": {
     "Custom": {
-      "level": "Simple",
+      "level": "Complex",
       "properties": {
         "max_tick_count": 3600,
         "team_size": 2,
@@ -108,5 +108,5 @@
       }
     }
   ],
-  "seed": 34542
+  "seed": 34544
 }
