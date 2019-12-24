@@ -25,6 +25,14 @@
  * - не использовал батут https://russianaicup.ru/game/view/297786
  */
 
+/**
+ * CHECK:
+ * - aim round
+ * - коэффициент score
+ * - уменьшение длины в dodge
+ * - _applyOppStrategy не только RL
+ */
+
 class Strategy {
     TSandbox prevEnv, prevEnv2, env;
     std::unordered_map<int, TPathFinder> pathFinders;
