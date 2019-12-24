@@ -337,8 +337,9 @@ public:
         auto actions = maybeActions ? maybeActions.value() : TActionsVec();
 
         auto startOppScore = env.score[1];
+        auto startMyScore = env.score[0];
         auto scorer = [&](TSandbox& env) {
-            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2;
+            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) * 0;
         };
         //         score health not_do dist_to_stand
         std::tuple<int,  int,   bool,  int> bestScore(-INF, unit.health, true, INF);
@@ -371,6 +372,7 @@ public:
                         act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
                     }
 
+                    OP_START(DODGE_OPP);
                     for (auto& u : dodgeEnv.units) {
                         if (u.id != unit.id) {
                             if (actionsWillBe.count(u.id)) {
@@ -381,6 +383,8 @@ public:
                             }
                         }
                     }
+                    OP_END(DODGE_OPP);
+
 
                     for (int i = 0; i < simulateTicks; i++) {
                         dodged->action = doSmth || i >= actions.size() ? act : actions[i];
@@ -754,6 +758,8 @@ public:
     }
 
     TPoint roundAim(const TPoint& aim, const TUnit& unit, const TUnit& target) {
+        return aim;
+
         auto angle = aim.getAngle();
         // 1 рад. = 57 град.
         // при n=100 дискретизация будет по 0.57 градуса

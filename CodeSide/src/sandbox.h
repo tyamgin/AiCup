@@ -295,8 +295,9 @@ private:
     }
 
     void _applyOppStrategy(TUnit& opp) {
-        if (oppShotSimpleStrategy.first == -1 || oppShotSimpleStrategy.first == opp.id ||
-            oppShotSimpleStrategy.second < currentTick) {
+        if (oppShotSimpleStrategy.first == -1
+            || oppShotSimpleStrategy.first == opp.id
+            || oppShotSimpleStrategy.second < currentTick) {
             return;
         }
 

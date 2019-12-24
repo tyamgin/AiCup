@@ -20,6 +20,7 @@ enum ELoggerAction {
     LA_FINDPATH,
     LA_SHOT_STRAT,
     LA_DODGE,
+    LA_DODGE_OPP,
 
     LA_ACTIONS_COUNT
 };
@@ -83,6 +84,7 @@ struct TLogger {
         out << "] FINDPATH                    " << _cumulativeDuration[LA_FINDPATH]                    / 1000 << "ms" << std::endl;
         out << "] SHOT_STRAT                  " << _cumulativeDuration[LA_SHOT_STRAT]                  / 1000 << "ms" << std::endl;
         out << "] DODGE                       " << _cumulativeDuration[LA_DODGE]                       / 1000 << "ms" << std::endl;
+        out << "] DODGE_OPP                   " << _cumulativeDuration[LA_DODGE_OPP]                   / 1000 << "ms" << std::endl;
         out << "] DJ_IN   " << djIn << std::endl;
         out << "] DJ_ALL  " << djAll << std::endl;
         out << "] DJ_JALL " << djJumpAll << std::endl;
