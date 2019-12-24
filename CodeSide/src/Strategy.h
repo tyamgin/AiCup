@@ -347,7 +347,8 @@ public:
         auto startOppScore = env.score[1];
         auto startMyScore = env.score[0];
         auto scorer = [&](TSandbox& env) {
-            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) * 0;
+            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) / 2;
+            // TODO: минус его жизни: https://russianaicup.ru/game/view/323645
         };
         //         score health not_do dist_to_stand
         std::tuple<int,  int,   bool,  int> bestScore(-INF, unit.health, true, INF);
