@@ -127,7 +127,7 @@ private:
         if (state.timeLeft == 0 || (state.pad && isOnLadder[state.x][state.y])) {
             return;
         }
-        if (!dfsStartMode && !state.pad && std::abs(dfsStartState.x % 6 - 3) > 1 && state.y > dfsStartState.y) {
+        if (!dfsStartMode && !state.pad && std::abs(dfsStartState.x % 6 - 3) > 1 && state.y > dfsStartState.y) { // TODO: нужно ли это в trace?
             return;
         }
         for (const auto& [to, w] : _getCellGoesDfs(state)) {
@@ -144,9 +144,11 @@ private:
                 return true;
             }
         }
-        if (state.timeLeft == 0) {
+
+        if (state.timeLeft == 0 || (state.pad && isOnLadder[state.x][state.y])) {
             return false;
         }
+
         for (const auto& [to, w] : _getCellGoesDfs(state)) {
             if (!dfsVisitedStates.count(to) && _dfsTrace(to)) {
                 TAction action;
