@@ -409,8 +409,7 @@ public:
 
         auto maybeShot = shotStrategy(unit, actions);
         if (maybeShot) {
-            action.shoot = maybeShot.value().shoot;
-            action.aim = maybeShot.value().aim;
+            action = maybeShot.value();
             for (auto& a : actions) {
                 a.aim = action.aim;
             }
@@ -499,93 +498,198 @@ public:
 
         OP_START(SHOT_STRAT);
 
-        TAction action = actions.empty() ? TAction() : actions[0];
-        action.aim = roundAim(calcAim(unit, *target, actions), unit, *target);
-        if (unit.canShot()) {
-            const int simulateTicks = 15;
-            const int itersCount = 6;
+        struct TShotStratResult {
+            bool verdict;
+            double scoreExp;
+            double successProbability;
+            TAction action;
+
+            bool operator <(const TShotStratResult& other) const {
+                if (verdict != other.verdict) {
+                    return verdict > other.verdict;
+                }
+                return scoreExp > other.scoreExp;
+            }
+        };
+
+        auto regularShotStrat = [&]() {
+            TShotStratResult result{false, 0, 1.0, actions.empty() ? TAction() : actions[0]};
+            result.action.aim = roundAim(calcAim(unit, *target, actions), unit, *target);
+            if (unit.canShot()) {
+                const int simulateTicks = 15;
+                const int itersCount = 6;
+                auto testNothingEnv = env;
+                for (int i = 0; i < simulateTicks; i++) {
+                    testNothingEnv.doTick();
+                    if (i == 0) {
+                        for (auto& u : testNothingEnv.units) {
+                            if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
+                                u.action = _dodgeSimpleStrategy(testNothingEnv, u.id, simulateTicks - 1);
+                            }
+                        }
+                    }
+                }
+
+                int successCount = 0;
+                int friendlyFails = 0;
+                double scoreExp = 0;
+                for (int it = -itersCount; it <= itersCount; it++) {
+                    auto testEnv = env;
+                    testEnv.getUnit(unit.id)->action = result.action;
+                    testEnv.getUnit(unit.id)->action.shoot = true;
+                    testEnv.shotSpreadToss = 1.0 * it / itersCount;
+                    for (int i = 0; i < simulateTicks; i++) {
+                        testEnv.doTick();
+                        testEnv.getUnit(unit.id)->action.shoot = false;
+                        if (i == 0) {
+                            for (auto& u : testEnv.units) {
+                                if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
+                                    u.action = _dodgeSimpleStrategy(testEnv, u.id, simulateTicks - 1);
+                                }
+                            }
+                        }
+                    }
+                    auto add = std::max(0, testEnv.score[0] - testNothingEnv.score[0]);
+                    auto loss = std::max(0, testEnv.friendlyLoss[0] - testNothingEnv.friendlyLoss[0]);
+                    auto score = add - loss*3/2;
+                    if ((score > 0 && loss <= 50)
+                        // победа
+                        || (testEnv.isWin() && !testNothingEnv.isWin())
+                        // убился только 1, и не задел партнера, при этом кого-то убив
+                        || (loss >= KILL_SCORE && loss <= KILL_SCORE + 50 && add >= KILL_SCORE && !testEnv.isLose())) {
+                        successCount++;
+                    } else if (score < 0) {
+                        friendlyFails++;
+                    }
+                    scoreExp += score;
+                }
+                scoreExp /= (itersCount*2 + 1.0);
+                double probability = successCount / (itersCount*2 + 1.0);
+#ifdef DEBUG
+                double failProbability = friendlyFails / (itersCount*2 + 1.0);
+                TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
+                                                               Vec2Float{float(unit.x1), float(unit.y2 + 2)},
+                                                               TextAlignment::LEFT,
+                                                               30,
+                                                               ColorFloat(0, 0, 1, 1)));
+                if (friendlyFails > 0) {
+                    TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(failProbability),
+                                                                  Vec2Float{float(unit.x1), float(unit.y2 + 2.5)},
+                                                                  TextAlignment::LEFT,
+                                                                  30,
+                                                                  ColorFloat(1, 0, 0, 1)));
+                }
+#endif
+                bool doShot = false;
+                if (friendlyFails <= 2) {
+                    if (probability >= 0.5) {
+                        doShot = true;
+                    }
+                    if (friendlyFails <= 1 && probability >= 0.4 && unit.weapon.isRocketLauncher()) {
+                        doShot = true;
+                    }
+                    if (friendlyFails == 0) {
+                        if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
+                            doShot = true;
+                        }
+                        if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
+                            doShot = true;
+                        }
+                        if (probability >= 0.3 && unit.weapon.type == ELootType::ASSAULT_RIFLE) {
+                            doShot = true;
+                        }
+                    }
+                }
+                result.verdict = doShot;
+                result.action.shoot = doShot;
+                result.successProbability = probability;
+                result.scoreExp = scoreExp;
+            }
+            return result;
+        };
+
+        auto mineKamikadzeStrat = [&](int plantMinesCount) {
+            TShotStratResult result{false, 0, 1.0, TAction()};
+            result.action.aim = TPoint(0, -1);
+            return result;
+
+            const int simulateTicks = 5;
             auto testNothingEnv = env;
             for (int i = 0; i < simulateTicks; i++) {
                 testNothingEnv.doTick();
                 if (i == 0) {
                     for (auto& u : testNothingEnv.units) {
-                        if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
+                        if (u.id != unit.id) {
                             u.action = _dodgeSimpleStrategy(testNothingEnv, u.id, simulateTicks - 1);
                         }
                     }
                 }
             }
 
-            int successCount = 0;
-            int friendlyFails = 0;
-            for (int it = -itersCount; it <= itersCount; it++) {
-                auto testEnv = env;
-                testEnv.getUnit(unit.id)->action = action;
-                testEnv.getUnit(unit.id)->action.shoot = true;
-                testEnv.shotSpreadToss = 1.0 * it / itersCount;
-                for (int i = 0; i < simulateTicks; i++) {
-                    testEnv.doTick();
-                    testEnv.getUnit(unit.id)->action.shoot = false;
-                    if (i == 0) {
-                        for (auto& u : testEnv.units) {
-                            if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
-                                u.action = _dodgeSimpleStrategy(testEnv, u.id, simulateTicks - 1);
-                            }
+            auto testEnv = env;
+            auto testUnit = testEnv.getUnit(unit.id);
+            testUnit->action = result.action;
+            for (int i = 0; i < simulateTicks; i++) {
+                testUnit->action.plantMine = i < plantMinesCount;
+                testUnit->action.shoot = i == plantMinesCount;
+                if (testUnit->action.plantMine && !testUnit->isStandOnGround()) {
+                    return result;
+                }
+                if (testUnit->action.shoot && !testUnit->canShot()) {
+                    return result;
+                }
+
+                testEnv.doTick();
+                if (i == 0) {
+                    for (auto& u : testEnv.units) {
+                        if (u.id != unit.id) {
+                            u.action = _dodgeSimpleStrategy(testEnv, u.id, simulateTicks - 1);
                         }
                     }
                 }
-                auto add = std::max(0, testEnv.score[0] - testNothingEnv.score[0]);
-                auto loss = std::max(0, testEnv.friendlyLoss[0] - testNothingEnv.friendlyLoss[0]);
-                auto score = add - loss*3/2;
-                if ((score > 0 && loss <= 50)
-                    // победа
-                    || (testEnv.isWin() && !testNothingEnv.isWin())
-                    // убился только 1, и не задел партнера, при этом кого-то убив
-                    || (loss >= KILL_SCORE && loss <= KILL_SCORE + 50 && add >= KILL_SCORE && !testEnv.isLose())) {
-                    successCount++;
-                } else if (score < 0) {
-                    friendlyFails++;
-                }
             }
-            double probability = successCount / (itersCount*2 + 1.0);
+            int successCount = 0;
+            int friendlyFails = 0;
+            auto add = std::max(0, testEnv.score[0] - testNothingEnv.score[0]);
+            auto loss = std::max(0, testEnv.friendlyLoss[0] - testNothingEnv.friendlyLoss[0]);
+            auto score = add - loss*3/2;
+            if ((score > 0 && loss <= 50)
+                // победа
+                || (testEnv.isWin() && !testNothingEnv.isWin())
+                // убился только 1, и не задел партнера, при этом кого-то убив
+                || (loss >= KILL_SCORE && loss <= KILL_SCORE + 50 && add >= KILL_SCORE && !testEnv.isLose())) {
+                successCount++;
+            } else if (score < 0) {
+                friendlyFails++;
+            }
+
+            if (successCount > 0) {
+                result.verdict = true;
+                result.successProbability = 1;
+                result.scoreExp = score;
+                result.action.shoot = plantMinesCount == 0;
+                result.action.plantMine = plantMinesCount > 0;
+            }
+            return result;
+        };
+
+        auto result = regularShotStrat();
+        for (int plantMines = 0; plantMines <= 2 && plantMines <= unit.mines; plantMines++) {
+            auto cand = mineKamikadzeStrat(plantMines);
+            if (cand.verdict && cand < result) {
+                result = cand;
 #ifdef DEBUG
-            double failProbability = friendlyFails / (itersCount*2 + 1.0);
-            TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
-                                                           Vec2Float{float(unit.x1), float(unit.y2 + 2)},
-                                                           TextAlignment::LEFT,
-                                                           30,
-                                                           ColorFloat(0, 0, 1, 1)));
-            if (friendlyFails > 0) {
-                TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(failProbability),
-                                                              Vec2Float{float(unit.x1), float(unit.y2 + 2.5)},
+                TDrawUtil::debug->draw(CustomData::PlacedText("KAMIKADZE " + std::to_string(plantMines),
+                                                              Vec2Float{float(unit.x1), float(unit.y2 + 2)},
                                                               TextAlignment::LEFT,
-                                                              30,
-                                                              ColorFloat(1, 0, 0, 1)));
-            }
+                                                              50,
+                                                              ColorFloat(0, 0, 1, 1)));
 #endif
-            if (friendlyFails <= 2) {
-                if (probability >= 0.5) {
-                    action.shoot = true;
-                }
-                if (friendlyFails <= 1 && probability >= 0.4 && unit.weapon.isRocketLauncher()) {
-                    action.shoot = true;
-                }
-                if (friendlyFails == 0) {
-                    if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
-                        action.shoot = true;
-                    }
-                    if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
-                        action.shoot = true;
-                    }
-                    if (probability >= 0.3 && unit.weapon.type == ELootType::ASSAULT_RIFLE) {
-                        action.shoot = true;
-                    }
-                }
             }
         }
 
         OP_END(SHOT_STRAT);
-        return action;
+        return result.action;
     }
 
     TPoint calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {

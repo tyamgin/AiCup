@@ -159,7 +159,7 @@ public:
                 swapWeaponBackup.push_back(false);
             }
             swapWeaponBackup[unit.id] = unit.action.swapWeapon;
-            if (unit.mines > 0 && unit.action.plantMine && unit.canJump && unit.isStandOnGround()) { // TODO: check is stand
+            if (unit.health > 0 && unit.mines > 0 && unit.action.plantMine && unit.canJump && unit.isStandOnGround()) { // TODO: check is stand
                 // NOTE: _mineNearestBulletCache заполняется после
                 mines.emplace_back(unit.plantMine());
             }
@@ -363,7 +363,7 @@ private:
             } else if (mine.state == IDLE) {
                 bool trigger = false;
                 for (auto& unit : units) {
-                    if (mine.isTriggerOn(unit)) {
+                    if (unit.health > 0 && mine.isTriggerOn(unit)) {
                         trigger = true;
                         break;
                     }
@@ -399,7 +399,7 @@ private:
                 weapon.spread = std::min(weapon.spread + std::abs(newAngle - weapon.lastAngle), WEAPON_MAX_SPREAD);
             }
             weapon.lastAngle = newAngle;
-            if (unit.action.shoot && weapon.magazine > 0 && weapon.fireTimer < -0.5) {
+            if (unit.health > 0 && unit.action.shoot && weapon.magazine > 0 && weapon.fireTimer < -0.5) {
                 auto newBullet = unit.shot(shotSpreadToss);
                 for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
                     if (newBullet.unitId != units[unitIdx].id && units[unitIdx].isNearBullet(newBullet)) {
@@ -430,6 +430,9 @@ private:
         for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
             auto& unit = units[unitIdx];
             if (oppTotalFreeze && !unit.isMy()) {
+                continue;
+            }
+            if (unit.health <= 0) {
                 continue;
             }
 
@@ -609,6 +612,9 @@ private:
     void _doBulletsDamageTick(int updatesPerTick) {
         for (int unitIdx = 0; unitIdx < (int) units.size(); unitIdx++) {
             auto& unit = units[unitIdx];
+            if (unit.health <= 0) {
+                continue;
+            }
             for (int bulletIdx : _unitNearestBulletCache[unitIdx]) {
                 auto& bullet = bullets[bulletIdx];
                 if (bullet.weaponType != ELootType::NONE && _collideBulletAndUnit(unit, bullet)) {
