@@ -32,8 +32,8 @@ public:
         return unit.intersectsWith(x1 - d, y1 - d, x2 + d, y2 + d);
     }
 
-    bool isTouch(const TRectangle& unitOrMine) const {
-        auto d = MINE_EXPLOSION_RADIUS - MINE_SIZE / 2;
+    bool isTouch(const TRectangle& unitOrMine, double radiusChange = 0) const {
+        auto d = MINE_EXPLOSION_RADIUS - MINE_SIZE / 2 + radiusChange;
         return unitOrMine.intersectsWith(x1 - d, y1 - d, x2 + d, y2 + d);
     }
 

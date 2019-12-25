@@ -302,6 +302,10 @@ public:
         y1 = pos.y;
         y2 = y1 + UNIT_HEIGHT;
     }
+
+    double getAbsAngleTo(const TUnit& other) const {
+        return std::abs(TPoint::getAngleBetween(TPoint::byAngle(weapon.lastAngle), other.center() - center()));
+    }
 };
 
 
