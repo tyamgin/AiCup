@@ -28,8 +28,16 @@
 /**
  * CHECK:
  * - aim round
- * - коэффициент score
- * - уменьшение длины в dodge
+ * - коэффициент score (b)
+ * [801, 14, 877]
+ * -76
+ * 0.47735399284862934
+ *
+ * - уменьшение длины в dodge (a)
+ * [869, 17, 918]
+ * -49
+ * 0.48628987129266926
+ *
  * - _applyOppStrategy не только RL
  */
 
@@ -347,8 +355,15 @@ public:
         auto startOppScore = env.score[1];
         auto startMyScore = env.score[0];
         auto scorer = [&](TSandbox& env) {
-            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) / 2;
-            // TODO: минус его жизни: https://russianaicup.ru/game/view/323645
+            int sumOppHealth = 0;
+            for (auto& u : env.units) {
+                if (!u.isMy()) {
+                    sumOppHealth += u.health;
+                }
+            }
+            sumOppHealth = 0; // TODO
+            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) / 2 - sumOppHealth / 8;
+            // минус его жизни для https://russianaicup.ru/game/view/323645
         };
         //         score health not_do dist_to_stand
         std::tuple<int,  int,   bool,  int> bestScore(-INF, unit.health, true, INF);
