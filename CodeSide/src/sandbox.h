@@ -325,7 +325,9 @@ private:
 
     void _blowUpMine(const TMine& mine) {
         for (auto& unit : units) {
-            if (mine.isTouch(unit)) {
+            // HACK: чтобы случайно не убиться самому
+            double mineRadiusChangeHack = unit.isMy() ? 0 : -0.16667; // чуть больше, чем смещение на 1 тик
+            if (mine.isTouch(unit, mineRadiusChangeHack)) {
                 auto damage = std::min(unit.health, MINE_EXPLOSION_DAMAGE);
                 unit.health -= damage;
                 if (unit.health <= 0) {
