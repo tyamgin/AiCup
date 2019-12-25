@@ -16,7 +16,6 @@
  * TODO:
  * - пп от стен, если соперник с базукой
  * - пп в пользу стояния на лестнице (легко уклоняться)
- * - стрелдять можно посреди тика, даже если unit.canShot() изначально false
  * - в findpath поощрять за бонусы
  * - ?? предсказывать dx противника
  * - ?? к базучнику близко не подходить
@@ -28,12 +27,12 @@
 /**
  * CHECK:
  * - aim round
- * - коэффициент score (b)
+ * - коэффициент score (b) 27.4
  * [801, 14, 877]
  * -76
  * 0.47735399284862934
  *
- * - уменьшение длины в dodge (a)
+ * - уменьшение длины в dodge (a) 27.3
  * [869, 17, 918]
  * -49
  * 0.48628987129266926
@@ -511,6 +510,7 @@ public:
                 }
             }
         }
+
         for (auto& u : env.units) {
             if (u.isMy()) {
                 continue;
@@ -540,11 +540,11 @@ public:
             }
         };
 
-        auto regularShotStrat = [&]() {
+        auto regularShotStrat = [&](int drawDx, const TPoint& aim) {
             TShotStratResult result{false, 0, 1.0, actions.empty() ? TAction() : actions[0]};
-            result.action.aim = roundAim(calcAim(unit, *target, actions), unit, *target);
-            if (unit.canShot()) {
-                const int simulateTicks = 15;
+            result.action.aim = aim;
+            if (unit.canShotInCurrentTick()) {
+                const int simulateTicks = unit.weapon.isRocketLauncher() ? 30 : 15;
                 const int itersCount = 6;
                 auto testNothingEnv = env;
                 for (int i = 0; i < simulateTicks; i++) {
@@ -595,16 +595,16 @@ public:
                 double probability = successCount / (itersCount*2 + 1.0);
 #ifdef DEBUG
                 double failProbability = friendlyFails / (itersCount*2 + 1.0);
-                TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability),
-                                                               Vec2Float{float(unit.x1), float(unit.y2 + 2)},
+                TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(probability).substr(0, 4),
+                                                               Vec2Float{float(unit.x1 + drawDx), float(unit.y2 + 2)},
                                                                TextAlignment::LEFT,
-                                                               30,
+                                                               22,
                                                                ColorFloat(0, 0, 1, 1)));
                 if (friendlyFails > 0) {
-                    TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(failProbability),
-                                                                  Vec2Float{float(unit.x1), float(unit.y2 + 2.5)},
+                    TDrawUtil::debug->draw(CustomData::PlacedText(std::to_string(failProbability).substr(0, 4),
+                                                                  Vec2Float{float(unit.x1 + drawDx), float(unit.y2 + 2.5)},
                                                                   TextAlignment::LEFT,
-                                                                  30,
+                                                                  22,
                                                                   ColorFloat(1, 0, 0, 1)));
                 }
 #endif
@@ -663,7 +663,7 @@ public:
                 if (testUnit->action.plantMine && !testUnit->isStandOnGround()) {
                     return result;
                 }
-                if (testUnit->action.shoot && !testUnit->canShot()) {
+                if (testUnit->action.shoot && !testUnit->canShotInCurrentTick()) {
                     return result;
                 }
 
@@ -701,7 +701,17 @@ public:
             return result;
         };
 
-        auto result = regularShotStrat();
+        auto aims = calcAim(unit, *target, actions);
+        aims[0] = roundAim(aims[0], unit, *target);
+
+        auto result = regularShotStrat(0, aims[0]);
+        if (aims.size() > 1) {
+            auto cand = regularShotStrat(1, aims[1]);
+            if (cand.verdict && cand < result) {
+                result = cand;
+            }
+        }
+
         for (int plantMines = 0; plantMines <= 2 && plantMines <= unit.mines; plantMines++) {
             auto cand = mineKamikadzeStrat(plantMines);
             if (cand.verdict && cand < result) {
@@ -720,35 +730,42 @@ public:
         return result.action;
     }
 
-    TPoint calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {
-        //return target.center() - unit.center(); // TODO
-
+    std::vector<TPoint> calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {
         auto selAim = getAimCenter(unit, target) - unit.center();
         int minTimeDiff = INT_MAX;
         if (target.canJump && target.jumpCanCancel) {// || target.getDistanceTo(unit) > 11) {
-            return selAim;
+            return {selAim};
         }
 
         TPathFinder pf(&env, target);
         std::tuple<double, double, TPoint> minDist(INF, -INF, TPoint());
         pf.traverseReachable(target, [&](double dist, const TUnit& tg, const TState& state) {
             if (isStand[state.x][state.y]) {
+                TDrawUtil().debugPoint(state.getPoint(), ColorFloat(0, 0, 1, 0.5));
                 minDist = std::min(minDist, std::make_tuple(dist, -tg.getDistanceTo(unit), tg.position()));
             }
         });
+        TPoint sumWithMinDist(0, 0);
+        int countWithMinDist = 0;
+        pf.traverseReachable(target, [&](double dist, const TUnit& tg, const TState& state) {
+            if (isStand[state.x][state.y]) {
+                if (std::abs(std::get<0>(minDist) - dist) < 0.1) {
+                    countWithMinDist++;
+                    sumWithMinDist += tg.position();
+                }
+            }
+        });
+        sumWithMinDist /= countWithMinDist;
+
         TStatesVec tarStates;
         TActionsVec tarActions;
         if (std::get<0>(minDist) < INF && pf.findPath(std::get<2>(minDist), tarStates, tarActions) && tarStates.size()) {
             TDrawUtil().drawPath(statesToPoints(tarStates), ColorFloat(0, 0, 1, 0.5));
         } else {
-            return selAim;
+            return {selAim};
         }
 
-        //auto snd = env;
-        //snd.oppFallFreeze = true;
         for (int t = 0; t < 70; t++) {
-            //snd.getUnit(unit.id)->action = t < actions.size() ? actions[t] : TAction();
-            //auto aim = snd.getUnit(target.id)->center() - unit.center();
             TUnit tarClone = target;
             tarClone.setPosition((t < tarStates.size() ? tarStates[t] : tarStates.back()).getPoint());
             auto aim = getAimCenter(unit, tarClone) - unit.center();
@@ -776,9 +793,13 @@ public:
                 minTimeDiff = std::abs(t - timeToShot);
                 selAim = aim;
             }
-            //snd.doTick(10);
         }
-        return selAim;
+        std::vector<TPoint> ret = {selAim};
+        if (sumWithMinDist.length() > 0) {
+            TDrawUtil().debugPoint(sumWithMinDist, ColorFloat(1, 1, 1, 0.8));
+            ret.push_back(sumWithMinDist - unit.center());
+        }
+        return ret;
     }
 
     TPoint roundAim(const TPoint& aim, const TUnit& unit, const TUnit& target) {

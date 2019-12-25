@@ -256,8 +256,10 @@ public:
         return SQR(x1 - unit.x1) + SQR(y1 - unit.y1);
     }
 
-    bool canShot() const {
-        return weapon.fireTimer < -0.5;
+    bool canShotInCurrentTick() const {
+        auto updatesPerSecond = UPDATES_PER_TICK * TICKS_PER_SECOND;
+        auto dTimerInMicrotick = WEAPON_RELOAD_TIME / updatesPerSecond;
+        return weapon.fireTimer - (UPDATES_PER_TICK - 1) * dTimerInMicrotick < 0;
     }
 
     bool isMagazineFull() const {

@@ -491,6 +491,24 @@ private:
                     }
                 }
             }
+        } else {
+            for (auto &my : env->units) {
+                if (!my.isMy()) {
+                    continue;
+                }
+                auto myCenter = my.center();
+                auto myCenterState = getPointState(myCenter);
+                for (int di = -40; di <= 40; di++) {
+                    for (int dj = -40; dj <= 40; dj++) {
+                        auto st = TState{myCenterState.x + di, myCenterState.y + dj, 0};
+                        auto pt = st.getPoint();
+                        if (st.x >= 0 && st.x < dist.size() && st.y >= 0 && st.y < dist[0].size()) {
+                            const double mx = 7.0;
+                            pen[st.x][st.y] = std::max(0.0, mx - pt.getDistanceTo(myCenter)) * 0.001;
+                        }
+                    }
+                }
+            }
         }
 
 #define DJ_COMPACT(x, y) uint32_t((uint32_t(x) << 16U) ^ uint32_t(y))
