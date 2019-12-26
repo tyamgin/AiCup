@@ -37,6 +37,13 @@
  * 0.48628987129266926
  *
  * - _applyOppStrategy не только RL
+ *
+ *
+ * (b) - mine
+ * [779, 11, 649]
+ * 130
+ * 0.5455182072829131
+ *
  */
 
 class Strategy {
@@ -503,13 +510,11 @@ public:
                 if (u.isMy() || unit.getDistanceTo(u) > 4) {
                     continue;
                 }
-                if (target == nullptr || (std::abs(TPoint::getAngleBetween(TPoint::byAngle(unit.weapon.lastAngle), u.center() - unit.center())) <
-                                          std::abs(TPoint::getAngleBetween(TPoint::byAngle(unit.weapon.lastAngle), target->center() - unit.center())))) {
+                if (target == nullptr || unit.getAbsAngleTo(u) < unit.getAbsAngleTo(*target)) {
                     target = &u;
                 }
             }
         }
-
         for (auto& u : env.units) {
             if (u.isMy()) {
                 continue;
@@ -519,7 +524,13 @@ public:
             }
         }
         if (target == nullptr) {
-            return {};
+            return {}; // impossible
+        }
+        TUnit* otherTarget = nullptr;
+        for (auto& u : env.units) {
+            if (!u.isMy() && u.id != target->id) {
+                otherTarget = &u;
+            }
         }
 
 
@@ -539,7 +550,7 @@ public:
             }
         };
 
-        auto regularShotStrat = [&](int drawDx, const TPoint& aim) {
+        auto regularShotStrat = [&](int drawDx, const TPoint& aim, const TUnit& target) {
             TShotStratResult result{false, 0, 1.0, actions.empty() ? TAction() : actions[0]};
             result.action.aim = aim;
             if (unit.canShotInCurrentTick()) {
@@ -616,10 +627,10 @@ public:
                         doShot = true;
                     }
                     if (friendlyFails == 0) {
-                        if (probability >= 0.4 && unit.getDistanceTo(*target) > 5) {
+                        if (probability >= 0.4 && unit.getDistanceTo(target) > 5) {
                             doShot = true;
                         }
-                        if (probability >= 0.3 && unit.getDistanceTo(*target) > 7) {
+                        if (probability >= 0.3 && unit.getDistanceTo(target) > 7) {
                             doShot = true;
                         }
                         if (probability >= 0.3 && unit.weapon.type == ELootType::ASSAULT_RIFLE) {
@@ -700,12 +711,22 @@ public:
             return result;
         };
 
-        auto aims = calcAim(unit, *target, actions);
-        aims[0] = roundAim(aims[0], unit, *target);
+        std::vector<std::pair<TPoint, TUnit*>> aims;
+        for (const auto& a : calcAim(unit, *target, actions)) {
+            aims.emplace_back(a, target);
+        }
+        aims[0].first = roundAim(aims[0].first, unit, *target);
+        auto result = regularShotStrat(0, aims[0].first, *aims[0].second);
 
-        auto result = regularShotStrat(0, aims[0]);
-        if (aims.size() > 1) {
-            auto cand = regularShotStrat(1, aims[1]);
+        if (otherTarget != nullptr && unit.weapon.isRocketLauncher() && unit.getDistanceTo(*otherTarget) < 20) {
+            auto otherAims = calcAim(unit, *otherTarget, actions);
+            if (otherAims.size() > 1) {
+                aims.emplace_back(otherAims[1], otherTarget);
+            }
+        }
+
+        for (int i = 1; i < (int) aims.size(); i++) {
+            auto cand = regularShotStrat(i, aims[i].first, *aims[i].second);
             if (cand.verdict && cand < result) {
                 result = cand;
             }
@@ -729,7 +750,7 @@ public:
         return result.action;
     }
 
-    std::vector<TPoint> calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {
+    TPointsVec calcAim(const TUnit& unit, const TUnit& target, const TActionsVec& actions) {
         auto selAim = getAimCenter(unit, target) - unit.center();
         int minTimeDiff = INT_MAX;
         if (target.canJump && target.jumpCanCancel) {// || target.getDistanceTo(unit) > 11) {
