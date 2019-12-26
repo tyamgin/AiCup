@@ -56,7 +56,7 @@ TPointsVec statesToPoints(const TStatesVec& states) {
 #define DIRECTION_ORDER {0, -1, 1}
 
 const double GO_DIST = 0.99;
-const double FALL_DOWN_DIST = 0.99;
+const double FALL_DOWN_DIST = 1.001; // должно быть больше, чем GO_DIST. Лучше идти, чем падать.
 const double GO_LADDER_DIST = 0.98;
 
 const int JUMP_TICKS_COUNT = 33;
