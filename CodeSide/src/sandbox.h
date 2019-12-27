@@ -373,7 +373,7 @@ private:
         for (auto& unit : units) {
             // HACK: чтобы случайно не убиться самому
             double mineRadiusChangeHack = unit.isMy() ? 0 : -0.16667; // чуть больше, чем смещение на 1 тик
-            if (mine.isTouch(unit, mineRadiusChangeHack)) {
+            if (unit.health > 0 && mine.isTouch(unit, mineRadiusChangeHack)) {
                 auto damage = std::min(unit.health, MINE_EXPLOSION_DAMAGE);
                 unit.health -= damage;
                 if (unit.health <= 0) {
@@ -713,7 +713,7 @@ private:
     void _applyRocketExplosionDamage(const TBullet& bullet) {
         if (bullet.weaponType == ELootType::ROCKET_LAUNCHER) {
             for (auto& unit : units) {
-                if (bullet.isRocketLauncherExplosionTouch(unit)) {
+                if (unit.health > 0 && bullet.isRocketLauncherExplosionTouch(unit)) {
                     auto damage = std::min(unit.health, ROCKET_LAUNCHER_EXPLOSION_DAMAGE);
                     unit.health -= damage;
                     if (unit.health <= 0) {
@@ -738,7 +738,7 @@ private:
     }
 
     bool _collideBulletAndUnit(TUnit& unit, const TBullet& bullet) {
-        if (unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
+        if (unit.health > 0 && unit.id != bullet.unitId && unit.intersectsWith(bullet)) {
             auto damage = std::min(unit.health, bullet.damage());
             unit.health -= damage;
             if (unit.health <= 0) {
