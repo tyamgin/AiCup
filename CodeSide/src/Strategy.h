@@ -597,9 +597,6 @@ public:
         auto regularShotStrat = [&](int drawDx, const TPoint& aim, const TUnit& target) {
             TShotStratResult result{false, 0, 1.0, actions.empty() ? TAction() : actions[0]};
             result.action.aim = aim;
-            if (env.currentTick == 220 && unit.weapon.isRocketLauncher()) {
-                drawDx=drawDx;
-            }
             if (unit.canShotInCurrentTick()) {
                 const int simulateTicks = unit.weapon.isRocketLauncher() ? 30 : 15;
                 const int itersCount = 6;
@@ -696,7 +693,7 @@ public:
         auto mineKamikadzeStrat = [&](int plantMinesCount) {
             TShotStratResult result{false, 0, 1.0, TAction()};
             result.action.aim = TPoint(0, -1);
-            return result;
+            //return result;
 
             const int simulateTicks = 5;
             auto testNothingEnv = env;
