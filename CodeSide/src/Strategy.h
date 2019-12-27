@@ -466,8 +466,7 @@ public:
     }
 
     TAction _dodgeSimpleStrategy(TSandbox& afterShotEnv, int unitId, int simulateTicks) {
-        int maxHealth = 0;
-        int minScore = INF;
+        std::tuple<int, int, int, int> best(0, 0, -INF, INF);
         int initialHealth = afterShotEnv.getUnit(unitId)->health;
         TAction bestAction;
         for (int dirX = -1; dirX <= 1; dirX++) {
@@ -482,17 +481,52 @@ public:
                 }
                 act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
                 opp->action = act;
-                for (int i = 0; i < simulateTicks && opp->health > maxHealth; i++) {
+                for (int i = 0; i < simulateTicks && opp->health > std::get<1>(best); i++) {
                     dodgeEnv.doTick(5);
                 }
-                auto sc = dodgeEnv.score[1 - TLevel::unitIdToPlayerIdx[unitId]];
-                if (opp->health > maxHealth || (opp->health == maxHealth && sc < minScore)) {
-                    maxHealth = opp->health;
-                    minScore = sc;
+                int pl = TLevel::unitIdToPlayerIdx[unitId];
+                std::tuple<int, int, int, int> cand((dodgeEnv.score[pl] - afterShotEnv.score[pl]) / KILL_SCORE * (!opp->isMy()),
+                                                    opp->health,
+                                                    -dodgeEnv.score[1 - pl],
+                                                    dodgeEnv.score[pl]);
+                if (cand > best) {
+                    best = cand;
                     bestAction = act;
                     if (opp->health == initialHealth) {
                         return bestAction;
                     }
+                }
+            }
+        }
+        return bestAction;
+    }
+
+    TAction _dodgeMineSimpleStrategy(TSandbox& afterShotEnv, int unitId, int simulateTicks, const TMine& mine) {
+        int minTimeToOut = INF;
+        TAction bestAction;
+        for (int dirX = -1; dirX <= 1; dirX++) {
+            for (int dirY = -1; dirY <= 1; dirY += 1) {
+                TSandbox dodgeEnv = afterShotEnv;
+                auto opp = dodgeEnv.getUnit(unitId);
+                TAction act;
+                if (dirY > 0) {
+                    act.jump = true;
+                } else if (dirY < 0) {
+                    act.jumpDown = true;
+                }
+                act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
+                opp->action = act;
+                int timeToOut = INF;
+                for (int i = 0; i < simulateTicks; i++) {
+                    dodgeEnv.doTick(5);
+                    if (!mine.isTouch(*opp)) {
+                        timeToOut = i;
+                        break;
+                    }
+                }
+                if (timeToOut < minTimeToOut) {
+                    minTimeToOut = timeToOut;
+                    bestAction = act;
                 }
             }
         }
@@ -553,6 +587,9 @@ public:
         auto regularShotStrat = [&](int drawDx, const TPoint& aim, const TUnit& target) {
             TShotStratResult result{false, 0, 1.0, actions.empty() ? TAction() : actions[0]};
             result.action.aim = aim;
+            if (env.currentTick == 220 && unit.weapon.isRocketLauncher()) {
+                drawDx=drawDx;
+            }
             if (unit.canShotInCurrentTick()) {
                 const int simulateTicks = unit.weapon.isRocketLauncher() ? 30 : 15;
                 const int itersCount = 6;
@@ -654,22 +691,26 @@ public:
             const int simulateTicks = 5;
             auto testNothingEnv = env;
             for (int i = 0; i < simulateTicks; i++) {
-                testNothingEnv.doTick();
                 if (i == 0) {
                     for (auto& u : testNothingEnv.units) {
-                        if (u.id != unit.id) {
-                            u.action = _dodgeSimpleStrategy(testNothingEnv, u.id, simulateTicks - 1);
+                        if (!u.isMy()) {
+                            u.action = _dodgeMineSimpleStrategy(testNothingEnv, u.id, simulateTicks, unit.getPossibleMine());
                         }
                     }
                 }
+                testNothingEnv.doTick();
             }
 
             auto testEnv = env;
             auto testUnit = testEnv.getUnit(unit.id);
             testUnit->action = result.action;
+            TAction firstAction;
             for (int i = 0; i < simulateTicks; i++) {
                 testUnit->action.plantMine = i < plantMinesCount;
-                testUnit->action.shoot = i == plantMinesCount;
+                testUnit->action.shoot = i == std::max(0, plantMinesCount - 1);
+                if (i == 0) {
+                    firstAction = testUnit->action;
+                }
                 if (testUnit->action.plantMine && !testUnit->isStandOnGround()) {
                     return result;
                 }
@@ -677,14 +718,14 @@ public:
                     return result;
                 }
 
-                testEnv.doTick();
                 if (i == 0) {
                     for (auto& u : testEnv.units) {
-                        if (u.id != unit.id) {
-                            u.action = _dodgeSimpleStrategy(testEnv, u.id, simulateTicks - 1);
+                        if (!u.isMy()) {
+                            u.action = _dodgeMineSimpleStrategy(testEnv, u.id, simulateTicks, unit.getPossibleMine());
                         }
                     }
                 }
+                testEnv.doTick();
             }
             int successCount = 0;
             int friendlyFails = 0;
@@ -695,7 +736,7 @@ public:
                 // победа
                 || (testEnv.isWin() && !testNothingEnv.isWin())
                 // убился только 1, и не задел партнера, при этом кого-то убив
-                || (loss >= KILL_SCORE && loss <= KILL_SCORE + 50 && add >= KILL_SCORE && !testEnv.isLose())) {
+                || (loss >= KILL_SCORE && loss <= KILL_SCORE + std::max(50, unit.health - testUnit->health) && add >= KILL_SCORE && !testEnv.isLose())) {
                 successCount++;
             } else if (score < 0) {
                 friendlyFails++;
@@ -704,9 +745,9 @@ public:
             if (successCount > 0) {
                 result.verdict = true;
                 result.successProbability = 1;
-                result.scoreExp = score;
-                result.action.shoot = plantMinesCount == 0;
-                result.action.plantMine = plantMinesCount > 0;
+                result.scoreExp = add;
+                result.action.shoot = firstAction.shoot;
+                result.action.plantMine = firstAction.plantMine;
             }
             return result;
         };
@@ -733,6 +774,17 @@ public:
         }
 
         for (int plantMines = 0; plantMines <= 2 && plantMines <= unit.mines; plantMines++) {
+            int minesAround = 0;
+            for (auto& mine : env.mines) {
+                minesAround += mine.position().getDistanceTo(unit.position()) < 0.001;
+            }
+            if (minesAround == 0 && plantMines == 0) {
+                continue;
+            }
+            if (!TLevel::canPlantMine[unit.id] && plantMines > 0) {
+                continue;
+            }
+
             auto cand = mineKamikadzeStrat(plantMines);
             if (cand.verdict && cand < result) {
                 result = cand;

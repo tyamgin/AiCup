@@ -113,6 +113,10 @@ public:
 
     TMine plantMine() {
         mines--;
+        return getPossibleMine();
+    }
+
+    TMine getPossibleMine() const {
         TMine mine;
         mine.playerIdx = playerIdx;
         mine.x1 = x1 + UNIT_HALF_WIDTH - MINE_SIZE / 2;

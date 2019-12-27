@@ -297,7 +297,51 @@ private:
     void _applyOppStrategy(TUnit& opp) {
         if (oppShotSimpleStrategy.first == -1
             || oppShotSimpleStrategy.first == opp.id
-            || oppShotSimpleStrategy.second < currentTick) {
+            || oppShotSimpleStrategy.second + 10 < currentTick) {
+            return;
+        }
+
+//        if (!opp.isMy() && opp.mines > 0 && opp.isStandOnGround()) {
+//            opp.action.plantMine = true;
+//        }
+        bool bump = false;
+        if (!opp.isMy() && opp.canShotInCurrentTick()) {
+            bool canPlant = false;
+            if (opp.mines > 0 && opp.isStandOnGround()) {
+                canPlant = true;
+            }
+
+            bool hasMine = false;
+            for (auto &m : mines) {
+                if (m.position().getDistanceTo2(opp.position()) < SQR(0.001)) {
+                    hasMine = true;
+                }
+            }
+
+            if (hasMine || canPlant) {
+                auto mine = opp.getPossibleMine();
+                for (auto& u : units) {
+                    if (opp.playerIdx != u.playerIdx && mine.isTouch(u)) {
+                        bump = true;
+                        break;
+                    }
+                }
+                if (bump) {
+                    opp.action.velocity = 0;
+                    opp.action.jumpDown = opp.action.jump = false;
+                    opp.action.aim = TPoint(0, -1);
+                    if (hasMine) {
+                        opp.action.shoot = true;
+                    } else {
+                        opp.action.plantMine = true;
+                    }
+                }
+            }
+        }
+        if (bump) {
+            return;
+        }
+        if (oppShotSimpleStrategy.second < currentTick) {
             return;
         }
 
@@ -314,12 +358,14 @@ private:
                     target = &my;
                 }
             }
+
             if (target != nullptr) {
                 opp.action.shoot = true;
                 if (!opp.isMy()) {
                     opp.action.aim = target->center() - opp.center();
                 }
             }
+
         }
     }
 

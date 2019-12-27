@@ -42,6 +42,10 @@ public:
         return bullet.x1 < x2 + d && bullet.x2 > x1 - d &&
                bullet.y1 < y2 + d && bullet.y2 > y1 - d;
     }
+
+    TPoint position() const {
+        return TPoint(x1 + MINE_SIZE / 2, y1);
+    }
 };
 
 #endif //CODESIDE_MINE_H

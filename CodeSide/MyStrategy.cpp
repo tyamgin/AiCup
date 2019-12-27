@@ -122,6 +122,7 @@ int TLevel::height = 0;
 std::vector<std::vector<ETile>> TLevel::tiles;
 int TLevel::myId = 0;
 std::vector<int> TLevel::unitIdToPlayerIdx;
+std::vector<bool> TLevel::canPlantMine;
 int TLevel::teamSize = 0;
 bool TLevel::isMyLeft = false;
 

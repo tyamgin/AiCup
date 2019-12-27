@@ -20,6 +20,7 @@ public:
     static int myId;
     static int teamSize;
     static std::vector<int> unitIdToPlayerIdx;
+    static std::vector<bool> canPlantMine;
     static bool isMyLeft;
 
     static ETile getTileType(double x, double y) {
@@ -27,6 +28,13 @@ public:
     }
 
     static void init(int myId, const Game& game) {
+        for (const auto& u : game.units) {
+            while (canPlantMine.size() <= u.id) {
+                canPlantMine.push_back(false);
+            }
+            canPlantMine[u.id] = u.onGround && u.mines > 0;
+        }
+
         if (game.currentTick > 0) {
             return;
         }
