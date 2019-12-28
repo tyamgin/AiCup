@@ -380,8 +380,9 @@ public:
             return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) / 2 - sumOppHealth / 8;
             // минус его жизни для https://russianaicup.ru/game/view/323645
         };
-        //         score health not_do dist_to_stand
-        std::tuple<int,  int,   bool,  int> bestScore(-INF, unit.health, true, INF);
+        //         score health minHealth not_do dist_to_stand
+        std::tuple<int,  int,   int,      bool,  int> bestScore(-INF, unit.health, true, INF);
+        // minHealth - чтобы не подрывался на базуке, если хочет взять аптечку (выйти в 0 по delta health)
         TPointsVec bestPath;
         TActionsVec bestActions;
 
@@ -424,16 +425,17 @@ public:
                     }
                     OP_END(DODGE_OPP);
 
-
+                    int minHealth = dodged->health;
                     for (int i = 0; i < simulateTicks; i++) {
                         dodged->action = doSmth || i >= actions.size() ? act : actions[i];
                         dodgeEnv.doTick();
+                        minHealth = std::min(minHealth, dodged->health);
                         path.push_back(dodged->position());
                         if (dodged->approxIsStand()) {
                             distToStand = std::min(distToStand, i);
                         }
                     }
-                    std::tuple<int, int, bool, int> score(scorer(dodgeEnv), dodged->health, !doSmth, distToStand);
+                    std::tuple<int, int, int, bool, int> score(scorer(dodgeEnv), dodged->health, minHealth, !doSmth, distToStand);
                     if (score > bestScore) {
                         bestScore = score;
                         bestPath = path;
@@ -443,7 +445,7 @@ public:
             }
         }
         actions = bestActions;
-        if (!std::get<2>(bestScore)) {
+        if (!std::get<bool>(bestScore)) {
             TDrawUtil().drawPath(bestPath, ColorFloat(1, 0, 0, 1));
         }
         OP_END(DODGE);
