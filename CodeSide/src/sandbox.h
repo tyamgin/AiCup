@@ -41,7 +41,7 @@ public:
     int myCount;
     std::pair<int, int> oppShotSimpleStrategy = {-1, -1};
     double shotSpreadToss = 0;
-    bool oppFallFreeze = false;
+    int oppFallFreezeExcept = -1;
     bool oppTotalFreeze = false;
 
     TSandbox() {
@@ -94,7 +94,7 @@ public:
         lootBoxIndex = sandbox.lootBoxIndex;
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
         shotSpreadToss = sandbox.shotSpreadToss;
-        oppFallFreeze = sandbox.oppFallFreeze;
+        oppFallFreezeExcept = sandbox.oppFallFreezeExcept;
         oppTotalFreeze = sandbox.oppTotalFreeze;
         myCount = sandbox.myCount;
         for (int i = 0; i < (int) units.size(); i++) {
@@ -138,7 +138,7 @@ public:
         }
         oppShotSimpleStrategy = sandbox.oppShotSimpleStrategy;
         shotSpreadToss = sandbox.shotSpreadToss;
-        oppFallFreeze = sandbox.oppFallFreeze;
+        oppFallFreezeExcept = sandbox.oppFallFreezeExcept;
         oppTotalFreeze = sandbox.oppTotalFreeze;
         myCount = sandbox.myCount;
         for (int i = 0; i < (int) units.size(); i++) {
@@ -576,7 +576,7 @@ private:
                     }
                 }
             } else if (action.jumpDown || !onLadder) {
-                if (!oppFallFreeze || unit.isMy() || !unit.canJump) {
+                if (oppFallFreezeExcept == -1 || oppFallFreezeExcept == unit.id || !unit.canJump) {
                     double dy = -UNIT_FALL_SPEED / updatesPerSecond;
 
                     auto wallMask = uint32_t(ETile::WALL);

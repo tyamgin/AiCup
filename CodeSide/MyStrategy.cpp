@@ -83,6 +83,7 @@ void debugCheckGameParams(const Game& game, bool print) {
 }
 
 std::unordered_map<int, UnitAction> MyStrategy::getActions(int myId, const Game& game, Debug& debug) {
+    TLogger::instance()->tick = game.currentTick;
     std::unordered_map<int, UnitAction> result;
 
     OP_START(ALL);

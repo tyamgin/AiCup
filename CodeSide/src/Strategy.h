@@ -285,6 +285,13 @@ class Strategy {
             }
         }
 
+//        if (unit.mines == 0 || (unit.mines == 1 && !unit.weapon.isRocketLauncher())) {
+//            auto maybeAct = _strategyLoot(unit, {ELootType::MINE});
+//            if (maybeAct) {
+//                return maybeAct;
+//            }
+//        }
+
 
         if (auto actions = findPathWrapper(unit, target->position())) {
             return actions;
@@ -315,10 +322,15 @@ public:
         if (env.currentTick == 0) {
             TPathFinder::initMap();
         }
+        std::unordered_map<int, TAction> result;
         for (auto &unit : env.units) {
             if (unit.isMy()) {
+                result[unit.id] = TAction();
                 pathFinders[unit.id] = TPathFinder(&env, unit);
             }
+        }
+        if (env.currentTick > 5 && env.currentTick < 750) {
+            return result;
         }
 
         if (env.currentTick > 1) {
@@ -326,8 +338,6 @@ public:
             prevEnv.doTick();
             _compareState(prevEnv, env, prevEnv2);
         }
-
-        std::unordered_map<int, TAction> result;
 
 //        for (auto& unit : env.units) {
 //            if (unit.isMy()) {
@@ -370,18 +380,10 @@ public:
         auto startOppScore = env.score[1];
         auto startMyScore = env.score[0];
         auto scorer = [&](TSandbox& env) {
-            int sumOppHealth = 0;
-            for (auto& u : env.units) {
-                if (!u.isMy()) {
-                    sumOppHealth += u.health;
-                }
-            }
-            sumOppHealth = 0; // TODO
-            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) / 2 - sumOppHealth / 8;
-            // минус его жизни для https://russianaicup.ru/game/view/323645
+            return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) / 2;
         };
-        //         score health minHealth not_do dist_to_stand
-        std::tuple<int,  int,   int,      bool,  int> bestScore(-INF, unit.health, true, INF);
+        //         score health minHealth sumOppHealth not_do dist_to_stand
+        std::tuple<int,  int,   int,      int,         bool,  int> bestScore(-INF);
         // minHealth - чтобы не подрывался на базуке, если хочет взять аптечку (выйти в 0 по delta health)
         TPointsVec bestPath;
         TActionsVec bestActions;
@@ -435,7 +437,14 @@ public:
                             distToStand = std::min(distToStand, i);
                         }
                     }
-                    std::tuple<int, int, int, bool, int> score(scorer(dodgeEnv), dodged->health, minHealth, !doSmth, distToStand);
+                    int sumOppHealth = 0; // минус его жизни для https://russianaicup.ru/game/view/323645
+                    for (auto& u : dodgeEnv.units) {
+                        if (!u.isMy()) {
+                            sumOppHealth += u.health;
+                        }
+                    }
+
+                    auto score = std::make_tuple(scorer(dodgeEnv), dodged->health, minHealth, -sumOppHealth, !doSmth, distToStand);
                     if (score > bestScore) {
                         bestScore = score;
                         bestPath = path;
@@ -478,9 +487,25 @@ public:
     }
 
     TAction _dodgeSimpleStrategy(TSandbox& afterShotEnv, int unitId, int simulateTicks) {
-        std::tuple<int, int, int, int> best(0, 0, -INF, INF);
+        std::tuple<int, int, int, int, int> best(0, 0, -INF, INF, -INF);
         int initialHealth = afterShotEnv.getUnit(unitId)->health;
         TAction bestAction;
+        bool noopt = afterShotEnv.myCount == 1 && !afterShotEnv.getUnit(unitId)->isMy();
+        for (const auto& u : afterShotEnv.units) {
+            if (u.isMy() && !u.weapon.isRocketLauncher()) {
+                noopt = false;
+            }
+        }
+        auto countRockerLaunchers = [](const TSandbox& snd) {
+            int rlCnt = 0;
+            for (auto& b : snd.bullets) {
+                rlCnt += b.weaponType == ELootType::ROCKET_LAUNCHER;
+            }
+            return rlCnt;
+        };
+
+        int initialRlCnt = countRockerLaunchers(afterShotEnv);
+
         for (int dirX = -1; dirX <= 1; dirX++) {
             for (int dirY = -1; dirY <= 1; dirY += 1) {
                 TSandbox dodgeEnv = afterShotEnv;
@@ -493,18 +518,26 @@ public:
                 }
                 act.velocity = dirX * UNIT_MAX_HORIZONTAL_SPEED;
                 opp->action = act;
-                for (int i = 0; i < simulateTicks && opp->health > std::get<1>(best); i++) {
+                int minRlChangeTime = INF;
+                for (int i = 0; i < simulateTicks; i++) {
+                    if (!noopt && opp->health <= std::get<1>(best)) {
+                        break;
+                    }
                     dodgeEnv.doTick(5);
+                    if (countRockerLaunchers(dodgeEnv) < initialRlCnt) {
+                        minRlChangeTime = std::min(minRlChangeTime, i);
+                    }
                 }
                 int pl = TLevel::unitIdToPlayerIdx[unitId];
-                std::tuple<int, int, int, int> cand((dodgeEnv.score[pl] - afterShotEnv.score[pl]) / KILL_SCORE * (!opp->isMy()),
-                                                    opp->health,
-                                                    -dodgeEnv.score[1 - pl],
-                                                    dodgeEnv.score[pl]);
+                std::tuple<int, int, int, int, int> cand((dodgeEnv.score[pl] - afterShotEnv.score[pl]) / KILL_SCORE * (!opp->isMy()),
+                                                         opp->health,
+                                                         -dodgeEnv.score[1 - pl],
+                                                         dodgeEnv.score[pl],
+                                                         -minRlChangeTime);
                 if (cand > best) {
                     best = cand;
                     bestAction = act;
-                    if (opp->health == initialHealth) {
+                    if (!noopt && opp->health == initialHealth) {
                         return bestAction;
                     }
                 }
@@ -603,8 +636,10 @@ public:
                 const int simulateTicks = unit.weapon.isRocketLauncher() ? 30 : 15;
                 const int itersCount = 6;
                 auto testNothingEnv = env;
+                testNothingEnv.oppFallFreezeExcept = unit.id;
                 for (int i = 0; i < simulateTicks; i++) {
                     testNothingEnv.doTick();
+                    testNothingEnv.oppFallFreezeExcept = -1;
                     if (i == 0) {
                         for (auto& u : testNothingEnv.units) {
                             if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
@@ -622,9 +657,11 @@ public:
                     testEnv.getUnit(unit.id)->action = result.action;
                     testEnv.getUnit(unit.id)->action.shoot = true;
                     testEnv.shotSpreadToss = 1.0 * it / itersCount;
+                    testEnv.oppFallFreezeExcept = unit.id;
                     for (int i = 0; i < simulateTicks; i++) {
                         testEnv.doTick();
-                        testEnv.getUnit(unit.id)->action.shoot = false;
+                        testEnv.oppFallFreezeExcept = -1;
+                        testEnv.getUnit(unit.id)->action = TAction();
                         if (i == 0) {
                             for (auto& u : testEnv.units) {
                                 if (u.id != unit.id || unit.weapon.isRocketLauncher()) {
