@@ -395,7 +395,7 @@ public:
             return env.getUnit(unit.id)->health - (env.score[1] - startOppScore) / 2 + (env.score[0] - startMyScore) / 2;
         };
         //         score health minHealth sumOppHealth not_do dist_to_stand
-        std::tuple<int,  int,   int,      int,         bool,  int> bestScore(-INF);
+        std::tuple<int,  int,   int,      int,         bool,  int> bestScore(-INF, 0, 0, 0, false, 0);
         // minHealth - чтобы не подрывался на базуке, если хочет взять аптечку (выйти в 0 по delta health)
         TPointsVec bestPath;
         TActionsVec bestActions;
