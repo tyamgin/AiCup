@@ -118,7 +118,20 @@ class Strategy {
         return {};
     }
 
+    bool hasAnyLoot(const std::set<ELootType>& lootTypes) {
+        for (const auto& lb : env.lootBoxes) {
+            if (lootTypes.count(lb.type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     std::optional<TActionsVec> _strategyLoot(const TUnit& unit, std::set<ELootType> lootTypes) {
+        if (!hasAnyLoot(lootTypes)) {
+            return {};
+        }
+
         auto& pathFinder = pathFinders[unit.id];
         std::map<std::pair<int, int>, double> lbPathPenalty;
         pathFinder.traverseReachable(unit, [&](double dist, const TUnit& unit, const TState& state) {
@@ -285,13 +298,12 @@ class Strategy {
             }
         }
 
-//        if (unit.mines == 0 || (unit.mines == 1 && !unit.weapon.isRocketLauncher())) {
-//            auto maybeAct = _strategyLoot(unit, {ELootType::MINE});
-//            if (maybeAct) {
-//                return maybeAct;
-//            }
-//        }
-
+        if (unit.mines == 0 || (unit.mines == 1 && !unit.weapon.isRocketLauncher())) {
+            auto maybeAct = _strategyLoot(unit, {ELootType::MINE});
+            if (maybeAct) {
+                return maybeAct;
+            }
+        }
 
         if (auto actions = findPathWrapper(unit, target->position())) {
             return actions;
@@ -329,9 +341,9 @@ public:
                 pathFinders[unit.id] = TPathFinder(&env, unit);
             }
         }
-        if (env.currentTick > 5 && env.currentTick < 750) {
-            return result;
-        }
+//        if (env.currentTick > 5 && env.currentTick < 750) {
+//            return result;
+//        }
 
         if (env.currentTick > 1) {
             prevEnv2 = prevEnv;
