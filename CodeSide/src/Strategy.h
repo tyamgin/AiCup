@@ -12,50 +12,6 @@
 #include <cassert>
 #include <unordered_set>
 
-/**
- * TODO:
- * - пп от стен, если соперник с базукой
- * - пп в пользу стояния на лестнице (легко уклоняться)
- * - в findpath поощрять за бонусы
- * - расшатывать прицел как в https://russianaicup.ru/game/view/285088
- * - !!! anti needTakeRL https://russianaicup.ru/game/view/296676
- * - не использовал батут https://russianaicup.ru/game/view/297786
- * - проверять второй shot только для RL
- */
-
-/**
- * CHECK:
- * - aim round
- * - коэффициент score (b) 27.4
- * [801, 14, 877]
- * -76
- * 0.47735399284862934
- *
- * - уменьшение длины в dodge (a) 27.3
- * [869, 17, 918]
- * -49
- * 0.48628987129266926
- *
- * - _applyOppStrategy не только RL
- *
- *
- * (b) - mine
- * [779, 11, 649]
- * 130
- * 0.5455182072829131
- *
- *
- * (a) v29.2k - v29.1k
- * [705, 7, 548]
- * 157
- * 0.5626496408619314
- *
- * (b) v29.2 - v29.1
- * [549, 4, 506]
- * 43
- * 0.5203791469194313
- */
-
 class Strategy {
     TSandbox prevEnv, prevEnv2, env;
     std::unordered_map<int, TPathFinder> pathFinders;
@@ -341,21 +297,12 @@ public:
                 pathFinders[unit.id] = TPathFinder(&env, unit);
             }
         }
-//        if (env.currentTick > 5 && env.currentTick < 750) {
-//            return result;
-//        }
 
         if (env.currentTick > 1) {
             prevEnv2 = prevEnv;
             prevEnv.doTick();
             _compareState(prevEnv, env, prevEnv2);
         }
-
-//        for (auto& unit : env.units) {
-//            if (unit.isMy()) {
-//                result[unit.id] = _mineGunTestStrategy(unit, env);
-//            }
-//        }
 
         _initialWeaponDistribute();
 
